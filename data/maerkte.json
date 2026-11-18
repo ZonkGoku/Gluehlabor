@@ -1,18 +1,26 @@
-[
-  "Rathausmarkt",
-  "Ottensen",
-  "Santa Pauli",
-  "Gänsemarkt",
-  "Fleetinsel",
-  "Jungfernstieg",
-  "Winterwald",
-  "Spitalerstraße",
-  "HafenCity",
-  "St. Georg",
-  "Eppendorf",
-  "Osterstraße",
-  "Blankenese",
-  "Bergedorf",
-  "Ikea Altona",
-  "Sonstiger"
-]
+{
+  "_hinweis": "Gepflegte Marktlisten je Stadt. Weitere Städte einfach ergänzen; frei eingegebene Märkte gehen trotzdem.",
+  "sonstiger": "Sonstiger",
+  "staedte": [
+    {
+      "stadt": "Hamburg",
+      "maerkte": [
+        "Rathausmarkt",
+        "Ottensen",
+        "Santa Pauli",
+        "Gänsemarkt",
+        "Fleetinsel",
+        "Jungfernstieg",
+        "Winterwald",
+        "Spitalerstraße",
+        "HafenCity",
+        "St. Georg",
+        "Eppendorf",
+        "Osterstraße",
+        "Blankenese",
+        "Bergedorf",
+        "Ikea Altona"
+      ]
+    }
+  ]
+}

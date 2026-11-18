@@ -42,7 +42,7 @@ export function Statistik() {
           <h2>Befund</h2>
           <ul class="befunde">
             {b.map((x) => (
-              <li class={`befund ${x.schwere}`}>
+              <li class={`befund s-${x.schwere}`}>
                 <span class="marke">{x.schwere === 'warnung' ? 'Achtung' : x.schwere === 'gut' ? 'OK' : 'Hinweis'}</span>
                 {x.text}
               </li>
@@ -137,7 +137,7 @@ export function Statistik() {
               {p.map((x) => (
                 <div class="saeule" role="listitem" title={`${x.becherNr}${x.becherNr === 5 ? '+' : ''}. Becher: ${x.anzahl}×, Ø ${zahl2(x.mittel)}`}>
                   <div
-                    class={x.mittel === null ? 'fuellung leer' : 'fuellung'}
+                    class={x.mittel === null ? 'fuellung ohne' : 'fuellung'}
                     style={{ height: `${((x.mittel ?? 0.2) / pMax) * 100}%` }}
                   />
                   <span class="w">{zahl2(x.mittel)}</span>

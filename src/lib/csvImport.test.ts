@@ -22,6 +22,11 @@ describe('importiereCsv', () => {
     expect(() => importiereCsv('stand,saison,geschmack\nX,2025,0')).toThrow(/ungültig/);
     expect(() => importiereCsv('stand,saison,geschmack\nX,2025,11')).toThrow(/ungültig/);
   });
+  it('liest eine optionale Stadt-Spalte', () => {
+    const [e] = importiereCsv('stand,markt,stadt,saison,geschmack\nKönig,Christkindlesmarkt,Nürnberg,2026,8');
+    expect(e.stadt).toBe('Nürnberg');
+    expect(importiereCsv(csv)[0].stadt).toBeUndefined();
+  });
   it('leere Notenzelle wird null, nicht 0', () => {
     const [e] = importiereCsv('stand,saison,geschmack,becher\nX,2025,7,');
     expect(e.noten.becher).toBeNull();

@@ -635,15 +635,15 @@
   border-radius: 6px;
   margin-top: 1px;
 }
-.befund.warnung .marke {
+.befund.s-warnung .marke {
   background: var(--u4-bg);
   color: var(--u4-fg);
 }
-.befund.hinweis .marke {
+.befund.s-hinweis .marke {
   background: var(--u3-bg);
   color: var(--u3-fg);
 }
-.befund.gut .marke {
+.befund.s-gut .marke {
   background: var(--u2-bg);
   color: var(--u2-fg);
 }
@@ -1044,7 +1044,7 @@
   background: var(--balken);
   min-height: 2px;
 }
-.pegel .saeule .fuellung.leer {
+.pegel .saeule .fuellung.ohne {
   background: var(--balken-leer);
 }
 .pegel .saeule .w {
@@ -1238,6 +1238,19 @@ a.karte {
   position: absolute;
   transform: translateX(-50%);
 }
-.pegel .saeule .fuellung.leer {
+.pegel .saeule .fuellung.ohne {
   height: 4px !important;
+}
+a.karte.spitze {
+  color: #fbf7f6;
+}
+.app-kopf .name small {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 420px) {
+  .app-kopf .sync {
+    font-size: 10.5px;
+  }
 }

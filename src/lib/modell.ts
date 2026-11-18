@@ -51,6 +51,8 @@ export interface Eintrag {
   id: string;
   stand: string;
   markt: string;
+  /** Stadt, falls nicht aus der gepflegten Marktliste ableitbar (bewertet wird in ganz Deutschland). */
+  stadt?: string;
   saison: number;
   datum?: string; // ISO yyyy-mm-dd
   sorte?: Sorte;

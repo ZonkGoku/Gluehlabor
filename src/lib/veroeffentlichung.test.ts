@@ -20,6 +20,9 @@ describe('eintragAlsJson', () => {
     expect(j.noten.becher).toBeNull();
     expect(j.noten.geschmack).toBe(7);
   });
+  it('nimmt die Stadt mit', () => {
+    expect(JSON.parse(eintragAlsJson({ ...basis, stadt: 'München' })).stadt).toBe('München');
+  });
   it('Rundreise ergibt einen gültigen Eintrag', () => {
     expect(istEintrag(JSON.parse(eintragAlsJson({ ...basis, sorte: 'kirsch', becherNr: 2, preis: 4.5 })))).toBe(true);
   });

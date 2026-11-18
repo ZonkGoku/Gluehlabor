@@ -4,7 +4,8 @@ import { zahl2 } from '../lib/format';
 import { befunde, ueberblick } from '../lib/statistik';
 import { Betreiber, Notenbalken, SaisonSchalter, UrteilPill } from './bausteine';
 import { useEintraege, useGewichte, useSaison } from './daten';
-import { LABELS, MAERKTE } from './stammdaten';
+import { staedte, stadtVon } from '../lib/orte';
+import { LABELS, MARKTLISTE } from './stammdaten';
 
 const UFARBE: Record<string, string> = {
   Nachschenken: 'var(--u1-bg)',
@@ -27,8 +28,12 @@ export function Uebersicht() {
   const u = ueberblick(auswahl, gewichte);
   const verteilung = urteilVerteilung(zeilen);
   const maxV = Math.max(1, ...Object.values(verteilung));
-  const checkliste = marktCheckliste(alle, MAERKTE.filter((m) => m !== 'Sonstiger'));
+  const heimat = MARKTLISTE.staedte[0];
+  const checkliste = marktCheckliste(alle, heimat.maerkte);
   const besucht = checkliste.filter((m) => m.becher > 0).length;
+  const orte = staedte(MARKTLISTE, alle);
+  const bekannteStaedte = orte.filter((o) => o.stadt !== null).length;
+  const maerkteGesamt = new Set(alle.map((e) => e.markt)).size;
   const warnungen = befunde(auswahl, gewichte, LABELS).filter((b) => b.schwere !== 'gut').slice(0, 3);
 
   return (
@@ -54,7 +59,7 @@ export function Uebersicht() {
             <div class="stand">{spitze.map((z) => z.eintrag.stand).join(' & ')}</div>
             <div class="geteilt">
               {spitze.length > 1 ? `Teilen sich Platz 1 · ` : ''}
-              {[...new Set(spitze.map((z) => z.eintrag.markt))].join(', ')}
+              {[...new Set(spitze.map((z) => [z.eintrag.markt, stadtVon(MARKTLISTE, z.eintrag)].filter(Boolean).join(' · ')))].join(', ')}
             </div>
             <div class="zahlen">
               <span class="zahl-gross">{zahl2(spitze[0].wertung.gesamt)}</span>
@@ -84,11 +89,11 @@ export function Uebersicht() {
               <div class="zusatz">{u.zehner}× die 10 · {u.einsOderZwei}× 1–2</div>
             </div>
             <div class="karte kpi">
-              <div class="wert">
-                {besucht}/{checkliste.length}
+              <div class="wert">{maerkteGesamt}</div>
+              <div class="label">Märkte besucht</div>
+              <div class="zusatz">
+                in {bekannteStaedte} {bekannteStaedte === 1 ? 'Stadt' : 'Städten'} · ganz Deutschland
               </div>
-              <div class="label">Märkte erkundet</div>
-              <div class="zusatz">über alle Saisons</div>
             </div>
           </div>
 
@@ -132,12 +137,12 @@ export function Uebersicht() {
               </h2>
               <ul class="befunde">
                 {warnungen.length === 0 ? (
-                  <li class="befund gut">
+                  <li class="befund s-gut">
                     <span class="marke">OK</span>Keine Auffälligkeiten.
                   </li>
                 ) : (
                   warnungen.map((b) => (
-                    <li class={`befund ${b.schwere}`}>
+                    <li class={`befund s-${b.schwere}`}>
                       <span class="marke">{b.schwere === 'warnung' ? 'Achtung' : 'Hinweis'}</span>
                       {b.text}
                     </li>
@@ -148,7 +153,7 @@ export function Uebersicht() {
 
             <section class="karte">
               <h2>
-                Wo wart ihr noch nie? <a href="#/vergleich">Checkliste</a>
+                Noch nie da · {heimat.stadt} {besucht}/{checkliste.length} <a href="#/vergleich">Checkliste</a>
               </h2>
               <div class="fortschritt" aria-label={`${besucht} von ${checkliste.length} Märkten`}>
                 <span style={{ width: `${(besucht / checkliste.length) * 100}%` }} />

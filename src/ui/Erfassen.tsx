@@ -2,8 +2,6 @@
 // Keine Rechenlogik hier: Wertung, Anker, Becher-Nr. kommen aus src/lib.
 
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import ankerJson from '../../data/anker.json';
-import maerkteJson from '../../data/maerkte.json';
 import { db, leseEinstellung, leseGewichte, schreibeEinstellung, speichereNeuenEintrag } from '../daten/db';
 import {
   leseEntwurf,
@@ -15,7 +13,9 @@ import {
 import { verkleinereFoto } from '../daten/foto';
 import { synchronisiere } from '../daten/sync';
 import { abendDatum, naechsteBecherNr } from '../lib/abend';
-import { ankerFuer, type AnkerDaten } from '../lib/anker';
+import { ankerFuer } from '../lib/anker';
+import { zerlegeFreienMarkt } from '../lib/orte';
+import { ANKER, MAERKTE, MARKTLISTE } from './stammdaten';
 import { euro, probeNr, zahl2 } from '../lib/format';
 import { DEFAULT_GEWICHTE, KRITERIEN, leereNoten, SORTEN, type Eintrag, type Kriterium, type Sorte } from '../lib/modell';
 import { bewerte } from '../lib/scoring';
@@ -23,8 +23,6 @@ import { useLive } from './hooks';
 import { Skala } from './Skala';
 import { SyncAnzeige } from './SyncAnzeige';
 
-const ANKER = ankerJson as unknown as AnkerDaten;
-const MAERKTE = maerkteJson as string[];
 
 const SORTE_LABEL: Record<Sorte, string> = {
   rot: 'Rot',
@@ -107,12 +105,20 @@ export function Erfassen() {
     const eintrag: Eintrag = {
       id: neueId(),
       stand,
-      markt: e.markt.trim() || 'Sonstiger',
+      markt: MARKTLISTE.sonstiger,
       saison: jetzt.getFullYear(),
       datum: abendDatum(jetzt),
       noten: { ...e.noten },
       erstelltAm: jetzt.getTime(),
     };
+    if (e.marktFrei) {
+      // Freie Eingabe „Markt, Stadt" – bewertet wird in ganz Deutschland.
+      const frei = zerlegeFreienMarkt(e.markt);
+      if (frei.markt) eintrag.markt = frei.markt;
+      if (frei.stadt) eintrag.stadt = frei.stadt;
+    } else if (e.markt.trim()) {
+      eintrag.markt = e.markt.trim();
+    }
     if (e.sorte) eintrag.sorte = e.sorte;
     if (becherNr !== undefined) eintrag.becherNr = becherNr;
     if (e.preis !== undefined) eintrag.preis = e.preis;
@@ -120,9 +126,9 @@ export function Erfassen() {
 
     await speichereNeuenEintrag(eintrag, foto ?? undefined);
     // Ab hier ist der Becher sicher auf dem Gerät.
-    await schreibeEinstellung('letzterMarkt', eintrag.markt);
+    await schreibeEinstellung('letzterMarkt', e.markt.trim() || eintrag.markt);
     await schreibeEntwurfFoto(null);
-    const neu = { ...leererEntwurf(eintrag.markt, e.sorte), marktFrei: e.marktFrei };
+    const neu = { ...leererEntwurf(e.markt.trim() || eintrag.markt, e.sorte), marktFrei: e.marktFrei };
     setE(neu);
     setBecherNrAngefasst(false);
     setFoto(null);
@@ -169,8 +175,8 @@ export function Erfassen() {
           <input
             class="feld"
             type="text"
-            placeholder="Markt"
-            aria-label="Markt (frei)"
+            placeholder="Markt, Stadt"
+            aria-label="Markt und Stadt, mit Komma getrennt"
             value={e.markt}
             onInput={(ev) => setE({ ...e, markt: (ev.target as HTMLInputElement).value })}
             onBlur={() => !e.markt.trim() && setE({ ...e, markt: MAERKTE[0], marktFrei: false })}
@@ -185,10 +191,17 @@ export function Erfassen() {
               setE(v === '__frei' ? { ...e, markt: '', marktFrei: true } : { ...e, markt: v });
             }}
           >
-            {MAERKTE.map((m) => (
-              <option value={m}>{m}</option>
+            {MARKTLISTE.staedte.map((s) => (
+              <optgroup label={s.stadt}>
+                {s.maerkte.map((m) => (
+                  <option value={m}>{m}</option>
+                ))}
+              </optgroup>
             ))}
-            <option value="__frei">Anderer Markt …</option>
+            <optgroup label="Woanders in Deutschland">
+              <option value={MARKTLISTE.sonstiger}>{MARKTLISTE.sonstiger}</option>
+              <option value="__frei">Anderer Markt, andere Stadt …</option>
+            </optgroup>
           </select>
         )}
       </div>

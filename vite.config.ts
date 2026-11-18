@@ -73,7 +73,7 @@ export default defineConfig({
       manifest: {
         name: 'Becherwerk',
         short_name: 'Becherwerk',
-        description: 'Prüfstand für Glühwein auf Hamburger Weihnachtsmärkten',
+        description: 'Prüfstelle für Glühwein auf Weihnachtsmärkten in ganz Deutschland – von David (Bayern) und Philip (Hamburg)',
         lang: 'de',
         start_url: './#/erfassen',
         scope: './',

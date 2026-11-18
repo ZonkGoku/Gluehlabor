@@ -2,7 +2,8 @@ import { marktCheckliste, saisons, wiederholungen, type Entwicklung } from '../l
 import { zahl2 } from '../lib/format';
 import { Betreiber } from './bausteine';
 import { useEintraege, useGewichte } from './daten';
-import { MAERKTE } from './stammdaten';
+import { staedte } from '../lib/orte';
+import { MARKTLISTE } from './stammdaten';
 
 const ENTWICKLUNG: Record<Entwicklung, string> = {
   besser: 'besser geworden',
@@ -26,8 +27,12 @@ export function Vergleich() {
   const jahre = [...new Set([...saisons(alle), new Date().getFullYear()])].sort();
   const w = wiederholungen(alle, gewichte);
   const mehrfach = w.filter((x) => Object.keys(x.jeSaison).length > 1);
-  const checkliste = marktCheckliste(alle, MAERKTE);
-  const besucht = checkliste.filter((m) => m.becher > 0).length;
+  const listen = MARKTLISTE.staedte.map((s) => {
+    const c = marktCheckliste(alle, s.maerkte);
+    return { stadt: s.stadt, checkliste: c, besucht: c.filter((m) => m.becher > 0).length };
+  });
+  const gepflegt = new Set(MARKTLISTE.staedte.map((s) => s.stadt));
+  const weitere = staedte(MARKTLISTE, alle).filter((o) => !gepflegt.has(o.stadt ?? ''));
 
   return (
     <>
@@ -81,24 +86,39 @@ export function Vergleich() {
           </div>
         </section>
 
-        <section class="karte">
-          <h2>
-            Wo wart ihr noch nie?
-            <span class="mono" style={{ fontWeight: 500, color: 'var(--text-2)', fontSize: '13px' }}>
-              {besucht}/{checkliste.length} erkundet
-            </span>
-          </h2>
-          <div class="fortschritt">
-            <span style={{ width: `${(besucht / checkliste.length) * 100}%` }} />
-          </div>
-          <div class="marktgitter">
-            {checkliste.map((m) => (
-              <div class={`markt ${m.abdeckung === 'noch nie da' ? 'nie' : m.abdeckung === 'abgedeckt' ? 'abgedeckt' : ''}`}>
-                <div class="n">{m.markt}</div>
-                <div class="z">
-                  {m.becher === 0 ? 'noch nie da' : `${m.becher} Becher · ${m.abdeckung}`}
+        {listen.map((l) => (
+          <section class="karte">
+            <h2>
+              Wo wart ihr noch nie? · {l.stadt}
+              <span class="mono" style={{ fontWeight: 500, color: 'var(--text-2)', fontSize: '13px' }}>
+                {l.besucht}/{l.checkliste.length} erkundet
+              </span>
+            </h2>
+            <div class="fortschritt">
+              <span style={{ width: `${(l.besucht / l.checkliste.length) * 100}%` }} />
+            </div>
+            <div class="marktgitter">
+              {l.checkliste.map((m) => (
+                <div class={`markt ${m.abdeckung === 'noch nie da' ? 'nie' : m.abdeckung === 'abgedeckt' ? 'abgedeckt' : ''}`}>
+                  <div class="n">{m.markt}</div>
+                  <div class="z">{m.becher === 0 ? 'noch nie da' : `${m.becher} Becher · ${m.abdeckung}`}</div>
                 </div>
-              </div>
+              ))}
+            </div>
+          </section>
+        ))}
+
+        <section class="karte">
+          <h2>Weitere Orte in Deutschland</h2>
+          <p style={{ margin: '0 0 12px', color: 'var(--text-2)', fontSize: '14px' }}>
+            Bewertet wird überall. Märkte außerhalb der gepflegten Listen tragt ihr bei der Erfassung als „Markt, Stadt" ein.
+          </p>
+          <div class="chips">
+            {weitere.length === 0 && <span class="chip-klein">Noch keine</span>}
+            {weitere.map((o) => (
+              <span class={o.stadt ? 'chip-klein gold' : 'chip-klein'}>
+                {o.stadt ?? 'Stadt nicht angegeben'} · {o.becher} Becher
+              </span>
             ))}
           </div>
         </section>

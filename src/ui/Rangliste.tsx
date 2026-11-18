@@ -2,9 +2,11 @@ import { useState } from 'preact/hooks';
 import { filtere, ranglisteMitWertung, saisons } from '../lib/auswertung';
 import { zahl2 } from '../lib/format';
 import { KRITERIEN } from '../lib/modell';
+import { stadtVon } from '../lib/orte';
 import { Betreiber, Notenbalken, SaisonSchalter, UrteilPill } from './bausteine';
 import { useEintraege, useGewichte, useSaison } from './daten';
 import { GewichteEditor } from './GewichteEditor';
+import { MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
 
 export function Rangliste() {
@@ -16,8 +18,19 @@ export function Rangliste() {
   if (!alle) return null;
 
   const jahre = [...new Set([...saisons(alle), new Date().getFullYear()])].sort();
-  const maerkte = [...new Set(alle.map((e) => e.markt))].sort((a, b) => a.localeCompare(b, 'de'));
-  const zeilen = ranglisteMitWertung(filtere(alle, { saison, markt }), gewichte);
+  // Märkte nach Stadt gruppiert; „stadt:<Name>" filtert eine ganze Stadt.
+  const gruppen = new Map<string, Set<string>>();
+  for (const e of alle) {
+    const s = stadtVon(MARKTLISTE, e) ?? 'Ohne Stadt';
+    gruppen.set(s, (gruppen.get(s) ?? new Set()).add(e.markt));
+  }
+  const stadtGruppen = [...gruppen.entries()].sort(([a], [b]) =>
+    a === 'Ohne Stadt' ? 1 : b === 'Ohne Stadt' ? -1 : a.localeCompare(b, 'de'),
+  );
+  const filter = markt.startsWith('stadt:')
+    ? { saison, markt: 'alle', stadt: markt.slice(6) }
+    : { saison, markt };
+  const zeilen = ranglisteMitWertung(filtere(alle, filter, MARKTLISTE), gewichte);
   const gehe = (id: string) => (location.hash = `#/becher/${id}`);
 
   return (
@@ -30,9 +43,16 @@ export function Rangliste() {
         <div class="filterreihe">
           <SaisonSchalter saisons={jahre} wert={saison} onWahl={setSaison} />
           <select class="auswahl" aria-label="Markt" value={markt} onChange={(e) => setMarkt((e.target as HTMLSelectElement).value)}>
-            <option value="alle">Alle Märkte</option>
-            {maerkte.map((m) => (
-              <option value={m}>{m}</option>
+            <option value="alle">Ganz Deutschland</option>
+            {stadtGruppen.map(([stadt, ms]) => (
+              <optgroup label={stadt}>
+                {stadt !== 'Ohne Stadt' && <option value={`stadt:${stadt}`}>Ganz {stadt}</option>}
+                {[...ms]
+                  .sort((a, b) => a.localeCompare(b, 'de'))
+                  .map((m) => (
+                    <option value={m}>{m}</option>
+                  ))}
+              </optgroup>
             ))}
           </select>
           <button type="button" class="pillknopf" aria-expanded={gewichteOffen} onClick={() => setGewichteOffen(!gewichteOffen)}>

@@ -11,6 +11,7 @@ import {
   wiederholungen,
 } from './auswertung';
 import { importiereCsv } from './csvImport';
+import { alleMaerkte, type MarktListe } from './orte';
 import { DEFAULT_GEWICHTE, KRITERIEN, leereNoten, type Eintrag, type Kriterium } from './modell';
 import {
   befunde,
@@ -25,7 +26,8 @@ import {
 } from './statistik';
 
 const csv = readFileSync(resolve(process.cwd(), 'data/gluehwein-2025.csv'), 'utf8');
-const maerkte: string[] = JSON.parse(readFileSync(resolve(process.cwd(), 'data/maerkte.json'), 'utf8'));
+const marktliste: MarktListe = JSON.parse(readFileSync(resolve(process.cwd(), 'data/maerkte.json'), 'utf8'));
+const maerkte = alleMaerkte(marktliste);
 const anker: AnkerDaten = JSON.parse(readFileSync(resolve(process.cwd(), 'data/anker.json'), 'utf8'));
 const labels = Object.fromEntries(KRITERIEN.map((k) => [k, anker[k].label])) as Record<Kriterium, string>;
 const bestand = importiereCsv(csv);
@@ -143,6 +145,11 @@ describe('Rangliste mit Filter', () => {
       [1, 'Otten Schleenwurm'],
       [2, 'Otten Tallinn'],
     ]);
+  });
+  it('Stadtfilter', () => {
+    const e = [...bestand, { ...bestand[0], id: 'm', stand: 'König', markt: 'Christkindlesmarkt', stadt: 'Nürnberg' }];
+    expect(filtere(e, { saison: 'alle', markt: 'alle', stadt: 'Nürnberg' }, marktliste).map((x) => x.stand)).toEqual(['König']);
+    expect(filtere(e, { saison: 'alle', markt: 'alle', stadt: 'Hamburg' }, marktliste)).toHaveLength(7);
   });
   it('leere Saison ergibt leere Liste', () => {
     expect(ranglisteMitWertung(filtere(bestand, { saison: 2026, markt: 'alle' }), DEFAULT_GEWICHTE)).toEqual([]);

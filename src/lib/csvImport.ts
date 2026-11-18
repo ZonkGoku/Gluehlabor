@@ -104,6 +104,7 @@ export function importiereCsv(text: string): Eintrag[] {
       noten,
       erstelltAm: Date.UTC(saison, 11, 1),
     };
+    if (wert('stadt')) e.stadt = wert('stadt');
     if (wert('datum')) e.datum = wert('datum');
     if (preisRoh) e.preis = Number(preisRoh);
     if (wert('notiz')) e.notiz = wert('notiz');

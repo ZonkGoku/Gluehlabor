@@ -41,7 +41,7 @@ export function Geruest({ route, children }: { route: string; children: Componen
         )}
         <div class="fussnote">
           {darf && <SyncAnzeige />}
-          <div>Gemacht und betrieben von David &amp; Philip.</div>
+          <div>Gemacht und betrieben von David (Bayern) &amp; Philip (Hamburg). Bewertet wird in ganz Deutschland.</div>
         </div>
       </aside>
 
@@ -49,7 +49,7 @@ export function Geruest({ route, children }: { route: string; children: Componen
         <img class="zeichen" src="./icon.svg" alt="" />
         <div class="name">
           Becherwerk
-          <small>David &amp; Philip · Prüfstelle</small>
+          <small>Bayern × Hamburg</small>
         </div>
         {darf && <SyncAnzeige />}
         <a class="symbolknopf" href="#/spickzettel" aria-label="Spickzettel">

@@ -1,16 +1,22 @@
 // Auswertung über mehrere Einträge: Filter, Rangliste, Vergleich, Checkliste. Reine Funktionen.
 
 import type { Eintrag, Gewichte } from './modell';
+import { stadtVon, type MarktListe } from './orte';
 import { bewerte, rangliste, type Urteil, type Wertung } from './scoring';
 
 export interface Filter {
   saison: number | 'alle';
   markt: string | 'alle';
+  /** Nur mit Marktliste wirksam, weil die Stadt oft aus ihr abgeleitet wird. */
+  stadt?: string | 'alle';
 }
 
-export function filtere<T extends Eintrag>(eintraege: readonly T[], f: Filter): T[] {
+export function filtere<T extends Eintrag>(eintraege: readonly T[], f: Filter, liste?: MarktListe): T[] {
   return eintraege.filter(
-    (e) => (f.saison === 'alle' || e.saison === f.saison) && (f.markt === 'alle' || e.markt === f.markt),
+    (e) =>
+      (f.saison === 'alle' || e.saison === f.saison) &&
+      (f.markt === 'alle' || e.markt === f.markt) &&
+      (!f.stadt || f.stadt === 'alle' || !liste || stadtVon(liste, e) === f.stadt),
   );
 }
 

@@ -11,6 +11,7 @@ export function eintragAlsJson(e: Eintrag): string {
     markt: e.markt,
     saison: e.saison,
   };
+  if (e.stadt) sauber.stadt = e.stadt;
   if (e.datum) sauber.datum = e.datum;
   if (e.sorte) sauber.sorte = e.sorte;
   if (e.becherNr !== undefined) sauber.becherNr = e.becherNr;
@@ -29,6 +30,7 @@ export function istEintrag(x: unknown): x is Eintrag {
   if (typeof e.id !== 'string' || typeof e.stand !== 'string' || !e.stand) return false;
   if (typeof e.markt !== 'string' || !Number.isInteger(e.saison)) return false;
   if (typeof e.erstelltAm !== 'number') return false;
+  if (e.stadt !== undefined && typeof e.stadt !== 'string') return false;
   if (e.sorte !== undefined && !(SORTEN as readonly string[]).includes(e.sorte as string)) return false;
   const noten = e.noten as Record<string, unknown> | undefined;
   if (!noten || typeof noten !== 'object') return false;

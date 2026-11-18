@@ -4,11 +4,12 @@ import { ankerFuer } from '../lib/anker';
 import { filtere, ranglisteMitWertung } from '../lib/auswertung';
 import { euro, zahl2 } from '../lib/format';
 import { KRITERIEN } from '../lib/modell';
+import { stadtVon } from '../lib/orte';
 import { bewerte } from '../lib/scoring';
 import { kriteriumStatistik } from '../lib/statistik';
 import { datumKurz, UrteilPill } from './bausteine';
 import { useEintraege, useGewichte } from './daten';
-import { ANKER } from './stammdaten';
+import { ANKER, MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
 
 const SORTE: Record<string, string> = {
@@ -51,6 +52,7 @@ export function Detail({ id }: { id: string }) {
   const rang = saisonZeilen.find((z) => z.eintrag.id === e.id)?.rang;
   const meta = [
     e.markt,
+    stadtVon(MARKTLISTE, e),
     `Saison ${e.saison}`,
     datumKurz(e.datum),
     e.sorte && SORTE[e.sorte],
