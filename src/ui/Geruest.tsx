@@ -25,7 +25,7 @@ export function Geruest({ route, children }: { route: string; children: Componen
         <>
           <header class="nm sticky top-0 z-30 flex items-center gap-3 px-4 pb-2" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 12px)' }}>
             <a href="#/" class="flex items-center gap-2.5 text-eis" aria-label={`${MARKE.name}, zur Übersicht`}>
-              <img src="./logo.png" alt="" class="size-10 rounded-full" />
+              <img src="./logo-klein.png" alt="" class="size-10 rounded-full" />
               <span class="flex flex-col leading-none">
                 <span class="font-display text-[22px] uppercase tracking-wider">{MARKE.name}</span>
                 <span class="etikett mt-1 hidden whitespace-nowrap !text-[9.5px] min-[440px]:block">Bayern × Hamburg</span>

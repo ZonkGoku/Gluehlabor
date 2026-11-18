@@ -16,7 +16,7 @@ export default defineConfig({
       // nämlich sofort, außer während der Erfassung.
       registerType: 'prompt',
       injectRegister: null,
-      includeAssets: ['logo.png', 'favicon.png', 'apple-touch-icon.png'],
+      includeAssets: ['logo.png', 'logo-klein.png', 'favicon.png', 'apple-touch-icon.png'],
       manifest: {
         name: 'Glühlabor',
         short_name: 'Glühlabor',
