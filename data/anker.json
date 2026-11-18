@@ -1,0 +1,74 @@
+{
+  "_hinweis": "Ankerdefinitionen je Kriterium. Wird von der App gelesen; Änderungen hier wirken ohne Codeänderung.",
+  "geschmack": {
+    "label": "Geschmack",
+    "anker": {
+      "10": "Der beste Glühwein, den ich je hatte. Würde sofort nochmal bestellen.",
+      "8": "Deutlich über Durchschnitt. Gewürze schmeckbar, Wein nicht nur Zucker.",
+      "6": "Solide. Trinkt man gern aus, denkt aber nicht drüber nach.",
+      "4": "Zu süß, zu dünn oder künstlich. Man trinkt ihn, weil er warm ist.",
+      "2": "Man lässt den Rest stehen."
+    }
+  },
+  "geruch": {
+    "label": "Geruch",
+    "anker": {
+      "10": "Man riecht ihn drei Meter vor dem Stand und will sofort einen.",
+      "8": "Klare Gewürznote. Zimt und Orange statt Alkoholfahne.",
+      "6": "Riecht nach Glühwein, mehr nicht.",
+      "4": "Riecht nach heißem Saft oder nach gar nichts.",
+      "2": "Riecht abschreckend. Billigwein oder Spülwasser."
+    }
+  },
+  "temperatur": {
+    "label": "Temperatur",
+    "anker": {
+      "10": "Heiß genug, dass man kurz wartet, nie heiß genug zum Verbrennen. Bleibt bis zum letzten Schluck warm.",
+      "8": "Gut heiß, kühlt gegen Ende leicht ab.",
+      "6": "Trinkbar warm, nach fünf Minuten lauwarm.",
+      "4": "Zu heiß zum Trinken oder von Anfang an zu kalt.",
+      "2": "Verbrannte Zunge oder kalter Becher."
+    }
+  },
+  "personal": {
+    "label": "Personal",
+    "anker": {
+      "10": "Schnell, freundlich, hat Lust auf den Job. Man kommt wegen der Leute wieder.",
+      "8": "Zugewandt und zügig.",
+      "6": "Macht seinen Job. Kein Kontakt, keine Beschwerde.",
+      "4": "Lustlos oder langsam. Man fühlt sich wie eine Störung.",
+      "2": "Unfreundlich, oder es wird falsch kassiert."
+    }
+  },
+  "atmosphaere": {
+    "label": "Atmosphäre",
+    "zusatz": "gemeint ist der Stand, nicht der Markt",
+    "anker": {
+      "10": "Man will bleiben. Licht, Enge, Musik — alles stimmt.",
+      "8": "Angenehm. Man stellt sich gern dazu.",
+      "6": "Funktional. Man trinkt und geht.",
+      "4": "Zugig, grell, zu laut oder zu voll.",
+      "2": "Man flüchtet mit dem Becher."
+    }
+  },
+  "preisLeistung": {
+    "label": "Preis/Leistung",
+    "anker": {
+      "10": "Für das Geld unschlagbar.",
+      "8": "Fair. Man zahlt gern.",
+      "6": "Üblicher Preis für übliche Qualität.",
+      "4": "Zu teuer für das, was drin ist.",
+      "2": "Abzocke."
+    }
+  },
+  "becher": {
+    "label": "Becher",
+    "anker": {
+      "10": "Sammelbecher, den man behalten will. Form, Motiv und Haptik stimmen.",
+      "8": "Ordentliche Keramik mit eigenem Motiv.",
+      "6": "Standardbecher ohne Eigenart.",
+      "4": "Dünn, hässlich oder unangenehm zu halten.",
+      "2": "Pappe oder Plastik."
+    }
+  }
+}
