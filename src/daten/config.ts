@@ -14,6 +14,3 @@ export const HAT_SERVER: boolean = roh !== '';
 
 /** Vorsatz für alle Aufrufe. Leer bei "/", dann gehen sie an denselben Ursprung. */
 export const API_BASIS: string = roh === '/' ? '' : roh.replace(/\/+$/, '');
-
-/** Altlast: wird nur noch vom alten GitHub-Token-Formular in ui/Einstellungen.tsx gebraucht. Der Sync läuft über den Community-Server. */
-export const REPO = { owner: 'ZonkGoku', name: 'Gluehlabor', branch: 'main' } as const;

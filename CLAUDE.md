@@ -106,8 +106,7 @@ src/ui/                  Preact-Komponenten. KEINE Rechenlogik hier (auch keine 
   Profil.tsx             Name, Verbindung zum Server, Prüfstellen-Code (Community-Einstellungen)
   Teilen.tsx, Mitbewerten.tsx, Qr.tsx      QR-Code zeigen / Einladung annehmen
   Rechtliches.tsx        Impressum und Datenschutz (Text = Entwurf, nicht rechtlich geprüft)
-  Einstellungen.tsx      Gewichtung und Darstellung. Auf ausdrücklichen Wunsch auf dem alten Stand belassen: das
-                         GitHub-Token-Formular dort ist überholt (der Sync läuft über den Server) und wird nicht mehr gebraucht
+  Einstellungen.tsx      Gewichtung, gemeinsamer Datenbestand (Sync-Knopf), Darstellung. Kein Token (das GitHub-Token-Formular ist am 18.11. auf Wunsch entfernt)
   daten.ts               Live-Hooks (Einträge, Gewichte, Saison-Auswahl)
 src/styles.css           Tokens beider Themes + Erfassungsscreen
 src/app.css              Gerüst und Auswertungsansichten
