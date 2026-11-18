@@ -71,7 +71,7 @@ try {
 }
 
 http_response_code($antwort->status);
-$kopf = ['Content-Type' => 'application/json; charset=utf-8', 'X-Content-Type-Options' => 'nosniff', 'Cache-Control' => 'no-store'] + $antwort->kopf;
+$kopf = ['Content-Type' => 'application/json; charset=utf-8', 'X-Content-Type-Options' => 'nosniff', 'X-Robots-Tag' => 'noindex, nofollow', 'Cache-Control' => 'no-store'] + $antwort->kopf;
 if ($pfad === '/api/status') {
     $oeffentlich = filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false;
     $kopf['X-Adresse-Erkannt'] = $oeffentlich ? 'ja' : 'nein';

@@ -1,0 +1,5 @@
+# Glühlabor ist ein privates Projekt und soll in keiner Suchmaschine auftauchen.
+# Absichtlich NICHT per "Disallow" gesperrt: Eine Suchmaschine muss die Seite abrufen dürfen, um das "noindex"
+# (Meta-Tag und Header X-Robots-Tag) zu sehen. Gesperrte Adressen können sonst allein wegen eines Links im Index landen.
+User-agent: *
+Allow: /

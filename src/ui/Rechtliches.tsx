@@ -11,8 +11,9 @@ import { useGeraetId } from './daten';
 const B = betreiberJson as unknown as Betreiber;
 const fehlt = fehlendeAngaben(B);
 
+/** Erinnerung nur beim Entwickeln. Öffentlich soll kein Hinweis auf fehlende Angaben stehen; das prüft `npm run launch-check`. */
 function Fehlt() {
-  if (fehlt.length === 0) return null;
+  if (!import.meta.env.DEV || fehlt.length === 0) return null;
   return (
     <div class="karte" style={{ borderColor: 'var(--warnung)', marginBottom: '14px' }}>
       <b>Die Betreiberangaben sind noch nicht vollständig.</b>
@@ -20,6 +21,9 @@ function Fehlt() {
     </div>
   );
 }
+
+/** Name, Straße (falls angegeben) und Ort. */
+const anschrift = [B.name, B.strasse, B.ort].map((x) => (x ?? '').trim()).filter(Boolean);
 
 export function Impressum() {
   return (
@@ -32,17 +36,23 @@ export function Impressum() {
       </div>
       <Fehlt />
       <section class="karte text-seite">
-        <h2>Angaben nach § 5 DDG</h2>
+        <h2>Privates Projekt</h2>
         <p>
-          {B.name || '…'}
-          <br />
-          {B.strasse || '…'}
-          <br />
-          {B.ort || '…'}
+          {MARKE.name} ist ein <b>rein privates Spaßprojekt</b> von {B.name || 'Philip'} (Hamburg) und David (Bayern). Es ist nicht
+          kommerziell: keine Werbung, keine Einnahmen, kein Angebot gegen Entgelt.
+        </p>
+        <h2>Verantwortlich</h2>
+        <p>
+          {anschrift.map((z, i) => (
+            <>
+              {i > 0 && <br />}
+              {z}
+            </>
+          ))}
         </p>
         <h2>Kontakt</h2>
         <p>
-          E-Mail: {B.email || '…'}
+          {B.email ? <>E-Mail: {B.email}</> : 'Kontakt über die Meldefunktion in der App.'}
           {B.telefon ? (
             <>
               <br />
@@ -58,8 +68,7 @@ export function Impressum() {
         </p>
         <h2>Haftung für Links</h2>
         <p>
-          {MARKE.name} ist ein privates Hobbyprojekt von {B.name || 'den Betreibern'} (David aus Bayern und Philip aus Hamburg)
-          ohne kommerzielle Absicht. Für Inhalte externer Seiten sind deren Betreiber verantwortlich.
+          Für Inhalte externer Seiten, auf die verlinkt wird, sind deren Betreiber verantwortlich.
         </p>
       </section>
       <Fuss />
@@ -82,7 +91,8 @@ export function Datenschutz() {
       <section class="karte text-seite">
         <h2>1. Wer verantwortlich ist</h2>
         <p>
-          {B.name || '…'}, {B.strasse || '…'}, {B.ort || '…'}. E-Mail: {B.email || '…'}.
+          {anschrift.join(', ')}.{B.email ? ` E-Mail: ${B.email}.` : ' Kontakt über die Meldefunktion in der App.'} Es handelt sich um ein privates, nicht
+          kommerzielles Projekt.
         </p>
 
         <h2>2. Auf deinem Gerät</h2>
@@ -151,7 +161,7 @@ export function Datenschutz() {
           Widerspruch sowie auf Widerruf einer Einwilligung. Du kannst dich bei einer Datenschutz-Aufsichtsbehörde beschweren.
         </p>
         <p>
-          <b>Löschen oder Namen entfernen:</b> Schreib an {B.email || '…'} und nenne deine Geräte-Kennung. Wir entfernen auf
+          <b>Löschen oder Namen entfernen:</b> {B.email ? `Schreib an ${B.email}` : 'Melde dich über die Kontaktangabe im Impressum'} und nenne deine Geräte-Kennung. Wir entfernen auf
           Wunsch nur deinen Namen von allen deinen Bewertungen oder alle Bewertungen dieses Geräts. Deine Kennung:{' '}
           <span class="mono" style={{ wordBreak: 'break-all', userSelect: 'all' }}>
             {geraet ?? 'wird beim ersten Bewerten angelegt'}

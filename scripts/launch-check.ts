@@ -1,7 +1,7 @@
 // Startcheck: Ist alles bereit, bevor der Link verteilt wird? Meldet jeden offenen Punkt.
 //   npm run launch-check
 import { readFileSync } from 'node:fs';
-import { fehlendeAngaben, type Betreiber } from '../src/lib/betreiber';
+import { fehlendeAngaben, hinweise, type Betreiber } from '../src/lib/betreiber';
 
 const lies = (p: string) => JSON.parse(readFileSync(p, 'utf8'));
 const SEITE_URL: string = lies('data/server.json').seite || 'https://gluehlabor.de/';
@@ -14,6 +14,7 @@ const pruefe = (ok: boolean, text: string, hinweis?: string) => ergebnisse.push(
 // 1. Betreiberangaben
 const fehlt = fehlendeAngaben(lies('data/betreiber.json') as Partial<Betreiber>);
 pruefe(fehlt.length === 0, 'Impressum: Betreiberangaben vollständig', fehlt.length ? `fehlt: ${fehlt.join(', ')} (data/betreiber.json)` : undefined);
+for (const h of hinweise(lies('data/betreiber.json') as Partial<Betreiber>)) console.log(`HINWEIS ${h}`);
 
 // 2. Server eingetragen und erreichbar
 const roh = ((process.env.VITE_API_URL ?? '') || lies('data/server.json').apiUrl || '').trim();
@@ -75,6 +76,11 @@ try {
   pruefe(r.ok, 'Live-Seite erreichbar', `Status ${r.status}`);
   // Link-Vorschau: Das Bild muss unter der angegebenen absoluten Adresse liegen und unter 300 KB bleiben (WhatsApp).
   const html = await r.text();
+  // Nicht bei Suchmaschinen listen: Header, Meta-Tag und robots.txt (die darf die Seite nicht sperren, sonst sieht Google das noindex nicht)
+  pruefe((r.headers.get('x-robots-tag') ?? '').includes('noindex'), 'Suchmaschinen: Header X-Robots-Tag noindex', 'php/htaccess.txt: Header X-Robots-Tag; läuft die Seite über Apache mit mod_headers?');
+  pruefe(/<meta name="robots" content="[^"]*noindex/.test(html), 'Suchmaschinen: Meta-Tag robots noindex', 'index.html prüfen');
+  const rt = await fetch(SEITE + '/robots.txt');
+  pruefe(rt.ok && !/^\s*Disallow:\s*\/\s*$/m.test(await rt.text()), 'robots.txt vorhanden und sperrt nicht alles', 'sonst sieht Google das noindex nicht');
   const bildUrl = /property="og:image" content="([^"]+)"/.exec(html)?.[1];
   pruefe(Boolean(bildUrl), 'Link-Vorschau: og:image gesetzt', 'index.html prüfen');
   if (bildUrl) {

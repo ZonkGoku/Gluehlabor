@@ -34,6 +34,7 @@ export const CSP = [
 ].join('; ');
 
 export const SICHERHEITSKOEPFE: Record<string, string> = {
+  'X-Robots-Tag': 'noindex, nofollow, noarchive, nosnippet, noimageindex',
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'no-referrer',
   'X-Frame-Options': 'DENY',

@@ -1,8 +1,8 @@
 {
-  "_hinweis": "Angaben für Impressum und Datenschutzerklärung. Name, Straße, Ort und E-Mail sind Pflicht, bevor die Seite öffentlich beworben wird (npm run launch-check prüft das).",
-  "name": "",
+  "_hinweis": "Angaben für Impressum und Datenschutzerklärung. Pflicht für den Start: Name, Ort und E-Mail (npm run launch-check prüft das). Die Straße ist bewusst weggelassen; mit Anschrift wäre das Impressum rechtlich belastbarer.",
+  "name": "Philip Behrend",
   "strasse": "",
-  "ort": "",
+  "ort": "Hamburg",
   "email": "",
   "telefon": "",
   "hostingStandort": ""

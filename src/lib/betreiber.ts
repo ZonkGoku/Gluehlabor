@@ -9,12 +9,21 @@ export interface Betreiber {
   hostingStandort?: string;
 }
 
+// Die Straße ist keine Pflicht für den Start: Philip hat sich bewusst für Name und Ort entschieden (privates Spaßprojekt).
 const PFLICHT: [keyof Betreiber, string][] = [
   ['name', 'Name'],
-  ['strasse', 'Straße und Hausnummer'],
-  ['ort', 'Postleitzahl und Ort'],
+  ['ort', 'Ort'],
   ['email', 'E-Mail-Adresse'],
 ];
+
+/** Hinweise, die den Start nicht blockieren, aber bekannt sein sollten. */
+export function hinweise(b: Partial<Betreiber>): string[] {
+  const h: string[] = [];
+  if (!(b.strasse ?? '').trim()) {
+    h.push('Keine Straße angegeben: Ein Impressum ohne vollständige Anschrift ist rechtlich angreifbar (nach § 5 DDG zählt eine ladungsfähige Anschrift). Hier bewusst so entschieden.');
+  }
+  return h;
+}
 
 /** Welche Pflichtangaben fehlen noch? Leere Liste = vollständig. */
 export function fehlendeAngaben(b: Partial<Betreiber>): string[] {

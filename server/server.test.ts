@@ -67,6 +67,10 @@ describe('statische Dateien', () => {
     expect((await fetch(basis + '/')).headers.get('strict-transport-security')).toBeNull();
     expect((await fetch(basis + '/', { headers: { 'X-Forwarded-Proto': 'https' } })).headers.get('strict-transport-security')).toContain('max-age');
   });
+  it('sagt Suchmaschinen: nicht listen (Seite und Schnittstelle)', async () => {
+    expect((await fetch(basis + '/')).headers.get('x-robots-tag')).toContain('noindex');
+    expect((await fetch(basis + '/api/status')).headers.get('x-robots-tag')).toContain('noindex');
+  });
   it('POST auf Dateien: 405', async () => expect((await fetch(basis + '/', { method: 'POST' })).status).toBe(405));
 });
 
