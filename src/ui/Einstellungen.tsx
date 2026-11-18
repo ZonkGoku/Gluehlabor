@@ -1,12 +1,10 @@
-// Einstellungen dieses Geräts: Name, Prüfstelle, Verbindung, Gewichtung, Darstellung.
+// Minimal: Schreib-Token hinterlegen und prüfen, Theme wählen.
 import { useEffect, useState } from 'preact/hooks';
-import { api, ApiFehler } from '../daten/api';
-import { API_URL } from '../daten/config';
-import { db, holeGeraet, leseEinstellung, schreibeEinstellung, setzeName } from '../daten/db';
-import { abonniereSync, synchronisiere, type SyncInfo } from '../daten/sync';
-import { GRENZEN, pruefeName } from '../lib/community';
+import { REPO } from '../daten/config';
+import { db, leseEinstellung, schreibeEinstellung } from '../daten/db';
+import { synchronisiere } from '../daten/sync';
 import { Betreiber } from './bausteine';
-import { useGeraetId, useGewichte, useName } from './daten';
+import { useGewichte } from './daten';
 import { GewichteEditor } from './GewichteEditor';
 import { useLive } from './hooks';
 
@@ -17,56 +15,35 @@ export function wendeThemeAn(t: Theme) {
   else document.documentElement.setAttribute('data-theme', t);
 }
 
-const VERBINDUNG: Record<SyncInfo['zustand'], string> = {
-  bereit: 'Verbunden. Neue Becher gehen automatisch zum Server.',
-  laeuft: 'Synchronisiere …',
-  offline: 'Gerade kein Netz. Becher bleiben auf dem Gerät und gehen später zum Server.',
-  'kein-server': 'Kein Community-Server eingerichtet. Alles bleibt auf diesem Gerät.',
-  fehler: 'Der Server hat einen Fehler gemeldet.',
-  gesperrt: 'Dieses Gerät wurde gesperrt.',
-};
-
 export function Einstellungen() {
-  const gewichte = useGewichte();
-  const gespeicherterName = useName();
-  const geraetId = useGeraetId();
-  const [name, setName] = useState('');
-  const [nameMeldung, setNameMeldung] = useState('');
+  const [token, setToken] = useState('');
   const [theme, setTheme] = useState<Theme>('auto');
-  const [info, setInfo] = useState<SyncInfo>({ zustand: 'bereit' });
-  const [code, setCode] = useState('');
-  const [codeMeldung, setCodeMeldung] = useState('');
+  const [meldung, setMeldung] = useState('');
+  const gewichte = useGewichte();
   const offen = useLive(() => db.eintraege.where('sync').equals('offen').count(), [], 0);
-  const abgelehnt = useLive(() => db.eintraege.where('sync').equals('abgelehnt').count(), [], 0);
-  const pruefstelle = useLive(() => leseEinstellung<boolean>('pruefstelle', false), [], false);
-  const nameFehler = useLive(() => leseEinstellung<string>('nameFehler', ''), [], '');
 
-  useEffect(() => abonniereSync(setInfo), []);
   useEffect(() => {
+    void leseEinstellung('token', '').then(setToken);
     void leseEinstellung<Theme>('theme', 'auto').then(setTheme);
   }, []);
-  useEffect(() => setName(gespeicherterName), [gespeicherterName]);
 
-  const speichereName = async () => {
-    const p = pruefeName(name);
-    if (!p.ok) return setNameMeldung(p.grund);
-    await setzeName(p.name ?? '');
-    await schreibeEinstellung('nameFehler', '');
-    await schreibeEinstellung('nameAbgelehnt', true); // die Frage auf der Startseite entfällt
-    setNameMeldung(p.name ? `Gespeichert: ${p.name}` : 'Du bist jetzt anonym.');
+  const speichern = async () => {
+    await schreibeEinstellung('token', token.trim());
+    setMeldung('Token gespeichert.');
     void synchronisiere();
   };
 
-  const schalteFrei = async () => {
-    setCodeMeldung('Prüfe …');
+  const pruefen = async () => {
+    setMeldung('Prüfe …');
     try {
-      await api('/api/pruefstelle', { methode: 'POST', geraet: await holeGeraet(), body: { code: code.trim() } });
-      setCode('');
-      setCodeMeldung('Dieses Gerät ist jetzt Prüfstelle.');
-      void synchronisiere();
-    } catch (err) {
-      if (err instanceof ApiFehler) setCodeMeldung(err.message);
-      else setCodeMeldung('Kein Netz. Bitte später erneut versuchen.');
+      const res = await fetch(`https://api.github.com/repos/${REPO.owner}/${REPO.name}`, {
+        headers: { Authorization: `Bearer ${token.trim()}`, Accept: 'application/vnd.github+json' },
+      });
+      if (!res.ok) return setMeldung(`Abgelehnt (${res.status}). Token oder Rechte falsch.`);
+      const repo = await res.json();
+      setMeldung(repo.permissions?.push ? 'Schreibrecht vorhanden.' : 'Token gültig, aber ohne Schreibrecht.');
+    } catch {
+      setMeldung('Kein Netz.');
     }
   };
 
@@ -85,87 +62,39 @@ export function Einstellungen() {
         </div>
       </div>
       <div class="raster">
-        <section class="karte seite" style={{ padding: '18px' }}>
-          <h2 style={{ margin: 0 }}>Dein Name · freiwillig</h2>
-          <p style={{ margin: '8px 0 0' }}>
-            Er steht öffentlich neben deinen Bewertungen. Wenn du dir zum ersten Mal einen Namen gibst, gilt er auch für Becher,
-            die du schon abgegeben hast. Ohne Namen erscheinst du als „Anonym". Besser kein voller echter Name. Ein Konto
-            brauchst du nicht.
-          </p>
-          <label for="name">Name oder Spitzname</label>
-          <input
-            id="name"
-            class="feld"
-            type="text"
-            maxLength={GRENZEN.name}
-            autocomplete="nickname"
-            value={name}
-            onInput={(e) => {
-              setName((e.target as HTMLInputElement).value);
-              setNameMeldung('');
-            }}
-            onKeyDown={(e) => e.key === 'Enter' && void speichereName()}
-          />
-          <div class="knopfreihe">
-            <button class="knopf primaer" onClick={() => void speichereName()}>
-              Speichern
-            </button>
-          </div>
-          {(nameMeldung || nameFehler) && <div class="meldung">{nameMeldung || `Der Server hat den Namen abgelehnt: ${nameFehler}`}</div>}
+        <section class="karte">
+          <h2>Gewichtung · gilt für alle Ansichten</h2>
+          <GewichteEditor gewichte={gewichte} />
         </section>
 
         <section class="karte seite" style={{ padding: '18px' }}>
-          <h2 style={{ margin: 0 }}>Verbindung</h2>
-          <p style={{ margin: '8px 0 0' }}>{VERBINDUNG[info.zustand]}</p>
-          {info.meldung && <div class="meldung">{info.meldung}</div>}
+          <h2 style={{ margin: 0 }}>Eintragen · nur David &amp; Philip</h2>
+          <p style={{ margin: '8px 0 0' }}>
+            Lesen kann jeder. Wer eintragen will, hinterlegt einmal pro Gerät einen GitHub-Token. Danach erscheint der
+            Knopf zum Erfassen, und jeder Becher landet automatisch im gemeinsamen Datenbestand.
+          </p>
+          <label for="token">GitHub-Token (fine-grained, nur {REPO.owner}/{REPO.name}, Contents: Read and write)</label>
+          <input
+            id="token"
+            class="feld"
+            type="password"
+            autocomplete="off"
+            value={token}
+            onInput={(e) => setToken((e.target as HTMLInputElement).value)}
+          />
           <div class="knopfreihe">
-            <button class="knopf" disabled={!API_URL} onClick={() => void synchronisiere()}>
+            <button class="knopf primaer" onClick={speichern}>
+              Speichern
+            </button>
+            <button class="knopf" onClick={pruefen}>
+              Prüfen
+            </button>
+            <button class="knopf" onClick={() => void synchronisiere()}>
               Jetzt synchronisieren ({offen} offen)
             </button>
           </div>
-          {abgelehnt > 0 && (
-            <p class="meldung" style={{ color: 'var(--warnung)' }}>
-              {abgelehnt} {abgelehnt === 1 ? 'Becher wurde' : 'Becher wurden'} vom Server abgelehnt und bleiben nur auf diesem Gerät.
-            </p>
-          )}
-          <p style={{ fontSize: '12.5px' }}>
-            Geräte-Kennung: <span class="mono">{geraetId ? geraetId.slice(0, 8) : 'wird beim ersten Becher angelegt'}</span>. Sie ist
-            anonym und enthält keine persönlichen Daten.
-          </p>
-        </section>
-
-        <section class="karte seite" style={{ padding: '18px' }}>
-          <h2 style={{ margin: 0 }}>Prüfstelle · nur David &amp; Philip</h2>
-          {pruefstelle ? (
-            <p style={{ margin: '8px 0 0' }}>Dieses Gerät ist als Prüfstelle freigeschaltet. Eure Bewertungen tragen das Siegel „Prüfstelle".</p>
-          ) : (
-            <>
-              <p style={{ margin: '8px 0 0' }}>
-                Mit dem Prüfstellen-Code tragen eure Bewertungen das Siegel „Prüfstelle". Alle anderen erscheinen als Community.
-              </p>
-              <label for="code">Prüfstellen-Code</label>
-              <input
-                id="code"
-                class="feld"
-                type="password"
-                autocomplete="off"
-                disabled={!API_URL}
-                value={code}
-                onInput={(e) => setCode((e.target as HTMLInputElement).value)}
-              />
-              <div class="knopfreihe">
-                <button class="knopf" disabled={!API_URL || !code.trim()} onClick={() => void schalteFrei()}>
-                  Freischalten
-                </button>
-              </div>
-              {codeMeldung && <div class="meldung">{codeMeldung}</div>}
-            </>
-          )}
-        </section>
-
-        <section class="karte" style={{ padding: '18px' }}>
-          <h2>Gewichtung · gilt für alle Ansichten</h2>
-          <GewichteEditor gewichte={gewichte} />
+          {meldung && <div class="meldung">{meldung}</div>}
+          <p>Der Token bleibt auf diesem Gerät. Ohne Netz wird lokal weiter erfasst; nichts geht verloren.</p>
         </section>
 
         <section class="karte seite" style={{ padding: '18px' }}>
