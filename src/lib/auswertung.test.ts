@@ -139,13 +139,13 @@ describe('Rangliste mit Filter', () => {
   it('Saison 2025: Plätze wie im Sheet', () => {
     const z = ranglisteMitWertung(filtere(bestand, { saison: 2025, markt: 'alle' }), DEFAULT_GEWICHTE);
     expect(z.map((x) => x.rang)).toEqual([1, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]);
-    expect(z[3].eintrag.stand).toBe('Otten Schleenwurm');
+    expect(z[3].eintrag.stand).toBe('Schleenwurm');
   });
   it('Marktfilter rankt neu', () => {
     const z = ranglisteMitWertung(filtere(bestand, { saison: 'alle', markt: 'Ottensen' }), DEFAULT_GEWICHTE);
     expect(z.map((x) => [x.rang, x.eintrag.stand])).toEqual([
-      [1, 'Otten Schleenwurm'],
-      [2, 'Otten Tallinn'],
+      [1, 'Schleenwurm'],
+      [2, 'Tallinn'],
     ]);
   });
   it('Stadtfilter', () => {

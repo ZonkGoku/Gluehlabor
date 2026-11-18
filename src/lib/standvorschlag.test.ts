@@ -9,7 +9,7 @@ const BESTAND = [
   E('Ikea Altona', 'Ikea Altona'),
   E('Glühweinkönig', 'Christkindlesmarkt'),
   E('Glühweinkönig', 'Rathausmarkt'),
-  E('Otten Schleenwurm', 'Ottensen'),
+  E('Schleenwurm', 'Ottensen'),
   E('Santa Pauli', 'Santa Pauli'),
 ];
 

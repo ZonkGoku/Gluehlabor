@@ -65,8 +65,9 @@ describe('Bestandsdaten 2025', () => {
     expect(eintraege.find((e) => e.stand === 'Gaensemarkt')!.markt).toBe('Gänsemarkt');
   });
 
-  it('„Salz" und „Trauen" waren nie Teil der Namen: Salzburg und Traunstein sind Städte', () => {
-    expect(eintraege.some((e) => /^salz\b|^trauen\b/i.test(e.stand))).toBe(false);
+  it('„Salz", „Trauen" und „Otten" waren nie Teil der Namen: Salzburg, Traunstein und Ottensen sind Orte', () => {
+    expect(eintraege.some((e) => /^(salz|trauen|otten)\b/i.test(e.stand))).toBe(false);
+    expect(eintraege.filter((e) => e.markt === 'Ottensen').map((e) => e.stand)).toEqual(['Schleenwurm', 'Tallinn']);
     expect(eintraege.filter((e) => e.stadt === 'Salzburg').map((e) => e.stand)).toEqual(['Chrom', 'Oma', 'Kameraden', 'Kroate', 'Pfadfinder', 'Stern']);
     expect(eintraege.find((e) => e.stand === 'Max')).toMatchObject({ stadt: 'Traunstein', markt: 'Sonstiger' });
   });
