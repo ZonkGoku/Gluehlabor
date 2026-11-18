@@ -35,6 +35,7 @@ const EINREICHUNGEN: unknown[] = [
   gut({ erstelltAm: JETZT - 121 * 86_400_000 }), gut({ erstelltAm: JETZT + 2 * 86_400_000 }), gut({ erstelltAm: 'x' }), gut({ erstelltAm: JETZT - 1000.6 }),
   gut({ datum: '2026-02-30' }), gut({ datum: '2026-13-01' }), gut({ datum: '5.12.2026' }), gut({ datum: '2026-12-08' }), gut({ datum: '2026-12-10' }), gut({ datum: null }), gut({ datum: 5 }),
   gut({ sorte: 'rot' }), gut({ sorte: 'bier' }), gut({ sorte: 5 }), gut({ becherNr: 0 }), gut({ becherNr: 7 }), gut({ becherNr: 8 }), gut({ becherNr: 2.5 }), gut({ becherNr: 3 }),
+  gut({ menge: 0.25 }), gut({ menge: 0.2 }), gut({ menge: 1 }), gut({ menge: 0.05 }), gut({ menge: 1.5 }), gut({ menge: 'x' }), gut({ menge: null }), gut({ menge: 0.333 }),
   gut({ preis: 4.5 }), gut({ preis: 4.555 }), gut({ preis: -1 }), gut({ preis: 50 }), gut({ preis: 50.01 }), gut({ preis: 'x' }), gut({ preis: 0 }),
   gut({ besuchId: 'abc' }), gut({ besuchId: 'abcd' }), gut({ besuchId: 'a'.repeat(33) }), gut({ besuchId: 'ab cd' }),
   gut({ noten: {} }), gut({ noten: null }), gut({ noten: 5 }), gut({ noten: { ...leereNoten() } }), gut({ noten: { ...leereNoten(), geschmack: 0 } }),

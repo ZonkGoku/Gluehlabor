@@ -15,7 +15,7 @@ import { TopKarte } from './nacht/Ticket';
 import { useEintraege, useGeraetId, useGewichte } from './daten';
 import { ANKER, MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
-import { t, kriteriumLabel } from '../i18n';
+import { t, kriteriumLabel, aktuelleSprache } from '../i18n';
 
 const SORTE: Record<string, string> = {
   rot: 'Rot',
@@ -67,7 +67,7 @@ export function Detail({ id }: { id: string }) {
     datumKurz(e.datum),
     e.sorte && t(SORTE[e.sorte]),
     e.becherNr !== undefined && t('{n}. Becher des Abends', { n: e.becherNr }),
-    e.preis !== undefined && euro(e.preis),
+    e.preis !== undefined && `${euro(e.preis)}${e.menge ? ` / ${String(e.menge).replace('.', aktuelleSprache() === 'en' ? '.' : ',')} l` : ''}`,
   ].filter(Boolean) as string[];
 
   return (

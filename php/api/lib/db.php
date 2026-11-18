@@ -102,12 +102,25 @@ final class Db
         return (int) $this->eins("SELECT wert FROM zaehler WHERE name = 'seq'")['wert'];
     }
 
+    /** Bringt eine ältere Datenbank auf den heutigen Stand (neue Spalten). Läuft bei jedem Start, ist aber nach dem ersten Mal wirkungslos. */
+    private function aktualisiere(): void
+    {
+        $kommazahl = $this->typ === 'mysql' ? 'DOUBLE' : 'REAL';
+        $hatMenge = $this->typ === 'mysql'
+            ? $this->eins("SELECT 1 AS x FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'becher' AND column_name = 'menge'")
+            : $this->eins("SELECT 1 AS x FROM pragma_table_info('becher') WHERE name = 'menge'");
+        if (!$hatMenge) {
+            $this->pdo->exec("ALTER TABLE becher ADD COLUMN menge $kommazahl");
+        }
+    }
+
     private function schema(): void
     {
         $vorhanden = $this->typ === 'mysql'
             ? $this->eins("SELECT 1 AS x FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'geraete'")
             : $this->eins("SELECT 1 AS x FROM sqlite_master WHERE type = 'table' AND name = 'geraete'");
         if ($vorhanden) {
+            $this->aktualisiere();
             return;
         }
         $my = $this->typ === 'mysql';
@@ -125,7 +138,7 @@ final class Db
             "CREATE TABLE becher (
                seq $zahl NOT NULL, id $id PRIMARY KEY, geraet_id $id NOT NULL, name $text,
                pruefstelle INTEGER NOT NULL DEFAULT 0, besuch_id $text, stand $text NOT NULL, markt $text NOT NULL,
-               stadt $text, saison INTEGER NOT NULL, datum $text, sorte $text, becher_nr INTEGER, preis $kommazahl,
+               stadt $text, saison INTEGER NOT NULL, datum $text, sorte $text, becher_nr INTEGER, preis $kommazahl, menge $kommazahl,
                notiz $gross, geschmack INTEGER, geruch INTEGER, temperatur INTEGER, personal INTEGER,
                atmosphaere INTEGER, preis_leistung INTEGER, becher INTEGER,
                erstellt_am $zahl NOT NULL, eingegangen_am $zahl NOT NULL, versteckt INTEGER NOT NULL DEFAULT 0)$ende",

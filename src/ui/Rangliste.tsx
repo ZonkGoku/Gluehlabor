@@ -11,7 +11,7 @@ import { GewichteEditor } from './GewichteEditor';
 import { useEinblenden } from './nacht/bewegung';
 import { Chips } from './nacht/Chips';
 import { PruefSiegel } from './nacht/PruefSiegel';
-import { StandTopKarte, StandZeile } from './nacht/StandKarten';
+import { DealZeile, StandTopKarte, StandZeile } from './nacht/StandKarten';
 import { MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
 import { t, tn } from '../i18n';
@@ -26,6 +26,7 @@ export function Rangliste() {
   const [saison, setSaison] = useSaison(alle);
   const [markt, setMarkt] = useState<string>('alle');
   const [quelle, setQuelle] = useState<Quelle>('alle');
+  const [ansicht, setAnsicht] = useState<'gesamt' | 'deals'>(() => (location.hash.includes('deals') ? 'deals' : 'gesamt'));
   const [gewichteOffen, setGewichteOffen] = useState(false);
   const wurzel = useEinblenden<HTMLDivElement>();
   if (!alle) return null;
@@ -46,6 +47,7 @@ export function Rangliste() {
   const bewertungen = zeilen.reduce((n, s) => n + s.wert.anzahl, 0);
   const podest = zeilen.slice(0, 3);
   const rest = zeilen.slice(3);
+  const deals = zeilen.filter((s) => s.deal.punkte !== null).sort((a, b) => (a.deal.rang ?? 1e9) - (b.deal.rang ?? 1e9));
 
   return (
     <div class="nm">
@@ -56,6 +58,13 @@ export function Rangliste() {
         <h1 class="mt-2 font-display text-[44px] uppercase leading-[1] tracking-wide text-eis sm:text-5xl">{t('Rangliste')}</h1>
         <div class="mt-4 flex flex-wrap items-center gap-2.5">
           <Chips optionen={['alle', ...jahre] as const} wert={saison} onWahl={setSaison} beschriftung={t('Saison')} label={(o) => (o === 'alle' ? t('Alle') : String(o))} />
+          <Chips
+            optionen={['gesamt', 'deals'] as const}
+            wert={ansicht}
+            onWahl={setAnsicht}
+            beschriftung={t('Ansicht')}
+            label={(o) => (o === 'gesamt' ? t('Gesamt') : t('Top Deals'))}
+          />
           <Chips
             optionen={['alle', 'pruefstelle', 'community'] as const}
             wert={quelle}
@@ -105,6 +114,24 @@ export function Rangliste() {
           <p class="mt-2 text-dunst">{t('Andere Saison, anderen Markt oder eine andere Wertung wählen.')}</p>
         </div>
       ) : (
+        ansicht === 'deals' ? (
+          <div ref={wurzel}>
+            <p class="mb-3 text-sm text-dunst">
+              {t('Top Deals: das beste Verhältnis aus Glühwein und Preis. Preis-Leistung = Glühwein-Note, 0,5 Punkte weniger je Euro über dem üblichen Preis der Stadt.')}
+            </p>
+            {deals.length === 0 ? (
+              <p class="glas rounded-3xl p-6 text-center text-dunst">{t('Noch keine Preis-Leistung für diese Auswahl.')}</p>
+            ) : (
+              <ol class="grid gap-2 md:grid-cols-2">
+                {deals.map((s) => (
+                  <li data-ein>
+                    <DealZeile stand={s} />
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        ) : (
         <div ref={wurzel}>
           {/* Sammelkarten: am Telefon zum Wischen, am Rechner nebeneinander */}
           <ol class="ohne-balken -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-6 pt-2 md:mx-0 md:grid md:grid-cols-3 md:items-stretch md:overflow-visible md:px-0">
@@ -125,6 +152,7 @@ export function Rangliste() {
             </ol>
           )}
         </div>
+        )
       )}
       <p class="mt-4 flex items-start gap-1.5 text-xs text-dunst">
         <span class="mt-0.5 shrink-0">

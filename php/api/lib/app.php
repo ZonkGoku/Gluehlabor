@@ -193,6 +193,9 @@ function alsEintrag(array $z): array
     if ($z['preis'] !== null) {
         $e['preis'] = (float) $z['preis'];
     }
+    if ($z['menge'] !== null) {
+        $e['menge'] = (float) $z['menge'];
+    }
     if ($z['notiz']) {
         $e['notiz'] = $z['notiz'];
     }
@@ -213,12 +216,12 @@ function fuegeEin(Db $db, array $e, string $geraetId, ?string $name, bool $pruef
         $n = $e['noten'];
         $db->lauf(
             'INSERT INTO becher (seq, id, geraet_id, name, pruefstelle, besuch_id, stand, markt, stadt, saison, datum, sorte,
-               becher_nr, preis, notiz, geschmack, geruch, temperatur, personal, atmosphaere, preis_leistung, becher,
+               becher_nr, preis, menge, notiz, geschmack, geruch, temperatur, personal, atmosphaere, preis_leistung, becher,
                erstellt_am, eingegangen_am, versteckt)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)',
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)',
             [
                 $seq, $e['id'], $geraetId, $name, $pruefstelle ? 1 : 0, $e['besuchId'], $e['stand'], $e['markt'], $e['stadt'],
-                $e['saison'], $e['datum'], $e['sorte'], $e['becherNr'], $e['preis'], $e['notiz'],
+                $e['saison'], $e['datum'], $e['sorte'], $e['becherNr'], $e['preis'], $e['menge'], $e['notiz'],
                 $n['geschmack'], $n['geruch'], $n['temperatur'], $n['personal'], $n['atmosphaere'],
                 $n['preisLeistung'], $n['becher'], $e['erstelltAm'], $jetzt,
             ],
@@ -423,6 +426,11 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
                 continue;
             }
             $e = $p['eintrag'];
+            // Preis-Leistung wird aus dem Preis berechnet: Ohne Preis nimmt der Server keine neue Bewertung an.
+            if ($e['preis'] === null) {
+                $ergebnisse[] = ['id' => $e['id'], 'status' => 'abgelehnt', 'grund' => 'Der Preis fehlt.'];
+                continue;
+            }
             $vorhanden = $db->eins('SELECT geraet_id FROM becher WHERE id = ?', [$e['id']]);
             if ($vorhanden) {
                 $ergebnisse[] = $vorhanden['geraet_id'] === $g['id']
@@ -586,7 +594,7 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
                 if ($db->eins('SELECT id FROM becher WHERE id = ?', [$id])) {
                     aendere(
                         $db,
-                        "versteckt = 1, name = NULL, notiz = NULL, stadt = NULL, stand = '-', markt = '-', besuch_id = NULL, geschmack = NULL, geruch = NULL, temperatur = NULL, personal = NULL, atmosphaere = NULL, preis_leistung = NULL, becher = NULL, preis = NULL",
+                        "versteckt = 1, name = NULL, notiz = NULL, stadt = NULL, stand = '-', markt = '-', besuch_id = NULL, geschmack = NULL, geruch = NULL, temperatur = NULL, personal = NULL, atmosphaere = NULL, preis_leistung = NULL, becher = NULL, preis = NULL, menge = NULL",
                         [],
                         $id,
                     );
@@ -636,7 +644,7 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
                         $db,
                         "versteckt = 1, name = NULL, notiz = NULL, stadt = NULL, stand = '-', markt = '-', besuch_id = NULL,
                          geschmack = NULL, geruch = NULL, temperatur = NULL, personal = NULL, atmosphaere = NULL,
-                         preis_leistung = NULL, becher = NULL, preis = NULL",
+                         preis_leistung = NULL, becher = NULL, preis = NULL, menge = NULL",
                         [],
                         (string) $z['id'],
                     );

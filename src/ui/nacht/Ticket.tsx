@@ -6,6 +6,7 @@ import type { Zeile } from '../../lib/auswertung';
 import { anzeigeName, istPruefstelle } from '../../lib/community';
 import { zahl2 } from '../../lib/format';
 import { UrteilPill } from '../bausteine';
+import { DealMarke } from './DealMarke';
 import { PruefSiegel } from './PruefSiegel';
 import { Symbol } from '../Symbol';
 import { useNeigung, useZaehler } from './bewegung';
@@ -134,6 +135,8 @@ interface TopKarteProps {
   teilenLink?: string;
   /** Prüfsiegel zeigen (Stand mit Bewertung der Prüfstelle). */
   siegel?: boolean;
+  /** „Top Deal"-Marke neben dem Urteil. */
+  deal?: boolean;
 }
 
 /** Kopfteil der Karte: Link zur Detailseite oder einfacher Block. */
@@ -149,7 +152,7 @@ function Inhalt({ href, children }: { href?: string; children: ComponentChildren
 }
 
 /** Die Karte für einen Spitzenplatz. */
-export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, ohneLink = false, href, stempel, von, teilenLink, siegel = false }: TopKarteProps) {
+export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, ohneLink = false, href, stempel, von, teilenLink, siegel = false, deal = false }: TopKarteProps) {
   const { eintrag: e, wertung: w, rang } = zeile;
   const pruef = istPruefstelle(e);
   const zeigeSiegel = siegel || (stempel === undefined && pruef);
@@ -205,8 +208,9 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
               <Messer etikett={t('Drumherum')} wert={w.drumherum} />
             </div>
           </div>
-          <div class="mt-3">
+          <div class="mt-3 flex flex-wrap items-center gap-2">
             <UrteilPill urteil={w.urteil} />
+            {deal && <DealMarke gross />}
           </div>
         </Inhalt>
       }

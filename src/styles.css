@@ -299,7 +299,7 @@ select.feld {
 /* Metadaten-Chips */
 .meta {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 6px;
 }
 .chip {
@@ -324,6 +324,33 @@ select.feld {
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: pointer;
+}
+.chip.preis {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-style: dashed;
+}
+.chip.preis.gesetzt {
+  border-style: solid;
+}
+.chip.preis.fehlt {
+  border-color: var(--warnung);
+  border-style: solid;
+}
+.chip-eingabe {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  outline: 0;
+}
+.chip-eingabe::placeholder {
+  color: var(--text-2);
 }
 .chip.gesetzt {
   border-color: var(--linie-stark);

@@ -170,6 +170,7 @@ interface BecherZeile {
   sorte: string | null;
   becher_nr: number | null;
   preis: number | null;
+  menge: number | null;
   notiz: string | null;
   geschmack: number | null;
   geruch: number | null;
@@ -208,6 +209,7 @@ function alsEintrag(z: BecherZeile): Record<string, unknown> {
   if (z.sorte) e.sorte = z.sorte;
   if (z.becher_nr !== null) e.becherNr = z.becher_nr;
   if (z.preis !== null) e.preis = z.preis;
+  if (z.menge !== null) e.menge = z.menge;
   if (z.notiz) e.notiz = z.notiz;
   if (z.name) e.name = z.name;
   if (z.besuch_id) e.besuchId = z.besuch_id;
@@ -232,13 +234,13 @@ function einfuegen(db: D1Like, e: Eintragsdaten, geraetId: string, name: string 
   return db
     .prepare(
       `INSERT INTO becher (seq, id, geraet_id, name, pruefstelle, besuch_id, stand, markt, stadt, saison, datum, sorte,
-         becher_nr, preis, notiz, geschmack, geruch, temperatur, personal, atmosphaere, preis_leistung, becher,
+         becher_nr, preis, menge, notiz, geschmack, geruch, temperatur, personal, atmosphaere, preis_leistung, becher,
          erstellt_am, eingegangen_am, versteckt)
-       VALUES (${NAECHSTE_SEQ}, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
+       VALUES (${NAECHSTE_SEQ}, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
     )
     .bind(
       e.id, geraetId, name, pruefstelle ? 1 : 0, e.besuchId ?? null, e.stand, e.markt, e.stadt ?? null, e.saison,
-      e.datum ?? null, e.sorte ?? null, e.becherNr ?? null, e.preis ?? null, e.notiz ?? null,
+      e.datum ?? null, e.sorte ?? null, e.becherNr ?? null, e.preis ?? null, e.menge ?? null, e.notiz ?? null,
       e.noten.geschmack, e.noten.geruch, e.noten.temperatur, e.noten.personal, e.noten.atmosphaere,
       e.noten.preisLeistung, e.noten.becher, e.erstelltAm, jetzt,
     );
@@ -394,6 +396,11 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
         ergebnisse.push({ id: rohId, status: 'abgelehnt', grund: p.grund });
         continue;
       }
+      // Preis-Leistung wird aus dem Preis berechnet: Ohne Preis nimmt der Server keine neue Bewertung an.
+      if (p.eintrag.preis === undefined) {
+        ergebnisse.push({ id: p.eintrag.id, status: 'abgelehnt', grund: 'Der Preis fehlt.' });
+        continue;
+      }
       const vorhanden = await db.prepare('SELECT geraet_id FROM becher WHERE id = ?').bind(p.eintrag.id).first<{ geraet_id: string }>();
       if (vorhanden) {
         ergebnisse.push(
@@ -536,7 +543,7 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
           .prepare(
             `UPDATE becher SET versteckt = 1, name = NULL, notiz = NULL, stadt = NULL, stand = '-', markt = '-', besuch_id = NULL,
                geschmack = NULL, geruch = NULL, temperatur = NULL, personal = NULL, atmosphaere = NULL,
-               preis_leistung = NULL, becher = NULL, preis = NULL, seq = ${NAECHSTE_SEQ} WHERE id = ?`,
+               preis_leistung = NULL, becher = NULL, preis = NULL, menge = NULL, seq = ${NAECHSTE_SEQ} WHERE id = ?`,
           )
           .bind(id)
           .run();
@@ -588,7 +595,7 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
               ? `UPDATE becher SET name = NULL, seq = ${NAECHSTE_SEQ} WHERE id = ?`
               : `UPDATE becher SET versteckt = 1, name = NULL, notiz = NULL, stadt = NULL, stand = '-', markt = '-', besuch_id = NULL,
                    geschmack = NULL, geruch = NULL, temperatur = NULL, personal = NULL, atmosphaere = NULL,
-                   preis_leistung = NULL, becher = NULL, preis = NULL, seq = ${NAECHSTE_SEQ} WHERE id = ?`,
+                   preis_leistung = NULL, becher = NULL, preis = NULL, menge = NULL, seq = ${NAECHSTE_SEQ} WHERE id = ?`,
           )
           .bind(z.id)
           .run();

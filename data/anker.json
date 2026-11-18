@@ -59,7 +59,8 @@
       "6": "Üblicher Preis für übliche Qualität.",
       "4": "Zu teuer für das, was drin ist.",
       "2": "Abzocke."
-    }
+    },
+    "zusatz": "wird automatisch aus Preis und Glühwein-Noten berechnet"
   },
   "becher": {
     "label": "Becher",

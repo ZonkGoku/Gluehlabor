@@ -57,7 +57,9 @@ export interface Eintrag {
   datum?: string; // ISO yyyy-mm-dd
   sorte?: Sorte;
   becherNr?: number; // 1..7
-  preis?: number; // Euro
+  preis?: number; // Euro, ohne Pfand
+  /** Größe der Tasse in Litern (z. B. 0.25). Ohne Angabe gilt 0,2 l. */
+  menge?: number;
   notiz?: string;
   foto?: string; // relativer Pfad im veröffentlichten Datenbestand
   noten: Noten;

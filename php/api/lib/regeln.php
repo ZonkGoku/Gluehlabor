@@ -173,6 +173,10 @@ function pruefeEinreichung(mixed $e, int $jetzt): array
     if ($preis !== null && (!istZahl($preis) || $preis < 0 || $preis > 50)) {
         return ['ok' => false, 'grund' => 'Ungültiger Preis.'];
     }
+    $menge = $e['menge'] ?? null;
+    if ($menge !== null && (!istZahl($menge) || $menge < 0.1 || $menge > 1)) {
+        return ['ok' => false, 'grund' => 'Ungültige Menge.'];
+    }
     $besuch = $e['besuchId'] ?? null;
     if ($besuch !== null && (!is_string($besuch) || preg_match('/^[A-Za-z0-9_-]{4,32}$/', $besuch) !== 1)) {
         return ['ok' => false, 'grund' => 'Ungültige Besuchs-Nr.'];
@@ -206,6 +210,7 @@ function pruefeEinreichung(mixed $e, int $jetzt): array
         'sorte' => is_string($sorte) ? $sorte : null,
         'becherNr' => $becherNr === null ? null : (int) $becherNr,
         'preis' => $preis === null ? null : round($preis * 100) / 100,
+        'menge' => $menge === null ? null : round($menge * 100) / 100,
         'notiz' => $notiz['wert'],
         'besuchId' => is_string($besuch) ? $besuch : null,
     ];

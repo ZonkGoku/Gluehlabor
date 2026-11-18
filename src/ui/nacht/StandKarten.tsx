@@ -1,8 +1,8 @@
 // Stände in den Karten und Zeilen der Ansichten: dieselben Bausteine wie bei einzelnen Bechern, nur mit Stand-Werten.
 import { t as tt, tn } from '../../i18n';
-import { zahl2 } from '../../lib/format';
+import { euro, zahl2 } from '../../lib/format';
 import { ortText } from '../../lib/orte';
-import { standAlsZeile, type Quelle, type Stand } from '../../lib/staende';
+import { dealAlsZeile, standAlsZeile, type Quelle, type Stand } from '../../lib/staende';
 import { MARKTLISTE } from '../stammdaten';
 import { RangZeile } from './RangZeile';
 import { TopKarte } from './Ticket';
@@ -34,6 +34,7 @@ export function StandTopKarte({ stand, klein, quelle = 'alle', hinweis, klasse, 
       teilenLink={standHref(stand)}
       stempel={stempel(stand)}
       siegel={stand.pruefstelle.anzahl > 0}
+      deal={stand.deal.top}
       von={quelle === 'alle' ? seitenText(stand) || tt('Alle Bewertungen') : quelle === 'pruefstelle' ? tt('Wertung der Prüfstelle') : tt('Wertung der Community')}
     />
   );
@@ -41,5 +42,21 @@ export function StandTopKarte({ stand, klein, quelle = 'alle', hinweis, klasse, 
 
 export function StandZeile({ stand }: { stand: Stand }) {
   const zeile = standAlsZeile(stand);
-  return <RangZeile zeile={zeile} ort={ortText(MARKTLISTE, zeile.eintrag)} href={standHref(stand)} zusatz={stempel(stand)} siegel={stand.pruefstelle.anzahl > 0} />;
+  return <RangZeile zeile={zeile} ort={ortText(MARKTLISTE, zeile.eintrag)} href={standHref(stand)} zusatz={stempel(stand)} siegel={stand.pruefstelle.anzahl > 0} deal={stand.deal.top} />;
+}
+
+/** Zeile der Top-Deals-Liste: Preis-Leistung statt Gesamtnote, dazu der übliche Preis. */
+export function DealZeile({ stand }: { stand: Stand }) {
+  const zeile = dealAlsZeile(stand);
+  const preis = stand.preis.median !== null ? `${euro(stand.preis.median)} ${tt('je 0,2 l')}` : null;
+  return (
+    <RangZeile
+      zeile={zeile}
+      ort={ortText(MARKTLISTE, zeile.eintrag)}
+      href={standHref(stand)}
+      zusatz={[preis, stempel(stand)].filter(Boolean).join(' · ')}
+      siegel={stand.pruefstelle.anzahl > 0}
+      deal={stand.deal.top}
+    />
+  );
 }

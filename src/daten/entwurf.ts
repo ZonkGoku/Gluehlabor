@@ -11,6 +11,8 @@ export interface Entwurf {
   sorte?: Sorte;
   becherNr?: number;
   preis?: number;
+  /** Größe der Tasse in Litern; ohne Angabe 0,2 l. */
+  menge?: number;
   notiz: string;
   noten: Noten;
   /** Stadt, wenn sie feststeht (z. B. aus einem QR-Code). */

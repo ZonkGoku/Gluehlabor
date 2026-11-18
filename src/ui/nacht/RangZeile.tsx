@@ -1,10 +1,11 @@
 // Zeile der Rangliste ab Platz 4 und in der Top 5 der Übersicht. Leicht gehalten: kein Glasfilter, damit lange Listen flüssig bleiben.
 import type { Zeile } from '../../lib/auswertung';
 import { zahl2 } from '../../lib/format';
+import { DealMarke } from './DealMarke';
 import { PruefSiegel } from './PruefSiegel';
 import { stufe } from './Ticket';
 
-export function RangZeile({ zeile, ort, href, zusatz, siegel = false }: { zeile: Zeile; ort?: string; href?: string; zusatz?: string; siegel?: boolean }) {
+export function RangZeile({ zeile, ort, href, zusatz, siegel = false, deal = false }: { zeile: Zeile; ort?: string; href?: string; zusatz?: string; siegel?: boolean; deal?: boolean }) {
   const { eintrag: e, wertung: w, rang } = zeile;
   const s = stufe(rang);
   return (
@@ -23,6 +24,7 @@ export function RangZeile({ zeile, ort, href, zusatz, siegel = false }: { zeile:
         <span class="flex items-center gap-1.5">
           <span class="truncate font-semibold">{e.stand}</span>
           {siegel && <PruefSiegel groesse={18} />}
+          {deal && <DealMarke />}
         </span>
         <span class="block truncate text-xs text-dunst">{[ort ?? `${e.markt} · ${e.saison}`, zusatz].filter(Boolean).join(' · ')}</span>
         <span class="mt-1.5 block h-1 overflow-hidden rounded-full bg-spur">

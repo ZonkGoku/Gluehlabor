@@ -13,6 +13,8 @@ interface Props {
   onWert: (n: Note) => void;
   onAktiv: () => void;
   onInfo: () => void;
+  /** Berechneter Wert: nicht antippbar, mit Hinweis „auto". */
+  nurAnzeige?: boolean;
 }
 
 function wertAusX(el: HTMLElement, clientX: number): number {
@@ -21,17 +23,17 @@ function wertAusX(el: HTMLElement, clientX: number): number {
   return Math.min(10, Math.max(1, Math.ceil(anteil * 10)));
 }
 
-function Inhalt({ name, gewicht, wert }: { name: string; gewicht: number; wert: Note }) {
+function Inhalt({ name, gewicht, wert, auto }: { name: string; gewicht: number; wert: Note; auto?: boolean }) {
   return (
     <div class="skala-inhalt">
       <span class="name">{name}</span>
-      <span class="gewicht">×{gewicht}</span>
+      <span class="gewicht">{auto ? `${t('auto')} ` : ''}×{gewicht}</span>
       <span class={wert === null ? 'wert leer' : 'wert'}>{wert ?? '–'}</span>
     </div>
   );
 }
 
-export function Skala({ name, gewicht, wert, aktiv, onWert, onAktiv, onInfo }: Props) {
+export function Skala({ name, gewicht, wert, aktiv, onWert, onAktiv, onInfo, nurAnzeige = false }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const letzter = useRef<Note>(wert);
   letzter.current = wert;
@@ -45,16 +47,19 @@ export function Skala({ name, gewicht, wert, aktiv, onWert, onAktiv, onInfo }: P
   };
 
   const down = (e: PointerEvent) => {
+    if (nurAnzeige) return onAktiv();
     const el = ref.current!;
     el.setPointerCapture(e.pointerId);
     onAktiv();
     setze(wertAusX(el, e.clientX));
   };
   const move = (e: PointerEvent) => {
+    if (nurAnzeige) return;
     const el = ref.current!;
     if (el.hasPointerCapture(e.pointerId)) setze(wertAusX(el, e.clientX));
   };
   const taste = (e: KeyboardEvent) => {
+    if (nurAnzeige) return;
     const w = letzter.current;
     if (e.key === 'ArrowRight' || e.key === 'ArrowUp') setze(Math.min(10, (w ?? 0) + 1));
     else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') setze(Math.max(1, (w ?? 2) - 1));
@@ -72,7 +77,7 @@ export function Skala({ name, gewicht, wert, aktiv, onWert, onAktiv, onInfo }: P
       <div
         ref={ref}
         class="skala"
-        role="slider"
+        role={nurAnzeige ? 'img' : 'slider'}
         tabIndex={0}
         aria-label={name}
         aria-valuemin={1}
@@ -84,9 +89,9 @@ export function Skala({ name, gewicht, wert, aktiv, onWert, onAktiv, onInfo }: P
         onFocus={onAktiv}
         onKeyDown={taste}
       >
-        <Inhalt name={name} gewicht={gewicht} wert={wert} />
+        <Inhalt name={name} gewicht={gewicht} wert={wert} auto={nurAnzeige} />
         <div class="skala-fuellung" aria-hidden="true" style={{ clipPath: `inset(0 ${rechts}% 0 0)` }}>
-          <Inhalt name={name} gewicht={gewicht} wert={wert} />
+          <Inhalt name={name} gewicht={gewicht} wert={wert} auto={nurAnzeige} />
         </div>
       </div>
       <button type="button" class="skala-info" aria-label={t('Anker {name}', { name })} onClick={onInfo}>

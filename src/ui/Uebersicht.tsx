@@ -18,7 +18,7 @@ import { Deutschlandkarte } from './Deutschlandkarte';
 import { useEinblenden, useNeigung } from './nacht/bewegung';
 import { Chips } from './nacht/Chips';
 import { Kachel, Kennzahl } from './nacht/Kachel';
-import { StandTopKarte, StandZeile } from './nacht/StandKarten';
+import { DealZeile, StandTopKarte, StandZeile } from './nacht/StandKarten';
 import { baueStaende, standAlsZeile } from '../lib/staende';
 import { kurzId, TicketRahmen } from './nacht/Ticket';
 import { Saisonverlauf } from './Saisonverlauf';
@@ -169,6 +169,7 @@ export function Uebersicht() {
   const k = kennzahlen(auswahl, MARKTLISTE, gewichte);
   const orte = staedte(MARKTLISTE, auswahl);
   const preise = preisindex(auswahl, MARKTLISTE);
+  const topDeals = staende.filter((s) => s.deal.punkte !== null).sort((a, b) => (a.deal.rang ?? 1e9) - (b.deal.rang ?? 1e9)).slice(0, 3);
 
   // Abend-Modus: nur die eigenen Becher dieses Geräts zählen, nicht die der Community.
   const meine = alle.filter((e) => e.geraet === geraetId);
@@ -289,7 +290,21 @@ export function Uebersicht() {
             <Deutschlandkarte staedte={orte} />
           </Kachel>
 
-          <Kachel titel={t('Glühwein-Preise')} klasse="col-span-2">
+          <Kachel titel={t('Top Deals')} link={{ href: '#/rangliste?deals=1', text: t('Alle Deals') }} klasse="col-span-2" innen="p-3">
+            {topDeals.length === 0 ? (
+              <p class="px-1 py-2 text-sm text-dunst">{t('Sobald Preise gemeldet sind, erscheinen hier die besten Deals.')}</p>
+            ) : (
+              <ol class="space-y-2">
+                {topDeals.map((s) => (
+                  <li>
+                    <DealZeile stand={s} />
+                  </li>
+                ))}
+              </ol>
+            )}
+          </Kachel>
+
+          <Kachel titel={t('Glühwein-Preise')} klasse="col-span-2 md:col-span-4">
             {preise.zeilen.length === 0 ? (
               <p class="text-sm text-dunst">
                 {preise.meldungen === 0

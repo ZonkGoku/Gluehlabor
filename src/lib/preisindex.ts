@@ -3,6 +3,7 @@
 
 import type { Eintrag } from './modell';
 import { stadtVon, type MarktListe } from './orte';
+import { preisJeBasis } from './preisleistung';
 
 export const MINDESTMELDUNGEN = 5;
 /** Plausible Preise für eine Tasse. Alles darunter oder darüber ist ein Vertipper oder kein Glühwein. */
@@ -51,7 +52,7 @@ export function preisindex(eintraege: readonly Eintrag[], liste: MarktListe, sch
   const jeStadt = new Map<string, number[]>();
   for (const e of gueltig) {
     const s = stadtVon(liste, e);
-    if (s) jeStadt.set(s, [...(jeStadt.get(s) ?? []), e.preis!]);
+    if (s) jeStadt.set(s, [...(jeStadt.get(s) ?? []), preisJeBasis(e.preis!, e.menge)]);
   }
   const zeilen = [...jeStadt.entries()]
     .filter(([, p]) => p.length >= schwelle)
@@ -59,7 +60,7 @@ export function preisindex(eintraege: readonly Eintrag[], liste: MarktListe, sch
     .sort((a, b) => b.n - a.n || a.stadt.localeCompare(b.stadt, 'de'));
   return {
     zeilen,
-    gesamt: gueltig.length >= schwelle ? statistik(gueltig.map((e) => e.preis!)) : null,
+    gesamt: gueltig.length >= schwelle ? statistik(gueltig.map((e) => preisJeBasis(e.preis!, e.menge))) : null,
     meldungen: gueltig.length,
     schwelle,
   };

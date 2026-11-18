@@ -22,6 +22,7 @@ import { ANKER, MARKTLISTE } from './stammdaten';
 import { euro, probeNr, zahl2 } from '../lib/format';
 import { DEFAULT_GEWICHTE, KRITERIEN, leereNoten, SORTEN, type Eintrag, type Kriterium, type Sorte } from '../lib/modell';
 import { bewerte } from '../lib/scoring';
+import { berechnePreisLeistung, MENGEN, PREIS_MAX, PREIS_MIN, referenzPreis, vergleichbar } from '../lib/preisleistung';
 import { schonBewertet } from '../lib/staende';
 import { useGeraetId } from './daten';
 import { useLive } from './hooks';
@@ -32,7 +33,7 @@ import { TicketBlatt } from './nacht/TicketBlatt';
 import { OrtBlatt } from './nacht/OrtBlatt';
 import { Symbol } from './Symbol';
 import { leseZuletzt, merkeOrt } from '../daten/zuletzt';
-import { t, kriteriumLabel } from '../i18n';
+import { aktuelleSprache, t, kriteriumLabel } from '../i18n';
 
 
 const SORTE_LABEL: Record<Sorte, string> = {
@@ -44,7 +45,11 @@ const SORTE_LABEL: Record<Sorte, string> = {
   alkoholfrei: 'Alkoholfrei',
   sonstiges: 'Sonstiges',
 };
-const PREISE = Array.from({ length: 15 }, (_, i) => 2.5 + i * 0.5); // 2,50 … 9,50 €
+/** „4,5" oder "4.50" → 4.5; ungültig oder außerhalb des plausiblen Bereichs → undefined. */
+function leseEuro(text: string): number | undefined {
+  const x = Number(text.trim().replace(',', '.').replace(/\s*€$/, ''));
+  return Number.isFinite(x) && x >= PREIS_MIN && x <= PREIS_MAX ? Math.round(x * 100) / 100 : undefined;
+}
 
 function neueId(): string {
   if (crypto.randomUUID) return crypto.randomUUID();
@@ -91,6 +96,11 @@ export function Erfassen() {
   const [ortOffen, setOrtOffen] = useState(false);
   const [nameOffen, setNameOffen] = useState(false);
   const [warnung, setWarnung] = useState<string | null>(null);
+  const [preisText, setPreisText] = useState(() => {
+    const p = leseEntwurf()?.preis;
+    return p === undefined ? '' : String(p).replace('.', ',');
+  });
+  const [preisFehlt, setPreisFehlt] = useState(false);
   const geraetId = useGeraetId();
   const [becherNrAngefasst, setBecherNrAngefasst] = useState(() => leseEntwurf()?.becherNr !== undefined);
   const [foto, setFoto] = useState<Blob | null>(null);
@@ -115,7 +125,11 @@ export function Erfassen() {
   const vorschlagNr = naechsteBecherNr(heutige, heute);
   const becherNr = becherNrAngefasst ? e.becherNr : vorschlagNr;
 
-  const wertung = useMemo(() => bewerte(e.noten, gewichte), [e.noten, gewichte]);
+  // Preis-Leistung rechnet die App selbst: aus dem Preis, der Größe und deinen Glühwein-Noten, gegen den üblichen Preis der Stadt.
+  const referenz = useMemo(() => referenzPreis(bestand, e.stadt, MARKTLISTE), [bestand, e.stadt]);
+  const plAuto = useMemo(() => berechnePreisLeistung(e.noten, gewichte, e.preis, e.menge, referenz, e.sorte), [e.noten, gewichte, e.preis, e.menge, referenz, e.sorte]);
+  const notenGesamt = useMemo(() => ({ ...e.noten, preisLeistung: plAuto }), [e.noten, plAuto]);
+  const wertung = useMemo(() => bewerte(notenGesamt, gewichte), [notenGesamt, gewichte]);
   // Vorschläge nur aus echten Ständen, nie der eigenen halb getippten Eingabe: der Entwurf zählt erst nach dem Speichern.
   const vorschlaege = useMemo(() => {
     const markt = e.markt !== MARKTLISTE.sonstiger ? e.markt : undefined;
@@ -129,7 +143,7 @@ export function Erfassen() {
     // Genau die Eingabe am selben Markt braucht keinen Vorschlag
     return alle.filter((v) => !(v.stand === e.stand.trim() && (!markt || v.markt === markt)));
   }, [bestand, e.stand, e.markt, e.stadt]);
-  const bewertet = KRITERIEN.filter((k) => e.noten[k] !== null).length;
+  const bewertet = KRITERIEN.filter((k) => k !== 'preisLeistung' && e.noten[k] !== null).length;
 
   const setNote = (k: Kriterium, n: number | null) => setE((x) => ({ ...x, noten: { ...x.noten, [k]: n } }));
 
@@ -165,6 +179,11 @@ export function Erfassen() {
       setOrtOffen(true);
       return;
     }
+    if (e.preis === undefined) {
+      // Ohne Preis keine Preis-Leistung: Der Preis ist Pflicht.
+      setPreisFehlt(true);
+      return;
+    }
     const jetzt = new Date();
     // Eine Bewertung je Stand und Abend. Dieselbe Regel prüft der Server.
     if (schonBewertet(bestand, geraetId, { stand, markt: e.markt.trim() || MARKTLISTE.sonstiger, stadt: e.stadt?.trim(), datum: abendDatum(jetzt), erstelltAm: jetzt.getTime() })) {
@@ -183,7 +202,7 @@ export function Erfassen() {
       markt: MARKTLISTE.sonstiger,
       saison: jetzt.getFullYear(),
       datum: abendDatum(jetzt),
-      noten: { ...e.noten },
+      noten: { ...notenGesamt },
       erstelltAm: jetzt.getTime(),
     };
     // Jeder Becher gehört zu einem Besuch. Wer den QR-Code zeigt oder scannt, teilt sich dieselbe Nr.
@@ -193,7 +212,8 @@ export function Erfassen() {
     if (e.stadt?.trim()) eintrag.stadt = e.stadt.trim();
     if (e.sorte) eintrag.sorte = e.sorte;
     if (becherNr !== undefined) eintrag.becherNr = becherNr;
-    if (e.preis !== undefined) eintrag.preis = e.preis;
+    eintrag.preis = e.preis;
+    if (e.menge !== undefined) eintrag.menge = e.menge;
     if (e.notiz.trim()) eintrag.notiz = e.notiz.trim();
 
     await speichereNeuenEintrag(eintrag, foto ?? undefined);
@@ -202,6 +222,8 @@ export function Erfassen() {
     await schreibeEntwurfFoto(null);
     const neu = leererEntwurf(eintrag.stadt, eintrag.markt, e.sorte);
     setE(neu);
+    setPreisText('');
+    setPreisFehlt(false);
     setBecherNrAngefasst(false);
     setFoto(null);
     setNotizOffen(false);
@@ -355,18 +377,38 @@ export function Erfassen() {
               <option value={n}>{t('Nr.')} {n}</option>
             ))}
           </select>
+          <label class={`chip preis${e.preis !== undefined ? ' gesetzt' : ''}${preisFehlt && e.preis === undefined ? ' fehlt' : ''}`}>
+            <input
+              class="chip-eingabe"
+              type="text"
+              inputMode="decimal"
+              autocomplete="off"
+              maxLength={6}
+              placeholder={t('Preis €')}
+              aria-label={t('Preis in Euro, ohne Pfand')}
+              aria-required="true"
+              aria-invalid={preisFehlt && e.preis === undefined}
+              value={preisText}
+              onInput={(ev) => {
+                const v = (ev.target as HTMLInputElement).value;
+                setPreisText(v);
+                setE((x) => ({ ...x, preis: leseEuro(v) }));
+              }}
+              onBlur={() => e.preis !== undefined && setPreisText(String(e.preis).replace('.', ','))}
+            />
+          </label>
           <select
-            class={e.preis !== undefined ? 'chip gesetzt' : 'chip'}
-            aria-label={t('Preis')}
-            value={e.preis ?? ''}
+            class={e.menge !== undefined ? 'chip gesetzt' : 'chip'}
+            aria-label={t('Größe der Tasse')}
+            value={e.menge ?? ''}
             onChange={(ev) => {
               const v = (ev.target as HTMLSelectElement).value;
-              setE({ ...e, preis: v ? Number(v) : undefined });
+              setE({ ...e, menge: v ? Number(v) : undefined });
             }}
           >
-            <option value="">{t('Preis')}</option>
-            {PREISE.map((p) => (
-              <option value={p}>{euro(p)}</option>
+            <option value="">{t('Größe')}</option>
+            {MENGEN.map((m) => (
+              <option value={m}>{String(m).replace('.', aktuelleSprache() === 'en' ? '.' : ',')} l</option>
             ))}
           </select>
           <button type="button" class={e.notiz.trim() ? 'chip gesetzt' : 'chip'} onClick={() => setNotizOffen(true)}>
@@ -385,8 +427,9 @@ export function Erfassen() {
             key={k}
             name={kriteriumLabel(ANKER[k].label)}
             gewicht={gewichte[k]}
-            wert={e.noten[k]}
+            wert={k === 'preisLeistung' ? plAuto : e.noten[k]}
             aktiv={aktiv === k}
+            nurAnzeige={k === 'preisLeistung'}
             onAktiv={() => setAktiv(k)}
             onInfo={() => setAktiv(k)}
             onWert={(n) => setNote(k, n)}
@@ -399,16 +442,25 @@ export function Erfassen() {
           <div class="kriterium">
             {kriteriumLabel(def.label)}
             {def.zusatz ? ` · ${t(def.zusatz)}` : ''}
-            {e.noten[aktiv] === null ? ` · ${t('nicht bewertet')}` : ''}
+            {aktiv === 'preisLeistung' ? '' : e.noten[aktiv] === null ? ` · ${t('nicht bewertet')}` : ''}
           </div>
-          {anker.map((a) => (
+          {aktiv === 'preisLeistung' && (
+            <div class="zeile einzeln">
+              <span class="text">
+                {!vergleichbar(e.sorte)
+                  ? t('Alkoholfreies und Feuerzangenbowle lassen sich preislich nicht vergleichen: keine Preis-Leistung.')
+                  : t('0,5 Punkte je Euro über oder unter dem üblichen Preis ({ref}{stadt}).', { ref: euro(referenz), stadt: e.stadt ? ` ${t('in')} ${e.stadt}` : '' })}
+              </span>
+            </div>
+          )}
+          {aktiv !== 'preisLeistung' && anker.map((a) => (
             <div class={anker.length === 1 ? 'zeile einzeln' : 'zeile'}>
               <span class="stufe">{a.stufe}</span>
               <span class="text">{a.text}</span>
             </div>
           ))}
         </div>
-        {e.noten[aktiv] !== null && (
+        {aktiv !== 'preisLeistung' && e.noten[aktiv] !== null && (
           <button type="button" onClick={() => setNote(aktiv, null)}>
             {t('Note löschen')}
           </button>
@@ -419,7 +471,7 @@ export function Erfassen() {
         <div class="messwert" aria-live="polite">
           <span class="kopfzeile">
             <span class={wertung.gesamt === null ? 'gesamt leer' : 'gesamt'}>{zahl2(wertung.gesamt)}</span>
-            <span class="urteil">{wertung.urteil ? t(wertung.urteil) : `${bewertet}/7`}</span>
+            <span class="urteil">{wertung.urteil ? t(wertung.urteil) : `${bewertet}/6`}</span>
           </span>
           <span class="unter">{t('Glühwein')}&nbsp;{zahl2(wertung.gluehwein)}</span>
           <span class="unter">{t('Drumherum')}&nbsp;{zahl2(wertung.drumherum)}</span>
@@ -430,7 +482,7 @@ export function Erfassen() {
           disabled={bewertet === 0 && !gespeichert}
           onClick={() => void speichern()}
         >
-          {fehlt && !e.stand.trim() ? t('Stand fehlt') : knopfText}
+          {fehlt && !e.stand.trim() ? t('Stand fehlt') : preisFehlt && e.preis === undefined ? t('Preis fehlt') : knopfText}
         </button>
       </footer>
     </main>

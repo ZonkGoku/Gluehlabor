@@ -105,6 +105,9 @@ export function pruefeEinreichung(x: unknown, jetzt: number): EinreichungPruefun
   if (e.preis !== undefined && e.preis !== null) {
     if (typeof e.preis !== 'number' || !Number.isFinite(e.preis) || e.preis < 0 || e.preis > 50) return { ok: false, grund: 'Ungültiger Preis.' };
   }
+  if (e.menge !== undefined && e.menge !== null) {
+    if (typeof e.menge !== 'number' || !Number.isFinite(e.menge) || e.menge < 0.1 || e.menge > 1) return { ok: false, grund: 'Ungültige Menge.' };
+  }
   if (e.besuchId !== undefined && e.besuchId !== null) {
     if (typeof e.besuchId !== 'string' || !/^[A-Za-z0-9_-]{4,32}$/.test(e.besuchId)) return { ok: false, grund: 'Ungültige Besuchs-Nr.' };
   }
@@ -132,6 +135,7 @@ export function pruefeEinreichung(x: unknown, jetzt: number): EinreichungPruefun
   if (typeof e.sorte === 'string') eintrag.sorte = e.sorte as Eintrag['sorte'];
   if (typeof e.becherNr === 'number') eintrag.becherNr = e.becherNr;
   if (typeof e.preis === 'number') eintrag.preis = Math.round(e.preis * 100) / 100;
+  if (typeof e.menge === 'number') eintrag.menge = Math.round(e.menge * 100) / 100;
   if (notiz.wert) eintrag.notiz = notiz.wert;
   if (typeof e.besuchId === 'string') eintrag.besuchId = e.besuchId;
   return { ok: true, eintrag };

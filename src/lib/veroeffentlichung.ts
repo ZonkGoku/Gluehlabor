@@ -16,6 +16,7 @@ export function eintragFuerServer(e: Eintrag): Record<string, unknown> {
   if (e.sorte) s.sorte = e.sorte;
   if (e.becherNr !== undefined) s.becherNr = e.becherNr;
   if (e.preis !== undefined) s.preis = e.preis;
+  if (e.menge !== undefined) s.menge = e.menge;
   if (e.notiz) s.notiz = e.notiz;
   if (e.besuchId) s.besuchId = e.besuchId;
   s.noten = Object.fromEntries(KRITERIEN.map((k) => [k, e.noten[k]]));

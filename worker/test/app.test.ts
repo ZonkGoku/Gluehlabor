@@ -73,6 +73,7 @@ const becher = (patch: Record<string, unknown> = {}) => ({
   saison: 2026,
   datum: '2026-12-05',
   noten: { ...leereNoten(), geschmack: 8, geruch: 7 },
+  preis: 4.5,
   erstelltAm: JETZT - 5000,
   ...patch,
 });
@@ -662,6 +663,29 @@ describe('Eine Bewertung je Gerät, Stand und Abend', () => {
     await sende(g, [am('Chrom', { id: 'erste-1234567' })]);
     await ruf('POST', '/api/admin/verstecken', { auth: ADMIN, body: { id: 'erste-1234567', versteckt: true } });
     expect((await sende(g, [am('Chrom')])).json.ergebnisse[0].status).toBe('ok');
+  });
+});
+
+describe('Preis und Größe', () => {
+  it('ohne Preis keine neue Bewertung; die Meldung sagt warum', async () => {
+    const g = await geraet();
+    const { preis, ...ohnePreis } = becher({ id: 'ohne-preis-123' });
+    void preis;
+    const r = await sende(g, [ohnePreis]);
+    expect(r.json.ergebnisse[0]).toMatchObject({ status: 'abgelehnt', grund: 'Der Preis fehlt.' });
+    expect((await liste()).json.eintraege).toHaveLength(0);
+  });
+  it('speichert die Größe und liefert sie zurück; ohne Angabe fehlt das Feld', async () => {
+    const g = await geraet();
+    await sende(g, [becher({ id: 'mit-menge-1234', menge: 0.25 }), becher({ id: 'ohne-menge-123' })]);
+    const e = (await liste()).json.eintraege;
+    expect(e.find((x: any) => x.id === 'mit-menge-1234').menge).toBe(0.25);
+    expect(e.find((x: any) => x.id === 'ohne-menge-123')).not.toHaveProperty('menge');
+  });
+  it.each([0, 0.05, 2, 'x', -1])('lehnt Größe %s ab', async (menge) => {
+    const g = await geraet();
+    const r = await sende(g, [becher({ menge })]);
+    expect(r.json.ergebnisse[0]).toMatchObject({ status: 'abgelehnt', grund: 'Ungültige Menge.' });
   });
 });
 

@@ -7,6 +7,7 @@
 import { abendVon, istPruefstelle, standIdent } from './community';
 import type { Eintrag, Gewichte } from './modell';
 import { stadtVon, type MarktListe } from './orte';
+import { medianVon, TOP_DEAL, vergleichspreise } from './preisleistung';
 import { bewerte, rangliste, runde2, urteil, type Urteil, type Wertung } from './scoring';
 import type { Zeile } from './auswertung';
 
@@ -39,6 +40,10 @@ export interface Stand<T extends Eintrag = Eintrag> {
   /** Immer beide Seiten, unabhängig von der gewählten Quelle. */
   pruefstelle: Gruppenwert;
   community: Gruppenwert;
+  /** Preis je 0,2 l (Median der vergleichbaren Meldungen); null ohne Preis. */
+  preis: { median: number | null; n: number };
+  /** Preis-Leistung: Mittel der Preis-Leistungs-Noten, eigene Rangfolge („Top Deals"). */
+  deal: { punkte: number | null; anzahl: number; rangWert: number | null; rang: number | null; top: boolean };
   /** Wert für die Reihenfolge (zum Mittel hingezogen). */
   rangWert: number | null;
   vorlaeufig: boolean;
@@ -102,6 +107,8 @@ export function baueStaende<T extends Eintrag>(
       stadt: stadtVon(liste, ref) ?? undefined,
       bewertungen: gewaehlt,
       wert: gruppenwert(gewaehlt, gewichte),
+      plNoten: gewaehlt.map((e) => e.noten.preisLeistung).filter((x): x is number => x !== null),
+      preise: vergleichspreise(gewaehlt),
       pruefstelle: gruppenwert(pruef, gewichte),
       community: gruppenwert(comm, gewichte),
     };
@@ -110,10 +117,28 @@ export function baueStaende<T extends Eintrag>(
   // Mittel aller einzelnen Bewertungen der Quelle: der Wert, zu dem wenige Bewertungen hingezogen werden.
   const alleNoten = mitWert.flatMap((s) => s.bewertungen.map((e) => bewerte(e.noten, gewichte).gesamt).filter((x): x is number => x !== null));
   const vorwert = mittel(alleNoten) ?? 0;
+  // Preis-Leistung hat eine eigene Rangfolge, ebenfalls zum Mittel hingezogen.
+  const alleDeal = mitWert.flatMap((s) => s.plNoten);
+  const dealVorwert = mittel(alleDeal) ?? 0;
+  const dealWert = (plNoten: number[]) => {
+    const p = mittel(plNoten);
+    return p === null ? null : (plNoten.length * p + VORWERT_GEWICHT * dealVorwert) / (plNoten.length + VORWERT_GEWICHT);
+  };
+  const dealRang = new Map(rangliste(mitWert.filter((s) => s.plNoten.length > 0), (s) => dealWert(s.plNoten)).map((p) => [p.eintrag.id, p.rang]));
   const staende: Stand<T>[] = aufbau.map((s) => {
     const n = s.wert.anzahl;
     const rangWert = s.wert.gesamt === null ? null : (n * s.wert.gesamt + VORWERT_GEWICHT * vorwert) / (n + VORWERT_GEWICHT);
-    return { ...s, rangWert, vorlaeufig: n < MIN_BEWERTUNGEN, urteil: urteil(s.wert.gesamt), rang: null };
+    const { plNoten, preise, ...rest } = s;
+    const punkte = mittel(plNoten);
+    return {
+      ...rest,
+      preis: { median: medianVon(preise), n: preise.length },
+      deal: { punkte, anzahl: plNoten.length, rangWert: dealWert(plNoten), rang: dealRang.get(s.id) ?? null, top: punkte !== null && runde2(punkte) >= TOP_DEAL },
+      rangWert,
+      vorlaeufig: n < MIN_BEWERTUNGEN,
+      urteil: urteil(s.wert.gesamt),
+      rang: null,
+    };
   });
   const platziert = rangliste(
     staende.filter((s) => s.wert.anzahl > 0),
@@ -150,3 +175,9 @@ export function schonBewertet(
 
 /** Auf zwei Stellen gerundet, für Vergleiche in Tests. */
 export const gerundet = (x: number | null): number | null => (x === null ? null : runde2(x));
+
+/** Ein Stand als Zeile der Top-Deals-Liste: statt der Gesamtnote steht die Preis-Leistung, statt des Platzes der Deal-Platz. */
+export function dealAlsZeile(s: Stand): Zeile {
+  const z = standAlsZeile(s);
+  return { ...z, rang: s.deal.rang, wertung: { ...z.wertung, gesamt: s.deal.punkte } };
+}

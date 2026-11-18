@@ -16,6 +16,7 @@ import { useEintraege, useGeraetId, useGewichte } from './daten';
 import { useAktuell, useLive } from './hooks';
 import { Kachel } from './nacht/Kachel';
 import { StandTopKarte } from './nacht/StandKarten';
+import { DealMarke } from './nacht/DealMarke';
 import { SiegelEtikett } from './nacht/PruefSiegel';
 import { MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
@@ -95,6 +96,20 @@ export function StandSeite({ id }: { id: string }) {
               <p class="mt-1 text-xs text-dunst">{s.community.anzahl === 0 ? t('noch nicht bewertet') : tn(s.community.anzahl, '{n} Bewertung', '{n} Bewertungen')}</p>
             </Kachel>
           </div>
+          <Kachel innen="p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="etikett">{t('Preis-Leistung')}</p>
+                <p class="mt-2 font-display text-[44px] leading-none text-gold-300">{zahl2(s.deal.punkte)}</p>
+                <p class="mt-1 text-xs text-dunst">
+                  {s.preis.median === null
+                    ? t('noch kein Preis gemeldet')
+                    : t('Preis: {preis} je 0,2 l · {n} Meldungen', { preis: euro(s.preis.median), n: s.preis.n })}
+                </p>
+              </div>
+              {s.deal.top && <DealMarke gross />}
+            </div>
+          </Kachel>
           <button
             type="button"
             disabled={schon}

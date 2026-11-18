@@ -70,6 +70,27 @@ describe('Stände', () => {
   });
 });
 
+describe('Preis und Deals', () => {
+  const mitPl = (stand: string, pl: number | null, preis?: number, p: Partial<Eintrag> = {}) =>
+    b(stand, 7, { noten: { ...leereNoten(), geschmack: 7, preisLeistung: pl }, ...(preis !== undefined ? { preis } : {}), ...p });
+  it('Median-Preis je 0,2 l, Größe wird umgerechnet', () => {
+    const s = baueStaende([mitPl('A', 7, 5), mitPl('A', 7, 6, { menge: 0.3 }), mitPl('A', 7, 6)], LISTE, DEFAULT_GEWICHTE);
+    expect(s[0].preis).toEqual({ median: 5, n: 3 }); // 5, 4, 6 → Median 5
+  });
+  it('Top Deal ab Preis-Leistung 8, eigene Rangfolge', () => {
+    const s = baueStaende([mitPl('Günstig', 9), mitPl('Günstig', 8), mitPl('Teuer', 3), mitPl('Teuer', 4), mitPl('Mittel', 7)], LISTE, DEFAULT_GEWICHTE);
+    const von = (n: string) => s.find((x) => x.stand === n)!;
+    expect(von('Günstig').deal).toMatchObject({ punkte: 8.5, anzahl: 2, top: true, rang: 1 });
+    expect(von('Mittel').deal.top).toBe(false);
+    expect(von('Teuer').deal.rang).toBe(3);
+  });
+  it('ohne Preis-Leistungs-Note: keine Deal-Wertung', () => {
+    const s = baueStaende([mitPl('X', null)], LISTE, DEFAULT_GEWICHTE);
+    expect(s[0].deal).toMatchObject({ punkte: null, anzahl: 0, rang: null, top: false });
+    expect(s[0].preis).toEqual({ median: null, n: 0 });
+  });
+});
+
 describe('schonBewertet', () => {
   const mein = b('Chrom', 7, { geraet: 'ich' });
   it('derselbe Stand am selben Abend', () => {
