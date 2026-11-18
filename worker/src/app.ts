@@ -125,7 +125,7 @@ interface GeraetZeile {
 }
 
 async function anmelden(request: Request, db: D1Like): Promise<GeraetZeile> {
-  const kopf = request.headers.get('Authorization') ?? '';
+  const kopf = request.headers.get('Authorization') ?? request.headers.get('X-Auth') ?? '';
   const m = /^Bearer ([A-Za-z0-9_-]{16,64})\.([0-9a-f]{64})$/.exec(kopf);
   if (!m) throw new HttpFehler(401, 'Anmeldung fehlt.');
   const g = await db.prepare('SELECT * FROM geraete WHERE id = ?').bind(m[1]).first<GeraetZeile>();
@@ -135,7 +135,7 @@ async function anmelden(request: Request, db: D1Like): Promise<GeraetZeile> {
 }
 
 function istAdmin(request: Request, env: Env): boolean {
-  const kopf = request.headers.get('Authorization') ?? '';
+  const kopf = request.headers.get('Authorization') ?? request.headers.get('X-Auth') ?? '';
   const m = /^Bearer (.+)$/.exec(kopf);
   return Boolean(env.ADMIN_TOKEN && m && gleich(m[1], env.ADMIN_TOKEN));
 }
@@ -251,7 +251,7 @@ export async function handle(request: Request, env: Env, jetzt: number = Date.no
         headers: {
           ...corsKopf(request, env, false),
           'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
-          'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+          'Access-Control-Allow-Headers': 'Authorization, Content-Type, X-Auth',
           'Access-Control-Max-Age': '86400',
         },
       });

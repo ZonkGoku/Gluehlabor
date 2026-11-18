@@ -11,6 +11,7 @@
     "worker/test",
     "worker/scripts",
     "server",
+    "php/test",
     "vite.config.ts",
     "vitest.config.ts",
     "scripts"

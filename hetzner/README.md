@@ -1,4 +1,7 @@
-# Glühlabor auf dem eigenen Hetzner-Server
+# Glühlabor auf einem eigenen Hetzner-Server (Alternative)
+
+> **Gewählt ist das Webhosting (`WEBHOSTING.md`), nicht dieser Weg.** Diese Anleitung gilt nur für einen Cloud-Server mit Root-Zugang
+> (kostet extra). Der Code dafür (`server/`, `Dockerfile`) bleibt getestet im Repository, falls das Projekt wächst.
 
 Ein Container liefert die App **und** die API aus (Node 22, SQLite-Datei). Der vorhandene Webserver bleibt vorne
 (Reverse-Proxy, Zertifikat) und leitet `gluehlabor.de` an `127.0.0.1:8787` weiter. Die bestehende Website läuft unverändert weiter.

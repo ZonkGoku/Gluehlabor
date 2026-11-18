@@ -1,0 +1,79 @@
+name: Deploy auf Hetzner Webhosting
+
+# Baut die App mit der PHP-Schnittstelle und lädt sie per FTPS ins Hauptverzeichnis von gluehlabor.de hoch.
+# Läuft bei jedem Push auf main und von Hand (Actions → Deploy auf Hetzner Webhosting → Run workflow).
+# Ohne die Secrets (Settings → Secrets and variables → Actions) wird nur gebaut und getestet, nichts hochgeladen.
+#
+# Secrets:
+#   FTP_SERVER, FTP_USER, FTP_PASSWORD   aus konsoleH (FTP-Benutzer der Domain gluehlabor.de)
+#   FTP_ORDNER                           optional, Zielordner auf dem Server, Standard /public_html
+#   ADMIN_TOKEN (mind. 24 Zeichen), PRUEFSTELLE_CODE, IP_SALT (mind. 16 Zeichen)   frei gewählte Zufallswerte
+#   DB_NAME, DB_USER, DB_PASSWORD, DB_HOST   optional, nur wenn MySQL statt SQLite genutzt werden soll
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hetzner
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USER: ${{ secrets.FTP_USER }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+      FTP_ORDNER: ${{ secrets.FTP_ORDNER }}
+      ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+      PRUEFSTELLE_CODE: ${{ secrets.PRUEFSTELLE_CODE }}
+      IP_SALT: ${{ secrets.IP_SALT }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_sqlite, mbstring, intl
+      - run: npm ci
+      - run: npm test
+      - name: Server-Tests gegen die PHP-Fassung
+        run: API_ZIEL=php-sqlite npx vitest run worker/test/app.test.ts
+      - name: Ordner für das Webhosting bauen
+        run: npm run build:webhosting
+      - name: Hochladen (FTPS)
+        if: env.FTP_SERVER != '' && env.FTP_USER != '' && env.FTP_PASSWORD != ''
+        run: |
+          sudo apt-get install -y lftp >/dev/null
+          lftp -u "$FTP_USER","$FTP_PASSWORD" "$FTP_SERVER" -e "
+            set ftp:ssl-force true
+            set ftp:ssl-protect-data true
+            set ssl:verify-certificate yes
+            set net:max-retries 3
+            set net:timeout 30
+            mirror -R --verbose=1 --parallel=3 out/webhosting ${FTP_ORDNER:-/public_html}
+            bye"
+      - name: Bestandsdaten einspielen (mehrfach gefahrlos)
+        if: env.FTP_SERVER != '' && env.ADMIN_TOKEN != ''
+        continue-on-error: true
+        env:
+          API_URL: https://gluehlabor.de
+        run: npm run worker:seed
+      - name: Startcheck (nur zur Information)
+        if: env.FTP_SERVER != ''
+        continue-on-error: true
+        run: npm run launch-check

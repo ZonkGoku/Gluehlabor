@@ -1,7 +1,7 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-import { handle, type Env } from '../src/app';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import type { Env } from '../src/app';
 import { leereNoten } from '../../src/lib/modell';
-import { neueDb } from './sqlite-d1';
+import { neuerEnv, ruft as handle, zielStart, zielStop, ZIEL } from './ziel';
 
 const JETZT = Date.parse('2026-12-05T20:00:00Z');
 const SITE = 'https://zonkgoku.github.io';
@@ -9,9 +9,13 @@ const ADMIN = 'admin-geheimnis';
 const CODE = 'prüfstellen-geheimnis';
 
 let env: Env;
+beforeAll(zielStart);
+afterAll(zielStop);
 beforeEach(() => {
-  env = { DB: neueDb(), ADMIN_TOKEN: ADMIN, PRUEFSTELLE_CODE: CODE, ERLAUBTE_URSPRUENGE: `${SITE},http://localhost:4173` };
+  env = neuerEnv({ ADMIN_TOKEN: ADMIN, PRUEFSTELLE_CODE: CODE, ERLAUBTE_URSPRUENGE: `${SITE},http://localhost:4173` });
 });
+// Diese beiden prüfen Funktionen der TypeScript-Fassung direkt (die PHP-Fassung hat eigene Prüfung in php/test).
+const nurTs = ZIEL === 'ts' ? it : it.skip;
 
 interface Opt {
   body?: unknown;
@@ -278,7 +282,7 @@ describe('Becher einreichen', () => {
     }
   });
 
-  it('derselbe Zähler hängt nicht über Tage zusammen (Tagessalz)', async () => {
+  nurTs('derselbe Zähler hängt nicht über Tage zusammen (Tagessalz)', async () => {
     const { adressSchluessel } = await import('../src/app');
     const heute = await adressSchluessel(env, 'schreiben', '1.2.3.4', JETZT);
     const morgen = await adressSchluessel(env, 'schreiben', '1.2.3.4', JETZT + 25 * 3_600_000);
@@ -288,7 +292,7 @@ describe('Becher einreichen', () => {
     expect(await adressSchluessel(env, 'schreiben', '1.2.3.4', JETZT)).not.toBe(heute);
   });
 
-  it('Aufräumen löscht abgelaufene Zähler und lässt frische stehen', async () => {
+  nurTs('Aufräumen löscht abgelaufene Zähler und lässt frische stehen', async () => {
     const { raeumeAuf } = await import('../src/app');
     await ruf('POST', '/api/melden', { ip: '1.1.1.1', body: {}, jetzt: JETZT - 3 * 86_400_000 });
     await ruf('POST', '/api/melden', { ip: '2.2.2.2', body: {} });

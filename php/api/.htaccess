@@ -1,0 +1,2 @@
+# lib/, privat/ und daten/ haben eigene Sperren (Require all denied).
+Options -Indexes

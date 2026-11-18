@@ -60,7 +60,8 @@ Gamification und Teilen-auf-Social. Bewertungen von David & Philip laufen weiter
 - **Server lokal**: `npm run worker:migrate` (einmal), `npm run worker:dev` (Port 8787, Geheimnisse
   in `worker/.dev.vars`, nicht im Repo), `npm run worker:seed` mit `API_URL` und `ADMIN_TOKEN` lädt die CSV
   als Prüfstellen-Becher. App gegen den lokalen Server: `VITE_API_URL=http://localhost:8787 npm run dev`.
-- **Eigener Server (Hetzner, gewählter Weg)**: `server/` (Node 22, `node:sqlite`) liefert `dist/` und `/api/*` same-origin aus einem Prozess und nutzt dieselbe Logik wie `worker/src/app.ts`. Adresse aus `X-Real-IP` nur von privaten Verbindungen (`server/adresse.ts`), Sicherheitsköpfe und CSP in `server/static.ts`, tägliche Sicherung (14 behalten), Seed beim Start. Build `npm run build:alles` (`VITE_API_URL=/`), `Dockerfile`, `docker-compose.yml`, Anleitung und Proxy-Beispiele in `hetzner/`. Domain gluehlabor.de, Marke in `src/marke.ts`. GitHub Pages bleibt ohne Server (nur lokal). `worker/` (Cloudflare) ist die Alternative, nicht der Plan.
+- **Hosting (gewählt): Hetzner Webhosting S** (Shared Hosting, Apache, PHP, kein Root, kein Node/Docker). `php/api/` (index.php, lib/regeln.php, lib/db.php, lib/app.php) ist die PHP-Fassung des Servers, SQLite in `api/daten/` oder MySQL (config). **Sie ist eine 1:1-Übertragung von `worker/src/app.ts` und `src/lib/community.ts`: Änderungen dort müssen in PHP nachgezogen werden.** Gesichert durch: dieselben Server-Tests gegen PHP (`API_ZIEL=php-sqlite|php-mysql npx vitest run worker/test/app.test.ts`, Ziele in `worker/test/ziel.ts`), `php/test/regeln.test.ts` (Regeln und Adress-Hash gegen TypeScript) und einen Browser-Test gegen echtes Apache + mod_php (nur manuell). Build: `npm run build:webhosting` (`scripts/webhosting.mjs`, `VITE_API_URL=/`, erzeugt `out/webhosting` mit `.htaccess` aus `php/htaccess.txt`). Deploy: `.github/workflows/hetzner.yml` (FTPS per lftp, Secrets siehe `hetzner/WEBHOSTING.md`). Authorization wird zusätzlich als `X-Auth` gesendet (manche Hoster entfernen es). Sync-Nummern entstehen in einer Transaktion mit gesperrter Zählerzeile (`zaehler`). Domain gluehlabor.de, Marke in `src/marke.ts`. GitHub Pages bleibt ohne Server (nur lokal).
+- **Alternativen, nicht der Plan:** `server/` + `Dockerfile` + `hetzner/README.md` (Node-Server für einen Cloud-Server mit Root, getestet) und `worker/` (Cloudflare).
 - **Server bei Cloudflare veröffentlichen** (Alternative, braucht Konto): `wrangler d1 create gluehlabor`, `database_id` in
   `worker/wrangler.toml` eintragen, `wrangler d1 migrations apply gluehlabor --remote`,
   `wrangler secret put ADMIN_TOKEN`, `PRUEFSTELLE_CODE` und `IP_SALT`, `wrangler deploy --config worker/wrangler.toml`,
@@ -175,11 +176,11 @@ Achtung bei Klassennamen: `styles.css` und `app.css` teilen sich den Namensraum
 
 ## Stand der Arbeit
 
-Gebaut und getestet (317 Tests, dazu Browser-Tests mit zwei Geräten gegen den lokalen Server, QR-Code mit
+Gebaut und getestet (453 Tests, dazu Browser-Tests mit zwei Geräten gegen den lokalen Server, QR-Code mit
 echtem Leser dekodiert): Scoring, alle Ansichten, Startseite mit Preisindex, Community-Server mit anonymer
 Kennung, Sync, freiwilligem Namen, Prüfstellen-Siegel, Melden, Moderation, Löschen auf Anfrage, QR-Mitbewerten,
 Impressum und Datenschutz (Entwurf), iPhone-Hinweis.
-**Offen bis zum Start:** Server auf Hetzner einrichten (DNS, Proxy, `hetzner/README.md`), Betreiberangaben
+**Offen bis zum Start:** Webhosting einrichten (SSL, FTP, GitHub-Secrets, `hetzner/WEBHOSTING.md`), Betreiberangaben
 eintragen, Test auf echten Handys, Datenschutz prüfen lassen. Reihenfolge und Termine: `ABLAUFPLAN.md`.
 Danach: Stand-Seiten mit Verteilung, Prüfstelle und Community getrennt, Fotos (R2), Bot-Schutz (Turnstile),
 Gewichte zwischen Geräten.

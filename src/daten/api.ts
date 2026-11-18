@@ -22,7 +22,11 @@ interface Optionen {
 export async function api<T>(pfad: string, o: Optionen = {}): Promise<T> {
   const kopf: Record<string, string> = {};
   if (o.body !== undefined) kopf['Content-Type'] = 'application/json';
-  if (o.geraet) kopf.Authorization = `Bearer ${o.geraet.id}.${o.geraet.schluessel}`;
+  if (o.geraet) {
+    kopf.Authorization = `Bearer ${o.geraet.id}.${o.geraet.schluessel}`;
+    // Manche Webhoster entfernen den Authorization-Header, bevor PHP ihn sieht. X-Auth trägt dasselbe.
+    kopf['X-Auth'] = kopf.Authorization;
+  }
   const res = await fetch(API_BASIS + pfad, {
     method: o.methode ?? 'GET',
     headers: kopf,

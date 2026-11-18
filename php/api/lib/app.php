@@ -1,0 +1,558 @@
+<?php
+// Community-Server für das Webhosting. Port von worker/src/app.ts: gleiche Endpunkte, gleiche Regeln, gleiche Antworten.
+declare(strict_types=1);
+
+require_once __DIR__ . '/regeln.php';
+require_once __DIR__ . '/db.php';
+
+const LIMITS = [
+    'geraeteJeIpUndStunde' => 150,
+    'becherJeGeraetUndTag' => 100,
+    'becherJeGeraetUndTagPruefstelle' => 1000,
+    'schreibzugriffeJeIpUndMinute' => 240,
+    'meldungenJeGeraetUndTag' => 20,
+    'maxBodyBytes' => 64000,
+    'maxEintraegeJeAnfrage' => 20,
+    'maxImport' => 100,
+];
+const MELDEGRUENDE = ['unpassend', 'spam', 'falsch', 'persoenlich', 'sonstiges'];
+const MIN_MS = 60_000;
+const STUNDE_MS = 3_600_000;
+
+final class HttpFehler extends Exception
+{
+    /** @param array<string,mixed> $extra */
+    public function __construct(public int $status, string $nachricht, public array $extra = [])
+    {
+        parent::__construct($nachricht);
+    }
+}
+
+final class Antwort
+{
+    /** @param array<string,string> $kopf */
+    public function __construct(public int $status, public mixed $daten, public array $kopf = [])
+    {
+    }
+}
+
+final class Anfrage
+{
+    /** @param array<string,string> $kopf Namen kleingeschrieben */
+    public function __construct(
+        public string $methode,
+        public string $pfad,
+        public array $query,
+        public array $kopf,
+        public string $body,
+        public string $ip,
+        public ?string $host = null,
+    ) {
+    }
+}
+
+function json_aus(mixed $daten): string
+{
+    return json_encode($daten, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION | JSON_INVALID_UTF8_SUBSTITUTE) ?: '{}';
+}
+
+function gleich(string $a, string $b): bool
+{
+    return hash_equals($a, $b);
+}
+
+function adressSchluessel(array $env, string $art, string $ip, int $jetzt): string
+{
+    $salz = $env['ip_salz'] ?? $env['admin_token'] ?? '';
+    return $art . ':' . substr(hash('sha256', $salz . '|' . intdiv($jetzt, TAG_MS) . '|' . $ip), 0, 24);
+}
+
+function raeumeAuf(Db $db, int $jetzt): int
+{
+    return $db->lauf('DELETE FROM limits WHERE ablauf < ?', [$jetzt - TAG_MS]);
+}
+
+/** @return array<string,mixed> */
+function lesen(Anfrage $a): array
+{
+    if (strlen($a->body) > LIMITS['maxBodyBytes']) {
+        throw new HttpFehler(413, 'Anfrage zu groß.');
+    }
+    $erste = ltrim($a->body)[0] ?? '';
+    $x = $erste === '{' ? json_decode($a->body, true, 32) : null;
+    if (!is_array($x)) {
+        throw new HttpFehler(400, 'Kein gültiges JSON.');
+    }
+    return $x;
+}
+
+/** Zähler je Schlüssel und Zeitfenster. true = noch erlaubt. */
+function begrenze(Db $db, string $schluessel, int $fensterMs, int $max, int $jetzt): bool
+{
+    $fenster = intdiv($jetzt, $fensterMs);
+    $ablauf = ($fenster + 1) * $fensterMs;
+    if ($db->typ === 'mysql') {
+        $db->lauf(
+            'INSERT INTO limits (schluessel, fenster, anzahl, ablauf) VALUES (?, ?, 1, ?)
+             ON DUPLICATE KEY UPDATE anzahl = IF(fenster = VALUES(fenster), anzahl + 1, 1), ablauf = VALUES(ablauf), fenster = VALUES(fenster)',
+            [$schluessel, $fenster, $ablauf],
+        );
+    } else {
+        $db->lauf(
+            'INSERT INTO limits (schluessel, fenster, anzahl, ablauf) VALUES (?, ?, 1, ?)
+             ON CONFLICT(schluessel) DO UPDATE SET
+               anzahl = CASE WHEN fenster = excluded.fenster THEN anzahl + 1 ELSE 1 END,
+               fenster = excluded.fenster, ablauf = excluded.ablauf',
+            [$schluessel, $fenster, $ablauf],
+        );
+    }
+    $z = $db->eins('SELECT anzahl FROM limits WHERE schluessel = ?', [$schluessel]);
+    return (int) ($z['anzahl'] ?? 0) <= $max;
+}
+
+/** @return array<string,mixed> */
+function anmelden(Anfrage $a, Db $db): array
+{
+    $kopf = $a->kopf['authorization'] ?? $a->kopf['x-auth'] ?? '';
+    if (preg_match('/^Bearer ([A-Za-z0-9_-]{16,64})\.([0-9a-f]{64})$/', $kopf, $m) !== 1) {
+        throw new HttpFehler(401, 'Anmeldung fehlt.');
+    }
+    $g = $db->eins('SELECT * FROM geraete WHERE id = ?', [$m[1]]);
+    if (!$g || !gleich((string) $g['schluessel_hash'], hash('sha256', $m[2]))) {
+        throw new HttpFehler(401, 'Unbekanntes Gerät.');
+    }
+    if ((int) $g['gesperrt'] !== 0) {
+        throw new HttpFehler(403, 'Dieses Gerät ist gesperrt.');
+    }
+    return $g;
+}
+
+function istAdmin(Anfrage $a, array $env): bool
+{
+    $kopf = $a->kopf['authorization'] ?? $a->kopf['x-auth'] ?? '';
+    $token = (string) ($env['admin_token'] ?? '');
+    return $token !== '' && preg_match('/^Bearer (.+)$/', $kopf, $m) === 1 && gleich($m[1], $token);
+}
+
+/** @param array<string,mixed> $z @return array<string,mixed> */
+function alsEintrag(array $z): array
+{
+    if ((int) $z['versteckt'] !== 0) {
+        return ['id' => $z['id'], 'versteckt' => true, 'seq' => (int) $z['seq']];
+    }
+    $n = static fn($v) => $v === null ? null : (int) $v;
+    $e = [
+        'id' => $z['id'],
+        'seq' => (int) $z['seq'],
+        'stand' => $z['stand'],
+        'markt' => $z['markt'],
+        'saison' => (int) $z['saison'],
+        'noten' => [
+            'geschmack' => $n($z['geschmack']),
+            'geruch' => $n($z['geruch']),
+            'temperatur' => $n($z['temperatur']),
+            'personal' => $n($z['personal']),
+            'atmosphaere' => $n($z['atmosphaere']),
+            'preisLeistung' => $n($z['preis_leistung']),
+            'becher' => $n($z['becher']),
+        ],
+        'erstelltAm' => (int) $z['erstellt_am'],
+        'geraet' => $z['geraet_id'],
+        'pruefstelle' => (int) $z['pruefstelle'] !== 0,
+    ];
+    if ($z['stadt']) {
+        $e['stadt'] = $z['stadt'];
+    }
+    if ($z['datum']) {
+        $e['datum'] = $z['datum'];
+    }
+    if ($z['sorte']) {
+        $e['sorte'] = $z['sorte'];
+    }
+    if ($z['becher_nr'] !== null) {
+        $e['becherNr'] = (int) $z['becher_nr'];
+    }
+    if ($z['preis'] !== null) {
+        $e['preis'] = (float) $z['preis'];
+    }
+    if ($z['notiz']) {
+        $e['notiz'] = $z['notiz'];
+    }
+    if ($z['name']) {
+        $e['name'] = $z['name'];
+    }
+    if ($z['besuch_id']) {
+        $e['besuchId'] = $z['besuch_id'];
+    }
+    return $e;
+}
+
+/** @param array<string,mixed> $e */
+function fuegeEin(Db $db, array $e, string $geraetId, ?string $name, bool $pruefstelle, int $jetzt): void
+{
+    $db->transaktion(function () use ($db, $e, $geraetId, $name, $pruefstelle, $jetzt) {
+        $seq = $db->naechsteSeq();
+        $n = $e['noten'];
+        $db->lauf(
+            'INSERT INTO becher (seq, id, geraet_id, name, pruefstelle, besuch_id, stand, markt, stadt, saison, datum, sorte,
+               becher_nr, preis, notiz, geschmack, geruch, temperatur, personal, atmosphaere, preis_leistung, becher,
+               erstellt_am, eingegangen_am, versteckt)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)',
+            [
+                $seq, $e['id'], $geraetId, $name, $pruefstelle ? 1 : 0, $e['besuchId'], $e['stand'], $e['markt'], $e['stadt'],
+                $e['saison'], $e['datum'], $e['sorte'], $e['becherNr'], $e['preis'], $e['notiz'],
+                $n['geschmack'], $n['geruch'], $n['temperatur'], $n['personal'], $n['atmosphaere'],
+                $n['preisLeistung'], $n['becher'], $e['erstelltAm'], $jetzt,
+            ],
+        );
+    });
+}
+
+/** Setzt Felder eines Bechers und gibt ihm eine neue Sync-Nummer. @param list<mixed> $werte */
+function aendere(Db $db, string $setzen, array $werte, string $id): int
+{
+    return (int) $db->transaktion(function () use ($db, $setzen, $werte, $id) {
+        $seq = $db->naechsteSeq();
+        return $db->lauf("UPDATE becher SET $setzen, seq = ? WHERE id = ?", [...$werte, $seq, $id]);
+    });
+}
+
+/** @return list<string> */
+function erlaubteUrspruenge(array $env): array
+{
+    return array_values(array_filter(array_map('trim', (array) ($env['erlaubte_ursprunge'] ?? []))));
+}
+
+function gleicherUrsprung(Anfrage $a, ?string $ursprung): bool
+{
+    if ($ursprung === null || $a->host === null) {
+        return false;
+    }
+    return preg_match('#^https?://#', $ursprung) === 1 && (parse_url($ursprung, PHP_URL_HOST) . (($p = parse_url($ursprung, PHP_URL_PORT)) ? ":$p" : '')) === $a->host;
+}
+
+function ursprungErlaubt(Anfrage $a, array $env, string $ursprung): bool
+{
+    return in_array($ursprung, erlaubteUrspruenge($env), true) || gleicherUrsprung($a, $ursprung);
+}
+
+/** @return array<string,string> */
+function corsKopf(Anfrage $a, array $env, bool $nurLesen): array
+{
+    $ursprung = $a->kopf['origin'] ?? null;
+    $basis = ['Vary' => 'Origin'];
+    if ($nurLesen) {
+        return $basis + ['Access-Control-Allow-Origin' => '*'];
+    }
+    if ($ursprung !== null && ursprungErlaubt($a, $env, $ursprung)) {
+        return $basis + ['Access-Control-Allow-Origin' => $ursprung];
+    }
+    return $basis;
+}
+
+// ───────── Einstieg ─────────
+
+function behandle(Anfrage $a, Db $db, array $env, int $jetzt): Antwort
+{
+    $pfad = rtrim($a->pfad, '/') ?: '/';
+    $methode = strtoupper($a->methode);
+    $nurLesen = $methode === 'GET' && ($pfad === '/api/becher' || $pfad === '/api/status');
+    $cors = corsKopf($a, $env, $nurLesen);
+
+    try {
+        if ($methode === 'OPTIONS') {
+            $ursprung = $a->kopf['origin'] ?? null;
+            $ok = $ursprung === null || ursprungErlaubt($a, $env, $ursprung);
+            return new Antwort($ok ? 204 : 403, null, corsKopf($a, $env, false) + [
+                'Access-Control-Allow-Methods' => 'GET, POST, PUT, OPTIONS',
+                'Access-Control-Allow-Headers' => 'Authorization, Content-Type, X-Auth',
+                'Access-Control-Max-Age' => '86400',
+            ]);
+        }
+        if ($methode !== 'GET') {
+            $ursprung = $a->kopf['origin'] ?? null;
+            if ($ursprung !== null && !ursprungErlaubt($a, $env, $ursprung)) {
+                throw new HttpFehler(403, 'Ursprung nicht erlaubt.');
+            }
+        }
+        // Nur Schreibzugriffe werden gezählt (Lesen kostet keine Schreibzeile).
+        if ($methode !== 'GET') {
+            if (random_int(1, 50) === 1) {
+                raeumeAuf($db, $jetzt);
+            }
+            if (!begrenze($db, adressSchluessel($env, 'schreiben', $a->ip, $jetzt), MIN_MS, LIMITS['schreibzugriffeJeIpUndMinute'], $jetzt)) {
+                throw new HttpFehler(429, 'Zu viele Anfragen. Bitte kurz warten.');
+            }
+        }
+        $antwort = route($a, $db, $env, $pfad, $methode, $jetzt);
+        $antwort->kopf = $cors + $antwort->kopf;
+        return $antwort;
+    } catch (HttpFehler $f) {
+        return new Antwort($f->status, ['fehler' => $f->getMessage()] + $f->extra, $cors);
+    } catch (Throwable $t) {
+        error_log('Glühlabor: ' . $t->getMessage());
+        return new Antwort(500, ['fehler' => 'Interner Fehler.'], $cors);
+    }
+}
+
+function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, int $jetzt): Antwort
+{
+    if ($pfad === '/api/status' && $methode === 'GET') {
+        return new Antwort(200, ['ok' => true, 'zeit' => $jetzt]);
+    }
+
+    // ── Gerät anmelden ──
+    if ($pfad === '/api/geraete' && $methode === 'POST') {
+        if (!begrenze($db, adressSchluessel($env, 'geraete', $a->ip, $jetzt), STUNDE_MS, LIMITS['geraeteJeIpUndStunde'], $jetzt)) {
+            throw new HttpFehler(429, 'Zu viele neue Geräte von dieser Adresse. Bitte später erneut versuchen.');
+        }
+        $b = lesen($a);
+        if (!is_string($b['id'] ?? null) || preg_match('/^[A-Za-z0-9_-]{16,64}$/', $b['id']) !== 1) {
+            throw new HttpFehler(400, 'Ungültige Kennung.');
+        }
+        if (!is_string($b['schluessel'] ?? null) || preg_match('/^[0-9a-f]{64}$/', $b['schluessel']) !== 1) {
+            throw new HttpFehler(400, 'Ungültiger Schlüssel.');
+        }
+        if ($db->eins('SELECT id FROM geraete WHERE id = ?', [$b['id']])) {
+            throw new HttpFehler(409, 'Diese Kennung ist schon vergeben.');
+        }
+        $db->lauf('INSERT INTO geraete (id, schluessel_hash, erstellt_am) VALUES (?, ?, ?)', [$b['id'], hash('sha256', $b['schluessel']), $jetzt]);
+        return new Antwort(201, ['ok' => true]);
+    }
+
+    // ── Eigene Daten ──
+    if ($pfad === '/api/ich' && ($methode === 'GET' || $methode === 'PUT')) {
+        $g = anmelden($a, $db);
+        if ($methode === 'GET') {
+            return new Antwort(200, ['id' => $g['id'], 'name' => $g['name'], 'pruefstelle' => (int) $g['pruefstelle'] !== 0]);
+        }
+        $b = lesen($a);
+        $p = pruefeName($b['name'] ?? null, (int) $g['pruefstelle'] !== 0);
+        if (!$p['ok']) {
+            throw new HttpFehler(422, $p['grund']);
+        }
+        $db->lauf('UPDATE geraete SET name = ? WHERE id = ?', [$p['name'], $g['id']]);
+        // Bisher namenlose Becher dieses Geräts bekommen den Namen nachträglich; schon benannte bleiben.
+        $nachbenannt = 0;
+        if ($p['name'] !== null) {
+            foreach ($db->alle('SELECT id FROM becher WHERE geraet_id = ? AND name IS NULL', [$g['id']]) as $z) {
+                aendere($db, 'name = ?', [$p['name']], (string) $z['id']);
+                $nachbenannt++;
+            }
+        }
+        return new Antwort(200, ['ok' => true, 'name' => $p['name'], 'nachbenannt' => $nachbenannt]);
+    }
+
+    if ($pfad === '/api/pruefstelle' && $methode === 'POST') {
+        $g = anmelden($a, $db);
+        $b = lesen($a);
+        if (!begrenze($db, 'code:' . $g['id'], STUNDE_MS, 10, $jetzt)) {
+            throw new HttpFehler(429, 'Zu viele Versuche.');
+        }
+        $code = (string) ($env['pruefstelle_code'] ?? '');
+        if ($code === '' || !is_string($b['code'] ?? null) || !gleich($b['code'], $code)) {
+            throw new HttpFehler(403, 'Falscher Code.');
+        }
+        $db->lauf('UPDATE geraete SET pruefstelle = 1 WHERE id = ?', [$g['id']]);
+        return new Antwort(200, ['ok' => true, 'pruefstelle' => true]);
+    }
+
+    // ── Becher ──
+    if ($pfad === '/api/becher' && $methode === 'POST') {
+        $g = anmelden($a, $db);
+        $b = lesen($a);
+        $liste = $b['eintraege'] ?? null;
+        if (!is_array($liste) || !array_is_list($liste) || count($liste) === 0 || count($liste) > LIMITS['maxEintraegeJeAnfrage']) {
+            throw new HttpFehler(400, 'Bitte 1 bis ' . LIMITS['maxEintraegeJeAnfrage'] . ' Einträge senden.');
+        }
+        $limit = (int) $g['pruefstelle'] !== 0 ? LIMITS['becherJeGeraetUndTagPruefstelle'] : LIMITS['becherJeGeraetUndTag'];
+        $schonHeute = (int) ($db->eins('SELECT COUNT(*) AS n FROM becher WHERE geraet_id = ? AND eingegangen_am > ?', [$g['id'], $jetzt - TAG_MS])['n'] ?? 0);
+        $frei = max(0, $limit - $schonHeute);
+
+        $ergebnisse = [];
+        foreach ($liste as $roh) {
+            $rohId = is_array($roh) ? ($roh['id'] ?? null) : null;
+            $p = pruefeEinreichung($roh, $jetzt);
+            if (!$p['ok']) {
+                $ergebnisse[] = ['id' => $rohId, 'status' => 'abgelehnt', 'grund' => $p['grund']];
+                continue;
+            }
+            $e = $p['eintrag'];
+            $vorhanden = $db->eins('SELECT geraet_id FROM becher WHERE id = ?', [$e['id']]);
+            if ($vorhanden) {
+                $ergebnisse[] = $vorhanden['geraet_id'] === $g['id']
+                    ? ['id' => $e['id'], 'status' => 'bereits']
+                    : ['id' => $e['id'], 'status' => 'abgelehnt', 'grund' => 'ID ist schon vergeben.'];
+                continue;
+            }
+            if ($frei <= 0) {
+                $ergebnisse[] = ['id' => $e['id'], 'status' => 'zu-viele', 'grund' => 'Tageslimit erreicht.'];
+                continue;
+            }
+            fuegeEin($db, $e, (string) $g['id'], $g['name'], (int) $g['pruefstelle'] !== 0, $jetzt);
+            $frei--;
+            $ergebnisse[] = ['id' => $e['id'], 'status' => 'ok'];
+        }
+        return new Antwort(200, ['ergebnisse' => $ergebnisse]);
+    }
+
+    if ($pfad === '/api/becher' && $methode === 'GET') {
+        $nach = max(0, (int) floor((float) ($a->query['nach'] ?? 0)));
+        $limit = (int) floor((float) ($a->query['limit'] ?? 200));
+        $limit = min(500, max(1, $limit ?: 200));
+        $zeilen = $db->alle('SELECT * FROM becher WHERE seq > ? ORDER BY seq ASC LIMIT ?', [$nach, $limit + 1]);
+        $mehr = count($zeilen) > $limit;
+        $seite = $mehr ? array_slice($zeilen, 0, $limit) : $zeilen;
+        $letzte = $seite === [] ? $nach : (int) $seite[count($seite) - 1]['seq'];
+        return new Antwort(200, ['eintraege' => array_map('alsEintrag', $seite), 'naechste' => $letzte, 'mehr' => $mehr], ['Cache-Control' => 'no-store']);
+    }
+
+    // ── Melden ──
+    if ($pfad === '/api/melden' && $methode === 'POST') {
+        $g = anmelden($a, $db);
+        $b = lesen($a);
+        if (!is_string($b['id'] ?? null) || !is_string($b['grund'] ?? null) || !in_array($b['grund'], MELDEGRUENDE, true)) {
+            throw new HttpFehler(400, 'Becher und Grund nötig.');
+        }
+        $t = $b['text'] ?? null;
+        if ($t !== null && !is_string($t)) {
+            throw new HttpFehler(400, 'Der Text muss Text sein.');
+        }
+        $text = is_string($t) ? (mb_substr(saeubere($t), 0, 300, 'UTF-8') ?: null) : null;
+        if (!begrenze($db, 'melden:' . $g['id'], TAG_MS, LIMITS['meldungenJeGeraetUndTag'], $jetzt)) {
+            throw new HttpFehler(429, 'Heute schon viele Meldungen. Bitte morgen wieder.');
+        }
+        if (!$db->eins('SELECT id FROM becher WHERE id = ? AND versteckt = 0', [$b['id']])) {
+            throw new HttpFehler(404, 'Becher nicht gefunden.');
+        }
+        $db->lauf($db->ignoriere() . ' INTO meldungen (becher_id, geraet_id, grund, text, erstellt_am) VALUES (?, ?, ?, ?, ?)', [$b['id'], $g['id'], $b['grund'], $text, $jetzt]);
+        return new Antwort(200, ['ok' => true]);
+    }
+
+    // ── Moderation ──
+    if (str_starts_with($pfad, '/api/admin/')) {
+        if (!istAdmin($a, $env)) {
+            throw new HttpFehler(401, 'Nur für die Prüfstelle.');
+        }
+        if ($pfad === '/api/admin/meldungen' && $methode === 'GET') {
+            $zeilen = $db->alle(
+                'SELECT m.becher_id AS id, COUNT(*) AS anzahl, MAX(m.erstellt_am) AS zuletzt, GROUP_CONCAT(m.grund) AS gruende,
+                        MAX(b.stand) AS stand, MAX(b.markt) AS markt, MAX(b.name) AS name, MAX(b.notiz) AS notiz,
+                        MAX(b.versteckt) AS versteckt, MAX(b.geraet_id) AS geraet_id
+                   FROM meldungen m LEFT JOIN becher b ON b.id = m.becher_id
+                  WHERE m.bearbeitet = 0
+                  GROUP BY m.becher_id
+                  ORDER BY anzahl DESC, zuletzt DESC
+                  LIMIT 100',
+            );
+            foreach ($zeilen as &$z) {
+                $z['anzahl'] = (int) $z['anzahl'];
+                $z['zuletzt'] = (int) $z['zuletzt'];
+                $z['versteckt'] = $z['versteckt'] === null ? null : (int) $z['versteckt'];
+            }
+            return new Antwort(200, ['meldungen' => $zeilen]);
+        }
+        if ($methode !== 'POST') {
+            throw new HttpFehler(404, 'Nicht gefunden.');
+        }
+        $b = lesen($a);
+
+        if ($pfad === '/api/admin/meldung-verwerfen') {
+            if (!is_string($b['id'] ?? null)) {
+                throw new HttpFehler(400, 'id nötig.');
+            }
+            $r = $db->lauf('UPDATE meldungen SET bearbeitet = 1 WHERE becher_id = ?', [$b['id']]);
+            return new Antwort(200, ['ok' => true, 'betroffen' => $r]);
+        }
+
+        if ($pfad === '/api/admin/verstecken') {
+            if (!is_string($b['id'] ?? null) || !is_bool($b['versteckt'] ?? null)) {
+                throw new HttpFehler(400, 'id und versteckt nötig.');
+            }
+            $r = aendere($db, 'versteckt = ?', [$b['versteckt'] ? 1 : 0], $b['id']);
+            if ($r === 0) {
+                throw new HttpFehler(404, 'Becher nicht gefunden.');
+            }
+            if ($b['versteckt']) {
+                $db->lauf('UPDATE meldungen SET bearbeitet = 1 WHERE becher_id = ?', [$b['id']]);
+            }
+            return new Antwort(200, ['ok' => true]);
+        }
+
+        if ($pfad === '/api/admin/sperren') {
+            if (!is_string($b['geraet'] ?? null) || !is_bool($b['gesperrt'] ?? null)) {
+                throw new HttpFehler(400, 'geraet und gesperrt nötig.');
+            }
+            $r = $db->lauf('UPDATE geraete SET gesperrt = ? WHERE id = ?', [$b['gesperrt'] ? 1 : 0, $b['geraet']]);
+            if ($r === 0 && !$db->eins('SELECT id FROM geraete WHERE id = ?', [$b['geraet']])) {
+                throw new HttpFehler(404, 'Gerät nicht gefunden.');
+            }
+            $zeilen = $db->alle('SELECT id FROM becher WHERE geraet_id = ?', [$b['geraet']]);
+            foreach ($zeilen as $z) {
+                aendere($db, 'versteckt = ?', [$b['gesperrt'] ? 1 : 0], (string) $z['id']);
+            }
+            return new Antwort(200, ['ok' => true, 'betroffen' => count($zeilen)]);
+        }
+
+        // Löschen auf Anfrage (Art. 17 DSGVO)
+        if ($pfad === '/api/admin/loeschen') {
+            if (!is_string($b['geraet'] ?? null) || !in_array($b['modus'] ?? null, ['name', 'alles'], true)) {
+                throw new HttpFehler(400, 'geraet und modus (name oder alles) nötig.');
+            }
+            if (!$db->eins('SELECT id FROM geraete WHERE id = ?', [$b['geraet']])) {
+                throw new HttpFehler(404, 'Gerät nicht gefunden.');
+            }
+            $zeilen = $db->alle('SELECT id FROM becher WHERE geraet_id = ?', [$b['geraet']]);
+            foreach ($zeilen as $z) {
+                if ($b['modus'] === 'name') {
+                    aendere($db, 'name = NULL', [], (string) $z['id']);
+                } else {
+                    aendere(
+                        $db,
+                        "versteckt = 1, name = NULL, notiz = NULL, stadt = NULL, stand = '-', markt = '-', besuch_id = NULL,
+                         geschmack = NULL, geruch = NULL, temperatur = NULL, personal = NULL, atmosphaere = NULL,
+                         preis_leistung = NULL, becher = NULL, preis = NULL",
+                        [],
+                        (string) $z['id'],
+                    );
+                }
+            }
+            if ($b['modus'] === 'name') {
+                $db->lauf('UPDATE geraete SET name = NULL WHERE id = ?', [$b['geraet']]);
+            } else {
+                $db->lauf("UPDATE geraete SET name = NULL, gesperrt = 1, schluessel_hash = '-' WHERE id = ?", [$b['geraet']]);
+            }
+            $db->lauf('DELETE FROM meldungen WHERE geraet_id = ? OR becher_id IN (SELECT id FROM (SELECT id FROM becher WHERE geraet_id = ?) AS t)', [$b['geraet'], $b['geraet']]);
+            return new Antwort(200, ['ok' => true, 'betroffen' => count($zeilen)]);
+        }
+
+        if ($pfad === '/api/admin/import') {
+            $liste = $b['eintraege'] ?? null;
+            if (!is_array($liste) || !array_is_list($liste) || count($liste) === 0 || count($liste) > LIMITS['maxImport']) {
+                throw new HttpFehler(400, 'Bitte 1 bis ' . LIMITS['maxImport'] . ' Einträge senden.');
+            }
+            $db->lauf($db->ignoriere() . " INTO geraete (id, schluessel_hash, name, pruefstelle, erstellt_am) VALUES ('bestand-pruefstelle', '-', 'Prüfstelle', 1, ?)", [$jetzt]);
+            $neu = 0;
+            $abgelehnt = [];
+            foreach ($liste as $roh) {
+                $erst = is_array($roh) && istZahl($roh['erstelltAm'] ?? null) ? $roh['erstelltAm'] : $jetzt;
+                // Bestandsdaten dürfen älter sein als das Einreichfenster der App.
+                $p = pruefeEinreichung(is_array($roh) ? ['erstelltAm' => (int) min(max($erst, $jetzt - 100 * TAG_MS), $jetzt)] + $roh : $roh, $jetzt);
+                if (!$p['ok']) {
+                    $abgelehnt[] = ['id' => is_array($roh) ? ($roh['id'] ?? null) : null, 'grund' => $p['grund']];
+                    continue;
+                }
+                $e = $p['eintrag'];
+                $e['erstelltAm'] = (int) $erst;
+                if ($db->eins('SELECT id FROM becher WHERE id = ?', [$e['id']])) {
+                    continue;
+                }
+                fuegeEin($db, $e, 'bestand-pruefstelle', 'Prüfstelle', true, $jetzt);
+                $neu++;
+            }
+            return new Antwort(200, ['neu' => $neu, 'abgelehnt' => $abgelehnt]);
+        }
+    }
+
+    throw new HttpFehler(404, 'Nicht gefunden.');
+}

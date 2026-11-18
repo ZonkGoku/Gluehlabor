@@ -21,7 +21,7 @@ if (!API_URL || !TOKEN || !befehl) {
 async function senden(pfad: string, body?: unknown): Promise<unknown> {
   const res = await fetch(API_URL + pfad, {
     method: body === undefined ? 'GET' : 'POST',
-    headers: { Authorization: `Bearer ${TOKEN}`, ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) },
+    headers: { Authorization: `Bearer ${TOKEN}`, 'X-Auth': `Bearer ${TOKEN}`, ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const daten = (await res.json()) as { fehler?: string };

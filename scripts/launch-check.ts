@@ -53,6 +53,15 @@ if (apiUrl) {
     const admin = await fetch(`${apiUrl}/api/admin/meldungen`);
     pruefe(admin.status === 401, 'Moderation ist ohne Schlüssel gesperrt', `Status ${admin.status}`);
 
+    // Webhosting: Konfiguration, Quelltext und Datenbankdatei dürfen von außen nicht erreichbar sein.
+    if (apiUrl.startsWith(SEITE)) {
+      for (const pfad of ['/api/privat/config.php', '/api/lib/app.php', '/api/daten/gluehlabor.sqlite']) {
+        const r = await fetch(SEITE + pfad);
+        const text = r.status === 200 ? await r.text() : '';
+        pruefe(r.status !== 200 || text === '', `${pfad} ist von außen gesperrt`, `Status ${r.status}: .htaccess in api/ wird nicht ausgewertet?`);
+      }
+    }
+
     const code = await fetch(`${apiUrl}/api/pruefstelle`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
     pruefe(code.status === 401, 'Prüfstellen-Code ist ohne Anmeldung gesperrt', `Status ${code.status}`);
   } catch (err) {

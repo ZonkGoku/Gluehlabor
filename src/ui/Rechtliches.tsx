@@ -120,19 +120,23 @@ export function Datenschutz() {
 
         <h2>5. Adressen und Missbrauchsschutz</h2>
         <p>
-          Beim Aufruf sieht der Server technisch deine IP-Adresse. Wir speichern keine IP-Adressen im
-          Klartext. Zum Schutz vor Missbrauch zählen wir Anfragen und neue Geräte je Adresse. Dafür speichern wir nur einen
+          Beim Aufruf sieht der Server technisch deine IP-Adresse. In der Datenbank der App speichern wir keine
+          IP-Adressen im Klartext. Zum Schutz vor Missbrauch zählen wir Anfragen und neue Geräte je Adresse. Dafür speichern wir nur einen
           Hashwert, der mit einem geheimen Salz und dem Tag gebildet wird und sich täglich ändert. Er wird innerhalb von zwei
           Tagen gelöscht.
         </p>
 
         <h2>6. Hosting</h2>
         <p>
-          Website, Server und Datenbank laufen auf einem eigenen Server bei der Hetzner Online GmbH, Industriestr. 25, 91710
-          Gunzenhausen (Deutschland){B.hostingStandort ? `, Standort: ${B.hostingStandort}` : ''}. Mit Hetzner besteht ein
-          Vertrag zur Auftragsverarbeitung. Es werden keine Dienste von Drittanbietern nachgeladen (keine Schriftarten-,
-          Analyse- oder Werbedienste). Beim Aufruf verarbeitet der Server deine IP-Adresse nur kurzfristig im Arbeitsspeicher
-          und schreibt sie nicht in Protokolldateien.
+          Website, Schnittstelle und Datenbank laufen bei der Hetzner Online GmbH, Industriestr. 25, 91710 Gunzenhausen
+          (Deutschland){B.hostingStandort ? `, Standort: ${B.hostingStandort}` : ''}. Mit Hetzner besteht ein Vertrag zur
+          Auftragsverarbeitung. Es werden keine Dienste von Drittanbietern nachgeladen (keine Schriftarten-, Analyse- oder
+          Werbedienste).
+        </p>
+        <p>
+          Der Webserver des Hosters protokolliert beim Aufruf technisch bedingt Zugriffe (IP-Adresse, Zeitpunkt, aufgerufene
+          Adresse, Browserkennung). Das dient dem sicheren Betrieb (Art. 6 Abs. 1 lit. f DSGVO). Die Dauer richtet sich nach
+          den Einstellungen des Hosters. Wir werten diese Protokolle nicht aus und verknüpfen sie nicht mit Bewertungen.
         </p>
 
         <h2>7. Wie lange wir speichern</h2>

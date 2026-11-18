@@ -17,7 +17,7 @@ let neu = 0;
 for (let i = 0; i < eintraege.length; i += 100) {
   const res = await fetch(`${API_URL}/api/admin/import`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
+    headers: { Authorization: `Bearer ${TOKEN}`, 'X-Auth': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ eintraege: eintraege.slice(i, i + 100) }),
   });
   const antwort = (await res.json()) as { neu?: number; abgelehnt?: unknown[]; fehler?: string };
