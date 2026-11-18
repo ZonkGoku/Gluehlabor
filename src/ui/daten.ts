@@ -14,7 +14,12 @@ export function useGewichte(): Gewichte {
   return useLive(leseGewichte, [], { ...DEFAULT_GEWICHTE });
 }
 
-/** Darf dieses Gerät eintragen? (Token hinterlegt oder schon lokal erfasst.) */
+/** Ist auf diesem Gerät ein Schreib-Token hinterlegt? */
+export function useHatToken(): boolean {
+  return Boolean(useLive(() => leseEinstellung<string>('token', ''), [], ''));
+}
+
+/** Zeigt dieses Gerät Eintrags-Details (Abend-Modus, Sync-Status)? (Token hinterlegt oder schon lokal erfasst.) */
 export function useDarfErfassen(): boolean {
   const token = useLive(() => leseEinstellung<string>('token', ''), [], '');
   const offen = useLive(() => db.eintraege.where('sync').equals('offen').count(), [], 0);

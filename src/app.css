@@ -1460,10 +1460,21 @@ a.karte.spitze {
   line-height: 1.5;
 }
 
-/* Handy: Plus-Balken zeigen, am Rechner übernimmt die Seitenleiste. */
+/* Der Erfassen-Knopf steht oben, am Handy wie am Rechner. */
+.plus-hinweis {
+  margin: 8px 4px 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--warnung);
+}
+.plus-hinweis a {
+  color: inherit;
+  font-weight: 600;
+}
 @media (min-width: 900px) {
-  .plus-balken {
-    display: none;
+  .b-plus {
+    grid-column: 1 / -1;
+    order: -1;
   }
   .start-raster {
     grid-template-columns: repeat(6, minmax(0, 1fr));

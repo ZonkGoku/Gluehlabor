@@ -6,7 +6,7 @@ import { staedte, stadtVon } from '../lib/orte';
 import { befunde } from '../lib/statistik';
 import { abend, kennzahlen, neuesteBecher, saisonStatus, saisonVerlauf } from '../lib/startseite';
 import { Betreiber, datumKurz, Notenbalken, SaisonSchalter, UrteilPill } from './bausteine';
-import { useDarfErfassen, useEintraege, useGewichte, useSaison } from './daten';
+import { useDarfErfassen, useEintraege, useGewichte, useHatToken, useSaison } from './daten';
 import { Deutschlandkarte } from './Deutschlandkarte';
 import { Saisonverlauf } from './Saisonverlauf';
 import { LABELS, MARKTLISTE } from './stammdaten';
@@ -16,6 +16,7 @@ export function Uebersicht() {
   const alle = useEintraege();
   const gewichte = useGewichte();
   const darf = useDarfErfassen();
+  const hatToken = useHatToken();
   const [saison, setSaison] = useSaison(alle);
   if (!alle) return null;
 
@@ -60,14 +61,12 @@ export function Uebersicht() {
       {zeilen.length === 0 && !abendModus ? (
         <div class="karte leer">
           <b>In dieser Saison ist noch kein Becher bewertet.</b>
-          {darf ? 'Der erste Glühwein des Jahres wartet.' : 'Sobald David und Philip den ersten Becher bewerten, steht er hier.'}
-          {darf && (
-            <p style={{ margin: '14px 0 0' }}>
-              <a class="pillknopf" href="#/erfassen">
-                <Symbol name="plus" groesse={18} /> Ersten Becher erfassen
-              </a>
-            </p>
-          )}
+          Der erste Glühwein des Jahres wartet.
+          <p style={{ margin: '14px 0 0' }}>
+            <a class="pillknopf" href="#/erfassen">
+              <Symbol name="plus" groesse={18} /> Ersten Becher erfassen
+            </a>
+          </p>
         </div>
       ) : (
         <div class="start-raster">
@@ -109,13 +108,19 @@ export function Uebersicht() {
             </a>
           )}
 
-          {darf && (
-            <a class="plus-balken b-plus" href="#/erfassen">
+          <div class="b-plus">
+            <a class="plus-balken" href="#/erfassen">
               <Symbol name="plus" groesse={22} />
               {heuteAbend.anzahl === 0 ? 'Becher erfassen' : 'Nächster Becher'}
               <span class="mono">Nr. {naechsteNr}</span>
             </a>
-          )}
+            {!hatToken && (
+              <p class="plus-hinweis">
+                Noch kein Token hinterlegt: Neue Becher bleiben vorerst nur auf diesem Gerät.{' '}
+                <a href="#/einstellungen">Token eintragen</a>
+              </p>
+            )}
+          </div>
 
           <div class="kennzahlen b-kpi">
             <div class="karte kpi">

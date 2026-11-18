@@ -33,12 +33,10 @@ export function Geruest({ route, children }: { route: string; children: Componen
           <Symbol name="einstellungen" groesse={20} />
           Einstellungen
         </a>
-        {darf && (
-          <a class="navpunkt erfassen" href="#/erfassen">
-            <Symbol name="plus" groesse={20} />
-            Becher erfassen
-          </a>
-        )}
+        <a class="navpunkt erfassen" href="#/erfassen">
+          <Symbol name="plus" groesse={20} />
+          Becher erfassen
+        </a>
         <div class="fussnote">
           {darf && <SyncAnzeige />}
           <div>Gemacht und betrieben von David (Bayern) &amp; Philip (Hamburg). Bewertet wird in ganz Deutschland.</div>
@@ -71,16 +69,9 @@ export function Geruest({ route, children }: { route: string; children: Componen
           <Symbol name="rangliste" />
           Rangliste
         </a>
-        {darf ? (
-          <a class="tab-plus" href="#/erfassen" aria-label="Becher erfassen">
-            <Symbol name="plus" groesse={28} />
-          </a>
-        ) : (
-          <a class="tab" href="#/spickzettel" aria-current={aktiv('spickzettel')}>
-            <Symbol name="spickzettel" />
-            Regeln
-          </a>
-        )}
+        <a class="tab-plus" href="#/erfassen" aria-label="Becher erfassen">
+          <Symbol name="plus" groesse={28} />
+        </a>
         <a class="tab" href="#/vergleich" aria-current={aktiv('vergleich')}>
           <Symbol name="vergleich" />
           Vergleich
