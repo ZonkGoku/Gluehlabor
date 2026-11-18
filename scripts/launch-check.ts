@@ -4,7 +4,8 @@ import { readFileSync } from 'node:fs';
 import { fehlendeAngaben, type Betreiber } from '../src/lib/betreiber';
 
 const lies = (p: string) => JSON.parse(readFileSync(p, 'utf8'));
-const SEITE = 'https://zonkgoku.github.io';
+const SEITE_URL: string = lies('data/server.json').seite || 'https://zonkgoku.github.io/Becherwerk/';
+const SEITE = new URL(SEITE_URL).origin;
 
 type Ergebnis = { ok: boolean; text: string; hinweis?: string };
 const ergebnisse: Ergebnis[] = [];
@@ -47,7 +48,7 @@ if (apiUrl) {
 
 // 3. Live-Seite
 try {
-  const r = await fetch(`${SEITE}/Becherwerk/`);
+  const r = await fetch(SEITE_URL);
   pruefe(r.ok, 'Live-Seite erreichbar', `Status ${r.status}`);
 } catch (err) {
   pruefe(false, 'Live-Seite erreichbar', String(err));

@@ -1,4 +1,5 @@
 {
-  "_hinweis": "Adresse des Community-Servers (Cloudflare Worker). Leer = die App arbeitet nur lokal. Wird beim Veröffentlichen des Servers eingetragen.",
-  "apiUrl": ""
+  "_hinweis": "apiUrl: Adresse des Community-Servers (Cloudflare Worker), leer = die App arbeitet nur lokal. seite: Adresse, unter der die App erreichbar ist (für npm run launch-check). Nach dem Wechsel auf die eigene Domain auf https://becherwerk.de/ setzen.",
+  "apiUrl": "",
+  "seite": "https://zonkgoku.github.io/Becherwerk/"
 }
