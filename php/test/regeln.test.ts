@@ -79,8 +79,8 @@ describe('PHP-Regeln entsprechen community.ts', () => {
     expect(pe).toEqual(e);
   });
   it.each(STAENDE.map((x, i) => [x[0], i] as const))('Stand %s', (_t, i) => {
-    const [stand, markt, stadt, datum, ms] = STAENDE[i];
-    expect(r.stand[i]).toEqual([standIdent({ stand, markt, stadt }), abendVon({ datum, erstelltAm: ms })]);
+    const [stand, , stadt, datum, ms] = STAENDE[i];
+    expect(r.stand[i]).toEqual([standIdent({ stand, stadt }), abendVon({ datum, erstelltAm: ms })]);
   });
   it('Adressen-Hash ist in beiden Fassungen identisch', async () => {
     const faelle = [['salz', 'schreiben', '203.0.113.5', JETZT], ['salz', 'geraete', '::1', JETZT + 86_400_000], ['äö', 'x', '1.2.3.4', 0]] as const;

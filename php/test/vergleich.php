@@ -17,6 +17,6 @@ foreach ($in['adresse'] as [$salz, $art, $ip, $jetzt]) {
     $aus['adresse'][] = adressSchluessel(['ip_salz' => $salz], $art, $ip, $jetzt);
 }
 foreach ($in['stand'] ?? [] as [$stand, $markt, $stadt, $datum, $ms]) {
-    $aus['stand'][] = [standIdent($stand, $markt, $stadt), abendVon($datum, $ms)];
+    $aus['stand'][] = [standIdent($stand, $stadt), abendVon($datum, $ms)];
 }
 echo json_aus($aus);

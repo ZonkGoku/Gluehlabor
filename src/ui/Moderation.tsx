@@ -2,9 +2,16 @@
 import { useEffect, useState } from 'preact/hooks';
 import { HAT_SERVER } from '../daten/config';
 import { leseEinstellung } from '../daten/db';
-import { entzieheZugang, fehlerText, ladeMeldungen, loescheGeraet, sperreGeraet, verstecke, verwirfMeldung, type Meldung } from '../daten/moderation';
+import { entferne, entzieheZugang, fehlerText, ladeMeldungen, loescheGeraet, sperreGeraet, verstecke, verwirfMeldung, type Meldung } from '../daten/moderation';
 import { MELDEGRUENDE } from '../daten/sync';
-import { useGeraetId } from './daten';
+import { useEintraege, useGeraetId } from './daten';
+import { anzeigeName, istPruefstelle } from '../lib/community';
+import { zahl2 } from '../lib/format';
+import { bewerte } from '../lib/scoring';
+import { useGewichte } from './daten';
+import { datumKurz } from './bausteine';
+import { ortText } from '../lib/orte';
+import { MARKTLISTE } from './stammdaten';
 import { useLive } from './hooks';
 import { t } from '../i18n';
 
@@ -18,6 +25,10 @@ export function Moderation() {
   const [liste, setListe] = useState<Meldung[] | null>(null);
   const [meldung, setMeldung] = useState('');
   const [loeschId, setLoeschId] = useState('');
+  const alle = useEintraege();
+  const gewichte = useGewichte();
+  const [suche, setSuche] = useState('');
+  const [gewaehlt, setGewaehlt] = useState<Set<string>>(new Set());
 
   const lade = async () => {
     try {
@@ -109,6 +120,61 @@ export function Moderation() {
           </li>
         ))}
       </ul>
+
+      <section class="glas mt-6 rounded-3xl p-4">
+        <h2 class="etikett !text-[11px]">{t('Alle Bewertungen')}{alle ? ` · ${alle.length}` : ''}</h2>
+        <p class="mt-1 text-xs text-dunst">{t('Testeinträge oder Unfug? Auswählen und endgültig löschen. Das lässt sich nicht rückgängig machen.')}</p>
+        <input class={`${FELD} mt-2`} placeholder={t('Suchen: Stand, Stadt oder Name')} aria-label={t('Suchen: Stand, Stadt oder Name')} value={suche} onInput={(e) => setSuche((e.target as HTMLInputElement).value)} />
+        {(() => {
+          const q = suche.trim().toLowerCase();
+          const treffer = (alle ?? [])
+            .filter((e) => !q || `${e.stand} ${e.stadt ?? ''} ${e.markt} ${e.name ?? ''}`.toLowerCase().includes(q))
+            .sort((a, b) => b.erstelltAm - a.erstelltAm);
+          const sichtbar = treffer.slice(0, 150);
+          const wahl = sichtbar.filter((e) => gewaehlt.has(e.id));
+          const umschalten = (id: string) => setGewaehlt((g) => { const n = new Set(g); n.has(id) ? n.delete(id) : n.add(id); return n; });
+          return (
+            <>
+              <div class="mt-2 flex flex-wrap items-center gap-2">
+                <button type="button" class={KNOPF} onClick={() => setGewaehlt(new Set(sichtbar.map((e) => e.id)))}>
+                  {t('Alle sichtbaren wählen')}
+                </button>
+                <button type="button" class={KNOPF} disabled={gewaehlt.size === 0} onClick={() => setGewaehlt(new Set())}>
+                  {t('Auswahl aufheben')}
+                </button>
+                <button
+                  type="button"
+                  class={`${KNOPF} !text-wein-400`}
+                  disabled={wahl.length === 0}
+                  onClick={() =>
+                    confirm(t('{n} Bewertungen endgültig löschen? Das lässt sich nicht rückgängig machen.', { n: wahl.length })) &&
+                    void tu(async () => { await entferne(wahl); setGewaehlt(new Set()); }, () => t('{n} Bewertungen gelöscht.', { n: wahl.length }))
+                  }
+                >
+                  {t('Auswahl löschen ({n})', { n: wahl.length })}
+                </button>
+              </div>
+              <ul class="mt-3 grid max-h-[60vh] gap-1.5 overflow-y-auto">
+                {sichtbar.map((e) => (
+                  <li>
+                    <label class="flex cursor-pointer items-center gap-3 rounded-2xl border border-rand bg-flaeche px-3 py-2 text-sm">
+                      <input type="checkbox" checked={gewaehlt.has(e.id)} onChange={() => umschalten(e.id)} aria-label={t('Auswählen: {stand}', { stand: e.stand })} />
+                      <span class="min-w-0 flex-1">
+                        <span class="block truncate font-semibold text-eis">{e.stand}</span>
+                        <span class="block truncate text-xs text-dunst">
+                          {[ortText(MARKTLISTE, e), datumKurz(e.datum) ?? t('Saison {s}', { s: e.saison }), istPruefstelle(e) ? t('Prüfstelle') : anzeigeName(e)].filter(Boolean).join(' · ')}
+                        </span>
+                      </span>
+                      <span class="font-display text-xl text-gold-300">{zahl2(bewerte(e.noten, gewichte).gesamt)}</span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+              {treffer.length > sichtbar.length && <p class="mt-2 text-xs text-dunst">{t('Es werden die neuesten {n} gezeigt. Mit der Suche findest du die übrigen.', { n: sichtbar.length })}</p>}
+            </>
+          );
+        })()}
+      </section>
 
       <section class="glas mt-6 rounded-3xl p-4">
         <h2 class="etikett !text-[11px]">{t('Löschen auf Anfrage')}</h2>

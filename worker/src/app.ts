@@ -524,6 +524,28 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
       return json({ ok: true, betroffen }, 200);
     }
 
+    // Bewertungen endgültig entfernen (Testeinträge, Unfug): Inhalt und Name werden gelöscht, ein Platzhalter bleibt,
+    // damit andere Geräte die Bewertung verlieren. Anders als „verstecken" ist das nicht umkehrbar.
+    if (pfad === '/api/admin/entfernen' && methode === 'POST') {
+      if (!Array.isArray(b.ids) || b.ids.length === 0 || b.ids.length > MAX_STAND_IDS || !b.ids.every((x) => typeof x === 'string')) {
+        throw new HttpFehler(400, `Bitte 1 bis ${MAX_STAND_IDS} Bewertungen nennen.`);
+      }
+      let betroffen = 0;
+      for (const id of b.ids as string[]) {
+        const r = await db
+          .prepare(
+            `UPDATE becher SET versteckt = 1, name = NULL, notiz = NULL, stadt = NULL, stand = '-', markt = '-', besuch_id = NULL,
+               geschmack = NULL, geruch = NULL, temperatur = NULL, personal = NULL, atmosphaere = NULL,
+               preis_leistung = NULL, becher = NULL, preis = NULL, seq = ${NAECHSTE_SEQ} WHERE id = ?`,
+          )
+          .bind(id)
+          .run();
+        betroffen += r.meta.changes;
+        await db.prepare('DELETE FROM meldungen WHERE becher_id = ?').bind(id).run();
+      }
+      return json({ ok: true, betroffen }, 200);
+    }
+
     // Zugang entziehen (Handy verloren): alle Geräte verlieren die Prüfstellen-Rechte, außer dem genannten. Danach den Code ändern.
     if (pfad === '/api/admin/pruefstelle-zuruecksetzen' && methode === 'POST') {
       const behalten = typeof b.behalten === 'string' ? b.behalten : '';

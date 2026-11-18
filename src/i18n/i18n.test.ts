@@ -47,7 +47,7 @@ describe('Wörterbuch', () => {
     for (const f of dateien) {
       const s = readFileSync(f, 'utf8');
       for (const m of s.matchAll(/\b(?:t|tt|uebersetze)\(\s*'((?:[^'\\]|\\.)*)'/g)) {
-        const k = m[1].replace(/\\'/g, "'");
+        const k = m[1].replace(/\\(['"])/g, '$1');
         if (!(k in EN)) fehlt.push(`${f}: ${k}`);
       }
       for (const m of s.matchAll(/\btn\([^,]+,\s*'((?:[^'\\]|\\.)*)',\s*'((?:[^'\\]|\\.)*)'/g)) {

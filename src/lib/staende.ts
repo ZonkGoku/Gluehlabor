@@ -56,7 +56,14 @@ export function gruppenwert(bewertungen: readonly Eintrag[], gewichte: Gewichte)
 
 /** Kennung des Stands, zu dem ein Eintrag gehört. Die Stadt folgt wenn nötig aus der gepflegten Marktliste. */
 export function standId(e: Eintrag, liste: MarktListe): string {
-  return standIdent({ stand: e.stand, markt: e.markt, stadt: stadtVon(liste, e) });
+  return standIdent({ stand: e.stand, stadt: stadtVon(liste, e) });
+}
+
+/** Häufigster echter Markt der Bewertungen; ohne Angabe „Sonstiger". */
+function haeufigsterMarkt(bewertungen: readonly Eintrag[], liste: MarktListe): string {
+  const z = new Map<string, number>();
+  for (const e of bewertungen) if (e.markt !== liste.sonstiger) z.set(e.markt, (z.get(e.markt) ?? 0) + 1);
+  return [...z.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? liste.sonstiger;
 }
 
 /** Häufigste Schreibweise, bei Gleichstand die zuletzt benutzte. */
@@ -91,7 +98,7 @@ export function baueStaende<T extends Eintrag>(
     return {
       id,
       stand: schoensteSchreibweise(neueste),
-      markt: ref.markt,
+      markt: haeufigsterMarkt(neueste, liste),
       stadt: stadtVon(liste, ref) ?? undefined,
       bewertungen: gewaehlt,
       wert: gruppenwert(gewaehlt, gewichte),

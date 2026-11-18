@@ -1,7 +1,7 @@
 // Moderation im Browser für Prüfstellen-Geräte. Dieselben Endpunkte wie die Kommandozeile (npm run moderation),
 // angemeldet mit dem Gerät statt mit dem Admin-Token.
 import { api, ApiFehler } from './api';
-import { holeGeraet } from './db';
+import { db, holeGeraet, type LokalerEintrag } from './db';
 import { holeBecher } from './sync';
 import { t } from '../i18n';
 
@@ -60,4 +60,20 @@ export async function aendereStand(ids: string[], stand: string, markt: string, 
 export async function entzieheZugang(): Promise<number> {
   const geraet = await holeGeraet();
   return (await admin<{ betroffen: number }>('pruefstelle-zuruecksetzen', { behalten: geraet.id })).betroffen;
+}
+
+/**
+ * Entfernt Bewertungen endgültig. Was schon beim Server liegt, wird dort unkenntlich gemacht (andere Geräte verlieren es beim
+ * nächsten Abgleich); was nur auf diesem Gerät liegt, wird lokal gelöscht.
+ */
+export async function entferne(eintraege: readonly Pick<LokalerEintrag, 'id' | 'sync'>[]): Promise<number> {
+  const amServer = eintraege.filter((e) => e.sync === 'fertig' || e.sync === 'bestand').map((e) => e.id);
+  const nurLokal = eintraege.filter((e) => e.sync === 'offen' || e.sync === 'abgelehnt').map((e) => e.id);
+  for (let i = 0; i < amServer.length; i += 200) await admin('entfernen', { ids: amServer.slice(i, i + 200) });
+  if (nurLokal.length) await db.eintraege.bulkDelete(nurLokal);
+  if (amServer.length) {
+    await db.eintraege.bulkDelete(amServer); // sofort weg; der Abgleich bringt nur noch den Platzhalter
+    await holeBecher();
+  }
+  return amServer.length + nurLokal.length;
 }

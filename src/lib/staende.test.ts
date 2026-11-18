@@ -56,7 +56,13 @@ describe('Stände', () => {
   it('leer', () => expect(baueStaende([], LISTE, DEFAULT_GEWICHTE)).toEqual([]));
   it('standId nutzt die Stadt der Marktliste', () => {
     const e = b('Chrom', 5, { stadt: undefined });
-    expect(standId(e, LISTE)).toBe('chrom|rathausmarkt|hamburg');
+    expect(standId(e, LISTE)).toBe('chrom|hamburg');
+  });
+  it('derselbe Stand an anderem Markt derselben Stadt zählt zusammen', () => {
+    const s = baueStaende([b('Superbude', 6, { markt: 'Rathausmarkt' }), b('Superbude', 4, { markt: 'Sonstiger' }), b('Superbude', 8, { markt: 'Rathausmarkt' })], LISTE, DEFAULT_GEWICHTE);
+    expect(s).toHaveLength(1);
+    expect(s[0].wert.anzahl).toBe(3);
+    expect(s[0].markt).toBe('Rathausmarkt');
   });
   it('anzahlText', () => {
     expect(anzahlText(1)).toBe('1 Bewertung');

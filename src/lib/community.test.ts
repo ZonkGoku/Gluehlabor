@@ -152,8 +152,10 @@ describe('istPruefstelle', () => {
 
 describe('Stand und Abend', () => {
   it('derselbe Stand trotz Schreibweise', () => {
-    expect(standIdent({ stand: 'Salz-Chrom', markt: 'Sonstiger', stadt: 'Salzburg' })).toBe(standIdent({ stand: ' salz  chrom! ', markt: 'sonstiger', stadt: 'SALZBURG' }));
-    expect(standIdent({ stand: 'Chrom', markt: 'A', stadt: 'X' })).not.toBe(standIdent({ stand: 'Chrom', markt: 'B', stadt: 'X' }));
+    expect(standIdent({ stand: 'Salz-Chrom', stadt: 'Salzburg' })).toBe(standIdent({ stand: ' salz  chrom! ', stadt: 'SALZBURG' }));
+    // der Markt zählt nicht, die Stadt schon
+    expect(standIdent({ stand: 'Chrom', stadt: 'X' })).toBe(standIdent({ stand: 'Chrom', stadt: 'x' }));
+    expect(standIdent({ stand: 'Chrom', stadt: 'X' })).not.toBe(standIdent({ stand: 'Chrom', stadt: 'Y' }));
   });
   it('Abend: Datum, sonst Tag der Erfassung', () => {
     expect(abendVon({ datum: '2026-12-05', erstelltAm: 0 })).toBe('2026-12-05');

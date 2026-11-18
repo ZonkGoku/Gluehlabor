@@ -435,11 +435,11 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
                 continue;
             }
             // Eine Bewertung je Gerät, Stand und Abend. Ein neuer Abend ist ein neuer Besuch.
-            $ident = standIdent($e['stand'], $e['markt'], $e['stadt']);
+            $ident = standIdent($e['stand'], $e['stadt']);
             $abend = abendVon($e['datum'], (int) $e['erstelltAm']);
             $doppelt = false;
             foreach ($db->alle('SELECT stand, markt, stadt, datum, erstellt_am FROM becher WHERE geraet_id = ? AND versteckt = 0 AND erstellt_am > ?', [$g['id'], $e['erstelltAm'] - 4 * TAG_MS]) as $z) {
-                if (standIdent((string) $z['stand'], (string) $z['markt'], $z['stadt']) === $ident && abendVon($z['datum'], (int) $z['erstellt_am']) === $abend) {
+                if (standIdent((string) $z['stand'], $z['stadt']) === $ident && abendVon($z['datum'], (int) $z['erstellt_am']) === $abend) {
                     $doppelt = true;
                     break;
                 }
@@ -565,6 +565,34 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
                     aendere($db, 'stand = ?, markt = ?, stadt = ?', [$stand['wert'], $markt['wert'], $stadt['wert']], $id);
                     $betroffen++;
                 }
+            }
+            return new Antwort(200, ['ok' => true, 'betroffen' => $betroffen]);
+        }
+
+        // Bewertungen endgültig entfernen (Testeinträge, Unfug): Inhalt und Name werden gelöscht, ein Platzhalter bleibt,
+        // damit andere Geräte die Bewertung verlieren. Anders als „verstecken" ist das nicht umkehrbar.
+        if ($pfad === '/api/admin/entfernen') {
+            $ids = $b['ids'] ?? null;
+            if (!is_array($ids) || !array_is_list($ids) || count($ids) === 0 || count($ids) > MAX_STAND_IDS) {
+                throw new HttpFehler(400, 'Bitte 1 bis ' . MAX_STAND_IDS . ' Bewertungen nennen.');
+            }
+            foreach ($ids as $id) {
+                if (!is_string($id)) {
+                    throw new HttpFehler(400, 'Bitte 1 bis ' . MAX_STAND_IDS . ' Bewertungen nennen.');
+                }
+            }
+            $betroffen = 0;
+            foreach ($ids as $id) {
+                if ($db->eins('SELECT id FROM becher WHERE id = ?', [$id])) {
+                    aendere(
+                        $db,
+                        "versteckt = 1, name = NULL, notiz = NULL, stadt = NULL, stand = '-', markt = '-', besuch_id = NULL, geschmack = NULL, geruch = NULL, temperatur = NULL, personal = NULL, atmosphaere = NULL, preis_leistung = NULL, becher = NULL, preis = NULL",
+                        [],
+                        $id,
+                    );
+                    $betroffen++;
+                }
+                $db->lauf('DELETE FROM meldungen WHERE becher_id = ?', [$id]);
             }
             return new Antwort(200, ['ok' => true, 'betroffen' => $betroffen]);
         }

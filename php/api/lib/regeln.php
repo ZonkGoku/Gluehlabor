@@ -219,10 +219,10 @@ function standKern(string $stand): string
     return trim(preg_replace('/[^\p{L}\p{N}]+/u', ' ', $s) ?? '');
 }
 
-/** Derselbe Stand: gleicher Name (Kern), gleicher Markt, gleiche Stadt. Port von standIdent. */
-function standIdent(string $stand, string $markt, ?string $stadt): string
+/** Derselbe Stand: gleicher Name (Kern) in derselben Stadt. Port von standIdent. */
+function standIdent(string $stand, ?string $stadt): string
 {
-    return standKern($stand) . '|' . mb_strtolower(saeubere($markt), 'UTF-8') . '|' . mb_strtolower(saeubere($stadt ?? ''), 'UTF-8');
+    return standKern($stand) . '|' . mb_strtolower(saeubere($stadt ?? ''), 'UTF-8');
 }
 
 /** Der Abend einer Bewertung: das Datum, sonst der Tag der Erfassung (UTC). Port von abendVon. */

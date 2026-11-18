@@ -1,9 +1,9 @@
 // Stand-Seite: eine Bude mit allen Bewertungen, dem Durchschnitt und, für die Prüfstelle, Pflegewerkzeugen.
 import { useState } from 'preact/hooks';
-import { fehlerText, aendereStand, verstecke } from '../daten/moderation';
+import { fehlerText, aendereStand, entferne, verstecke } from '../daten/moderation';
 import { HAT_SERVER } from '../daten/config';
 import { entwurfHatInhalt, leseEntwurf, schreibeEntwurf } from '../daten/entwurf';
-import { leseEinstellung } from '../daten/db';
+import { leseEinstellung, type LokalerEintrag } from '../daten/db';
 import { anzeigeName, istPruefstelle } from '../lib/community';
 import { zahl2, euro } from '../lib/format';
 import { leereNoten } from '../lib/modell';
@@ -160,6 +160,23 @@ export function StandSeite({ id }: { id: string }) {
                   {t('Ausblenden')}
                 </button>
               )}
+              {pruefstelle && (
+                <button
+                  type="button"
+                  class="ml-3 mt-2 text-xs text-wein-400 underline"
+                  onClick={async () => {
+                    if (!confirm(t('Diese Bewertung endgültig löschen? Das lässt sich nicht rückgängig machen.'))) return;
+                    try {
+                      await entferne([e]);
+                      setHinweis(t('Bewertung gelöscht.'));
+                    } catch (err) {
+                      setHinweis(fehlerText(err));
+                    }
+                  }}
+                >
+                  {t('Löschen')}
+                </button>
+              )}
             </li>
           );
         })}
@@ -176,7 +193,7 @@ export function StandSeite({ id }: { id: string }) {
 }
 
 /** Nur für Prüfstellen-Geräte: umbenennen, Stadt und Markt zuordnen, Stände zusammenführen, ganz ausblenden. */
-function Pflege({ stand: s, alle, meldung }: { stand: Stand; alle: Stand[]; meldung: (t: string) => void }) {
+function Pflege({ stand: s, alle, meldung }: { stand: Stand<LokalerEintrag>; alle: Stand<LokalerEintrag>[]; meldung: (t: string) => void }) {
   const [name, setName] = useState(s.stand);
   const [stadt, setStadt] = useState(s.stadt ?? '');
   const [markt, setMarkt] = useState(s.markt);
@@ -264,6 +281,20 @@ function Pflege({ stand: s, alle, meldung }: { stand: Stand; alle: Stand[]; meld
           }}
         >
           {t('Ganzen Stand ausblenden')}
+        </button>
+        <button
+          type="button"
+          class="ml-4 text-sm text-wein-400 underline"
+          onClick={() => {
+            if (!confirm(t('Den ganzen Stand „{a}\" mit {n} Bewertungen endgültig löschen? Das lässt sich nicht rückgängig machen.', { a: s.stand, n: s.bewertungen.length }))) return;
+            void lauf(async () => {
+              await entferne(s.bewertungen);
+              location.hash = '#/rangliste';
+              return t('Stand gelöscht.');
+            });
+          }}
+        >
+          {t('Ganzen Stand endgültig löschen')}
         </button>
       </div>
     </section>

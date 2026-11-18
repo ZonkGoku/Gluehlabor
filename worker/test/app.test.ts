@@ -640,23 +640,53 @@ describe('Eine Bewertung je Gerät, Stand und Abend', () => {
     const r = await sende(g, [am('Chrom'), am('chrom')]);
     expect(r.json.ergebnisse.map((x: any) => x.status)).toEqual(['ok', 'abgelehnt']);
   });
-  it('ein anderer Abend, ein anderer Stand, ein anderer Markt und ein anderes Gerät sind erlaubt', async () => {
+  it('ein anderer Abend, ein anderer Stand, eine andere Stadt und ein anderes Gerät sind erlaubt', async () => {
     const g = await geraet();
     const h = await geraet();
     const r = await sende(g, [
       am('Chrom'),
       am('Chrom', { datum: '2026-12-06' }),
       am('Gustl'),
-      am('Chrom', { markt: 'Winterwald' }),
+      am('Chrom', { stadt: 'Köln' }),
     ]);
     expect(r.json.ergebnisse.map((x: any) => x.status)).toEqual(['ok', 'ok', 'ok', 'ok']);
     expect((await sende(h, [am('Chrom')])).json.ergebnisse[0].status).toBe('ok');
+  });
+  it('derselbe Stand an einem anderen Markt derselben Stadt ist derselbe Stand', async () => {
+    const g = await geraet();
+    expect((await sende(g, [am('Chrom')])).json.ergebnisse[0].status).toBe('ok');
+    expect((await sende(g, [am('Chrom', { markt: 'Winterwald' })])).json.ergebnisse[0].status).toBe('abgelehnt');
   });
   it('ausgeblendete Bewertungen zählen nicht mehr', async () => {
     const g = await geraet();
     await sende(g, [am('Chrom', { id: 'erste-1234567' })]);
     await ruf('POST', '/api/admin/verstecken', { auth: ADMIN, body: { id: 'erste-1234567', versteckt: true } });
     expect((await sende(g, [am('Chrom')])).json.ergebnisse[0].status).toBe('ok');
+  });
+});
+
+describe('Bewertungen entfernen', () => {
+  it('entfernt Inhalt und Namen endgültig, lässt einen Platzhalter für andere Geräte und beendet Meldungen', async () => {
+    const pruef = await geraet();
+    await ruf('POST', '/api/pruefstelle', { auth: pruef.auth, body: { code: CODE } });
+    const g = await geraet();
+    await sende(g, [becher({ id: 'weg-a-1234567', notiz: 'privat' }), becher({ id: 'bleibt-1234567' })]);
+    await ruf('POST', '/api/melden', { auth: g.auth, body: { id: 'weg-a-1234567', grund: 'spam' } });
+    const vorher = (await liste()).json;
+    const r = await ruf('POST', '/api/admin/entfernen', { auth: pruef.auth, body: { ids: ['weg-a-1234567', 'gibt-es-nicht'] } });
+    expect(r.status).toBe(200);
+    expect(r.json.betroffen).toBe(1);
+    const neu = (await liste(`?nach=${vorher.naechste}`)).json.eintraege;
+    expect(neu).toEqual([{ id: 'weg-a-1234567', versteckt: true, seq: expect.any(Number) }]);
+    const roh = await ruf('GET', '/api/admin/meldungen', { auth: ADMIN });
+    expect(roh.json.meldungen).toEqual([]);
+    expect((await liste()).json.eintraege.find((e: any) => e.id === 'bleibt-1234567').stand).toMatch(/^Glühweinkönig/);
+  });
+  it('nur für die Prüfstelle, und mit gültiger Liste', async () => {
+    const g = await geraet();
+    expect((await ruf('POST', '/api/admin/entfernen', { auth: g.auth, body: { ids: ['x'] } })).status).toBe(401);
+    expect((await ruf('POST', '/api/admin/entfernen', { auth: ADMIN, body: { ids: [] } })).status).toBe(400);
+    expect((await ruf('POST', '/api/admin/entfernen', { auth: ADMIN, body: { ids: Array.from({ length: 201 }, (_, i) => `i-${i}`) } })).status).toBe(400);
   });
 });
 

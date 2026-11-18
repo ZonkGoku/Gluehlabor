@@ -152,9 +152,9 @@ export function standKern(stand: string): string {
   return saeubere(stand).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 }
 
-/** Derselbe Stand: gleicher Name (Kern), gleiche Stadt, gleicher Markt. */
-export function standIdent(e: { stand: string; markt: string; stadt?: string | null }): string {
-  return `${standKern(e.stand)}|${saeubere(e.markt).toLowerCase()}|${saeubere(e.stadt ?? '').toLowerCase()}`;
+/** Derselbe Stand: gleicher Name (Kern) in derselben Stadt. Der Markt zählt nicht: Wer ihn anders wählt, bewertet trotzdem dieselbe Bude. */
+export function standIdent(e: { stand: string; stadt?: string | null }): string {
+  return `${standKern(e.stand)}|${saeubere(e.stadt ?? '').toLowerCase()}`;
 }
 
 /** Der Abend einer Bewertung: das Datum, sonst der Tag der Erfassung (UTC). */
