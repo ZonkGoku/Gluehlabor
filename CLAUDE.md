@@ -20,8 +20,10 @@ Glühwein-Prüfstelle von David & Philip. Der vollständige Auftrag steht in `BR
   Schreiben braucht einen fine-grained Token (nur dieses Repo, Contents: read/write),
   der pro Gerät in den Einstellungen liegt. Lesen ist öffentlich: Der Build erzeugt
   `daten/eintraege.json` aus `data/eintraege/` (Vite-Plugin in `vite.config.ts`).
-- **PWA** über `vite-plugin-pwa` (generateSW, `registerType: 'prompt'`: Updates
-  warten, bis die App geschlossen ist, damit keine Erfassung durch Neuladen verloren geht).
+- **PWA** über `vite-plugin-pwa` (generateSW, `registerType: 'prompt'`). `src/daten/update.ts` spielt
+  neue Versionen sofort ein, nur nicht auf `#/erfassen` (dort wartet das Update, bis man die
+  Erfassung verlässt). Startadresse der installierten App ist die Startseite (`start_url: './#/'`),
+  nicht die Erfassung. Entwurf und lokale Becher überstehen jedes Neuladen.
 - **Vitest** für alle reinen Funktionen. `npm test`, `npm run typecheck`, `npm run build`.
 - **Deploy**: `.github/workflows/deploy.yml` veröffentlicht bei jedem Push auf `main` den Stand von `main`. Solange `main` nicht Standard-Branch ist, läuft der Deploy über einen workflow_dispatch auf dem Standard-Branch (Pages-Umgebung erlaubt nur den Standard-Branch). Die Seite liegt
   unter https://zonkgoku.github.io/Becherwerk/ . Pages → Source = „GitHub Actions" (ist gesetzt).
@@ -34,6 +36,7 @@ Glühwein-Prüfstelle von David & Philip. Der vollständige Auftrag steht in `BR
 data/                    Daten, nicht Code
   gluehwein-2025.csv     Bestandsdaten, beim ersten Start importiert (nie in den Quelltext kopieren)
   anker.json             Ankerdefinitionen je Kriterium (werden sich ändern)
+  staedte.json           Koordinaten je Stadt für die Deutschlandkarte (fehlt eine Stadt, steht sie nur in der Liste)
   maerkte.json           gepflegte Marktlisten je Stadt + „Sonstiger" (weitere Städte einfach ergänzen)
   regeln.json            Regeln des Spickzettels
   eintraege/<id>.json    synchronisierte Becher (schreibt die App)
@@ -45,11 +48,14 @@ src/lib/                 REINE Funktionen ohne UI/DOM, alle getestet
   auswertung.ts          Filter, Rangliste mit Wertung, Urteilsverteilung, Jahresvergleich, Markt-Checkliste
   statistik.ts           Kennzahlen, Korrelationen, Pegel, Befunde als Sätze
   orte.ts                Märkte ↔ Städte, freie Eingabe „Markt, Stadt"
+  startseite.ts          Standard-Saison, Saison-Tag, Abend, Saisonverlauf, neueste Becher, Kennzahlen
+  karte.ts               Projektion und Umriss der Deutschlandkarte, Kartenpunkte
   anker.ts, abend.ts, format.ts, veroeffentlichung.ts
 src/daten/               Speicher und Netz: db.ts, sync.ts, entwurf.ts, foto.ts, config.ts
 src/ui/                  Preact-Komponenten. KEINE Rechenlogik hier (auch keine Schwellenwerte).
   Geruest.tsx            Tab-Leiste (Telefon) / Seitenleiste (Rechner)
-  Uebersicht, Rangliste, Detail, Vergleich, Statistik, Spickzettel, Einstellungen, Erfassen
+  Uebersicht (= Startseite), Rangliste, Detail, Vergleich, Statistik, Spickzettel, Einstellungen, Erfassen
+  Deutschlandkarte.tsx, Saisonverlauf.tsx  Bausteine der Startseite
   daten.ts               Live-Hooks (Einträge, Gewichte, Saison-Auswahl)
 src/styles.css           Tokens beider Themes + Erfassungsscreen
 src/app.css              Gerüst und Auswertungsansichten
@@ -90,6 +96,17 @@ scripts/icons.mjs        rastert icon.svg zu den PNG-Icons (nutzt Playwright aus
 - Wer eintragen darf: Geräte mit Token (oder mit lokal offenen Einträgen). Öffentliche
   Besucher sehen keinen Erfassen-Knopf.
 
+## Startseite (`#/`, Datei `src/ui/Uebersicht.tsx`)
+
+Reihenfolge: Bühne (Spitzenreiter, oder auf Geräten mit Token nach dem ersten Becher des Abends
+„Heute Abend"), Plus-Balken „Nächster Becher Nr. N" (nur Handy, nur mit Token), vier Kennzahlen,
+Rangliste Top 5, Deutschlandkarte, neueste Becher, Saisonverlauf, wichtigster Befund.
+- Ohne eigene Wahl zeigt jede Ansicht die Standard-Saison: laufendes Jahr, sobald es dort Becher
+  gibt, sonst die letzte (`standardSaison`). Die Saison beginnt mit dem ersten Becher des Jahres
+  („Tag 1"). Gewählte Saison wird pro Gerät gemerkt.
+- Besucher ohne Token sehen dasselbe, aber ohne Plus-Balken und ohne Abend-Modus.
+- Die 14 Becher aus 2025 haben kein Datum; der Saisonverlauf sagt das, statt zu raten.
+
 ## Gestaltung
 
 Prüfbericht, nicht Weihnachtsmarkt. Farben `--accent #7B1E2B`, `--gold #D9A640`,
@@ -103,7 +120,7 @@ Achtung bei Klassennamen: `styles.css` und `app.css` teilen sich den Namensraum
 ## Stand der Arbeit
 
 1–5 erledigt: Stack, Scoring + Tests, Erfassungsscreen (offline, PWA, Sync), alle Ansichten
-des alten Sheets, Deutschland-weite Orte. Noch nicht gegen das echte Repo getestet: der
+des alten Sheets, Deutschland-weite Orte, Startseite mit Abend-Modus, Karte und Saisonverlauf. Noch nicht gegen das echte Repo getestet: der
 Upload per Token (erst möglich, wenn ein Token auf einem Gerät hinterlegt ist).
 Mögliche nächste Schritte: Gewichte zwischen beiden Geräten synchronisieren (derzeit pro Gerät),
 weitere gepflegte Marktlisten (z. B. für Davids Region in Bayern).

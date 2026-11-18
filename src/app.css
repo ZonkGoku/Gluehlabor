@@ -1254,3 +1254,258 @@ a.karte.spitze {
     font-size: 10.5px;
   }
 }
+
+/* ───────── Startseite ───────── */
+
+.start-raster {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1fr);
+}
+.start-raster > * {
+  min-width: 0;
+}
+.kennzahlen {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.kennzahlen .kpi {
+  padding: 12px 8px;
+  text-align: center;
+}
+.kennzahlen .kpi .wert {
+  font-size: 22px;
+}
+.kennzahlen .kpi .label {
+  font-size: 12px;
+}
+@media (min-width: 900px) {
+  .kennzahlen {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    height: 100%;
+  }
+  .kennzahlen .kpi {
+    display: grid;
+    align-content: center;
+  }
+  .kennzahlen .kpi .wert {
+    font-size: 28px;
+  }
+}
+
+.plus-balken {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--knopf);
+  color: var(--auf-knopf);
+  font-weight: 600;
+  font-size: 17px;
+  text-decoration: none;
+  box-shadow: 0 10px 24px -12px rgba(123, 30, 43, 0.6);
+}
+.plus-balken .mono {
+  font-weight: 500;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.karte-de {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr);
+}
+.karte-de svg {
+  width: 100%;
+  max-height: 300px;
+  display: block;
+}
+.karte-de .umriss {
+  fill: var(--karte-2);
+  stroke: var(--linie-stark);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+}
+.karte-de .punkt {
+  fill: var(--balken);
+  fill-opacity: 0.82;
+  stroke: var(--karte);
+  stroke-width: 2;
+}
+.staedteliste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.staedteliste li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px 4px 10px;
+  border-radius: 999px;
+  background: var(--karte-2);
+  border: 1px solid var(--linie);
+  font-size: 13px;
+}
+.staedteliste .zahl {
+  font-family: var(--mono);
+  font-weight: 600;
+  min-width: 22px;
+  text-align: center;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--karte);
+}
+.staedteliste .ohne {
+  background: transparent;
+  border-style: dashed;
+  color: var(--text-2);
+}
+
+.neueste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.neueste a {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 4px 10px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--linie);
+  color: inherit;
+  text-decoration: none;
+}
+.neueste li:last-child a {
+  border-bottom: 0;
+}
+.neueste .n {
+  font-weight: 500;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.neueste .n small {
+  display: block;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--text-2);
+  margin-top: 2px;
+  white-space: normal;
+}
+.neueste .zahl {
+  font-family: var(--mono);
+  font-weight: 600;
+}
+
+.verlauf {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 120px;
+  padding-top: 6px;
+}
+.verlauf .saeule {
+  flex: 1 1 0;
+  min-width: 4px;
+  max-width: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px 6px 3px 3px;
+  background: var(--balken);
+  opacity: 0.55;
+  cursor: pointer;
+}
+.verlauf .saeule.leer {
+  background: var(--balken-leer);
+  opacity: 1;
+}
+.verlauf .saeule.an {
+  opacity: 1;
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+.verlauf-achse {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-2);
+  margin-top: 6px;
+}
+.verlauf-text {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: var(--text-2);
+}
+.verlauf-text b {
+  color: var(--text);
+  font-family: var(--mono);
+  font-weight: 600;
+}
+.leer-hinweis {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Handy: Plus-Balken zeigen, am Rechner übernimmt die Seitenleiste. */
+@media (min-width: 900px) {
+  .plus-balken {
+    display: none;
+  }
+  .start-raster {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .b-hero {
+    grid-column: span 4;
+  }
+  .b-kpi {
+    grid-column: span 2;
+  }
+  .b-rang,
+  .b-karte,
+  .b-neu,
+  .b-selbst {
+    grid-column: span 3;
+  }
+  .b-verlauf {
+    grid-column: 1 / -1;
+  }
+  .b-selbst {
+    order: 6;
+  }
+  .b-verlauf {
+    order: 7;
+  }
+}
+@media (max-width: 899px) {
+  .spitze .zahl-gross {
+    font-size: 48px;
+  }
+}
+
+@media (max-width: 430px) {
+  .app-kopf .name small {
+    display: none;
+  }
+}
+@media (min-width: 900px) {
+  .karte-de svg {
+    max-height: 230px;
+  }
+}
+.verlauf .saeule:only-child {
+  max-width: 28px;
+}

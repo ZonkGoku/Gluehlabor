@@ -2,7 +2,8 @@
 // oder Gewichten rendern sofort jede Ansicht neu.
 import { useEffect, useState } from 'preact/hooks';
 import { db, leseEinstellung, leseGewichte, type LokalerEintrag } from '../daten/db';
-import { DEFAULT_GEWICHTE, type Gewichte } from '../lib/modell';
+import { DEFAULT_GEWICHTE, type Eintrag, type Gewichte } from '../lib/modell';
+import { standardSaison } from '../lib/startseite';
 import { useLive } from './hooks';
 
 export function useEintraege(): LokalerEintrag[] | null {
@@ -21,26 +22,28 @@ export function useDarfErfassen(): boolean {
 }
 
 // Saison-Auswahl: pro Betrachter gemerkt, über alle Ansichten geteilt.
+// Ohne eigene Wahl gilt die Standard-Saison (laufendes Jahr, sonst die letzte).
 export type SaisonWahl = number | 'alle';
 const KEY = 'becherwerk.saison';
-let saison: SaisonWahl = (() => {
+let gewaehlt: SaisonWahl | null = (() => {
   try {
     const v = localStorage.getItem(KEY);
-    return v === null || v === 'alle' ? 'alle' : Number(v);
+    return v === null ? null : v === 'alle' ? 'alle' : Number(v);
   } catch {
-    return 'alle';
+    return null;
   }
 })();
-const hoerer = new Set<(s: SaisonWahl) => void>();
+const hoerer = new Set<(s: SaisonWahl | null) => void>();
 
-export function useSaison(): [SaisonWahl, (s: SaisonWahl) => void] {
-  const [s, setS] = useState(saison);
+export function useSaison(eintraege: readonly Eintrag[] | null): [SaisonWahl, (s: SaisonWahl) => void] {
+  const [s, setS] = useState(gewaehlt);
   useEffect(() => {
     hoerer.add(setS);
     return () => void hoerer.delete(setS);
   }, []);
+  const standard = standardSaison(eintraege ?? [], new Date().getFullYear());
   const setze = (neu: SaisonWahl) => {
-    saison = neu;
+    gewaehlt = neu;
     try {
       localStorage.setItem(KEY, String(neu));
     } catch {
@@ -48,5 +51,5 @@ export function useSaison(): [SaisonWahl, (s: SaisonWahl) => void] {
     }
     hoerer.forEach((h) => h(neu));
   };
-  return [s, setze];
+  return [s ?? standard, setze];
 }

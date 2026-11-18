@@ -13,7 +13,7 @@ const r2 = (x: number | null) => (x === null ? '–' : x.toFixed(2).replace('-',
 export function Statistik() {
   const alle = useEintraege();
   const gewichte = useGewichte();
-  const [saison, setSaison] = useSaison();
+  const [saison, setSaison] = useSaison(alle);
   if (!alle) return null;
 
   const jahre = [...new Set([...saisons(alle), new Date().getFullYear()])].sort();

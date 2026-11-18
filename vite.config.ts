@@ -65,8 +65,8 @@ export default defineConfig({
     preact(),
     datenbestand(),
     VitePWA({
-      // „prompt": Ein neuer Service Worker wartet, bis die App geschlossen wurde.
-      // Kein Neuladen mitten in einer Erfassung.
+      // „prompt": Der neue Service Worker wartet, bis src/daten/update.ts ihn freigibt,
+      // nämlich sofort, außer während der Erfassung.
       registerType: 'prompt',
       injectRegister: null,
       includeAssets: ['icon.svg', 'logo.svg', 'apple-touch-icon.png'],
@@ -75,7 +75,7 @@ export default defineConfig({
         short_name: 'Becherwerk',
         description: 'Prüfstelle für Glühwein auf Weihnachtsmärkten in ganz Deutschland – von David (Bayern) und Philip (Hamburg)',
         lang: 'de',
-        start_url: './#/erfassen',
+        start_url: './#/',
         scope: './',
         display: 'standalone',
         orientation: 'portrait',

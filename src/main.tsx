@@ -7,14 +7,13 @@ import './styles.css';
 import './app.css';
 
 import { render } from 'preact';
-import { registerSW } from 'virtual:pwa-register';
 import { App } from './App';
 import { leseEinstellung } from './daten/db';
 import { starteSync } from './daten/sync';
+import { starteUpdates } from './daten/update';
 import { wendeThemeAn } from './ui/Einstellungen';
 
 void leseEinstellung<'auto' | 'hell' | 'dunkel'>('theme', 'auto').then(wendeThemeAn);
 render(<App />, document.getElementById('app')!);
 starteSync();
-// Neue Version wartet, bis die App geschlossen wird – nie Neuladen mitten in der Erfassung.
-registerSW({ immediate: true });
+starteUpdates();

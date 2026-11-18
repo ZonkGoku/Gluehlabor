@@ -12,7 +12,7 @@ import { Symbol } from './Symbol';
 export function Rangliste() {
   const alle = useEintraege();
   const gewichte = useGewichte();
-  const [saison, setSaison] = useSaison();
+  const [saison, setSaison] = useSaison(alle);
   const [markt, setMarkt] = useState<string>('alle');
   const [gewichteOffen, setGewichteOffen] = useState(false);
   if (!alle) return null;
