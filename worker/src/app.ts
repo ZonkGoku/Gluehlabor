@@ -391,7 +391,8 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
     return json(
       { eintraege: seite.map(alsEintrag), naechste: seite.at(-1)?.seq ?? nach, mehr },
       200,
-      { 'Cache-Control': 'public, max-age=15' },
+      // Der Rand darf 5 s zwischenspeichern, ein Browser nie (siehe src/daten/api.ts).
+      { 'Cache-Control': 'public, s-maxage=5, max-age=0' },
     );
   }
 
@@ -466,6 +467,38 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
           .bind(b.gesperrt ? 1 : 0, z.id)
           .run();
       }
+      return json({ ok: true, betroffen: results.length }, 200);
+    }
+
+    // Löschen auf Anfrage (Art. 17 DSGVO). 'name': entfernt nur den Namen von allen Bechern des Geräts.
+    // 'alles': macht alle Becher des Geräts unkenntlich und sperrt das Gerät. Platzhalter bleiben, damit
+    // andere Geräte die Becher entfernen.
+    if (pfad === '/api/admin/loeschen' && methode === 'POST') {
+      if (typeof b.geraet !== 'string' || (b.modus !== 'name' && b.modus !== 'alles')) {
+        throw new HttpFehler(400, 'geraet und modus (name oder alles) nötig.');
+      }
+      const g = await db.prepare('SELECT id FROM geraete WHERE id = ?').bind(b.geraet).first();
+      if (!g) throw new HttpFehler(404, 'Gerät nicht gefunden.');
+      const { results } = await db.prepare('SELECT id FROM becher WHERE geraet_id = ?').bind(b.geraet).all<{ id: string }>();
+      for (const z of results) {
+        await db
+          .prepare(
+            b.modus === 'name'
+              ? `UPDATE becher SET name = NULL, seq = ${NAECHSTE_SEQ} WHERE id = ?`
+              : `UPDATE becher SET versteckt = 1, name = NULL, notiz = NULL, stadt = NULL, stand = '-', markt = '-', besuch_id = NULL,
+                   geschmack = NULL, geruch = NULL, temperatur = NULL, personal = NULL, atmosphaere = NULL,
+                   preis_leistung = NULL, becher = NULL, preis = NULL, seq = ${NAECHSTE_SEQ} WHERE id = ?`,
+          )
+          .bind(z.id)
+          .run();
+      }
+      if (b.modus === 'name') await db.prepare('UPDATE geraete SET name = NULL WHERE id = ?').bind(b.geraet).run();
+      else await db.prepare("UPDATE geraete SET name = NULL, gesperrt = 1, schluessel_hash = '-' WHERE id = ?").bind(b.geraet).run();
+      // Meldungen, die dieses Gerät abgegeben hat, und Meldungen über seine Becher sind damit erledigt.
+      await db
+        .prepare('DELETE FROM meldungen WHERE geraet_id = ? OR becher_id IN (SELECT id FROM becher WHERE geraet_id = ?)')
+        .bind(b.geraet, b.geraet)
+        .run();
       return json({ ok: true, betroffen: results.length }, 200);
     }
 

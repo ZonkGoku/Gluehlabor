@@ -534,3 +534,49 @@ describe('Melden', () => {
     expect(e.find((x: any) => x.id === 'zwei-1234567x').stand).toBe('Glühweinkönig'); // noch sichtbar
   });
 });
+
+describe('Löschen auf Anfrage', () => {
+  const loesche = (geraet: string, modus: string) => ruf('POST', '/api/admin/loeschen', { auth: ADMIN, body: { geraet, modus } });
+
+  it('ohne Admin-Token: 401', async () => {
+    expect((await ruf('POST', '/api/admin/loeschen', { body: { geraet: 'x', modus: 'alles' } })).status).toBe(401);
+  });
+  it.each([[{ modus: 'alles' }], [{ geraet: 'x' }], [{ geraet: 'x', modus: 'kaputt' }]])('lehnt unvollständige Anfrage ab', async (body) => {
+    expect((await ruf('POST', '/api/admin/loeschen', { auth: ADMIN, body })).status).toBe(400);
+  });
+  it('unbekanntes Gerät: 404', async () => expect((await loesche('gibts-nicht-1234567', 'name')).status).toBe(404));
+
+  it("'name' entfernt den Namen von allen Bechern, die Bewertungen bleiben", async () => {
+    const g = await geraet();
+    const anderes = await geraet();
+    await ruf('PUT', '/api/ich', { auth: g.auth, body: { name: 'Anna' } });
+    await ruf('PUT', '/api/ich', { auth: anderes.auth, body: { name: 'Berta' } });
+    await sende(g, [becher({ id: 'a-1-12345678' }), becher({ id: 'a-2-12345678' })]);
+    await sende(anderes, [becher({ id: 'b-1-12345678' })]);
+    const vorher = (await liste()).json.naechste;
+    expect((await loesche(g.id, 'name')).json.betroffen).toBe(2);
+    const neu = (await liste(`?nach=${vorher}`)).json.eintraege;
+    expect(neu).toHaveLength(2); // geändert, also erneut ausgeliefert
+    for (const e of neu) {
+      expect(e).not.toHaveProperty('name');
+      expect(e.stand).toBe('Glühweinkönig');
+    }
+    expect((await liste()).json.eintraege.find((e: any) => e.id === 'b-1-12345678').name).toBe('Berta');
+    expect((await ruf('GET', '/api/ich', { auth: g.auth })).json.name).toBeNull();
+  });
+
+  it("'alles' macht die Becher unkenntlich, sperrt das Gerät und räumt Meldungen weg", async () => {
+    const g = await geraet();
+    const melder = await geraet();
+    await ruf('PUT', '/api/ich', { auth: g.auth, body: { name: 'Anna' } });
+    await sende(g, [becher({ id: 'weg-1-1234567', notiz: 'privat', preis: 4.5 })]);
+    await ruf('POST', '/api/melden', { auth: melder.auth, body: { id: 'weg-1-1234567', grund: 'spam' } });
+    expect((await loesche(g.id, 'alles')).json.betroffen).toBe(1);
+    const e = (await liste()).json.eintraege.find((x: any) => x.id === 'weg-1-1234567');
+    expect(e).toMatchObject({ id: 'weg-1-1234567', versteckt: true });
+    const roh = await env.DB.prepare('SELECT * FROM becher WHERE id = ?').bind('weg-1-1234567').first<Record<string, unknown>>();
+    expect(roh).toMatchObject({ name: null, notiz: null, stadt: null, stand: '-', markt: '-', geschmack: null, preis: null, versteckt: 1 });
+    expect((await ruf('GET', '/api/ich', { auth: g.auth })).status).toBe(401);
+    expect(((await ruf('GET', '/api/admin/meldungen', { auth: ADMIN })).json.meldungen as unknown[]).length).toBe(0);
+  });
+});

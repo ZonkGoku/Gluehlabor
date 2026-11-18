@@ -10,7 +10,7 @@ interface Zwischenspeicher {
 
 export default {
   async fetch(request: Request, env: Env, ctx: Kontext): Promise<Response> {
-    // Die öffentliche Liste wird am Rand zwischengespeichert (15 s). Das schont die Datenbank,
+    // Die öffentliche Liste wird am Rand zwischengespeichert (5 s). Das schont die Datenbank,
     // wenn viele Geräte gleichzeitig synchronisieren.
     const cache = (globalThis as { caches?: { default?: Zwischenspeicher } }).caches?.default;
     const url = new URL(request.url);
