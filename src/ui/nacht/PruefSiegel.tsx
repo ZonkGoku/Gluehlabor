@@ -2,7 +2,7 @@
 import { t } from '../../i18n';
 
 export function PruefSiegel({ groesse = 40, klasse = '' }: { groesse?: number; klasse?: string }) {
-  const text = t('Von der Prüfstelle geprüft');
+  const text = t('Von David & Philip getestet');
   return (
     <svg width={groesse} height={groesse} viewBox="0 0 48 48" role="img" aria-label={text} class={`shrink-0 ${klasse}`}>
       <title>{text}</title>
@@ -25,7 +25,7 @@ export function SiegelEtikett({ text }: { text?: string }) {
   return (
     <span class="inline-flex items-center gap-2 rounded-full border border-gold-400/50 bg-[rgb(255_200_87/0.1)] py-1 pl-1 pr-3 text-xs font-semibold text-gold-300">
       <PruefSiegel groesse={22} />
-      {text ?? t('Von der Prüfstelle geprüft')}
+      {text ?? t('Von David & Philip getestet')}
     </span>
   );
 }

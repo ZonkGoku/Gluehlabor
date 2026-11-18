@@ -7,15 +7,19 @@ import { weniger } from './bewegung';
 import { t } from '../../i18n';
 
 const PUNKTE = [
-  { route: '', label: 'Übersicht', symbol: 'uebersicht' },
+  { route: '', label: 'Start', symbol: 'uebersicht' },
   { route: 'rangliste', label: 'Rangliste', symbol: 'pokal' },
   null, // Platz des Erfassen-Knopfs
-  { route: 'vergleich', label: 'Vergleich', symbol: 'vergleich' },
-  { route: 'statistik', label: 'Statistik', symbol: 'statistik' },
+  { route: 'mehr', label: 'Mehr', symbol: 'menue' },
+  { route: 'profil', label: 'Ich', symbol: 'profil' },
 ] as const;
 
-function platz(route: string): number {
-  if (route.startsWith('becher/')) return 1;
+/** Ansichten, die unter „Mehr" hängen, und die Seiten, die zur Rangliste gehören. */
+const UNTER_MEHR = ['vergleich', 'statistik', 'spickzettel', 'einstellungen', 'impressum', 'datenschutz', 'moderation'];
+
+export function platz(route: string): number {
+  if (route.startsWith('becher/') || route.startsWith('stand/')) return 1;
+  if (UNTER_MEHR.includes(route)) return 3;
   return PUNKTE.findIndex((p) => p !== null && p.route === route);
 }
 
@@ -76,7 +80,7 @@ export function Navigation({ route }: { route: string }) {
               key={p.route}
               href={`#/${p.route}`}
               aria-current={idx === i ? 'page' : undefined}
-              class={`relative z-10 flex flex-col items-center gap-0.5 rounded-full py-2 text-[10.5px] font-medium tracking-wide no-underline transition-colors duration-200 ${
+              class={`relative z-10 flex flex-col items-center gap-0.5 rounded-full py-2 text-xs font-medium tracking-wide no-underline transition-colors duration-200 ${
                 idx === i ? 'text-gold-300' : 'text-dunst'
               }`}
             >

@@ -63,7 +63,7 @@
     "zusatz": "wird automatisch aus Preis und Glühwein-Noten berechnet"
   },
   "becher": {
-    "label": "Becher",
+    "label": "Tasse",
     "anker": {
       "10": "Sammelbecher, den man behalten will. Form, Motiv und Haptik stimmen.",
       "8": "Ordentliche Keramik mit eigenem Motiv.",

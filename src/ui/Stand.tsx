@@ -17,6 +17,7 @@ import { useAktuell, useLive } from './hooks';
 import { Kachel } from './nacht/Kachel';
 import { StandTopKarte } from './nacht/StandKarten';
 import { DealMarke } from './nacht/DealMarke';
+import { HilfePunkt } from './nacht/HilfePunkt';
 import { Netzdiagramm, type Reihe } from './Netzdiagramm';
 import { SiegelEtikett } from './nacht/PruefSiegel';
 import { ANKER, MARKTLISTE } from './stammdaten';
@@ -78,9 +79,10 @@ export function StandSeite({ id }: { id: string }) {
         <Symbol name="zurueck" groesse={18} /> {t('Rangliste')}
       </a>
       {s.pruefstelle.anzahl > 0 && (
-        <p class="mt-3">
-          <SiegelEtikett text={t('Von der Prüfstelle geprüft: {n}', { n: s.pruefstelle.gesamt === null ? '–' : zahl2(s.pruefstelle.gesamt) })} />
-        </p>
+        <div class="mt-3 flex flex-wrap items-center gap-2">
+          <SiegelEtikett text={t('Von David & Philip getestet: {n}', { n: s.pruefstelle.gesamt === null ? '–' : zahl2(s.pruefstelle.gesamt) })} />
+          <HilfePunkt text={t('Das goldene Siegel bekommt ein Stand, den David und Philip selbst getestet haben. Es sagt nichts über die Note, nur dass die Prüfstelle dort war.')} />
+        </div>
       )}
       <div class="mt-3 grid gap-4 md:grid-cols-2">
         <StandTopKarte stand={s} ohneLink ort={ortText(MARKTLISTE, { markt: s.markt, stadt: s.stadt })} hinweis={s.rang ? t('Platz {r} von {n}', { r: s.rang, n: staende.length }) : undefined} />
@@ -100,7 +102,10 @@ export function StandSeite({ id }: { id: string }) {
           <Kachel innen="p-4">
             <div class="flex items-start justify-between gap-3">
               <div>
-                <p class="etikett">{t('Preis-Leistung')}</p>
+                <p class="etikett">
+                  {t('Preis-Leistung')}{' '}
+                  <HilfePunkt text={t('Berechnet aus Glühwein-Note und Preis: 0,5 Punkte weniger je Euro über dem üblichen Preis der Stadt. Ab 8 Punkten heißt ein Stand „Top Deal".')} />
+                </p>
                 <p class="mt-2 font-display text-[44px] leading-none text-gold-300">{zahl2(s.deal.punkte)}</p>
                 <p class="mt-1 text-xs text-dunst">
                   {s.preis.median === null
@@ -125,7 +130,7 @@ export function StandSeite({ id }: { id: string }) {
               {t('QR-Code zum Mitbewerten zeigen')}
             </a>
           )}
-          {s.vorlaeufig && <p class="text-center text-xs text-dunst">{t('Vorläufig: Ab {n} Bewertungen zählt der Stand voll für die Reihenfolge.', { n: MIN_BEWERTUNGEN })}</p>}
+          {s.vorlaeufig && <p class="text-center text-xs text-dunst">{t('Noch wenige Bewertungen: Ab {n} Bewertungen zählt der Stand voll für die Reihenfolge.', { n: MIN_BEWERTUNGEN })}</p>}
           <Kachel titel={t('Verteilung der Urteile')} innen="p-4">
             <ul class="space-y-1.5">
               {URTEILE.map((u) => (
@@ -165,7 +170,7 @@ export function StandSeite({ id }: { id: string }) {
                 <span class="min-w-0 flex-1">
                   <span class="flex items-center gap-2 font-semibold">
                     <span class="truncate">{pruef && !e.name ? 'David & Philip' : anzeigeName(e)}</span>
-                    {pruef && <span class="shrink-0 whitespace-nowrap rounded-md border border-gold-400/70 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.16em] text-gold-300">{t('Prüfstelle')}</span>}
+                    {pruef && <span class="shrink-0 whitespace-nowrap rounded-md border border-gold-400/70 px-1.5 py-0.5 font-mono text-[11px] uppercase tracking-[0.16em] text-gold-300">{t('Prüfstelle')}</span>}
                   </span>
                   <span class="block truncate text-xs text-dunst">
                     {[datumKurz(e.datum) ?? t('Saison {s}', { s: e.saison }), e.preis !== undefined ? euro(e.preis) : null].filter(Boolean).join(' · ')}

@@ -5,7 +5,6 @@ import { filtere, ranglisteMitWertung, saisons } from '../lib/auswertung';
 import { euro, zahl2 } from '../lib/format';
 import { preisindex } from '../lib/preisindex';
 import { ortText, staedte } from '../lib/orte';
-import { befunde } from '../lib/statistik';
 import { abend, kennzahlen, neuesteBecher, saisonStatus, saisonVerlauf } from '../lib/startseite';
 import { Betreiber, datumKurz, UrteilPill } from './bausteine';
 import { leseEinstellung, schreibeEinstellung, setzeName } from '../daten/db';
@@ -15,6 +14,7 @@ import { istIosImBrowser } from '../lib/installhinweis';
 import { useEintraege, useGeraetId, useGewichte, useMeineAnzahl, useName, useSaison } from './daten';
 import { useLive } from './hooks';
 import { Deutschlandkarte } from './Deutschlandkarte';
+import { leseZuletzt } from '../daten/zuletzt';
 import { useEinblenden, useNeigung } from './nacht/bewegung';
 import { Chips } from './nacht/Chips';
 import { Kachel, Kennzahl } from './nacht/Kachel';
@@ -22,7 +22,7 @@ import { DealZeile, StandTopKarte, StandZeile } from './nacht/StandKarten';
 import { baueStaende, standAlsZeile } from '../lib/staende';
 import { kurzId, TicketRahmen } from './nacht/Ticket';
 import { Saisonverlauf } from './Saisonverlauf';
-import { LABELS, MARKTLISTE } from './stammdaten';
+import { MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
 import { t } from '../i18n';
 
@@ -99,7 +99,7 @@ function AbendKarte({ abend: a, naechsteNr, klasse }: { abend: ReturnType<typeof
         <a href={a.bester ? `#/becher/${encodeURIComponent(a.bester.id)}` : '#/rangliste'} class="block p-5 pb-4 text-eis no-underline">
           <div class="flex items-center justify-between">
             <span class="etikett !text-gold-300">{t('Heute Abend')}</span>
-            <span class="-rotate-3 rounded-md border border-gold-400/70 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-gold-300">
+            <span class="-rotate-3 rounded-md border border-gold-400/70 px-2 py-1 font-mono text-[11px] uppercase tracking-[0.18em] text-gold-300">
               {a.markt ?? t('Dein Abend')}
             </span>
           </div>
@@ -117,7 +117,7 @@ function AbendKarte({ abend: a, naechsteNr, klasse }: { abend: ReturnType<typeof
         <>
           <span class="font-display text-[34px] leading-none text-gold-300">{String(naechsteNr).padStart(2, '0')}</span>
           <div class="min-w-0 flex-1 leading-tight">
-            <div class="etikett !text-[9.5px]">{t('Nächster Becher')}</div>
+            <div class="etikett !text-[11px]">{t('Nächster Becher')}</div>
             <div class="truncate text-xs text-dunst">{t('Ticket')} #{kurzId(String(a.anzahl) + (a.markt ?? ''))}</div>
           </div>
         </>
@@ -149,12 +149,55 @@ function ErfassenKnopf({ nr, erster, klasse }: { nr: number; erster: boolean; kl
   );
 }
 
+const AUSWAHL =
+  'glas appearance-none rounded-full py-2.5 pl-4 pr-9 text-sm text-eis outline-none transition focus-visible:ring-2 focus-visible:ring-gold-400/70 min-h-[44px]';
+
+/** Erste Begegnung: in einem Satz sagen, was die App ist und was man tun soll. */
+function Willkommen() {
+  const schritte = ['Glühweinstand wählen', 'Noten und Preis eintragen', 'Rangliste ansehen und teilen'];
+  return (
+    <section data-ein class="glas rahmen-licht mb-1 mt-2 rounded-3xl p-5">
+      <p class="etikett !text-gold-300">{t('Glühwein-Rangliste für Weihnachtsmärkte')}</p>
+      <h1 class="mt-2 font-display text-[38px] uppercase leading-[1] tracking-wide text-eis sm:text-5xl">{t('Wo gibt’s den besten Glühwein?')}</h1>
+      <p class="mt-3 text-base text-eis/90">{t('Bewerte deinen Glühwein in 30 Sekunden. Aus allen Bewertungen entsteht die Rangliste. Ohne Konto.')}</p>
+      <ol class="mt-4 grid gap-2 text-sm text-dunst">
+        {schritte.map((x, i) => (
+          <li class="flex items-center gap-3">
+            <span class="grid size-7 shrink-0 place-items-center rounded-full border border-gold-400/60 font-mono text-xs text-gold-300">{i + 1}</span>
+            {t(x)}
+          </li>
+        ))}
+      </ol>
+      <div class="mt-5 grid gap-2.5 sm:grid-cols-2">
+        <a
+          href="#/erfassen"
+          class="animate-puls flex min-h-[52px] items-center justify-center gap-2 rounded-full px-6 font-semibold text-[#1a1020] no-underline"
+          style={{ background: 'linear-gradient(135deg,#ffe29a,#ff8a3d)' }}
+        >
+          <Symbol name="plus" groesse={18} /> {t('Jetzt bewerten')}
+        </a>
+        <a href="#/rangliste" class="glas flex min-h-[52px] items-center justify-center rounded-full px-6 font-semibold text-eis no-underline">
+          {t('Rangliste ansehen')}
+        </a>
+      </div>
+      <p class="mt-3 text-xs text-dunst">{t('Glühwein nur ab 18 Jahren. Trink verantwortungsvoll.')}</p>
+    </section>
+  );
+}
+
 export function Uebersicht() {
   const alle = useEintraege();
   const gewichte = useGewichte();
   const geraetId = useGeraetId();
   const meineAnzahl = useMeineAnzahl();
   const [saison, setSaison] = useSaison(alle);
+  const [stadtWahl, setStadtWahl] = useState<string>(() => {
+    try {
+      return localStorage.getItem('gluehlabor.startstadt') ?? leseZuletzt()[0]?.stadt ?? 'alle';
+    } catch {
+      return 'alle';
+    }
+  });
   const raster = useEinblenden<HTMLDivElement>();
   if (!alle) return null;
 
@@ -165,7 +208,19 @@ export function Uebersicht() {
   const auswahl = filtere(alle, { saison, markt: 'alle' });
   const zeilen = ranglisteMitWertung(auswahl, gewichte);
   const staende = baueStaende(auswahl, MARKTLISTE, gewichte);
-  const spitze = staende.filter((s) => s.rang === 1);
+  // Rangliste der gewählten Stadt (die Stadt muss es in dieser Auswahl geben, sonst gilt ganz Deutschland)
+  const stadtListe = staedte(MARKTLISTE, auswahl).filter((x): x is typeof x & { stadt: string } => x.stadt !== null);
+  const stadt = stadtListe.some((x) => x.stadt === stadtWahl) ? stadtWahl : 'alle';
+  const staendeStadt = stadt === 'alle' ? staende : baueStaende(filtere(auswahl, { saison: 'alle', markt: 'alle', stadt }, MARKTLISTE), MARKTLISTE, gewichte);
+  const waehleStadt = (neu: string) => {
+    setStadtWahl(neu);
+    try {
+      localStorage.setItem('gluehlabor.startstadt', neu);
+    } catch {
+      /* egal */
+    }
+  };
+  const spitze = staendeStadt.filter((s) => s.rang === 1);
   const k = kennzahlen(auswahl, MARKTLISTE, gewichte);
   const orte = staedte(MARKTLISTE, auswahl);
   const preise = preisindex(auswahl, MARKTLISTE);
@@ -191,16 +246,31 @@ export function Uebersicht() {
 
   const verlauf = typeof saison === 'number' ? saisonVerlauf(alle, saison, gewichte, heute) : null;
   const neueste = neuesteBecher(auswahl, 5);
-  const befund = befunde(auswahl, gewichte, LABELS);
-  const wichtig = befund.find((b) => b.schwere === 'warnung') ?? befund[0];
 
   return (
     <div class="nm">
-      <div class="mb-5 mt-2 flex flex-wrap items-end justify-between gap-3">
-        <div>
+      {meineAnzahl === 0 ? (
+        <Willkommen />
+      ) : (
+        <div class="mb-5 mt-2">
           <p class="etikett !text-gold-300">{statusText}</p>
           <h1 class="mt-2 font-display text-[40px] uppercase leading-[1] tracking-wide text-eis sm:text-5xl">{t('Wer glüht am besten?')}</h1>
         </div>
+      )}
+
+      <div class="mb-4 mt-5 flex flex-wrap items-center gap-2.5">
+        <label class="relative">
+          <span class="sr-only">{t('Stadt')}</span>
+          <select class={AUSWAHL} value={stadt} onChange={(ev) => waehleStadt((ev.target as HTMLSelectElement).value)}>
+            <option value="alle">{t('Die Besten in ganz Deutschland')}</option>
+            {stadtListe.map((x) => (
+              <option value={x.stadt}>{t('Die Besten in {stadt}', { stadt: x.stadt })}</option>
+            ))}
+          </select>
+          <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rotate-90 text-dunst">
+            <Symbol name="pfeil" groesse={14} />
+          </span>
+        </label>
         <Chips optionen={['alle', ...jahre] as const} wert={saison} onWahl={setSaison} beschriftung={t('Saison')} label={(o) => (o === 'alle' ? t('Alle') : String(o))} />
       </div>
 
@@ -223,11 +293,16 @@ export function Uebersicht() {
           <div data-ein class="col-span-2 md:row-span-3">
             {abendModus ? (
               <AbendKarte abend={heuteAbend} naechsteNr={naechsteNr} />
+            ) : spitze.length === 0 ? (
+              <div class="glas rounded-3xl p-6 text-center">
+                <p class="font-display text-2xl uppercase tracking-wide text-eis">{t('Noch keine Bewertung hier')}</p>
+                <p class="mt-2 text-dunst">{t('Sei die oder der Erste in {stadt}.', { stadt: stadt === 'alle' ? t('deiner Stadt') : stadt })}</p>
+              </div>
             ) : (
               <StandTopKarte
                 stand={spitze[0]}
                 titel={spitze.map((s) => s.stand).join(' & ')}
-                hinweis={spitze.length > 1 ? t('Teilen sich Platz 1') : undefined}
+                hinweis={[stadt !== 'alle' ? t('Platz 1 in {stadt}', { stadt }) : null, spitze.length > 1 ? t('Teilen sich Platz 1') : null].filter(Boolean).join(' · ') || undefined}
                 ort={[...new Set(spitze.map((s) => ortText(MARKTLISTE, standAlsZeile(s).eintrag)))].join(', ')}
               />
             )}
@@ -248,9 +323,9 @@ export function Uebersicht() {
             </p>
           )}
 
-          <Kachel titel={`${t('Rangliste')} ${saison === 'alle' ? '' : saison}`} link={{ href: '#/rangliste', text: t('Alle {n}', { n: staende.length }) }} klasse="col-span-2" innen="p-3">
+          <Kachel titel={`${t('Rangliste')} ${saison === 'alle' ? '' : saison}`} link={{ href: '#/rangliste', text: t('Alle {n}', { n: staendeStadt.length }) }} klasse="col-span-2" innen="p-3">
             <ol class="space-y-2">
-              {staende.slice(0, 5).map((s) => (
+              {staendeStadt.slice(0, 5).map((s) => (
                 <li>
                   <StandZeile stand={s} />
                 </li>
@@ -337,15 +412,6 @@ export function Uebersicht() {
               <Saisonverlauf verlauf={verlauf} saison={saison as number} />
             </Kachel>
           )}
-
-          <Kachel titel={t('Selbstkontrolle')} link={{ href: '#/statistik', text: t('Statistik') }} klasse="col-span-2 md:col-span-4">
-            <p class="text-sm leading-relaxed text-eis">
-              <span class="mr-2 rounded-md border border-gold-400/60 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.16em] text-gold-300">
-                {wichtig.schwere === 'warnung' ? t('Achtung') : wichtig.schwere === 'gut' ? t('OK') : t('Hinweis')}
-              </span>
-              {wichtig.text}
-            </p>
-          </Kachel>
         </div>
       )}
       <Betreiber />

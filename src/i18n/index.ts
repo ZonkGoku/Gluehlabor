@@ -72,7 +72,7 @@ export function tn(n: number, einzahl: string, mehrzahl: string): string {
   return t(n === 1 ? einzahl : mehrzahl, { n });
 }
 
-/** Name eines Kriteriums. „Becher" heißt als Kriterium (die Tasse selbst) englisch „Mug", als Zählwort „cup". */
+/** Name eines Kriteriums. „Tasse" heißt als Kriterium englisch „Mug", „Becher" als Zählwort „cup". */
 export function kriteriumLabel(label: string): string {
-  return sprache === 'en' && label === 'Becher' ? 'Mug' : t(label);
+  return sprache === 'en' && label === 'Tasse' ? 'Mug' : t(label);
 }

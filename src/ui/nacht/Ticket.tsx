@@ -96,7 +96,7 @@ function Messer({ etikett, wert }: { etikett: string; wert: number | null }) {
   return (
     <div>
       <div class="flex items-baseline justify-between gap-2">
-        <span class="etikett !text-[10px] !tracking-[0.1em]">{etikett}</span>
+        <span class="etikett !text-[11px] !tracking-[0.1em]">{etikett}</span>
         <span class="whitespace-nowrap font-mono text-xs text-eis">{zahl2(wert)}</span>
       </div>
       <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-spur">
@@ -180,13 +180,13 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
             <div class="flex items-center gap-2">
             {zeigeSiegel && <PruefSiegel groesse={klein ? 34 : 42} />}
             {stempel !== undefined ? (
-              <span class="whitespace-nowrap rounded-md border border-[var(--nm-rand-stark)] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-dunst">{stempel}</span>
+              <span class="whitespace-nowrap rounded-md border border-[var(--nm-rand-stark)] px-2 py-1 font-mono text-[11px] uppercase tracking-[0.14em] text-dunst">{stempel}</span>
             ) : pruef ? (
-              <span class="-rotate-3 rounded-md border border-gold-400/70 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-gold-300">
+              <span class="-rotate-3 rounded-md border border-gold-400/70 px-2 py-1 font-mono text-[11px] uppercase tracking-[0.18em] text-gold-300">
                 {t('Prüfstelle')}
               </span>
             ) : (
-              <span class="rounded-md border border-[var(--nm-rand-stark)] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-dunst">{t('Community')}</span>
+              <span class="rounded-md border border-[var(--nm-rand-stark)] px-2 py-1 font-mono text-[11px] uppercase tracking-[0.18em] text-dunst">{t('Community')}</span>
             )}
             </div>
           </div>
@@ -216,7 +216,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
         <>
           <QrStummel link={link} titel={t('QR-Code: öffnet {stand}', { stand: titel ?? e.stand })} />
           <div class="min-w-0 flex-1 leading-tight">
-            <div class="etikett truncate whitespace-nowrap !text-[9.5px] !tracking-[0.12em]">
+            <div class="etikett truncate whitespace-nowrap !text-[11px] !tracking-[0.12em]">
               {e.saison} · #{kurzId(e.id)}
             </div>
             <div class="truncate text-xs text-dunst">{von ?? (pruef ? t('von David & Philip') : t('bewertet von {name}', { name: anzeigeName(e) }))}</div>
@@ -224,7 +224,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
           <button
             type="button"
             onClick={teilen}
-            class="glas flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-2 text-xs font-semibold text-gold-300 transition hover:text-gold-400"
+            class="glas flex min-h-[44px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-4 text-xs font-semibold text-gold-300 transition hover:text-gold-400"
           >
             <Symbol name="teilen" groesse={15} />
             {meldung || t('Teilen')}

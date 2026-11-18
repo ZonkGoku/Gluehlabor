@@ -37,6 +37,10 @@ Ein Eintrag (Becher) ist **eine Bewertung einer Person**; ein **Stand** ist die 
 - **Prüfsiegel:** Ein Stand mit mindestens einer Bewertung der Prüfstelle trägt das goldene Siegel (`ui/nacht/PruefSiegel.tsx`) auf Sammelkarten, in Listenzeilen, auf der Stand-Seite und im Story-Bild (`KartenDaten.geprueft`).
 - Nicht gebaut: eine Bewertung am selben Abend nachträglich ändern (man kann sie nur über die Moderation ausblenden lassen).
 
+## Bedienung und Verständlichkeit (Audit vom 18.11.2026)
+
+Leitlinie: **Ein Fremder muss in fünf Sekunden verstehen, was die App ist und was er tun soll.** Die Hauptnavigation hat nur Start · Rangliste · **+ Bewerten** · Mehr · Ich (`ui/nacht/Navigation.tsx`); Vergleich, Statistik, Hilfe & Regeln (Spickzettel), Einstellungen, Impressum, Datenschutz und Moderation hängen unter `#/mehr` (`ui/Mehr.tsx`), in der Seitenleiste als eigene Gruppe. Startseite (`ui/Uebersicht.tsx`): für Besucher ohne eigenen Becher der Willkommens-Block (ein Satz, drei Schritte, „Jetzt bewerten" / „Rangliste ansehen", Hinweis ab 18), darunter Auswahl „Die Besten in <Stadt>" (merkt sich die Stadt, `gluehlabor.startstadt`) und Saison; „Selbstkontrolle" gehört nur noch in die Statistik. Erfassung: der **Preis** ist ein eigener großer Bereich (`.preis-block`, mit Schnellwahl 4 bis 6 €, Größe daneben) direkt unter Stand und Ort; alle sieben Regler bleiben (keine Schnellbewertung, bewusst). Begriffe: Kriterium „Becher" heißt jetzt „Tasse" (Zählwort bleibt Becher), „Anker" heißt „?" („Was bedeutet …?"), die Gewichte (×3) stehen nur in den Einstellungen, „vorläufig" heißt „wenige Bewertungen", das Siegel „Von David & Philip getestet". Kleine „?" (`ui/nacht/HilfePunkt.tsx`) erklären Siegel und Preis-Leistung. **Mindestmaße:** Tippziele mindestens 44 px, Fließtext mindestens 12 px, Großbuchstaben-Etiketten mindestens 11 px (nur die Logo-Zeile hat 10 px).
+
 ## Stack
 
 - **Vite 6 + Preact 10 + TypeScript**, Hash-Router (`#/erfassen`, `#/einstellungen`, …)

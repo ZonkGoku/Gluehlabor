@@ -81,7 +81,7 @@ function Zeile({ e, aktiv, onHover, q }: { e: Eintrag; aktiv: boolean; onHover: 
 function Abschnitt({ titel, kinder }: { titel: string; kinder: ComponentChildren }) {
   return (
     <section class="mt-2">
-      <h3 class="etikett px-3.5 pb-1 pt-2 !text-[10.5px]">{titel}</h3>
+      <h3 class="etikett px-3.5 pb-1 pt-2 !text-[11px]">{titel}</h3>
       {kinder}
     </section>
   );

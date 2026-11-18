@@ -45,6 +45,8 @@ const SORTE_LABEL: Record<Sorte, string> = {
   alkoholfrei: 'Alkoholfrei',
   sonstiges: 'Sonstiges',
 };
+const SCHNELLPREISE = [4, 4.5, 5, 5.5, 6];
+
 /** „4,5" oder "4.50" → 4.5; ungültig oder außerhalb des plausiblen Bereichs → undefined. */
 function leseEuro(text: string): number | undefined {
   const x = Number(text.trim().replace(',', '.').replace(/\s*€$/, ''));
@@ -332,6 +334,66 @@ export function Erfassen() {
       </div>
       )}
 
+      <section class={`preis-block${e.preis === undefined ? ' leer' : ' gesetzt'}${preisFehlt && e.preis === undefined ? ' fehlt' : ''}`} aria-label={t('Preis')}>
+        <div class="preis-kopf">
+          <span class="preis-titel">
+            {t('Preis der Tasse')} <b>{t('Pflicht')}</b>
+          </span>
+          <select
+            class="preis-groesse"
+            aria-label={t('Größe der Tasse')}
+            value={e.menge ?? ''}
+            onChange={(ev) => {
+              const v = (ev.target as HTMLSelectElement).value;
+              setE({ ...e, menge: v ? Number(v) : undefined });
+            }}
+          >
+            <option value="">{t('Größe')} 0,2 l</option>
+            {MENGEN.map((m) => (
+              <option value={m}>{String(m).replace('.', aktuelleSprache() === 'en' ? '.' : ',')} l</option>
+            ))}
+          </select>
+        </div>
+        <div class="preis-zeile">
+          <label class="preis-eingabe">
+            <input
+              type="text"
+              inputMode="decimal"
+              autocomplete="off"
+              maxLength={6}
+              placeholder="0,00"
+              aria-label={t('Preis in Euro, ohne Pfand')}
+              aria-required="true"
+              aria-invalid={preisFehlt && e.preis === undefined}
+              value={preisText}
+              onInput={(ev) => {
+                const v = (ev.target as HTMLInputElement).value;
+                setPreisText(v);
+                setE((x) => ({ ...x, preis: leseEuro(v) }));
+              }}
+              onBlur={() => e.preis !== undefined && setPreisText(String(e.preis).replace('.', ','))}
+            />
+            <span aria-hidden="true">€</span>
+          </label>
+          <div class="preis-schnell" role="group" aria-label={t('Schnellwahl Preis')}>
+            {SCHNELLPREISE.map((p) => (
+              <button
+                type="button"
+                aria-pressed={e.preis === p}
+                class={e.preis === p ? 'an' : ''}
+                onClick={() => {
+                  setPreisText(String(p).replace('.', ','));
+                  setE((x) => ({ ...x, preis: p }));
+                }}
+              >
+                {String(p.toFixed(2)).replace('.', ',')}
+              </button>
+            ))}
+          </div>
+        </div>
+        <p class="preis-hinweis">{preisFehlt && e.preis === undefined ? t('Bitte den Preis eintragen.') : t('Ohne Pfand. Daraus berechnet die App Preis-Leistung.')}</p>
+      </section>
+
       {notizOffen ? (
         <div class="notizzeile">
           <input
@@ -375,40 +437,6 @@ export function Erfassen() {
             <option value="">{t('Nr.')} –</option>
             {[1, 2, 3, 4, 5, 6, 7].map((n) => (
               <option value={n}>{t('Nr.')} {n}</option>
-            ))}
-          </select>
-          <label class={`chip preis${e.preis !== undefined ? ' gesetzt' : ''}${preisFehlt && e.preis === undefined ? ' fehlt' : ''}`}>
-            <input
-              class="chip-eingabe"
-              type="text"
-              inputMode="decimal"
-              autocomplete="off"
-              maxLength={6}
-              placeholder={t('Preis €')}
-              aria-label={t('Preis in Euro, ohne Pfand')}
-              aria-required="true"
-              aria-invalid={preisFehlt && e.preis === undefined}
-              value={preisText}
-              onInput={(ev) => {
-                const v = (ev.target as HTMLInputElement).value;
-                setPreisText(v);
-                setE((x) => ({ ...x, preis: leseEuro(v) }));
-              }}
-              onBlur={() => e.preis !== undefined && setPreisText(String(e.preis).replace('.', ','))}
-            />
-          </label>
-          <select
-            class={e.menge !== undefined ? 'chip gesetzt' : 'chip'}
-            aria-label={t('Größe der Tasse')}
-            value={e.menge ?? ''}
-            onChange={(ev) => {
-              const v = (ev.target as HTMLSelectElement).value;
-              setE({ ...e, menge: v ? Number(v) : undefined });
-            }}
-          >
-            <option value="">{t('Größe')}</option>
-            {MENGEN.map((m) => (
-              <option value={m}>{String(m).replace('.', aktuelleSprache() === 'en' ? '.' : ',')} l</option>
             ))}
           </select>
           <button type="button" class={e.notiz.trim() ? 'chip gesetzt' : 'chip'} onClick={() => setNotizOffen(true)}>
@@ -471,7 +499,7 @@ export function Erfassen() {
         <div class="messwert" aria-live="polite">
           <span class="kopfzeile">
             <span class={wertung.gesamt === null ? 'gesamt leer' : 'gesamt'}>{zahl2(wertung.gesamt)}</span>
-            <span class="urteil">{wertung.urteil ? t(wertung.urteil) : `${bewertet}/6`}</span>
+            <span class="urteil">{wertung.urteil ? t(wertung.urteil) : t('{n} von 6 Noten', { n: bewertet })}</span>
           </span>
           <span class="unter">{t('Glühwein')}&nbsp;{zahl2(wertung.gluehwein)}</span>
           <span class="unter">{t('Drumherum')}&nbsp;{zahl2(wertung.drumherum)}</span>

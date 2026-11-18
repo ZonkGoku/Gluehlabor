@@ -18,7 +18,7 @@ export function Kachel({ titel, link, klasse = '', innen = 'p-4', children }: Ka
         <header class="mb-3 flex items-baseline justify-between gap-3">
           <h2 class="etikett !text-[11px] !font-medium">{titel}</h2>
           {link && (
-            <a href={link.href} class="text-xs font-medium text-gold-300 no-underline hover:text-gold-400">
+            <a href={link.href} class="-my-3 inline-block py-3 text-sm font-medium text-gold-300 no-underline hover:text-gold-400">
               {link.text}
             </a>
           )}

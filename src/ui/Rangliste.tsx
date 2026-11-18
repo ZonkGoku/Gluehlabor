@@ -17,7 +17,7 @@ import { Symbol } from './Symbol';
 import { t, tn } from '../i18n';
 
 const FELD =
-  'glas appearance-none rounded-full bg-no-repeat py-2.5 pl-4 pr-9 text-sm text-eis outline-none transition focus-visible:ring-2 focus-visible:ring-gold-400/70';
+  'glas min-h-[44px] appearance-none rounded-full bg-no-repeat py-2.5 pl-4 pr-9 text-sm text-eis outline-none transition focus-visible:ring-2 focus-visible:ring-gold-400/70';
 
 export function Rangliste() {
   useAktuell();
@@ -94,7 +94,7 @@ export function Rangliste() {
             type="button"
             aria-expanded={gewichteOffen}
             onClick={() => setGewichteOffen(!gewichteOffen)}
-            class={`glas rounded-full px-4 py-2.5 text-sm transition ${gewichteOffen ? 'text-gold-300' : 'text-eis hover:text-gold-300'}`}
+            class={`glas min-h-[44px] rounded-full px-4 py-2.5 text-sm transition ${gewichteOffen ? 'text-gold-300' : 'text-eis hover:text-gold-300'}`}
           >
             {t('Gewichtung')} <span class="ml-1 font-mono text-xs text-dunst">{KRITERIEN.map((k) => gewichte[k]).join('·')}</span>
           </button>
@@ -159,7 +159,7 @@ export function Rangliste() {
           <Symbol name="pfeil" groesse={12} />
         </span>
         <span class="mr-1 inline-block align-middle"><PruefSiegel groesse={16} /></span>
-        {t('Das Siegel trägt jeder Stand, den die Prüfstelle (David & Philip) selbst getestet hat.')} {t('Ein Stand zählt den Durchschnitt aller Bewertungen. Wenige Bewertungen zählen für die Reihenfolge weniger (vorläufig), angezeigt wird immer der echte Durchschnitt. Glühwein = Geschmack, Geruch, Temperatur · Drumherum = Personal, Atmosphäre, Preis/Leistung, Becher.')}
+        {t('Das Siegel trägt jeder Stand, den die Prüfstelle (David & Philip) selbst getestet hat.')} {t('Ein Stand zählt den Durchschnitt aller Bewertungen. Wenige Bewertungen zählen für die Reihenfolge weniger („wenige Bewertungen"), angezeigt wird immer der echte Durchschnitt. Glühwein = Geschmack, Geruch, Temperatur · Drumherum = Personal, Atmosphäre, Preis/Leistung, Tasse.')}
       </p>
       <Betreiber />
     </div>

@@ -23,17 +23,17 @@ function wertAusX(el: HTMLElement, clientX: number): number {
   return Math.min(10, Math.max(1, Math.ceil(anteil * 10)));
 }
 
-function Inhalt({ name, gewicht, wert, auto }: { name: string; gewicht: number; wert: Note; auto?: boolean }) {
+function Inhalt({ name, wert, auto }: { name: string; wert: Note; auto?: boolean }) {
   return (
     <div class="skala-inhalt">
       <span class="name">{name}</span>
-      <span class="gewicht">{auto ? `${t('auto')} ` : ''}×{gewicht}</span>
+      {auto && <span class="gewicht">{t('auto')}</span>}
       <span class={wert === null ? 'wert leer' : 'wert'}>{wert ?? '–'}</span>
     </div>
   );
 }
 
-export function Skala({ name, gewicht, wert, aktiv, onWert, onAktiv, onInfo, nurAnzeige = false }: Props) {
+export function Skala({ name, wert, aktiv, onWert, onAktiv, onInfo, nurAnzeige = false }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const letzter = useRef<Note>(wert);
   letzter.current = wert;
@@ -89,13 +89,13 @@ export function Skala({ name, gewicht, wert, aktiv, onWert, onAktiv, onInfo, nur
         onFocus={onAktiv}
         onKeyDown={taste}
       >
-        <Inhalt name={name} gewicht={gewicht} wert={wert} auto={nurAnzeige} />
+        <Inhalt name={name} wert={wert} auto={nurAnzeige} />
         <div class="skala-fuellung" aria-hidden="true" style={{ clipPath: `inset(0 ${rechts}% 0 0)` }}>
-          <Inhalt name={name} gewicht={gewicht} wert={wert} auto={nurAnzeige} />
+          <Inhalt name={name} wert={wert} auto={nurAnzeige} />
         </div>
       </div>
-      <button type="button" class="skala-info" aria-label={t('Anker {name}', { name })} onClick={onInfo}>
-        Anker
+      <button type="button" class="skala-info" aria-label={t('Was bedeutet {name}?', { name })} onClick={onInfo}>
+        ?
       </button>
     </div>
   );

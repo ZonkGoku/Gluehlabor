@@ -9,7 +9,7 @@ export function Spickzettel() {
       <div class="seitenkopf">
         <div>
           <p class="eyebrow">{t('Vor dem ersten Becher einmal lesen')}</p>
-          <h1>{t('Spickzettel')}</h1>
+          <h1>{t('Hilfe & Regeln')}</h1>
         </div>
       </div>
       <div class="raster">

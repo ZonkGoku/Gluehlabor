@@ -43,14 +43,8 @@ export function Geruest({ route, children }: { route: string; children: Componen
             {breit && <SpracheKnopf />}
             {breit && <MenueKnopf />}
             <ThemeKnopf />
-            <a class={ICONKNOPF} href="#/spickzettel" aria-label={t('Spickzettel')}>
+            <a class={ICONKNOPF} href="#/spickzettel" aria-label={t('Hilfe & Regeln')}>
               <Symbol name="spickzettel" groesse={20} />
-            </a>
-            <a class={ICONKNOPF} href="#/profil" aria-label={t('Profil')}>
-              <Symbol name="profil" groesse={20} />
-            </a>
-            <a class={ICONKNOPF} href="#/einstellungen" aria-label={t('Einstellungen')}>
-              <Symbol name="einstellungen" groesse={20} />
             </a>
           </header>
           <Navigation route={route} />

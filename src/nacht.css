@@ -241,8 +241,8 @@ body {
 /* Kleine Beschriftung wie auf einem Ticket */
 @utility etikett {
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  letter-spacing: 0.16em;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--nm-text-2);
 }
@@ -429,6 +429,119 @@ body {
   color: var(--nm-akzent-text);
 }
 
+/* Preis: Pflichtangabe, deshalb groß und gleich unter Stand und Ort. Leer leuchtet er, gefüllt wird er ruhig. */
+.erf .preis-block {
+  display: grid;
+  gap: 6px;
+  padding: 8px 10px 6px;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--nm-akzent-text);
+  background: var(--flaeche);
+  box-shadow: 0 0 0 3px rgb(255 200 87 / 0.12), 0 0 22px -6px rgb(255 138 61 / 0.5);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.erf .preis-block.gesetzt {
+  border-color: var(--linie-stark);
+  box-shadow: none;
+}
+.erf .preis-block.fehlt {
+  border-color: var(--warnung);
+  box-shadow: 0 0 0 3px rgb(240 52 79 / 0.2);
+}
+.erf .preis-kopf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text);
+}
+.erf .preis-titel {
+  font-weight: 600;
+}
+.erf .preis-titel b {
+  margin-left: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--nm-akzent-text);
+}
+.erf .preis-block.gesetzt .preis-titel b {
+  display: none;
+}
+.erf .preis-groesse {
+  height: 40px;
+  border: 1px solid var(--linie);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-2);
+  font: 12px var(--mono);
+  padding: 0 8px;
+}
+.erf .preis-zeile {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+.erf .preis-eingabe {
+  flex: 0 0 116px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 46px;
+  padding: 0 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--linie-stark);
+  background: var(--bg);
+  font-family: var(--font-display, var(--sans));
+  font-size: 26px;
+  color: var(--text);
+}
+.erf .preis-eingabe input {
+  height: 100%;
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  outline: 0;
+}
+.erf .preis-eingabe input::placeholder {
+  color: var(--text-2);
+  opacity: 0.6;
+}
+.erf .preis-schnell {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 5px;
+}
+.erf .preis-schnell button {
+  border: 1px solid var(--linie);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-2);
+  font: 13px var(--mono);
+  cursor: pointer;
+}
+.erf .preis-schnell button.an {
+  border-color: var(--nm-akzent-text);
+  background: var(--flaeche-hover, var(--flaeche));
+  color: var(--text);
+}
+.erf .preis-hinweis {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.25;
+  color: var(--text-2);
+}
+.erf .preis-block.fehlt .preis-hinweis {
+  color: var(--warnung);
+}
+
 /* Stadtfeld unter Stand und Markt, wenn der Markt „Sonstiger" ist */
 .erf .stadtzeile {
   margin-top: 8px;
@@ -441,7 +554,7 @@ body {
     height: auto;
     min-height: 100dvh;
     overflow: visible;
-    grid-template-rows: auto auto auto auto auto auto;
+    grid-template-rows: auto auto auto auto auto auto auto;
   }
   .erf .skalen {
     grid-template-rows: repeat(7, 50px);
