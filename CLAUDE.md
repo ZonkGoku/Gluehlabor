@@ -93,18 +93,20 @@ scripts/icons.mjs        rastert icon.svg zu den PNG-Icons (nutzt Playwright aus
 - Statistik-Schwellen wie im alten Sheet: Spanne (max − min) unter 5 = Skala zu eng,
   Korrelation mit Geschmack über 0,6 = misst nichts Eigenes, Streuung unter 1 = kaum Streuung.
   Markt-Checkliste: 0 Becher noch nie da, unter 3 kaum erkundet, ab 3 abgedeckt.
-- Wer eintragen darf: Geräte mit Token (oder mit lokal offenen Einträgen). Öffentliche
-  Besucher sehen keinen Erfassen-Knopf.
+- Erfassen kann jedes Gerät, der Knopf ist überall sichtbar (Startseite, Tab-Leiste, Seitenleiste).
+  Ohne Token bleibt der Becher lokal (Status "nur lokal · kein Token") und wird hochgeladen,
+  sobald ein Token hinterlegt ist. In die geteilten Daten schreibt nur ein Gerät mit Token.
 
 ## Startseite (`#/`, Datei `src/ui/Uebersicht.tsx`)
 
 Reihenfolge: Bühne (Spitzenreiter, oder auf Geräten mit Token nach dem ersten Becher des Abends
-„Heute Abend"), Plus-Balken „Nächster Becher Nr. N" (nur Handy, nur mit Token), vier Kennzahlen,
+„Heute Abend"), Plus-Balken „Nächster Becher Nr. N" (immer, auch am Rechner), vier Kennzahlen,
 Rangliste Top 5, Deutschlandkarte, neueste Becher, Saisonverlauf, wichtigster Befund.
 - Ohne eigene Wahl zeigt jede Ansicht die Standard-Saison: laufendes Jahr, sobald es dort Becher
   gibt, sonst die letzte (`standardSaison`). Die Saison beginnt mit dem ersten Becher des Jahres
   („Tag 1"). Gewählte Saison wird pro Gerät gemerkt.
-- Besucher ohne Token sehen dasselbe, aber ohne Plus-Balken und ohne Abend-Modus.
+- Der Abend-Modus („Heute Abend") erscheint nur auf Geräten mit Token oder lokal offenen Bechern.
+  Ohne Token weist ein Hinweis unter dem Plus-Balken auf die Einstellungen hin.
 - Die 14 Becher aus 2025 haben kein Datum; der Saisonverlauf sagt das, statt zu raten.
 
 ## Gestaltung
