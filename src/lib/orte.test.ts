@@ -4,7 +4,9 @@ import { describe, expect, it } from 'vitest';
 import { importiereCsv } from './csvImport';
 import { alleMaerkte, staedte, stadtVon, stadtZuMarkt, zerlegeFreienMarkt, type MarktListe } from './orte';
 
-const liste: MarktListe = JSON.parse(readFileSync(resolve(process.cwd(), 'data/maerkte.json'), 'utf8'));
+// Die Abnahme von 2025 gilt für die Hamburger Liste; weitere Städte prüft maerkte.test.ts.
+const voll: MarktListe = JSON.parse(readFileSync(resolve(process.cwd(), 'data/maerkte.json'), 'utf8'));
+const liste: MarktListe = { ...voll, staedte: voll.staedte.filter((s) => s.stadt === 'Hamburg') };
 const bestand = importiereCsv(readFileSync(resolve(process.cwd(), 'data/gluehwein-2025.csv'), 'utf8'));
 
 describe('Marktliste', () => {

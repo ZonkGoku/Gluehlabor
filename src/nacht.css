@@ -342,3 +342,55 @@ body {
 .erf .chip {
   border-radius: 14px;
 }
+
+/* Vorschläge unter dem Stand-Feld der Erfassung */
+.erf .vorschlaege {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border-radius: 18px;
+  background: linear-gradient(160deg, var(--nm-glas-stark-a), var(--nm-glas-stark-b));
+  backdrop-filter: blur(22px) saturate(160%);
+  border: 1px solid var(--nm-glas-rand-stark);
+  box-shadow: 0 24px 60px -18px var(--nm-schatten);
+}
+.erf .vorschlaege button {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: 'name zahl' 'ort zahl';
+  width: 100%;
+  gap: 1px 12px;
+  text-align: left;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+.erf .vorschlaege button:hover,
+.erf .vorschlaege button:focus-visible {
+  background: var(--nm-flaeche-hover);
+}
+.erf .vorschlaege .vs-name {
+  grid-area: name;
+  font-weight: 600;
+  font-size: 16px;
+}
+.erf .vorschlaege .vs-ort {
+  grid-area: ort;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.erf .vorschlaege .vs-zahl {
+  grid-area: zahl;
+  align-self: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--nm-akzent-text);
+}

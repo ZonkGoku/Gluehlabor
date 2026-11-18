@@ -73,6 +73,15 @@ if (apiUrl) {
 try {
   const r = await fetch(SEITE_URL);
   pruefe(r.ok, 'Live-Seite erreichbar', `Status ${r.status}`);
+  // Link-Vorschau: Das Bild muss unter der angegebenen absoluten Adresse liegen und unter 300 KB bleiben (WhatsApp).
+  const html = await r.text();
+  const bildUrl = /property="og:image" content="([^"]+)"/.exec(html)?.[1];
+  pruefe(Boolean(bildUrl), 'Link-Vorschau: og:image gesetzt', 'index.html prüfen');
+  if (bildUrl) {
+    const b = await fetch(bildUrl);
+    const gr = Number(b.headers.get('content-length') ?? (await b.arrayBuffer()).byteLength);
+    pruefe(b.ok && (b.headers.get('content-type') ?? '').startsWith('image/') && gr < 300_000, 'Link-Vorschau: Bild erreichbar und unter 300 KB', `${bildUrl}: Status ${b.status}, ${gr} Bytes`);
+  }
 } catch (err) {
   pruefe(false, 'Live-Seite erreichbar', String(err));
 }

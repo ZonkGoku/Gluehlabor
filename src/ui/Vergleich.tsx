@@ -27,10 +27,15 @@ export function Vergleich() {
   const jahre = [...new Set([...saisons(alle), new Date().getFullYear()])].sort();
   const w = wiederholungen(alle, gewichte);
   const mehrfach = w.filter((x) => Object.keys(x.jeSaison).length > 1);
-  const listen = MARKTLISTE.staedte.map((s) => {
+  // Bei bald 40 Städten wäre eine Checkliste je Stadt eine Mauer: Hier stehen Heimatstädte und alle Städte mit Bechern;
+  // der Rest wird als „noch unentdeckt" nur aufgezählt.
+  const IMMER = new Set(['Hamburg', 'München', 'Nürnberg']);
+  const alleListen = MARKTLISTE.staedte.map((s) => {
     const c = marktCheckliste(alle, s.maerkte);
-    return { stadt: s.stadt, checkliste: c, besucht: c.filter((m) => m.becher > 0).length };
+    return { stadt: s.stadt, anzahl: s.maerkte.length, checkliste: c, besucht: c.filter((m) => m.becher > 0).length };
   });
+  const listen = alleListen.filter((l) => IMMER.has(l.stadt) || l.besucht > 0);
+  const unentdeckt = alleListen.filter((l) => !IMMER.has(l.stadt) && l.besucht === 0);
   const gepflegt = new Set(MARKTLISTE.staedte.map((s) => s.stadt));
   const weitere = staedte(MARKTLISTE, alle).filter((o) => !gepflegt.has(o.stadt ?? ''));
 
@@ -107,6 +112,22 @@ export function Vergleich() {
             </div>
           </section>
         ))}
+
+        {unentdeckt.length > 0 && (
+          <section class="karte">
+            <h2>Noch unentdeckt</h2>
+            <p style={{ margin: '0 0 12px', color: 'var(--text-2)', fontSize: '14px' }}>
+              In diesen Städten kennt Glühlabor schon Märkte, aber noch ohne euren Becher.
+            </p>
+            <div class="chips">
+              {unentdeckt.map((l) => (
+                <span class="chip-klein">
+                  {l.stadt} · {l.anzahl} {l.anzahl === 1 ? 'Markt' : 'Märkte'}
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section class="karte">
           <h2>Weitere Orte in Deutschland</h2>

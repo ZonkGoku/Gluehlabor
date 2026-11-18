@@ -26,7 +26,9 @@ import {
 } from './statistik';
 
 const csv = readFileSync(resolve(process.cwd(), 'data/gluehwein-2025.csv'), 'utf8');
-const marktliste: MarktListe = JSON.parse(readFileSync(resolve(process.cwd(), 'data/maerkte.json'), 'utf8'));
+// Die Abnahme von 2025 gilt für die Hamburger Liste; weitere Städte prüft maerkte.test.ts.
+const volleListe: MarktListe = JSON.parse(readFileSync(resolve(process.cwd(), 'data/maerkte.json'), 'utf8'));
+const marktliste: MarktListe = { ...volleListe, staedte: volleListe.staedte.filter((s) => s.stadt === 'Hamburg') };
 const maerkte = alleMaerkte(marktliste);
 const anker: AnkerDaten = JSON.parse(readFileSync(resolve(process.cwd(), 'data/anker.json'), 'utf8'));
 const labels = Object.fromEntries(KRITERIEN.map((k) => [k, anker[k].label])) as Record<Kriterium, string>;

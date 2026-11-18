@@ -16,7 +16,8 @@ import { abendDatum, naechsteBecherNr } from '../lib/abend';
 import { besuchIdAusBytes } from '../lib/besuch';
 import { MARKE } from '../marke';
 import { ankerFuer } from '../lib/anker';
-import { zerlegeFreienMarkt } from '../lib/orte';
+import { stadtVon, zerlegeFreienMarkt } from '../lib/orte';
+import { kanonischerStand, schlageStaendeVor, type Vorschlag } from '../lib/standvorschlag';
 import { ANKER, MAERKTE, MARKTLISTE } from './stammdaten';
 import { euro, probeNr, zahl2 } from '../lib/format';
 import { DEFAULT_GEWICHTE, KRITERIEN, leereNoten, SORTEN, type Eintrag, type Kriterium, type Sorte } from '../lib/modell';
@@ -66,6 +67,9 @@ export function Erfassen() {
   const [gespeichert, setGespeichert] = useState<string | null>(null);
   const [fertigId, setFertigId] = useState<string | null>(null);
   const standRef = useRef<HTMLInputElement>(null);
+  const [standFokus, setStandFokus] = useState(false);
+  // Alle Becher dieses Geräts, auch die schon synchronisierten der Community: daraus kommen die Vorschläge.
+  const bestand = useLive(() => db.eintraege.toArray(), [], []);
 
   // Beim ersten Öffnen ohne Entwurf: zuletzt benutzten Markt vorschlagen.
   useEffect(() => {
@@ -86,6 +90,17 @@ export function Erfassen() {
   const becherNr = becherNrAngefasst ? e.becherNr : vorschlagNr;
 
   const wertung = useMemo(() => bewerte(e.noten, gewichte), [e.noten, gewichte]);
+  // Vorschläge nur aus echten Ständen, nie der eigenen halb getippten Eingabe: der Entwurf zählt erst nach dem Speichern.
+  const vorschlaege = useMemo(() => {
+    const markt = !e.marktFrei && e.markt !== MARKTLISTE.sonstiger ? e.markt : undefined;
+    const alle = schlageStaendeVor(
+      bestand.map((b) => ({ stand: b.stand, markt: b.markt, stadt: b.stadt })),
+      e.stand,
+      markt,
+    );
+    // Genau die Eingabe am selben Markt braucht keinen Vorschlag
+    return alle.filter((v) => !(v.stand === e.stand.trim() && (!markt || v.markt === markt)));
+  }, [bestand, e.stand, e.markt, e.marktFrei]);
   const bewertet = KRITERIEN.filter((k) => e.noten[k] !== null).length;
 
   const setNote = (k: Kriterium, n: number | null) => setE((x) => ({ ...x, noten: { ...x.noten, [k]: n } }));
@@ -98,8 +113,22 @@ export function Erfassen() {
     await schreibeEntwurfFoto(klein);
   };
 
+  /** Vorschlag übernehmen: Stand und Markt (samt Stadt) aus dem vorhandenen Becher. */
+  const uebernimm = (v: Vorschlag) => {
+    const stadt = v.stadt ?? stadtVon(MARKTLISTE, { markt: v.markt });
+    // In der Auswahlliste, wenn der Markt dort steht und die Stadt dazu passt; sonst als freie Eingabe „Markt, Stadt".
+    const gelistet = MAERKTE.includes(v.markt) && (!v.stadt || stadtVon(MARKTLISTE, { markt: v.markt }) === v.stadt);
+    setE((x) => ({
+      ...x,
+      stand: v.stand,
+      markt: gelistet ? v.markt : stadt ? `${v.markt}, ${stadt}` : v.markt,
+      marktFrei: !gelistet,
+    }));
+    setStandFokus(false);
+  };
+
   const speichern = async () => {
-    const stand = e.stand.trim();
+    const stand = kanonischerStand(bestand, e.stand, e.marktFrei ? (zerlegeFreienMarkt(e.markt).markt ?? e.markt) : e.markt);
     if (!stand) {
       setFehlt(true);
       standRef.current?.focus();
@@ -194,7 +223,22 @@ export function Erfassen() {
           </button>
         </div>
       ) : (
-      <div class="stamm">
+      <div class="stamm" style={{ position: 'relative' }}>
+        {standFokus && vorschlaege.length > 0 && (
+          <ul class="vorschlaege" role="listbox" aria-label="Meintest du einen dieser Stände?">
+            {vorschlaege.map((v) => (
+              <li role="option">
+                <button type="button" onPointerDown={(ev) => { ev.preventDefault(); uebernimm(v); }}>
+                  <span class="vs-name">{v.stand}</span>
+                  <span class="vs-ort">
+                    {[v.markt === MARKTLISTE.sonstiger ? null : v.markt, v.stadt ?? stadtVon(MARKTLISTE, { markt: v.markt })].filter(Boolean).join(' · ') || v.markt}
+                  </span>
+                  <span class="vs-zahl">{v.anzahl}×</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
         <input
           ref={standRef}
           class="feld"
@@ -207,6 +251,8 @@ export function Erfassen() {
           enterkeyhint="done"
           value={e.stand}
           onInput={(ev) => setE({ ...e, stand: (ev.target as HTMLInputElement).value })}
+          onFocus={() => setStandFokus(true)}
+          onBlur={() => setTimeout(() => setStandFokus(false), 120)}
           onKeyDown={(ev) => ev.key === 'Enter' && (ev.target as HTMLInputElement).blur()}
         />
         {e.marktFrei ? (

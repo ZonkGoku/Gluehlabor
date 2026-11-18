@@ -47,6 +47,21 @@ hoch, spielt die 14 Becher von 2025 ein und macht den Startcheck. Danach läuft 
 | Startcheck: „Besucheradresse kommt nicht an" | Der Hoster stellt einen Proxy davor. Dann `REMOTE_ADDR` ist dessen Adresse und das Limit gilt für alle zusammen. Bescheid geben, dann lese ich `X-Forwarded-For` |
 | FTP-Upload scheitert | Zugangsdaten und `FTP_ORDNER` prüfen; Explizites FTPS (Port 21) muss erlaubt sein |
 
+## Tägliche Sicherung einrichten (einmalig, 5 Minuten)
+
+Die Datenbank ist die ganze Community. `api/lib/sicherung.php` kopiert sie jeden Tag nach `api/daten/sicherungen/`, behält die
+letzten 14 und räumt abgelaufene Zähler auf. Das Skript läuft nur auf der Kommandozeile und ist über den Browser nicht erreichbar.
+
+1. konsoleH → Konto `fnp1…` → **Einstellungen → Cronjob Manager** → neuen Cronjob anlegen.
+2. Befehl: `php /usr/www/users/fnpw3y/public_html/api/lib/sicherung.php` (der Pfad beginnt bei Hetzner meist mit
+   `/usr/www/users/<FTP-Login>/`; falls der Cronjob Manager einen anderen Pfad oder eine PHP-Version vorschlägt, den nehmen).
+3. Zeit: täglich, zum Beispiel 03:30 Uhr.
+4. Den Cronjob einmal von Hand ausführen. Danach per FTP prüfen, ob `api/daten/sicherungen/gluehlabor-JJJJ-MM-TT.sqlite` da ist.
+5. Gelegentlich eine Sicherung per FTP herunterladen und woanders aufbewahren (Rechner, Cloud-Speicher). Wiederherstellen: Datei
+   über `api/daten/gluehlabor.sqlite` kopieren (vorher `-wal` und `-shm` daneben löschen).
+
+Bei MySQL entsteht stattdessen `gluehlabor-JJJJ-MM-TT.json.gz` mit allen Tabellen.
+
 ## Betrieb
 
 - **Moderation (täglich 5 Minuten):** `API_URL=https://gluehlabor.de ADMIN_TOKEN=… npm run moderation -- liste`,

@@ -1,5 +1,5 @@
 {
-  "_hinweis": "Gepflegte Marktlisten je Stadt. Weitere Städte einfach ergänzen; frei eingegebene Märkte gehen trotzdem.",
+  "_hinweis": "Gepflegte Marktlisten je Stadt (gängige Namen der großen Märkte, ohne Gewähr). Weitere Städte und Märkte einfach ergänzen; frei eingegebene Märkte gehen trotzdem. Marktnamen müssen über alle Städte eindeutig sein.",
   "sonstiger": "Sonstiger",
   "staedte": [
     {
@@ -20,6 +20,241 @@
         "Blankenese",
         "Bergedorf",
         "Ikea Altona"
+      ]
+    },
+    {
+      "stadt": "München",
+      "maerkte": [
+        "Christkindlmarkt Marienplatz",
+        "Weihnachtsmarkt Residenz",
+        "Weihnachtsmarkt Sendlinger Tor",
+        "Mittelalterlicher Weihnachtsmarkt Wittelsbacherplatz",
+        "Pink Christmas",
+        "Tollwood Winterfestival"
+      ]
+    },
+    {
+      "stadt": "Nürnberg",
+      "maerkte": [
+        "Christkindlesmarkt",
+        "Kinderweihnacht",
+        "Markt der Partnerstädte"
+      ]
+    },
+    {
+      "stadt": "Aachen",
+      "maerkte": [
+        "Aachener Weihnachtsmarkt"
+      ]
+    },
+    {
+      "stadt": "Augsburg",
+      "maerkte": [
+        "Augsburger Christkindlesmarkt"
+      ]
+    },
+    {
+      "stadt": "Bamberg",
+      "maerkte": [
+        "Bamberger Weihnachtsmarkt"
+      ]
+    },
+    {
+      "stadt": "Berlin",
+      "maerkte": [
+        "Weihnachtszauber Gendarmenmarkt",
+        "Weihnachtsmarkt Gedächtniskirche",
+        "Weihnachtsmarkt Schloss Charlottenburg",
+        "Weihnachtsmarkt Roter Rathaus",
+        "Lucia-Weihnachtsmarkt Kulturbrauerei",
+        "Weihnachtsmarkt Spandau",
+        "Weihnachtsmarkt Alexanderplatz"
+      ]
+    },
+    {
+      "stadt": "Bonn",
+      "maerkte": [
+        "Bonner Weihnachtsmarkt"
+      ]
+    },
+    {
+      "stadt": "Bremen",
+      "maerkte": [
+        "Bremer Weihnachtsmarkt",
+        "Schlachte-Zauber"
+      ]
+    },
+    {
+      "stadt": "Dortmund",
+      "maerkte": [
+        "Dortmunder Weihnachtsmarkt"
+      ]
+    },
+    {
+      "stadt": "Dresden",
+      "maerkte": [
+        "Striezelmarkt",
+        "Weihnachtsmarkt Neumarkt Dresden",
+        "Augustusmarkt",
+        "Mittelaltermarkt Stallhof"
+      ]
+    },
+    {
+      "stadt": "Düsseldorf",
+      "maerkte": [
+        "Sternchenmarkt",
+        "Engelchenmarkt"
+      ]
+    },
+    {
+      "stadt": "Erfurt",
+      "maerkte": [
+        "Erfurter Weihnachtsmarkt"
+      ]
+    },
+    {
+      "stadt": "Essen",
+      "maerkte": [
+        "Essener Weihnachtsmarkt"
+      ]
+    },
+    {
+      "stadt": "Esslingen",
+      "maerkte": [
+        "Mittelalterlicher Weihnachtsmarkt Esslingen"
+      ]
+    },
+    {
+      "stadt": "Frankfurt am Main",
+      "maerkte": [
+        "Frankfurter Weihnachtsmarkt"
+      ]
+    },
+    {
+      "stadt": "Freiburg",
+      "maerkte": [
+        "Freiburger Weihnachtsmarkt"
+      ]
+    },
+    {
+      "stadt": "Goslar",
+      "maerkte": [
+        "Weihnachtswald Goslar"
+      ]
+    },
+    {
+      "stadt": "Hannover",
+      "maerkte": [
+        "Hannoverscher Weihnachtsmarkt"
+      ]
+    },
+    {
+      "stadt": "Heidelberg",
+      "maerkte": [
+        "Heidelberger Weihnachtsmarkt"
+      ]
+    },
+    {
+      "stadt": "Karlsruhe",
+      "maerkte": [
+        "Karlsruher Christkindlesmarkt"
+      ]
+    },
+    {
+      "stadt": "Kassel",
+      "maerkte": [
+        "Kasseler Weihnachtsmarkt"
+      ]
+    },
+    {
+      "stadt": "Kiel",
+      "maerkte": [
+        "Kieler Weihnachtsmarkt"
+      ]
+    },
+    {
+      "stadt": "Köln",
+      "maerkte": [
+        "Kölner Dom Weihnachtsmarkt",
+        "Heinzels Wintermärchen",
+        "Markt der Engel",
+        "Nikolausdorf",
+        "Hafen-Weihnachtsmarkt"
+      ]
+    },
+    {
+      "stadt": "Leipzig",
+      "maerkte": [
+        "Leipziger Weihnachtsmarkt",
+        "Mittelalterlicher Weihnachtsmarkt Leipzig"
+      ]
+    },
+    {
+      "stadt": "Lübeck",
+      "maerkte": [
+        "Lübecker Weihnachtsmarkt"
+      ]
+    },
+    {
+      "stadt": "Magdeburg",
+      "maerkte": [
+        "Magdeburger Weihnachtsmarkt"
+      ]
+    },
+    {
+      "stadt": "Mainz",
+      "maerkte": [
+        "Mainzer Weihnachtsmarkt"
+      ]
+    },
+    {
+      "stadt": "Münster",
+      "maerkte": [
+        "Weihnachtsmarkt Lambertikirchplatz",
+        "Weihnachtsmarkt Domplatz Münster"
+      ]
+    },
+    {
+      "stadt": "Potsdam",
+      "maerkte": [
+        "Blauer Lichterglanz"
+      ]
+    },
+    {
+      "stadt": "Regensburg",
+      "maerkte": [
+        "Christkindlmarkt Neupfarrplatz",
+        "Romantischer Weihnachtsmarkt Thurn und Taxis"
+      ]
+    },
+    {
+      "stadt": "Rostock",
+      "maerkte": [
+        "Rostocker Weihnachtsmarkt"
+      ]
+    },
+    {
+      "stadt": "Rothenburg ob der Tauber",
+      "maerkte": [
+        "Reiterlesmarkt"
+      ]
+    },
+    {
+      "stadt": "Stuttgart",
+      "maerkte": [
+        "Stuttgarter Weihnachtsmarkt"
+      ]
+    },
+    {
+      "stadt": "Ulm",
+      "maerkte": [
+        "Ulmer Weihnachtsmarkt"
+      ]
+    },
+    {
+      "stadt": "Würzburg",
+      "maerkte": [
+        "Würzburger Weihnachtsmarkt"
       ]
     }
   ]

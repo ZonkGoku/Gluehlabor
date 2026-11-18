@@ -61,6 +61,7 @@ Gamification und Teilen-auf-Social. Bewertungen von David & Philip laufen weiter
   in `worker/.dev.vars`, nicht im Repo), `npm run worker:seed` mit `API_URL` und `ADMIN_TOKEN` lädt die CSV
   als Prüfstellen-Becher. App gegen den lokalen Server: `VITE_API_URL=http://localhost:8787 npm run dev`.
 - **Hosting (gewählt): Hetzner Webhosting S** (Shared Hosting, Apache, PHP, kein Root, kein Node/Docker). `php/api/` (index.php, lib/regeln.php, lib/db.php, lib/app.php) ist die PHP-Fassung des Servers, SQLite in `api/daten/` oder MySQL (config). **Sie ist eine 1:1-Übertragung von `worker/src/app.ts` und `src/lib/community.ts`: Änderungen dort müssen in PHP nachgezogen werden.** Gesichert durch: dieselben Server-Tests gegen PHP (`API_ZIEL=php-sqlite|php-mysql npx vitest run worker/test/app.test.ts`, Ziele in `worker/test/ziel.ts`), `php/test/regeln.test.ts` (Regeln und Adress-Hash gegen TypeScript) und einen Browser-Test gegen echtes Apache + mod_php (nur manuell). Build: `npm run build:webhosting` (`scripts/webhosting.mjs`, `VITE_API_URL=/`, erzeugt `out/webhosting` mit `.htaccess` aus `php/htaccess.txt`). Deploy: `.github/workflows/hetzner.yml` (FTPS per lftp, Secrets siehe `hetzner/WEBHOSTING.md`). Authorization wird zusätzlich als `X-Auth` gesendet (manche Hoster entfernen es). Sync-Nummern entstehen in einer Transaktion mit gesperrter Zählerzeile (`zaehler`). Domain gluehlabor.de, Marke in `src/marke.ts`. GitHub Pages bleibt ohne Server (nur lokal).
+- **Sicherung:** `php/api/lib/sicherung.php` (nur CLI, per Cronjob Manager täglich), SQLite-Kopie bzw. JSON.gz bei MySQL, 14 bleiben.
 - **Alternativen, nicht der Plan:** `server/` + `Dockerfile` + `hetzner/README.md` (Node-Server für einen Cloud-Server mit Root, getestet) und `worker/` (Cloudflare).
 - **Server bei Cloudflare veröffentlichen** (Alternative, braucht Konto): `wrangler d1 create gluehlabor`, `database_id` in
   `worker/wrangler.toml` eintragen, `wrangler d1 migrations apply gluehlabor --remote`,
@@ -80,7 +81,7 @@ data/                    Daten, nicht Code
   staedte.json           Koordinaten je Stadt für die Deutschlandkarte (fehlt eine Stadt, steht sie nur in der Liste)
   betreiber.json         Name, Anschrift, E-Mail für Impressum und Datenschutz (Pflicht vor dem Start)
   server.json            Adresse des Community-Servers (leer = nur lokal)
-  maerkte.json           gepflegte Marktlisten je Stadt + „Sonstiger" (weitere Städte einfach ergänzen)
+  maerkte.json           gepflegte Marktlisten je Stadt (36 Städte, Namen eindeutig, siehe maerkte.test.ts) + „Sonstiger"
   regeln.json            Regeln des Spickzettels
 worker/                  Community-Server: src/app.ts (alle Endpunkte), migrations/, test/, scripts/seed.ts
 src/lib/                 REINE Funktionen ohne UI/DOM, alle getestet
@@ -97,6 +98,7 @@ src/lib/                 REINE Funktionen ohne UI/DOM, alle getestet
   orte.ts                Märkte ↔ Städte, freie Eingabe „Markt, Stadt"
   startseite.ts          Standard-Saison, Saison-Tag, Abend, Saisonverlauf, neueste Becher, Kennzahlen
   karte.ts               Projektion und Umriss der Deutschlandkarte, Kartenpunkte
+  standvorschlag.ts      Vorschläge beim Erfassen (Stand existiert schon?), Schreibweise vereinheitlichen
   anker.ts, abend.ts, format.ts, veroeffentlichung.ts
 src/daten/               Speicher und Netz: db.ts (inkl. Gerätekennung), api.ts, sync.ts, update.ts, entwurf.ts, foto.ts, config.ts
 src/ui/                  Preact-Komponenten. KEINE Rechenlogik hier (auch keine Schwellenwerte).
@@ -110,7 +112,7 @@ src/ui/                  Preact-Komponenten. KEINE Rechenlogik hier (auch keine 
   daten.ts               Live-Hooks (Einträge, Gewichte, Saison-Auswahl)
 src/styles.css           Tokens beider Themes + Erfassungsscreen
 src/app.css              Gerüst und Auswertungsansichten
-public/                  icon.svg (PWA-Zeichen), logo.svg (Siegel mit „David & Philip"), PNG-Icons
+public/                  og.jpg (Link-Vorschau, erzeugt von scripts/og.mjs), icon.svg (PWA-Zeichen), logo.svg (Siegel mit „David & Philip"), PNG-Icons
 scripts/launch-check.ts  Startcheck (npm run launch-check)
 scripts/icons.mjs        rastert icon.svg zu den PNG-Icons (nutzt Playwright aus der Umgebung)
 ```
