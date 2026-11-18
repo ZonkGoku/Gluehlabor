@@ -48,7 +48,7 @@ function gruppiere(eintraege: readonly StandEintrag[]): Gruppe[] {
   for (const e of eintraege) {
     const key = kern(e.stand);
     if (!key) continue;
-    const id = `${key}|${marktSchluessel(e.markt)}`;
+    const id = `${key}|${marktSchluessel(e.markt)}|${(e.stadt ?? '').trim().toLowerCase()}`;
     let g = gruppen.get(id);
     if (!g) gruppen.set(id, (g = { key, markt: e.markt, stadt: e.stadt, schreibweisen: new Map(), anzahl: 0 }));
     g.anzahl++;
@@ -96,12 +96,13 @@ export function schlageStaendeVor(eintraege: readonly StandEintrag[], eingabe: s
 }
 
 /**
- * Gibt es am selben Markt schon einen Stand mit demselben Namen (ohne Groß/Klein, Satzzeichen, Leerraum)?
+ * Gibt es am selben Markt (und, wenn angegeben, in derselben Stadt) schon einen Stand mit demselben Namen (ohne Groß/Klein, Satzzeichen, Leerraum)?
  * Dann gilt dessen Schreibweise, damit die Rangliste nicht in Varianten zerfällt.
  */
-export function kanonischerStand(eintraege: readonly StandEintrag[], stand: string, markt: string): string {
+export function kanonischerStand(eintraege: readonly StandEintrag[], stand: string, markt: string, stadt?: string): string {
   const key = kern(stand);
   const m = marktSchluessel(markt);
-  const g = gruppiere(eintraege).find((x) => x.key === key && marktSchluessel(x.markt) === m);
+  const st = stadt?.trim().toLowerCase();
+  const g = gruppiere(eintraege).find((x) => x.key === key && marktSchluessel(x.markt) === m && (st === undefined || (x.stadt ?? '').trim().toLowerCase() === st));
   return g ? schoenste(g) : stand.trim();
 }

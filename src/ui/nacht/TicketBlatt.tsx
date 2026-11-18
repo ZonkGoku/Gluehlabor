@@ -1,7 +1,7 @@
 // „Dein Ticket": erscheint direkt nach dem Speichern eines Bechers. Der Moment, in dem man teilen will.
 import { useState } from 'preact/hooks';
 import { filtere, ranglisteMitWertung } from '../../lib/auswertung';
-import { stadtVon } from '../../lib/orte';
+import { ortText } from '../../lib/orte';
 import { useEintraege, useGewichte } from '../daten';
 import { MARKTLISTE } from '../stammdaten';
 import { Symbol } from '../Symbol';
@@ -19,7 +19,7 @@ export function TicketBlatt({ id, onNaechster }: { id: string; onNaechster: () =
   const zeilen = ranglisteMitWertung(filtere(alle, { saison: e.saison, markt: 'alle' }), gewichte);
   const zeile = zeilen.find((z) => z.eintrag.id === id);
   if (!zeile) return null;
-  const ort = [e.markt, stadtVon(MARKTLISTE, e)].filter(Boolean).join(' · ');
+  const ort = ortText(MARKTLISTE, e);
   const link = `${location.origin}${location.pathname}#/becher/${encodeURIComponent(id)}`;
 
   const teilen = async () => {

@@ -162,7 +162,7 @@ describe('Rangliste mit Filter', () => {
   });
   it('Gewichte ändern das Ergebnis sofort', () => {
     const nurBecher = { ...DEFAULT_GEWICHTE, geschmack: 0, geruch: 0, temperatur: 0, personal: 0, atmosphaere: 0, preisLeistung: 0 };
-    expect(ranglisteMitWertung(bestand, nurBecher)[0].eintrag.stand).toBe('Salz Chrom');
+    expect(ranglisteMitWertung(bestand, nurBecher)[0].eintrag.stand).toBe('Chrom');
     expect(ranglisteMitWertung(bestand, nurBecher)[0].wertung.gesamt).toBe(8);
   });
 });

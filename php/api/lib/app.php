@@ -208,6 +208,21 @@ function fuegeEin(Db $db, array $e, string $geraetId, ?string $name, bool $pruef
     });
 }
 
+/** Unterscheidet sich der gespeicherte Bestandsbecher vom Eintrag der CSV? @param array<string,mixed> $z @param array<string,mixed> $e */
+function bestandGeaendert(array $z, array $e): bool
+{
+    $n = $e['noten'];
+    $gleich = static fn($a, $b) => ($a === null ? null : (is_numeric($a) ? (float) $a : $a)) === ($b === null ? null : (is_numeric($b) ? (float) $b : $b));
+    return !(
+        $gleich($z['stand'], $e['stand']) && $gleich($z['markt'], $e['markt']) && $gleich($z['stadt'], $e['stadt'])
+        && $gleich($z['saison'], $e['saison']) && $gleich($z['datum'], $e['datum']) && $gleich($z['sorte'], $e['sorte'])
+        && $gleich($z['becher_nr'], $e['becherNr']) && $gleich($z['preis'], $e['preis']) && $gleich($z['notiz'], $e['notiz'])
+        && $gleich($z['geschmack'], $n['geschmack']) && $gleich($z['geruch'], $n['geruch']) && $gleich($z['temperatur'], $n['temperatur'])
+        && $gleich($z['personal'], $n['personal']) && $gleich($z['atmosphaere'], $n['atmosphaere'])
+        && $gleich($z['preis_leistung'], $n['preisLeistung']) && $gleich($z['becher'], $n['becher'])
+    );
+}
+
 /** Setzt Felder eines Bechers und gibt ihm eine neue Sync-Nummer. @param list<mixed> $werte */
 function aendere(Db $db, string $setzen, array $werte, string $id): int
 {
@@ -533,6 +548,7 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
             }
             $db->lauf($db->ignoriere() . " INTO geraete (id, schluessel_hash, name, pruefstelle, erstellt_am) VALUES ('bestand-pruefstelle', '-', 'Prüfstelle', 1, ?)", [$jetzt]);
             $neu = 0;
+            $aktualisiert = 0;
             $abgelehnt = [];
             foreach ($liste as $roh) {
                 $erst = is_array($roh) && istZahl($roh['erstelltAm'] ?? null) ? $roh['erstelltAm'] : $jetzt;
@@ -544,13 +560,29 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
                 }
                 $e = $p['eintrag'];
                 $e['erstelltAm'] = (int) $erst;
-                if ($db->eins('SELECT id FROM becher WHERE id = ?', [$e['id']])) {
+                $z = $db->eins('SELECT * FROM becher WHERE id = ?', [$e['id']]);
+                if ($z) {
+                    // Bestandsdaten lassen sich über die CSV korrigieren (gleiche ID, anderer Inhalt); die Sync-Nummer steigt.
+                    if ($z['geraet_id'] === 'bestand-pruefstelle' && bestandGeaendert($z, $e)) {
+                        $n = $e['noten'];
+                        aendere(
+                            $db,
+                            'stand = ?, markt = ?, stadt = ?, saison = ?, datum = ?, sorte = ?, becher_nr = ?, preis = ?, notiz = ?,
+                             geschmack = ?, geruch = ?, temperatur = ?, personal = ?, atmosphaere = ?, preis_leistung = ?, becher = ?',
+                            [
+                                $e['stand'], $e['markt'], $e['stadt'], $e['saison'], $e['datum'], $e['sorte'], $e['becherNr'], $e['preis'], $e['notiz'],
+                                $n['geschmack'], $n['geruch'], $n['temperatur'], $n['personal'], $n['atmosphaere'], $n['preisLeistung'], $n['becher'],
+                            ],
+                            $e['id'],
+                        );
+                        $aktualisiert++;
+                    }
                     continue;
                 }
                 fuegeEin($db, $e, 'bestand-pruefstelle', 'Prüfstelle', true, $jetzt);
                 $neu++;
             }
-            return new Antwort(200, ['neu' => $neu, 'abgelehnt' => $abgelehnt]);
+            return new Antwort(200, ['neu' => $neu, 'aktualisiert' => $aktualisiert, 'abgelehnt' => $abgelehnt]);
         }
     }
 

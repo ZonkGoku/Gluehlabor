@@ -61,7 +61,7 @@ function slug(s: string): string {
 
 /**
  * Wandelt CSV-Text in Einträge um. Die IDs sind deterministisch
- * (`import-<saison>-<zeile>-<stand>`), damit ein erneuter Import nichts
+ * (`import-<saison>-<zeile>-<stand>`, oder die Spalte `id`), damit ein erneuter Import nichts
  * verdoppelt. Leere Notenzellen werden null, nie 0.
  */
 export function importiereCsv(text: string): Eintrag[] {
@@ -97,7 +97,8 @@ export function importiereCsv(text: string): Eintrag[] {
 
     const preisRoh = wert('preis').replace(',', '.');
     const e: Eintrag = {
-      id: `import-${saison}-${String(zeilenNr + 1).padStart(3, '0')}-${slug(stand)}`,
+      // Optionale Spalte „id": hält die ID stabil, wenn ein Stand umbenannt wird (die ID hängt sonst am Namen).
+      id: wert('id') || `import-${saison}-${String(zeilenNr + 1).padStart(3, '0')}-${slug(stand)}`,
       stand,
       markt: wert('markt') || 'Sonstiger',
       saison,

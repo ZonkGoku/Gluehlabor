@@ -105,14 +105,14 @@ describe('saisonVerlauf', () => {
 
 describe('kennzahlen', () => {
   const liste: MarktListe = JSON.parse(readFileSync(resolve(process.cwd(), 'data/maerkte.json'), 'utf8'));
-  it('Bestand 2025: 14 Becher, 7 Märkte, 1 Stadt (der Rest ist „Sonstiger" ohne Stadt)', () => {
+  it('Bestand 2025: 14 Becher, 7 Märkte, 3 Städte (Hamburg, Salzburg, Traunstein)', () => {
     const k = kennzahlen(bestand, liste, DEFAULT_GEWICHTE);
-    expect(k).toMatchObject({ becher: 14, maerkte: 7, staedte: 1 });
+    expect(k).toMatchObject({ becher: 14, maerkte: 7, staedte: 3 });
     expect(k.mittel).toBeCloseTo(5.255952381, 8);
   });
   it('freie Städte zählen mit', () => {
     const k = kennzahlen([...bestand, mk('x1', 2026, '2026-11-20', 7, { markt: 'Christkindlesmarkt', stadt: 'Nürnberg' })], liste, DEFAULT_GEWICHTE);
-    expect(k.staedte).toBe(2);
+    expect(k.staedte).toBe(4);
   });
   it('leer', () => expect(kennzahlen([], liste, DEFAULT_GEWICHTE)).toEqual({ becher: 0, maerkte: 0, staedte: 0, mittel: null }));
 });

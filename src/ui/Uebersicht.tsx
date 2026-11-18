@@ -4,7 +4,7 @@ import { abendDatum } from '../lib/abend';
 import { filtere, ranglisteMitWertung, saisons } from '../lib/auswertung';
 import { euro, zahl2 } from '../lib/format';
 import { preisindex } from '../lib/preisindex';
-import { staedte, stadtVon } from '../lib/orte';
+import { ortText, staedte } from '../lib/orte';
 import { befunde } from '../lib/statistik';
 import { abend, kennzahlen, neuesteBecher, saisonStatus, saisonVerlauf } from '../lib/startseite';
 import { Betreiber, datumKurz, UrteilPill } from './bausteine';
@@ -181,7 +181,7 @@ export function Uebersicht() {
     1,
   )[0];
   const naechsteNr = heuteAbend.anzahl === 0 ? 1 : heuteAbend.naechsteNr;
-  const ortVon = (z: (typeof zeilen)[number]) => [z.eintrag.markt, stadtVon(MARKTLISTE, z.eintrag)].filter(Boolean).join(' · ');
+  const ortVon = (z: (typeof zeilen)[number]) => ortText(MARKTLISTE, z.eintrag);
 
   const status = saisonStatus(alle, typeof saison === 'number' ? saison : jahr, heute);
   const statusText =

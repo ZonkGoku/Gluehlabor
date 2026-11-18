@@ -16,7 +16,8 @@ import { abendDatum, naechsteBecherNr } from '../lib/abend';
 import { besuchIdAusBytes } from '../lib/besuch';
 import { MARKE } from '../marke';
 import { ankerFuer } from '../lib/anker';
-import { stadtVon, zerlegeFreienMarkt } from '../lib/orte';
+import { ortTeile, stadtVon, zerlegeFreienMarkt } from '../lib/orte';
+import staedteJson from '../../data/staedte.json';
 import { kanonischerStand, schlageStaendeVor, type Vorschlag } from '../lib/standvorschlag';
 import { ANKER, MAERKTE, MARKTLISTE } from './stammdaten';
 import { euro, probeNr, zahl2 } from '../lib/format';
@@ -89,6 +90,16 @@ export function Erfassen() {
   const vorschlagNr = naechsteBecherNr(heutige, heute);
   const becherNr = becherNrAngefasst ? e.becherNr : vorschlagNr;
 
+  // Städte für die Auswahl: Karte, gepflegte Liste und alles, was schon bewertet wurde
+  const bekannteStaedte = useMemo(() => {
+    const alle = new Set<string>([...Object.keys(staedteJson).filter((k) => !k.startsWith('_')), ...MARKTLISTE.staedte.map((x) => x.stadt)]);
+    for (const b of bestand) {
+      const st = b.stadt?.trim();
+      if (st) alle.add(st);
+    }
+    return [...alle].sort((a, b) => a.localeCompare(b, 'de'));
+  }, [bestand]);
+
   const wertung = useMemo(() => bewerte(e.noten, gewichte), [e.noten, gewichte]);
   // Vorschläge nur aus echten Ständen, nie der eigenen halb getippten Eingabe: der Entwurf zählt erst nach dem Speichern.
   const vorschlaege = useMemo(() => {
@@ -118,17 +129,21 @@ export function Erfassen() {
     const stadt = v.stadt ?? stadtVon(MARKTLISTE, { markt: v.markt });
     // In der Auswahlliste, wenn der Markt dort steht und die Stadt dazu passt; sonst als freie Eingabe „Markt, Stadt".
     const gelistet = MAERKTE.includes(v.markt) && (!v.stadt || stadtVon(MARKTLISTE, { markt: v.markt }) === v.stadt);
+    const sonstiger = v.markt === MARKTLISTE.sonstiger;
     setE((x) => ({
       ...x,
       stand: v.stand,
-      markt: gelistet ? v.markt : stadt ? `${v.markt}, ${stadt}` : v.markt,
-      marktFrei: !gelistet,
+      // „Sonstiger" bleibt in der Auswahl, die Stadt kommt in ihr eigenes Feld
+      markt: sonstiger ? v.markt : gelistet ? v.markt : stadt ? `${v.markt}, ${stadt}` : v.markt,
+      marktFrei: sonstiger ? false : !gelistet,
+      stadt: sonstiger ? (v.stadt ?? undefined) : undefined,
     }));
     setStandFokus(false);
   };
 
   const speichern = async () => {
-    const stand = kanonischerStand(bestand, e.stand, e.marktFrei ? (zerlegeFreienMarkt(e.markt).markt ?? e.markt) : e.markt);
+    const freiOrt = e.marktFrei ? zerlegeFreienMarkt(e.markt) : null;
+    const stand = kanonischerStand(bestand, e.stand, freiOrt?.markt ?? e.markt, freiOrt?.stadt ?? (e.markt === MARKTLISTE.sonstiger ? e.stadt?.trim() : undefined));
     if (!stand) {
       setFehlt(true);
       standRef.current?.focus();
@@ -157,6 +172,8 @@ export function Erfassen() {
       if (frei.stadt) eintrag.stadt = frei.stadt;
     } else if (e.markt.trim()) {
       eintrag.markt = e.markt.trim();
+      // „Sonstiger" sagt nichts über den Ort: die Stadt kommt aus dem eigenen Feld.
+      if (eintrag.markt === MARKTLISTE.sonstiger && e.stadt?.trim()) eintrag.stadt = e.stadt.trim();
     }
     if (e.sorte) eintrag.sorte = e.sorte;
     if (becherNr !== undefined) eintrag.becherNr = becherNr;
@@ -230,9 +247,7 @@ export function Erfassen() {
               <li role="option">
                 <button type="button" onPointerDown={(ev) => { ev.preventDefault(); uebernimm(v); }}>
                   <span class="vs-name">{v.stand}</span>
-                  <span class="vs-ort">
-                    {[v.markt === MARKTLISTE.sonstiger ? null : v.markt, v.stadt ?? stadtVon(MARKTLISTE, { markt: v.markt })].filter(Boolean).join(' · ') || v.markt}
-                  </span>
+                  <span class="vs-ort">{ortTeile(MARKTLISTE, v).join(' · ') || v.markt}</span>
                   <span class="vs-zahl">{v.anzahl}×</span>
                 </button>
               </li>
@@ -272,7 +287,7 @@ export function Erfassen() {
             value={e.markt}
             onChange={(ev) => {
               const v = (ev.target as HTMLSelectElement).value;
-              setE(v === '__frei' ? { ...e, markt: '', marktFrei: true } : { ...e, markt: v });
+              setE(v === '__frei' ? { ...e, markt: '', marktFrei: true, stadt: undefined } : { ...e, markt: v, stadt: v === MARKTLISTE.sonstiger ? e.stadt : undefined });
             }}
           >
             {MARKTLISTE.staedte.map((s) => (
@@ -289,6 +304,28 @@ export function Erfassen() {
           </select>
         )}
       </div>
+      )}
+
+      {!e.gesperrt && !e.marktFrei && e.markt === MARKTLISTE.sonstiger && (
+        <div class="stadtzeile">
+          <input
+            class="feld"
+            type="text"
+            list="bekannte-staedte"
+            placeholder="Stadt, z. B. Salzburg"
+            aria-label="Stadt"
+            autocomplete="off"
+            autocapitalize="words"
+            maxLength={60}
+            value={e.stadt ?? ''}
+            onInput={(ev) => setE({ ...e, stadt: (ev.target as HTMLInputElement).value })}
+          />
+          <datalist id="bekannte-staedte">
+            {bekannteStaedte.map((s) => (
+              <option value={s} />
+            ))}
+          </datalist>
+        </div>
       )}
 
       {notizOffen ? (

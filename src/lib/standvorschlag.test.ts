@@ -61,6 +61,19 @@ describe('schlageStaendeVor', () => {
   });
 });
 
+describe('gleicher Name in verschiedenen Städten (Markt „Sonstiger")', () => {
+  const B = [E('Max', 'Sonstiger', 'Traunstein'), E('Max', 'Sonstiger', 'Salzburg'), E('Max', 'Sonstiger', 'Salzburg')];
+  it('sind getrennte Vorschläge', () => {
+    const v = schlageStaendeVor(B, 'max');
+    expect(v.map((x) => [x.stadt, x.anzahl]).sort()).toEqual([['Salzburg', 2], ['Traunstein', 1]]);
+  });
+  it('die Schreibweise wird nur aus derselben Stadt übernommen', () => {
+    const C = [E('MAX', 'Sonstiger', 'Traunstein'), E('Max', 'Sonstiger', 'Salzburg')];
+    expect(kanonischerStand(C, 'max', 'Sonstiger', 'Traunstein')).toBe('MAX');
+    expect(kanonischerStand(C, 'max', 'Sonstiger', 'salzburg')).toBe('Max');
+  });
+});
+
 describe('kanonischerStand', () => {
   it('übernimmt die Schreibweise des vorhandenen Stands am selben Markt', () => {
     expect(kanonischerStand(BESTAND, 'SALZ-CHROM', 'sonstiger')).toBe('Salz Chrom');

@@ -424,6 +424,29 @@ describe('Moderation', () => {
     expect((await ruf('POST', '/api/admin/import', { ...admin, body: { eintraege: daten } })).json.neu).toBe(0);
     expect((await liste()).json.eintraege).toHaveLength(1);
   });
+  it('Import korrigiert Bestandsdaten: gleiche ID, neuer Stand und Stadt; neue Sync-Nummer; zweiter Lauf ändert nichts', async () => {
+    const alt = Date.parse('2025-12-01T00:00:00Z');
+    const vorher = { id: 'import-2025-001-salz-chrom', stand: 'Salz Chrom', markt: 'Sonstiger', saison: 2025, noten: { ...leereNoten(), geschmack: 6 }, erstelltAm: alt };
+    const nachher = { ...vorher, stand: 'Chrom', stadt: 'Salzburg' };
+    await ruf('POST', '/api/admin/import', { ...admin, body: { eintraege: [vorher, { ...vorher, id: 'import-2025-002-weiter', stand: 'Weiter' }] } });
+    const seq0 = (await liste()).json.naechste as number;
+    const r = await ruf('POST', '/api/admin/import', { ...admin, body: { eintraege: [nachher, { ...vorher, id: 'import-2025-002-weiter', stand: 'Weiter' }] } });
+    expect(r.json).toMatchObject({ neu: 0, aktualisiert: 1 });
+    const e = (await liste()).json.eintraege.find((x: any) => x.id === vorher.id);
+    expect(e).toMatchObject({ stand: 'Chrom', stadt: 'Salzburg', pruefstelle: true });
+    expect(e.seq).toBeGreaterThan(seq0);
+    // Geräte holen die Korrektur über die Sync-Nummer
+    expect((await liste(`?nach=${seq0}`)).json.eintraege.map((x: any) => x.id)).toEqual([vorher.id]);
+    expect((await ruf('POST', '/api/admin/import', { ...admin, body: { eintraege: [nachher] } })).json).toMatchObject({ neu: 0, aktualisiert: 0 });
+    expect((await liste()).json.eintraege).toHaveLength(2);
+  });
+  it('Import fasst Becher von Nutzern nie an, auch bei gleicher ID', async () => {
+    const g = await geraet();
+    await sende(g, [becher({ id: 'fremd-12345678', stand: 'Original' })]);
+    const r = await ruf('POST', '/api/admin/import', { ...admin, body: { eintraege: [becher({ id: 'fremd-12345678', stand: 'Überschrieben' })] } });
+    expect(r.json).toMatchObject({ neu: 0, aktualisiert: 0 });
+    expect((await liste()).json.eintraege[0].stand).toBe('Original');
+  });
   it('das Bestandsgerät kann sich nie anmelden', async () => {
     await ruf('POST', '/api/admin/import', { ...admin, body: { eintraege: [becher({ id: 'imp-12345678' })] } });
     for (const s of ['-', '', 'a'.repeat(64)]) {

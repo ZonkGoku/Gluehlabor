@@ -132,8 +132,11 @@ scripts/icons.mjs        rastert icon.svg zu den PNG-Icons (nutzt Playwright aus
 - Rangliste absteigend, Wettkampfplätze 1, 1, 3. Gleichstand = gleicher Wert auf zwei Stellen.
   Einträge ohne Wert ans Ende, ohne Rang.
 - Anzeige mit Punkt als Dezimaltrenner (`6.33`), wie im Auftrag. Preise mit Komma (`4,50 €`).
-- Abnahme: Nach Import von 2025 teilen sich Salz Chrom und Ikea Altona Platz 1 (6.33),
-  Rathaus Schloss Platz 3 (6.25), letzter ist Trauen Max (3.67, Weggießen).
+- Abnahme: Nach Import von 2025 teilen sich Chrom (Salzburg) und Ikea Altona Platz 1 (6.33),
+  Rathaus Schloss Platz 3 (6.25), letzter ist Max (Traunstein) (3.67, Weggießen).
+  „Salz Chrom" und „Trauen Max" hießen in der Ur-CSV so, weil „Salz" (Salzburg) und „Trauen" (Traunstein) die Stadt meinten; die CSV hat jetzt
+  die Spalten `id` (hält die alten IDs stabil) und `stadt`. Der Server korrigiert Bestandsbecher über `POST /api/admin/import`
+  (gleiche ID, anderer Inhalt → Update mit neuer Sync-Nummer, Antwort `aktualisiert`); der Deploy-Workflow spielt die CSV bei jedem Lauf ein.
 
 ## Datenmodell-Konventionen
 
@@ -144,7 +147,7 @@ scripts/icons.mjs        rastert icon.svg zu den PNG-Icons (nutzt Playwright aus
 - Zusatzfelder eines Eintrags: `geraet` (anonyme Kennung), `name`, `pruefstelle` (nur Server), `besuchId` (QR-Besuch, Schritt 2).
 - „Heute Abend" und die Becher-Nr. zählen nur die eigenen Becher dieses Geräts (`geraet === eigene Kennung`), nicht die der Community.
 - Fotos bleiben vorerst nur lokal (`fotoBlob`); der Server nimmt noch keine an (Schritt 3, R2).
-- `stadt` (optional) wird nur gespeichert, wenn sie nicht aus der gepflegten Liste folgt.
+- `stadt` (optional) wird nur gespeichert, wenn sie nicht aus der gepflegten Liste folgt. Beim Markt „Sonstiger" gibt es in der Erfassung ein eigenes Stadtfeld (Vorschläge aus Karte, Marktliste und schon bewerteten Städten). Anzeige immer über `ortText`/`ortTeile` (src/lib/orte.ts): „Sonstiger" erscheint nie als Ort.
   Die Stadt eines Eintrags immer über `stadtVon(MARKTLISTE, e)` holen. Freie Eingabe im
   Erfassungsscreen: „Markt, Stadt" (`zerlegeFreienMarkt`).
 - Statistik-Schwellen wie im alten Sheet: Spanne (max − min) unter 5 = Skala zu eng,

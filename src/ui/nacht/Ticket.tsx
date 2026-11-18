@@ -87,9 +87,9 @@ export function TicketRahmen({ rang, klein, kinder, stummel, klasse = '' }: Rahm
 function Messer({ etikett, wert }: { etikett: string; wert: number | null }) {
   return (
     <div>
-      <div class="flex items-baseline justify-between">
-        <span class="etikett">{etikett}</span>
-        <span class="font-mono text-xs text-eis">{zahl2(wert)}</span>
+      <div class="flex items-baseline justify-between gap-2">
+        <span class="etikett !text-[10px] !tracking-[0.1em]">{etikett}</span>
+        <span class="whitespace-nowrap font-mono text-xs text-eis">{zahl2(wert)}</span>
       </div>
       <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-spur">
         <div

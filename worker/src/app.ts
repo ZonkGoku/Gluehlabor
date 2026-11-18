@@ -203,6 +203,18 @@ function alsEintrag(z: BecherZeile): Record<string, unknown> {
 
 type Eintragsdaten = Extract<ReturnType<typeof pruefeEinreichung>, { ok: true }>['eintrag'];
 
+/** Unterscheidet sich der gespeicherte Bestandsbecher vom Eintrag der CSV? */
+function bestandGeaendert(z: BecherZeile, e: Eintragsdaten): boolean {
+  const n = e.noten;
+  return (
+    z.stand !== e.stand || z.markt !== e.markt || (z.stadt ?? null) !== (e.stadt ?? null) || z.saison !== e.saison ||
+    (z.datum ?? null) !== (e.datum ?? null) || (z.sorte ?? null) !== (e.sorte ?? null) || (z.becher_nr ?? null) !== (e.becherNr ?? null) ||
+    (z.preis ?? null) !== (e.preis ?? null) || (z.notiz ?? null) !== (e.notiz ?? null) ||
+    z.geschmack !== n.geschmack || z.geruch !== n.geruch || z.temperatur !== n.temperatur || z.personal !== n.personal ||
+    z.atmosphaere !== n.atmosphaere || z.preis_leistung !== n.preisLeistung || z.becher !== n.becher
+  );
+}
+
 function einfuegen(db: D1Like, e: Eintragsdaten, geraetId: string, name: string | null, pruefstelle: boolean, jetzt: number) {
   return db
     .prepare(
@@ -515,6 +527,7 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
         .bind(jetzt)
         .run();
       let neu = 0;
+      let aktualisiert = 0;
       const abgelehnt: { id: unknown; grund: string }[] = [];
       for (const roh of b.eintraege) {
         // Bestandsdaten dürfen älter sein als das Einreichfenster der App.
@@ -527,12 +540,31 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
           continue;
         }
         const e = { ...p.eintrag, erstelltAm: (roh as { erstelltAm: number }).erstelltAm ?? p.eintrag.erstelltAm };
-        const r = await db.prepare('SELECT id FROM becher WHERE id = ?').bind(e.id).first();
-        if (r) continue;
+        const r = await db.prepare('SELECT * FROM becher WHERE id = ?').bind(e.id).first<BecherZeile>();
+        if (r) {
+          // Bestandsdaten lassen sich über die CSV korrigieren (Stand umbenannt, Stadt ergänzt): gleiche ID, anderer Inhalt.
+          // Die Sync-Nummer steigt, damit alle Geräte die Korrektur holen. Gleicher Inhalt: nichts passiert.
+          if (r.geraet_id === 'bestand-pruefstelle' && bestandGeaendert(r, e)) {
+            await db
+              .prepare(
+                `UPDATE becher SET stand = ?, markt = ?, stadt = ?, saison = ?, datum = ?, sorte = ?, becher_nr = ?, preis = ?, notiz = ?,
+                   geschmack = ?, geruch = ?, temperatur = ?, personal = ?, atmosphaere = ?, preis_leistung = ?, becher = ?,
+                   seq = ${NAECHSTE_SEQ} WHERE id = ?`,
+              )
+              .bind(
+                e.stand, e.markt, e.stadt ?? null, e.saison, e.datum ?? null, e.sorte ?? null, e.becherNr ?? null, e.preis ?? null, e.notiz ?? null,
+                e.noten.geschmack, e.noten.geruch, e.noten.temperatur, e.noten.personal, e.noten.atmosphaere, e.noten.preisLeistung, e.noten.becher,
+                e.id,
+              )
+              .run();
+            aktualisiert++;
+          }
+          continue;
+        }
         await einfuegen(db, e, 'bestand-pruefstelle', 'Prüfstelle', true, jetzt).run();
         neu++;
       }
-      return json({ neu, abgelehnt }, 200);
+      return json({ neu, aktualisiert, abgelehnt }, 200);
     }
   }
 

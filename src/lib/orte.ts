@@ -21,6 +21,17 @@ export function stadtVon(liste: MarktListe, e: { markt: string; stadt?: string }
   return e.stadt?.trim() || stadtZuMarkt(liste, e.markt);
 }
 
+/** Teile der Ortsangabe zur Anzeige: Markt (außer dem Sammelwert „Sonstiger") und Stadt. */
+export function ortTeile(liste: MarktListe, e: { markt: string; stadt?: string }): string[] {
+  const markt = e.markt.trim() && e.markt !== liste.sonstiger ? e.markt.trim() : null;
+  return [markt, stadtVon(liste, e)].filter((x): x is string => Boolean(x));
+}
+
+/** Ort für die Anzeige, z. B. „Salzburg" oder „Rathausmarkt · Hamburg"; ohne Angaben „Ort unbekannt". */
+export function ortText(liste: MarktListe, e: { markt: string; stadt?: string }): string {
+  return ortTeile(liste, e).join(' · ') || 'Ort unbekannt';
+}
+
 /**
  * Freie Eingabe „Markt, Stadt" zerlegen. Ohne Komma ist alles der Markt.
  * „Christkindlesmarkt, Nürnberg" → { markt: "Christkindlesmarkt", stadt: "Nürnberg" }

@@ -2,7 +2,7 @@
 import { useState } from 'preact/hooks';
 import { filtere, ranglisteMitWertung, saisons } from '../lib/auswertung';
 import { KRITERIEN } from '../lib/modell';
-import { stadtVon } from '../lib/orte';
+import { ortText, stadtVon } from '../lib/orte';
 import { Betreiber } from './bausteine';
 import { useEintraege, useGewichte, useSaison } from './daten';
 import { GewichteEditor } from './GewichteEditor';
@@ -37,7 +37,7 @@ export function Rangliste() {
   );
   const filter = markt.startsWith('stadt:') ? { saison, markt: 'alle', stadt: markt.slice(6) } : { saison, markt };
   const zeilen = ranglisteMitWertung(filtere(alle, filter, MARKTLISTE), gewichte);
-  const ortVon = (z: (typeof zeilen)[number]) => [z.eintrag.markt, stadtVon(MARKTLISTE, z.eintrag)].filter(Boolean).join(' · ');
+  const ortVon = (z: (typeof zeilen)[number]) => ortText(MARKTLISTE, z.eintrag);
   const podest = zeilen.slice(0, 3);
   const rest = zeilen.slice(3);
 

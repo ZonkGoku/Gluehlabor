@@ -7,7 +7,7 @@ import { anzeigeName, istPruefstelle } from '../lib/community';
 import { filtere, ranglisteMitWertung } from '../lib/auswertung';
 import { euro, zahl2 } from '../lib/format';
 import { KRITERIEN } from '../lib/modell';
-import { stadtVon } from '../lib/orte';
+import { ortText, ortTeile } from '../lib/orte';
 import { bewerte } from '../lib/scoring';
 import { kriteriumStatistik } from '../lib/statistik';
 import { datumKurz } from './bausteine';
@@ -60,8 +60,7 @@ export function Detail({ id }: { id: string }) {
   const saisonZeilen = ranglisteMitWertung(filtere(alle, { saison: e.saison, markt: 'alle' }), gewichte);
   const rang = saisonZeilen.find((z) => z.eintrag.id === e.id)?.rang;
   const meta = [
-    e.markt,
-    stadtVon(MARKTLISTE, e),
+    ...ortTeile(MARKTLISTE, e),
     `von ${istPruefstelle(e) ? 'David & Philip' : anzeigeName(e)}`,
     `Saison ${e.saison}`,
     datumKurz(e.datum),
@@ -78,7 +77,7 @@ export function Detail({ id }: { id: string }) {
       <div class="detail-kopf">
         <TopKarte
           zeile={{ rang: rang ?? null, eintrag: e, wertung: w }}
-          ort={[e.markt, stadtVon(MARKTLISTE, e)].filter(Boolean).join(' · ')}
+          ort={ortText(MARKTLISTE, e)}
           hinweis={rang ? `Platz ${rang} von ${saisonZeilen.length}` : undefined}
           ohneLink
         />

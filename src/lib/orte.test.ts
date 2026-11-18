@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { importiereCsv } from './csvImport';
-import { alleMaerkte, staedte, stadtVon, stadtZuMarkt, zerlegeFreienMarkt, type MarktListe } from './orte';
+import { alleMaerkte, ortTeile, ortText, staedte, stadtVon, stadtZuMarkt, zerlegeFreienMarkt, type MarktListe } from './orte';
 
 // Die Abnahme von 2025 gilt für die Hamburger Liste; weitere Städte prüft maerkte.test.ts.
 const voll: MarktListe = JSON.parse(readFileSync(resolve(process.cwd(), 'data/maerkte.json'), 'utf8'));
@@ -45,10 +45,11 @@ describe('zerlegeFreienMarkt', () => {
 });
 
 describe('staedte', () => {
-  it('Bestand 2025: 7 Becher in Hamburg, 7 ohne bekannte Stadt', () => {
+  it('Bestand 2025: 7 Becher in Hamburg, 6 in Salzburg, 1 in Traunstein', () => {
     expect(staedte(liste, bestand)).toEqual([
       { stadt: 'Hamburg', becher: 7, maerkte: 6 },
-      { stadt: null, becher: 7, maerkte: 1 },
+      { stadt: 'Salzburg', becher: 6, maerkte: 1 },
+      { stadt: 'Traunstein', becher: 1, maerkte: 1 },
     ]);
   });
   it('mehrere Städte, meistbesuchte zuerst', () => {
@@ -58,5 +59,21 @@ describe('staedte', () => {
       { markt: 'Rathausmarkt' },
     ]);
     expect(s.map((x) => x.stadt)).toEqual(['München', 'Hamburg']);
+  });
+});
+
+describe('ortText', () => {
+  it('„Sonstiger" erscheint nicht als Ort, die Stadt schon', () => {
+    expect(ortText(liste, { markt: 'Sonstiger', stadt: 'Salzburg' })).toBe('Salzburg');
+    expect(ortTeile(liste, { markt: 'Sonstiger', stadt: 'Salzburg' })).toEqual(['Salzburg']);
+  });
+  it('gepflegter Markt mit abgeleiteter Stadt', () => {
+    expect(ortText(liste, { markt: 'Rathausmarkt' })).toBe('Rathausmarkt · Hamburg');
+  });
+  it('freier Markt mit Stadt', () => {
+    expect(ortText(liste, { markt: 'Dorfmarkt', stadt: 'Traunstein' })).toBe('Dorfmarkt · Traunstein');
+  });
+  it('ohne jede Angabe', () => {
+    expect(ortText(liste, { markt: 'Sonstiger' })).toBe('Ort unbekannt');
   });
 });

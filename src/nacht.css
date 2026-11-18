@@ -394,3 +394,8 @@ body {
   font-size: 12px;
   color: var(--nm-akzent-text);
 }
+
+/* Stadtfeld unter Stand und Markt, wenn der Markt „Sonstiger" ist */
+.erf .stadtzeile {
+  margin-top: 8px;
+}
