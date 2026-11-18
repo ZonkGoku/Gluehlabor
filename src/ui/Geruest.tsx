@@ -1,5 +1,6 @@
 // App-Gerüst: Kopf + Tab-Leiste am Telefon, Seitenleiste am Rechner.
 import type { ComponentChildren } from 'preact';
+import { MARKE } from '../marke';
 import { useMeineAnzahl } from './daten';
 import { Symbol } from './Symbol';
 import { SyncAnzeige } from './SyncAnzeige';
@@ -18,10 +19,10 @@ export function Geruest({ route, children }: { route: string; children: Componen
   return (
     <div class="app">
       <aside class="seitenleiste">
-        <img class="logo" src="./logo.svg" alt="Becherwerk – gemacht und betrieben von David & Philip" />
+        <img class="logo" src="./logo.svg" alt={`${MARKE.name} – gemacht und betrieben von David & Philip`} />
         <div class="titel">
-          Becherwerk
-          <small>Prüfstelle für Glühwein</small>
+          {MARKE.name}
+          <small>{MARKE.claim}</small>
         </div>
         {NAV.map((n) => (
           <a class="navpunkt" href={`#/${n.route}`} aria-current={aktiv(n.route)}>
@@ -50,7 +51,7 @@ export function Geruest({ route, children }: { route: string; children: Componen
       <header class="app-kopf">
         <img class="zeichen" src="./icon.svg" alt="" />
         <div class="name">
-          Becherwerk
+          {MARKE.name}
           <small>Bayern × Hamburg</small>
         </div>
         {darf && <SyncAnzeige />}

@@ -39,7 +39,7 @@ export function useMeineAnzahl(): number {
 // Saison-Auswahl: pro Betrachter gemerkt, über alle Ansichten geteilt.
 // Ohne eigene Wahl gilt die Standard-Saison (laufendes Jahr, sonst die letzte).
 export type SaisonWahl = number | 'alle';
-const KEY = 'becherwerk.saison';
+const KEY = 'gluehlabor.saison';
 let gewaehlt: SaisonWahl | null = (() => {
   try {
     const v = localStorage.getItem(KEY);

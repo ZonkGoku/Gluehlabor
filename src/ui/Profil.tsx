@@ -1,7 +1,7 @@
 // Profil dieses Geräts: Name, Verbindung zum Community-Server, Prüfstelle.
 import { useEffect, useState } from 'preact/hooks';
 import { api, ApiFehler } from '../daten/api';
-import { API_URL } from '../daten/config';
+import { HAT_SERVER } from '../daten/config';
 import { db, holeGeraet, leseEinstellung, schreibeEinstellung, setzeName } from '../daten/db';
 import { abonniereSync, synchronisiere, type SyncInfo } from '../daten/sync';
 import { GRENZEN, pruefeName } from '../lib/community';
@@ -100,7 +100,7 @@ export function Profil() {
           <p style={{ margin: '8px 0 0' }}>{VERBINDUNG[info.zustand]}</p>
           {info.meldung && <div class="meldung">{info.meldung}</div>}
           <div class="knopfreihe">
-            <button class="knopf" disabled={!API_URL} onClick={() => void synchronisiere()}>
+            <button class="knopf" disabled={!HAT_SERVER} onClick={() => void synchronisiere()}>
               Jetzt synchronisieren ({offen} offen)
             </button>
           </div>
@@ -134,12 +134,12 @@ export function Profil() {
                 class="feld"
                 type="password"
                 autocomplete="off"
-                disabled={!API_URL}
+                disabled={!HAT_SERVER}
                 value={code}
                 onInput={(e) => setCode((e.target as HTMLInputElement).value)}
               />
               <div class="knopfreihe">
-                <button class="knopf" disabled={!API_URL || !code.trim()} onClick={() => void schalteFrei()}>
+                <button class="knopf" disabled={!HAT_SERVER || !code.trim()} onClick={() => void schalteFrei()}>
                   Freischalten
                 </button>
               </div>

@@ -1,5 +1,6 @@
 // Kleine, wiederverwendete Anzeigebausteine. Keine Rechenlogik.
 import type { Urteil } from '../lib/scoring';
+import { MARKE } from '../marke';
 import type { SaisonWahl } from './daten';
 
 export function UrteilPill({ urteil }: { urteil: Urteil | null }) {
@@ -42,7 +43,7 @@ export function Betreiber() {
     <footer class="betreiber">
       <img src="./logo.svg" alt="" />
       <span>
-        Becherwerk ist die Prüfstelle für Glühwein auf Weihnachtsmärkten in ganz Deutschland. Gemacht und
+        {MARKE.name} ist die {MARKE.claim} auf Weihnachtsmärkten in ganz Deutschland. Gemacht und
         betrieben von David aus Bayern und Philip aus Hamburg, seit 2025.
         <span class="rechtliches">
           <a href="#/impressum">Impressum</a> · <a href="#/datenschutz">Datenschutz</a>

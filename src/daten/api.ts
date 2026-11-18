@@ -1,7 +1,7 @@
 // Zugriff auf den Community-Server. Netzfehler werfen einen TypeError (kein Netz),
 // Antworten mit Fehlercode einen ApiFehler.
 
-import { API_URL } from './config';
+import { API_BASIS } from './config';
 import type { Geraet } from './db';
 
 export class ApiFehler extends Error {
@@ -23,7 +23,7 @@ export async function api<T>(pfad: string, o: Optionen = {}): Promise<T> {
   const kopf: Record<string, string> = {};
   if (o.body !== undefined) kopf['Content-Type'] = 'application/json';
   if (o.geraet) kopf.Authorization = `Bearer ${o.geraet.id}.${o.geraet.schluessel}`;
-  const res = await fetch(API_URL + pfad, {
+  const res = await fetch(API_BASIS + pfad, {
     method: o.methode ?? 'GET',
     headers: kopf,
     // Nie aus dem Browser-Zwischenspeicher: Ein zweiter Abgleich soll wirklich nachfragen.

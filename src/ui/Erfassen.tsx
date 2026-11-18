@@ -14,6 +14,7 @@ import { verkleinereFoto } from '../daten/foto';
 import { synchronisiere } from '../daten/sync';
 import { abendDatum, naechsteBecherNr } from '../lib/abend';
 import { besuchIdAusBytes } from '../lib/besuch';
+import { MARKE } from '../marke';
 import { ankerFuer } from '../lib/anker';
 import { zerlegeFreienMarkt } from '../lib/orte';
 import { ANKER, MAERKTE, MARKTLISTE } from './stammdaten';
@@ -162,7 +163,7 @@ export function Erfassen() {
   return (
     <main class="erf">
       <header class="kopf">
-        <span class="marke">Becherwerk</span>
+        <span class="marke">{MARKE.name}</span>
         <span class="titel" />
         <SyncAnzeige />
         {e.stand.trim() && (

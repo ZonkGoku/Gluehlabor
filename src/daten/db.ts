@@ -26,12 +26,12 @@ export interface Einstellung {
   wert: unknown;
 }
 
-class BecherwerkDb extends Dexie {
+class GluehlaborDb extends Dexie {
   eintraege!: Table<LokalerEintrag, string>;
   einstellungen!: Table<Einstellung, string>;
 
   constructor() {
-    super('becherwerk');
+    super('gluehlabor');
     this.version(1).stores({
       eintraege: 'id, sync, saison, markt, datum, erstelltAm',
       einstellungen: 'key',
@@ -49,7 +49,7 @@ class BecherwerkDb extends Dexie {
   }
 }
 
-export const db = new BecherwerkDb();
+export const db = new GluehlaborDb();
 
 export async function leseEinstellung<T>(key: string, fallback: T): Promise<T> {
   const e = await db.einstellungen.get(key);

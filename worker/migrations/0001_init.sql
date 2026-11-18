@@ -1,4 +1,4 @@
--- Becherwerk Community-Server. Cloudflare D1 (SQLite).
+-- Glühlabor Community-Server. SQLite (Cloudflare D1 oder eigener Server).
 
 CREATE TABLE geraete (
   id             TEXT PRIMARY KEY,          -- anonyme Kennung, vom Gerät gewählt (UUID)

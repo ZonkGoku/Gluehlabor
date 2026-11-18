@@ -16,8 +16,8 @@ export default defineConfig({
       injectRegister: null,
       includeAssets: ['icon.svg', 'logo.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Becherwerk',
-        short_name: 'Becherwerk',
+        name: 'Glühlabor',
+        short_name: 'Glühlabor',
         description: 'Prüfstelle für Glühwein auf Weihnachtsmärkten in ganz Deutschland – von David (Bayern) und Philip (Hamburg)',
         lang: 'de',
         start_url: './#/',

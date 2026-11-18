@@ -7,7 +7,7 @@ import { istGueltigeNote } from './scoring';
 export const GRENZEN = { stand: 80, markt: 80, stadt: 60, notiz: 500, name: 24 } as const;
 
 /** Diese Namen kann nur die Prüfstelle führen. Das Siegel „Prüfstelle" hängt trotzdem nicht am Namen. */
-export const RESERVIERTE_NAMEN = ['david', 'philip', 'prüfstelle', 'pruefstelle', 'admin', 'becherwerk', 'moderator'];
+export const RESERVIERTE_NAMEN = ['david', 'philip', 'prüfstelle', 'pruefstelle', 'admin', 'becherwerk', 'gluehlabor', 'glühlabor', 'moderator'];
 
 // eslint-disable-next-line no-control-regex
 const STEUERZEICHEN = /[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁦-⁩]/g;

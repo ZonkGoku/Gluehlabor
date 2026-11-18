@@ -4,7 +4,7 @@ compatibility_date = "2025-09-01"
 
 [vars]
 # Seiten, die schreiben dürfen (Browser-Ursprünge, kommagetrennt)
-ERLAUBTE_URSPRUENGE = "https://becherwerk.de,https://www.becherwerk.de,https://zonkgoku.github.io,http://localhost:4173,http://localhost:5173"
+ERLAUBTE_URSPRUENGE = "https://gluehlabor.de,https://www.gluehlabor.de,https://zonkgoku.github.io,http://localhost:4173,http://localhost:5173"
 
 [triggers]
 crons = ["17 3 * * *"]   # täglich 03:17 UTC: abgelaufene Zähler löschen

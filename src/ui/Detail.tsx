@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import { ApiFehler } from '../daten/api';
-import { API_URL } from '../daten/config';
+import { HAT_SERVER } from '../daten/config';
 import { MELDEGRUENDE, meldeBecher } from '../daten/sync';
 import { ankerFuer } from '../lib/anker';
 import { anzeigeName } from '../lib/community';
@@ -108,7 +108,7 @@ export function Detail({ id }: { id: string }) {
               </a>
             </p>
           )}
-          {API_URL && e.geraet !== geraetId && e.sync !== 'bestand' && !e.pruefstelle && (
+          {HAT_SERVER && e.geraet !== geraetId && e.sync !== 'bestand' && !e.pruefstelle && (
             <div style={{ marginTop: '14px' }}>
               {!meldenOffen ? (
                 <button type="button" class="besuch-aus" style={{ padding: 0 }} onClick={() => setMeldenOffen(true)}>

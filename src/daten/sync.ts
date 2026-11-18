@@ -7,7 +7,7 @@
 
 import { eintragFuerServer, istEintrag } from '../lib/veroeffentlichung';
 import { api, ApiFehler } from './api';
-import { API_URL } from './config';
+import { HAT_SERVER } from './config';
 import { db, holeGeraet, leseEinstellung, schreibeEinstellung, type LokalerEintrag } from './db';
 
 export type SyncZustand = 'bereit' | 'laeuft' | 'offline' | 'kein-server' | 'fehler' | 'gesperrt';
@@ -18,7 +18,7 @@ export interface SyncInfo {
   zuletzt?: number;
 }
 
-let info: SyncInfo = { zustand: API_URL ? 'bereit' : 'kein-server' };
+let info: SyncInfo = { zustand: HAT_SERVER ? 'bereit' : 'kein-server' };
 const hoerer = new Set<(i: SyncInfo) => void>();
 
 function setze(neu: SyncInfo) {
@@ -151,7 +151,7 @@ export function synchronisiere(): Promise<void> {
 }
 
 async function lauf(): Promise<void> {
-  if (!API_URL) return setze({ zustand: 'kein-server' });
+  if (!HAT_SERVER) return setze({ zustand: 'kein-server' });
   if (!navigator.onLine) return setze({ ...info, zustand: 'offline' });
   setze({ ...info, zustand: 'laeuft' });
   try {
@@ -179,7 +179,7 @@ export function starteSync(): void {
   gestartet = true;
   const anstossen = () => void synchronisiere();
   window.addEventListener('online', anstossen);
-  window.addEventListener('offline', () => setze({ ...info, zustand: API_URL ? 'offline' : 'kein-server' }));
+  window.addEventListener('offline', () => setze({ ...info, zustand: HAT_SERVER ? 'offline' : 'kein-server' }));
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') anstossen();
   });

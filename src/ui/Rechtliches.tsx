@@ -3,6 +3,7 @@
 // tatsächlich tun (siehe CLAUDE.md). Ändert sich dort etwas, muss er mitziehen. Er ist ein Entwurf und
 // nicht rechtlich geprüft.
 import betreiberJson from '../../data/betreiber.json';
+import { MARKE } from '../marke';
 import { fehlendeAngaben, type Betreiber } from '../lib/betreiber';
 import { Betreiber as Fuss } from './bausteine';
 import { useGeraetId } from './daten';
@@ -57,7 +58,7 @@ export function Impressum() {
         </p>
         <h2>Haftung für Links</h2>
         <p>
-          Becherwerk ist ein privates Hobbyprojekt von {B.name || 'den Betreibern'} (David aus Bayern und Philip aus Hamburg)
+          {MARKE.name} ist ein privates Hobbyprojekt von {B.name || 'den Betreibern'} (David aus Bayern und Philip aus Hamburg)
           ohne kommerzielle Absicht. Für Inhalte externer Seiten sind deren Betreiber verantwortlich.
         </p>
       </section>

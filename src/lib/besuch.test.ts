@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { besuchIdAusBytes, besuchsLink, leseBesuch, type Besuch } from './besuch';
 import { GRENZEN } from './community';
 
-const BASIS = 'https://zonkgoku.github.io/Becherwerk/';
+const BASIS = 'https://gluehlabor.de/';
 const nachHash = (link: string) => link.split('#/mitbewerten?')[1];
 
 describe('besuchsLink und leseBesuch', () => {

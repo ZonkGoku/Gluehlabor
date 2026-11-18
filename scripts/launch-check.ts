@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { fehlendeAngaben, type Betreiber } from '../src/lib/betreiber';
 
 const lies = (p: string) => JSON.parse(readFileSync(p, 'utf8'));
-const SEITE_URL: string = lies('data/server.json').seite || 'https://zonkgoku.github.io/Becherwerk/';
+const SEITE_URL: string = lies('data/server.json').seite || 'https://gluehlabor.de/';
 const SEITE = new URL(SEITE_URL).origin;
 
 type Ergebnis = { ok: boolean; text: string; hinweis?: string };

@@ -1,5 +1,6 @@
 // Startseite. Alle Zahlen kommen aus src/lib; hier wird nur angeordnet.
 import { useState } from 'preact/hooks';
+import { MARKE } from '../marke';
 import { abendDatum } from '../lib/abend';
 import { filtere, ranglisteMitWertung, saisons } from '../lib/auswertung';
 import { euro, zahl2 } from '../lib/format';
@@ -134,7 +135,7 @@ export function Uebersicht() {
       <div class="seitenkopf">
         <div>
           <p class="eyebrow">{statusText}</p>
-          <h1>Becherwerk</h1>
+          <h1>{MARKE.name}</h1>
         </div>
         <SaisonSchalter saisons={jahre} wert={saison} onWahl={setSaison} />
       </div>

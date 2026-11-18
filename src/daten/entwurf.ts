@@ -27,7 +27,7 @@ export function entwurfHatInhalt(e: Entwurf | null): boolean {
   return Boolean(e.stand.trim()) || Object.values(e.noten).some((n) => n !== null) || Boolean(e.notiz.trim());
 }
 
-const KEY = 'becherwerk.entwurf';
+const KEY = 'gluehlabor.entwurf';
 
 export function leseEntwurf(): Entwurf | null {
   try {

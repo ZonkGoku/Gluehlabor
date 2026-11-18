@@ -1,4 +1,5 @@
-// Becherwerk Community-Server: alle Endpunkte. Läuft auf Cloudflare Workers + D1.
+// Glühlabor Community-Server: alle Endpunkte. Reine Logik, läuft auf Cloudflare Workers + D1
+// (worker/) und auf dem eigenen Server mit SQLite (server/).
 //
 // Grundsätze
 // - Keine Konten. Ein Gerät wählt eine Kennung und einen Schlüssel und meldet sich damit an.

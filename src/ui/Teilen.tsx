@@ -4,6 +4,7 @@ import { db } from '../daten/db';
 import { leseEntwurf } from '../daten/entwurf';
 import { synchronisiere } from '../daten/sync';
 import { besuchsLink, type Besuch } from '../lib/besuch';
+import { MARKE } from '../marke';
 import { anzeigeName } from '../lib/community';
 import { stadtVon, zerlegeFreienMarkt } from '../lib/orte';
 import { useLive } from './hooks';
@@ -68,7 +69,7 @@ export function Teilen() {
   const teile = async () => {
     try {
       if (navigator.share) {
-        await navigator.share({ title: `Becherwerk: ${besuch.stand}`, text: `Bewerte mit mir: ${besuch.stand}`, url: link });
+        await navigator.share({ title: `${MARKE.name}: ${besuch.stand}`, text: `Bewerte mit mir: ${besuch.stand}`, url: link });
         return;
       }
     } catch {
@@ -97,7 +98,7 @@ export function Teilen() {
         <Qr text={link} titel={`QR-Code zum Mitbewerten bei ${besuch.stand}`} />
       </div>
       <p class="fokus-hinweis">
-        Die anderen scannen den Code mit der Handykamera. Es öffnet sich Becherwerk mit diesem Stand, jeder bewertet für
+        Die anderen scannen den Code mit der Handykamera. Es öffnet sich das {MARKE.name} mit diesem Stand, jeder bewertet für
         sich. Dafür braucht niemand ein Konto oder eine App.
       </p>
 
