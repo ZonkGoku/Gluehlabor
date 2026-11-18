@@ -24,6 +24,7 @@ import { bewerte } from '../lib/scoring';
 import { useLive } from './hooks';
 import { Skala } from './Skala';
 import { SyncAnzeige } from './SyncAnzeige';
+import { TicketBlatt } from './nacht/TicketBlatt';
 
 
 const SORTE_LABEL: Record<Sorte, string> = {
@@ -63,6 +64,7 @@ export function Erfassen() {
   const [notizOffen, setNotizOffen] = useState(false);
   const [fehlt, setFehlt] = useState(false);
   const [gespeichert, setGespeichert] = useState<string | null>(null);
+  const [fertigId, setFertigId] = useState<string | null>(null);
   const standRef = useRef<HTMLInputElement>(null);
 
   // Beim ersten Öffnen ohne Entwurf: zuletzt benutzten Markt vorschlagen.
@@ -144,6 +146,7 @@ export function Erfassen() {
     setFehlt(false);
     setAktiv('geschmack');
     setGespeichert(`Probe ${probeNr(anzahl + 1)} gesichert`);
+    setFertigId(eintrag.id);
     navigator.vibrate?.([20, 40, 20]);
     setTimeout(() => setGespeichert(null), 2200);
     void synchronisiere();
@@ -161,6 +164,7 @@ export function Erfassen() {
   const knopfText = gespeichert ?? (bewertet === 0 ? 'Noch keine Note' : 'Speichern');
 
   return (
+    <>
     <main class="erf">
       <header class="kopf">
         <span class="marke">{MARKE.name}</span>
@@ -365,5 +369,7 @@ export function Erfassen() {
         </button>
       </footer>
     </main>
+    {fertigId && <TicketBlatt id={fertigId} onNaechster={() => setFertigId(null)} />}
+    </>
   );
 }

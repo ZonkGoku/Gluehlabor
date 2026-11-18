@@ -8,7 +8,8 @@ import { zahl2 } from '../../lib/format';
 import { UrteilPill } from '../bausteine';
 import { Symbol } from '../Symbol';
 import { useNeigung, useZaehler } from './bewegung';
-import { teileLink } from './teilen';
+import { kartenDaten, teileKartenBild } from './karteBild';
+import { kurzId } from './kennung';
 
 /** Farben je Platz: Rahmenverlauf und Leuchtfarbe. */
 const STUFEN = {
@@ -20,12 +21,7 @@ const NORMAL = { rahmen: 'linear-gradient(135deg,rgb(255 255 255/.22),rgb(255 25
 
 export const stufe = (rang: number | null) => (rang === 1 || rang === 2 || rang === 3 ? STUFEN[rang] : NORMAL);
 
-/** Kurze, stabile Kennung aus der ID für den Stummel (#3F2A). */
-export function kurzId(id: string): string {
-  let h = 2166136261;
-  for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619);
-  return ((h >>> 0) & 0xffff).toString(16).toUpperCase().padStart(4, '0');
-}
+export { kurzId } from './kennung';
 
 /** Strichcode, der nur aus der ID entsteht. Dekor, kein echter Code. */
 function Strichcode({ id }: { id: string }) {
@@ -64,7 +60,7 @@ export function TicketRahmen({ rang, klein, kinder, stummel, klasse = '' }: Rahm
   return (
     <div
       ref={ref}
-      class={`group rounded-[28px] shadow-[0_0_46px_-24px_var(--glow)] transition-shadow duration-300 hover:shadow-[0_0_84px_-14px_var(--glow)] will-change-transform ${klasse}`}
+      class={`nm group rounded-[28px] shadow-[0_0_46px_-24px_var(--glow)] transition-shadow duration-300 hover:shadow-[0_0_84px_-14px_var(--glow)] will-change-transform ${klasse}`}
       style={{ '--glow': s.glow }}
     >
       <div class="ticket-kerbe rahmen-licht glas relative overflow-hidden rounded-[28px]" style={{ '--rahmen': s.rahmen }}>
@@ -117,10 +113,24 @@ interface TopKarteProps {
   hinweis?: string;
   klein?: boolean;
   klasse?: string;
+  /** Auf der Detailseite selbst führt die Karte nirgendwohin. */
+  ohneLink?: boolean;
+}
+
+/** Kopfteil der Karte: Link zur Detailseite oder einfacher Block. */
+function Inhalt({ href, children }: { href?: string; children: ComponentChildren }) {
+  const klasse = 'block p-5 pb-4 text-eis no-underline';
+  return href ? (
+    <a href={href} class={klasse}>
+      {children}
+    </a>
+  ) : (
+    <div class={klasse}>{children}</div>
+  );
 }
 
 /** Die Karte für einen Spitzenplatz. */
-export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse }: TopKarteProps) {
+export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, ohneLink = false }: TopKarteProps) {
   const { eintrag: e, wertung: w, rang } = zeile;
   const pruef = istPruefstelle(e);
   const zahl = useZaehler(w.gesamt);
@@ -128,11 +138,11 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse }: 
   const teilen = async (ev: Event) => {
     ev.preventDefault();
     ev.stopPropagation();
-    const r = await teileLink('Glühlabor', `${e.stand}: ${zahl2(w.gesamt)} von 10 bei Glühlabor`, `#/becher/${encodeURIComponent(e.id)}`);
-    if (r === 'kopiert') {
-      setMeldung('Link kopiert');
-      setTimeout(() => setMeldung(''), 2200);
-    }
+    setMeldung('Erzeuge …');
+    const link = `${location.origin}${location.pathname}#/becher/${encodeURIComponent(e.id)}`;
+    const r = await teileKartenBild(kartenDaten(zeile, ort, titel), link);
+    setMeldung(r === 'gespeichert' ? 'Bild gespeichert' : '');
+    if (r === 'gespeichert') setTimeout(() => setMeldung(''), 2600);
   };
   return (
     <TicketRahmen
@@ -140,7 +150,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse }: 
       klein={klein}
       klasse={klasse}
       kinder={
-        <a href={`#/becher/${encodeURIComponent(e.id)}`} class="block p-5 pb-4 text-eis no-underline">
+        <Inhalt href={ohneLink ? undefined : `#/becher/${encodeURIComponent(e.id)}`}>
           <div class="flex items-start justify-between gap-3">
             <div class="flex items-baseline gap-2">
               <span class={`font-display leading-none licht-text ${klein ? 'text-[40px]' : 'text-[52px]'}`}>{String(rang ?? '–').padStart(2, '0')}</span>
@@ -173,7 +183,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse }: 
           <div class="mt-3">
             <UrteilPill urteil={w.urteil} />
           </div>
-        </a>
+        </Inhalt>
       }
       stummel={
         <>

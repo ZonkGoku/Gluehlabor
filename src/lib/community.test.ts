@@ -132,3 +132,16 @@ describe('anzeigeName', () => {
     expect(anzeigeName({ name: 'Anna' })).toBe('Anna');
   });
 });
+
+describe('istPruefstelle', () => {
+  it('Server-Siegel und lokale Bestandsdaten zählen als Prüfstelle', async () => {
+    const { istPruefstelle } = await import('./community');
+    expect(istPruefstelle({ pruefstelle: true })).toBe(true);
+    expect(istPruefstelle({ sync: 'bestand' })).toBe(true);
+  });
+  it('alles andere ist Community', async () => {
+    const { istPruefstelle } = await import('./community');
+    expect(istPruefstelle({})).toBe(false);
+    expect(istPruefstelle({ pruefstelle: false, sync: 'fertig' })).toBe(false);
+  });
+});

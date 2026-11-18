@@ -165,8 +165,9 @@ Rangliste Top 5, Deutschlandkarte, neueste Becher, Saisonverlauf, wichtigster Be
 
 ## Gestaltung („Night Market", seit 18.11.2026)
 
-Immersive, mobile-first Konsumenten-App statt Prüfbericht. **Nur ein Theme: Nacht** (Mitternachtsblau `#070B1A`, Glühwein-Rot `#F0344F`,
-Glut-Orange `#FF8A3D`, Gold `#FFC857`, Text `#F4F1FF`/`#A3ACCB`). Es gibt keinen Hell/Dunkel-Schalter mehr.
+Immersive, mobile-first Konsumenten-App statt Prüfbericht. **Hell und Dunkel** (Dunkel: Mitternachtsblau `#070B1A`, Glühwein-Rot `#F0344F`, Glut-Orange `#FF8A3D`, Gold `#FFC857`; Hell: warmer Morgenhimmel, tiefes Indigo als Text).
+Alle themenabhängigen Farben stehen einmal als `--nm-*` mit `light-dark()` in `src/nacht.css`; `color-scheme` entscheidet (Auto = System, `data-theme="hell"|"dunkel"` erzwingt).
+Auswahl in `src/daten/darstellung.ts` (localStorage, `public/theme-init.js` setzt es vor dem ersten Zeichnen). **Menü am Rechner umschaltbar:** Seitenleiste (Standard) oder schwebende Leiste, am Telefon immer die schwebende Leiste.
 - **Design-System in `src/nacht.css`**: Tailwind v4 **ohne Preflight** (nur Theme und Utilities), damit die noch nicht umgebauten Ansichten
   nicht verändert werden. Eigene Utilities: `glas`, `glas-stark` (Milchglas), `licht-text` (Zahlen im Lichtverlauf), `rahmen-licht`
   (Verlaufsrahmen, Farben über `--rahmen`), `ticket-kerbe`, `etikett`. Die alten Tokens (`--bg`, `--karte`, `--zahl` …) sind dort auf Nachtfarben
@@ -179,8 +180,9 @@ Glut-Orange `#FF8A3D`, Gold `#FFC857`, Text `#F4F1FF`/`#A3ACCB`). Es gibt keinen
 - Bewegung mit **Motion** (`motion`, die Engine von Framer Motion ohne React, läuft mit Preact; ca. 28 KB gzip): gestaffeltes Einblenden
   (`useEinblenden`, Kinder mit `data-ein`), Neigung zur Maus und Einfedern (`useNeigung`), Zahl zählt hoch (`useZaehler`). Alles respektiert
   „Bewegung reduzieren". Hover-Leuchten und Schimmer sind reines CSS.
-- Umgebaut: Gerüst, Übersicht (Bento), Rangliste. **Noch im alten Stil, aber mit Nacht-Tokens:** Erfassen, Detail, Vergleich, Statistik,
-  Spickzettel, Profil, Teilen. Nächste Kandidaten: Erfassen als Ticket, Detail als Sammelkarte.
+- Umgebaut: Gerüst, Übersicht (Bento), Rangliste, Detail (große Sammelkarte), Erfassung (Ticket-Look per CSS, nach dem Speichern „Dein Ticket" in `nacht/TicketBlatt.tsx`).
+  **Bild-Export:** `nacht/karteBild.ts` zeichnet die Karte auf eine Canvas (1080×1920, immer Nachtlook) und teilt sie per Share-Dialog bzw. lädt sie am Rechner herunter.
+  **Noch im alten Stil, aber mit den neuen Tokens:** Vergleich, Statistik, Spickzettel, Profil, Teilen.
 - Keine Emoji, kein Schnee, keine Tannen. Prüfstellen-Becher tragen den Stempel „Prüfstelle" (`istPruefstelle` in `src/lib/community.ts`,
   schließt lokale Bestandsdaten ein).
 - Klassennamen: `styles.css` und `app.css` teilen sich den Namensraum (z. B. `.hinweis`, `.leer`, `.kopf`); neue Bausteine nutzen nur Tailwind-Utilities.

@@ -3,14 +3,15 @@ import { ApiFehler } from '../daten/api';
 import { HAT_SERVER } from '../daten/config';
 import { MELDEGRUENDE, meldeBecher } from '../daten/sync';
 import { ankerFuer } from '../lib/anker';
-import { anzeigeName } from '../lib/community';
+import { anzeigeName, istPruefstelle } from '../lib/community';
 import { filtere, ranglisteMitWertung } from '../lib/auswertung';
 import { euro, zahl2 } from '../lib/format';
 import { KRITERIEN } from '../lib/modell';
 import { stadtVon } from '../lib/orte';
 import { bewerte } from '../lib/scoring';
 import { kriteriumStatistik } from '../lib/statistik';
-import { datumKurz, UrteilPill } from './bausteine';
+import { datumKurz } from './bausteine';
+import { TopKarte } from './nacht/Ticket';
 import { useEintraege, useGeraetId, useGewichte } from './daten';
 import { ANKER, MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
@@ -61,7 +62,7 @@ export function Detail({ id }: { id: string }) {
   const meta = [
     e.markt,
     stadtVon(MARKTLISTE, e),
-    `von ${anzeigeName(e)}`,
+    `von ${istPruefstelle(e) ? 'David & Philip' : anzeigeName(e)}`,
     `Saison ${e.saison}`,
     datumKurz(e.datum),
     e.sorte && SORTE[e.sorte],
@@ -75,26 +76,16 @@ export function Detail({ id }: { id: string }) {
         <Symbol name="zurueck" groesse={18} /> Rangliste
       </a>
       <div class="detail-kopf">
-        <section class="karte spitze">
-          <img class="siegel" src="./logo.svg" alt="" />
-          <p class="eyebrow">
-            {rang ? `Platz ${rang} von ${saisonZeilen.length} · Saison ${e.saison}` : `Saison ${e.saison}`}
-          </p>
-          <div class="stand">{e.stand}</div>
-          <div class="zahlen">
-            <span class="zahl-gross">{zahl2(w.gesamt)}</span>
-            <span class="teil">
-              Glühwein <b>{zahl2(w.gluehwein)}</b>
-              <br />
-              Drumherum <b>{zahl2(w.drumherum)}</b>
-            </span>
-            <UrteilPill urteil={w.urteil} />
-          </div>
-        </section>
+        <TopKarte
+          zeile={{ rang: rang ?? null, eintrag: e, wertung: w }}
+          ort={[e.markt, stadtVon(MARKTLISTE, e)].filter(Boolean).join(' · ')}
+          hinweis={rang ? `Platz ${rang} von ${saisonZeilen.length}` : undefined}
+          ohneLink
+        />
         <section class="karte">
           <h2>Protokoll</h2>
           <div class="metaliste">
-            {e.pruefstelle && <span class="chip-klein gold">Prüfstelle</span>}
+            {istPruefstelle(e) && <span class="chip-klein gold">Prüfstelle</span>}
             {meta.map((m) => (
               <span class="chip-klein">{m}</span>
             ))}
@@ -108,7 +99,7 @@ export function Detail({ id }: { id: string }) {
               </a>
             </p>
           )}
-          {HAT_SERVER && e.geraet !== geraetId && e.sync !== 'bestand' && !e.pruefstelle && (
+          {HAT_SERVER && e.geraet !== geraetId && !istPruefstelle(e) && (
             <div style={{ marginTop: '14px' }}>
               {!meldenOffen ? (
                 <button type="button" class="besuch-aus" style={{ padding: 0 }} onClick={() => setMeldenOffen(true)}>
