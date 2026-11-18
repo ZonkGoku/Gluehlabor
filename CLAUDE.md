@@ -61,12 +61,12 @@ Gamification und Teilen-auf-Social. Bewertungen von David & Philip laufen weiter
   in `worker/.dev.vars`, nicht im Repo), `npm run worker:seed` mit `API_URL` und `ADMIN_TOKEN` lädt die CSV
   als Prüfstellen-Becher. App gegen den lokalen Server: `VITE_API_URL=http://localhost:8787 npm run dev`.
 - **Eigener Server (Hetzner, gewählter Weg)**: `server/` (Node 22, `node:sqlite`) liefert `dist/` und `/api/*` same-origin aus einem Prozess und nutzt dieselbe Logik wie `worker/src/app.ts`. Adresse aus `X-Real-IP` nur von privaten Verbindungen (`server/adresse.ts`), Sicherheitsköpfe und CSP in `server/static.ts`, tägliche Sicherung (14 behalten), Seed beim Start. Build `npm run build:alles` (`VITE_API_URL=/`), `Dockerfile`, `docker-compose.yml`, Anleitung und Proxy-Beispiele in `hetzner/`. Domain gluehlabor.de, Marke in `src/marke.ts`. GitHub Pages bleibt ohne Server (nur lokal). `worker/` (Cloudflare) ist die Alternative, nicht der Plan.
-- **Server bei Cloudflare veröffentlichen** (Alternative, braucht Konto): `wrangler d1 create becherwerk`, `database_id` in
-  `worker/wrangler.toml` eintragen, `wrangler d1 migrations apply becherwerk --remote`,
+- **Server bei Cloudflare veröffentlichen** (Alternative, braucht Konto): `wrangler d1 create gluehlabor`, `database_id` in
+  `worker/wrangler.toml` eintragen, `wrangler d1 migrations apply gluehlabor --remote`,
   `wrangler secret put ADMIN_TOKEN`, `PRUEFSTELLE_CODE` und `IP_SALT`, `wrangler deploy --config worker/wrangler.toml`,
   danach die Worker-Adresse in `data/server.json` eintragen, `worker:seed` ausführen und `npm run launch-check` laufen lassen.
 - **Deploy**: `.github/workflows/deploy.yml` veröffentlicht bei jedem Push auf `main` den Stand von `main`. Solange `main` nicht Standard-Branch ist, läuft der Deploy über einen workflow_dispatch auf dem Standard-Branch (Pages-Umgebung erlaubt nur den Standard-Branch). Die Seite liegt
-  unter https://zonkgoku.github.io/Becherwerk/ . Pages → Source = „GitHub Actions" (ist gesetzt).
+  unter https://zonkgoku.github.io/Gluehlabor/ . Pages → Source = „GitHub Actions" (ist gesetzt).
 - `base: './'` (relativ) plus Hash-Router: kein Repo-Name im Build, keine weiße Seite
   durch falsche Unterpfade.
 

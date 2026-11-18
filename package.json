@@ -11,7 +11,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
     "worker:dev": "wrangler dev --local --port 8787 --config worker/wrangler.toml",
-    "worker:migrate": "wrangler d1 migrations apply becherwerk --local --config worker/wrangler.toml",
+    "worker:migrate": "wrangler d1 migrations apply gluehlabor --local --config worker/wrangler.toml",
     "worker:seed": "tsx worker/scripts/seed.ts",
     "launch-check": "tsx scripts/launch-check.ts",
     "moderation": "tsx worker/scripts/moderation.ts",

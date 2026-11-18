@@ -1,4 +1,4 @@
-name = "becherwerk-api"
+name = "gluehlabor-api"
 main = "src/index.ts"
 compatibility_date = "2025-09-01"
 
@@ -11,7 +11,7 @@ crons = ["17 3 * * *"]   # täglich 03:17 UTC: abgelaufene Zähler löschen
 
 [[d1_databases]]
 binding = "DB"
-database_name = "becherwerk"
+database_name = "gluehlabor"
 database_id = "LOKAL"          # wird beim Einrichten durch die echte ID ersetzt
 migrations_dir = "migrations"
 
