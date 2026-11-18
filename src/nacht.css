@@ -399,3 +399,58 @@ body {
 .erf .stadtzeile {
   margin-top: 8px;
 }
+
+/* Erfassung auf kurzen Fenstern (kleine Laptops, Handys im Querformat, iPhone SE): Statt zu überlappen scrollt die Seite,
+ * Messwert und Speichern bleiben unten sichtbar. Auf hohen Handys bleibt es bei „eine Ansicht, kein Scrollen". */
+@media (max-height: 780px) {
+  .erf {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+    grid-template-rows: auto auto auto auto auto auto;
+  }
+  .erf .skalen {
+    grid-template-rows: repeat(7, 50px);
+    align-content: start;
+  }
+  .erf .fuss {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    margin: 0 calc(var(--rand) * -1);
+    padding: 8px var(--rand) calc(env(safe-area-inset-bottom) + 8px);
+    background: var(--leiste);
+    backdrop-filter: blur(16px) saturate(150%);
+    border-top: 1px solid var(--linie);
+  }
+  /* Messwert kompakt: Note und Urteil in einer Zeile, Glühwein und Drumherum darunter nebeneinander */
+  .erf .messwert {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    align-content: center;
+    gap: 0 12px;
+  }
+  .erf .messwert .kopfzeile {
+    flex: 1 0 100%;
+  }
+  .erf .messwert .gesamt {
+    font-size: 30px;
+  }
+  .erf .speichern {
+    height: 52px;
+  }
+}
+.messwert .gesamt {
+  font-size: 34px;
+}
+
+/* „.leer" ist auch der Name einer Leer-Karte (app.css) und machte die Note im Fuß der Erfassung 100 px hoch */
+.messwert .gesamt.leer {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  text-align: left;
+  min-height: 0;
+}

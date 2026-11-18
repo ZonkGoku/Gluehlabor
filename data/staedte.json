@@ -1,5 +1,5 @@
 {
-  "_hinweis": "Koordinaten (Breite, Länge) für die Deutschlandkarte auf der Startseite. Fehlt eine Stadt, erscheint sie unter der Karte als Liste. Einfach ergänzen.",
+  "_hinweis": "Koordinaten (Breite, Länge) für die Karte auf der Startseite (Deutschland und Österreich). Fehlt eine Stadt, erscheint sie unter der Karte als Liste. Einfach ergänzen.",
   "Hamburg": [
     53.55,
     9.99
@@ -183,5 +183,33 @@
   "Traunstein": [
     47.87,
     12.64
+  ],
+  "Wien": [
+    48.21,
+    16.37
+  ],
+  "Innsbruck": [
+    47.27,
+    11.39
+  ],
+  "Graz": [
+    47.07,
+    15.44
+  ],
+  "Linz": [
+    48.31,
+    14.29
+  ],
+  "Klagenfurt": [
+    46.62,
+    14.31
+  ],
+  "Villach": [
+    46.61,
+    13.85
+  ],
+  "Bregenz": [
+    47.5,
+    9.75
   ]
 }

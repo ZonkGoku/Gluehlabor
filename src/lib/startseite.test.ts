@@ -2,7 +2,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { importiereCsv } from './csvImport';
-import { KARTE_BREITE, KARTE_HOEHE, kartenPunkte, koordinatenVon, projiziere, umrissPfad, type Koordinaten } from './karte';
+import { KARTE_BREITE, KARTE_HOEHE, kartenPunkte, koordinatenVon, projiziere, umrissPfad, umrisse, UMRISS_OESTERREICH, type Koordinaten } from './karte';
+import staedteKarte from '../../data/staedte.json';
 import { DEFAULT_GEWICHTE, leereNoten, type Eintrag } from './modell';
 import type { MarktListe } from './orte';
 import { abend, kennzahlen, neuesteBecher, saisonStatus, saisonVerlauf, standardSaison } from './startseite';
@@ -166,5 +167,40 @@ describe('Karte', () => {
   it('alle Städte der Daten haben Koordinaten', () => {
     const maerkte = JSON.parse(readFileSync(resolve(process.cwd(), 'data/maerkte.json'), 'utf8'));
     for (const s of maerkte.staedte) expect(koordinatenVon(orte, s.stadt), s.stadt).not.toBeNull();
+  });
+});
+
+describe('Karte: Deutschland und Österreich', () => {
+  const innen = (poly: [number, number][], lat: number, lon: number) => {
+    let drin = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const [yi, xi] = poly[i];
+      const [yj, xj] = poly[j];
+      if (yi > lat !== yj > lat && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) drin = !drin;
+    }
+    return drin;
+  };
+  it('zwei Länder, beide als geschlossener Pfad', () => {
+    const u = umrisse();
+    expect(u.map((x) => x.land)).toEqual(['Deutschland', 'Österreich']);
+    for (const x of u) expect(x.pfad).toMatch(/^M[\d. -]+(L[\d. -]+)+ Z$/);
+  });
+  it('Salzburg und Wien liegen in Österreich, München und Traunstein nicht', () => {
+    expect(innen(UMRISS_OESTERREICH, 47.81, 13.05)).toBe(true); // Salzburg
+    expect(innen(UMRISS_OESTERREICH, 48.21, 16.37)).toBe(true); // Wien
+    expect(innen(UMRISS_OESTERREICH, 47.07, 15.44)).toBe(true); // Graz
+    expect(innen(UMRISS_OESTERREICH, 47.27, 11.4)).toBe(true); // Innsbruck
+    expect(innen(UMRISS_OESTERREICH, 48.14, 11.58)).toBe(false); // München
+    expect(innen(UMRISS_OESTERREICH, 47.87, 12.64)).toBe(false); // Traunstein
+  });
+  it('alle Städte der Karte liegen im sichtbaren Ausschnitt', () => {
+    for (const [name, k] of Object.entries(staedteKarte)) {
+      if (name.startsWith('_')) continue;
+      const [x, y] = projiziere((k as number[])[0], (k as number[])[1]);
+      expect(x, name).toBeGreaterThan(0);
+      expect(x, name).toBeLessThan(KARTE_BREITE);
+      expect(y, name).toBeGreaterThan(0);
+      expect(y, name).toBeLessThan(KARTE_HOEHE);
+    }
   });
 });

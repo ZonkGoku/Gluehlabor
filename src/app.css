@@ -1330,6 +1330,9 @@ a.karte.spitze {
   stroke-width: 1.4;
   stroke-linejoin: round;
 }
+.karte-de .umriss[data-land='Österreich'] {
+  fill-opacity: 0.7;
+}
 .karte-de .punkt {
   fill: var(--balken);
   fill-opacity: 0.82;

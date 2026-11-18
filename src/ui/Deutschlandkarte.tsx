@@ -1,8 +1,8 @@
-import { KARTE_BREITE, KARTE_HOEHE, kartenPunkte, umrissPfad, type Koordinaten } from '../lib/karte';
+import { KARTE_BREITE, KARTE_HOEHE, kartenPunkte, umrisse, type Koordinaten } from '../lib/karte';
 import staedteJson from '../../data/staedte.json';
 
 const ORTE = staedteJson as unknown as Koordinaten;
-const UMRISS = umrissPfad();
+const UMRISSE = umrisse();
 
 export interface StadtZahl {
   stadt: string | null;
@@ -19,9 +19,11 @@ export function Deutschlandkarte({ staedte }: { staedte: StadtZahl[] }) {
       <svg
         viewBox={`-6 -6 ${KARTE_BREITE + 12} ${KARTE_HOEHE + 12}`}
         role="img"
-        aria-label={`Deutschlandkarte mit Bechern je Stadt: ${beschreibung || 'noch keine Stadt bekannt'}`}
+        aria-label={`Karte von Deutschland und Österreich mit Bechern je Stadt: ${beschreibung || 'noch keine Stadt bekannt'}`}
       >
-        <path d={UMRISS} class="umriss" />
+        {UMRISSE.map((u) => (
+          <path d={u.pfad} class="umriss" data-land={u.land} />
+        ))}
         {punkte.map((p) => (
           <g>
             <title>{`${p.stadt}: ${p.becher} ${p.becher === 1 ? 'Becher' : 'Becher'}`}</title>

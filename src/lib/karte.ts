@@ -7,8 +7,9 @@ const LON0 = 5.6;
 const LAT0 = 55.2;
 const KOS = Math.cos((51 * Math.PI) / 180);
 export const MASSSTAB = 40;
-export const KARTE_BREITE = Math.round((15.3 - LON0) * KOS * MASSSTAB);
-export const KARTE_HOEHE = Math.round((LAT0 - 47.1) * MASSSTAB);
+// Ausschnitt: Deutschland und Österreich (Salzburg, Wien, Tirol …), damit Orte jenseits der Grenze nicht im Leeren liegen.
+export const KARTE_BREITE = Math.round((17.4 - LON0) * KOS * MASSSTAB);
+export const KARTE_HOEHE = Math.round((LAT0 - 46.3) * MASSSTAB);
 
 export function projiziere(lat: number, lon: number): [number, number] {
   return [(lon - LON0) * KOS * MASSSTAB, (LAT0 - lat) * MASSSTAB];
@@ -29,14 +30,40 @@ const UMRISS: [number, number][] = [
   [53.85, 8.6], [53.55, 8.55], [53.95, 8.95], [54.25, 8.85], [54.35, 8.6], [54.55, 8.95], [54.91, 8.65],
 ];
 
-/** SVG-Pfad des Umrisses in Kartenkoordinaten. */
-export function umrissPfad(): string {
+/**
+ * Grober Umriss Österreichs (Breite, Länge), im Uhrzeigersinn ab dem Bodensee. Die Grenze zu Deutschland nutzt dieselben Punkte wie
+ * UMRISS (in umgekehrter Reihenfolge), damit beide Länder ohne Lücke aneinanderstoßen.
+ */
+export const UMRISS_OESTERREICH: [number, number][] = [
+  [47.55, 9.75], [47.27, 10.2], [47.4, 10.5], [47.43, 11.1], [47.58, 11.65], [47.7, 12.45], [47.57, 12.95], [47.7, 13.05],
+  [47.97, 12.85], [48.25, 13.0], [48.28, 13.4], [48.57, 13.82], [48.77, 13.84], [48.6, 14.6], [48.75, 14.95], [48.97, 14.95],
+  [48.75, 15.8], [48.72, 16.5], [48.77, 17.16], [48.4, 17.0], [48.12, 17.1], [47.75, 17.1], [47.7, 16.6], [47.4, 16.45],
+  [47.0, 16.1], [46.85, 16.1], [46.65, 15.65], [46.55, 15.0], [46.5, 14.5], [46.4, 13.7], [46.62, 13.4], [46.55, 12.5],
+  [46.78, 12.15], [47.0, 11.5], [46.85, 10.5], [46.9, 10.1], [47.05, 9.88], [47.25, 9.55], [47.5, 9.55],
+];
+
+function pfadVon(punkte: [number, number][]): string {
   return (
-    UMRISS.map(([lat, lon], i) => {
-      const [x, y] = projiziere(lat, lon);
-      return `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`;
-    }).join(' ') + ' Z'
+    punkte
+      .map(([lat, lon], i) => {
+        const [x, y] = projiziere(lat, lon);
+        return `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`;
+      })
+      .join(' ') + ' Z'
   );
+}
+
+/** SVG-Pfad des deutschen Umrisses in Kartenkoordinaten. */
+export function umrissPfad(): string {
+  return pfadVon(UMRISS);
+}
+
+/** Alle Länder der Karte, jedes mit eigenem Pfad. */
+export function umrisse(): { land: 'Deutschland' | 'Österreich'; pfad: string }[] {
+  return [
+    { land: 'Deutschland', pfad: pfadVon(UMRISS) },
+    { land: 'Österreich', pfad: pfadVon(UMRISS_OESTERREICH) },
+  ];
 }
 
 export type Koordinaten = Record<string, [number, number] | string>;
