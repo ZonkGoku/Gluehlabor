@@ -201,7 +201,7 @@ Auswahl in `src/daten/darstellung.ts` (localStorage, `public/theme-init.js` setz
 - Umgebaut: Gerüst, Übersicht (Bento), Rangliste, Detail (große Sammelkarte), Erfassung (Ticket-Look per CSS, nach dem Speichern „Dein Ticket" in `nacht/TicketBlatt.tsx`).
   **Bild-Export:** `nacht/karteBild.ts` zeichnet die Karte auf eine Canvas (1080×1920, immer Nachtlook) und teilt sie per Share-Dialog bzw. lädt sie am Rechner herunter.
   **Noch im alten Stil, aber mit den neuen Tokens:** Vergleich, Statistik, Spickzettel, Profil, Teilen.
-- Weihnachtsmarkt-Stimmung (seit 18.11.): leise fallender Schnee, funkelnde Sterne (nur nachts), flackerndes Budenlicht am unteren Rand, die Lichterkette, ein gestreiftes Budendach ganz oben und eine Schneehaube auf den Karten (`TicketRahmen`), alles in `ui/nacht/Hintergrund.tsx`, reine CSS-Animation (`schnee`, `flackern`), mit „Bewegung reduzieren" aus. Keine Emoji, keine Tannen. Prüfstellen-Becher tragen den Stempel „Prüfstelle" (`istPruefstelle` in `src/lib/community.ts`,
+- Weihnachtsmarkt-Stimmung (seit 18.11.): leise fallender Schnee, funkelnde Sterne (nur nachts), flackerndes Budenlicht am unteren Rand, die Lichterkette, eine Lichterkette (`Lichterkette.tsx`) am festen Milchglas-Header (ohne Header fest am oberen Rand) und eine Schneehaube auf den Karten (`TicketRahmen`), alles in `ui/nacht/Hintergrund.tsx`, reine CSS-Animation (`schnee`, `flackern`), mit „Bewegung reduzieren" aus. Keine Emoji, keine Tannen. Prüfstellen-Becher tragen den Stempel „Prüfstelle" (`istPruefstelle` in `src/lib/community.ts`,
   schließt lokale Bestandsdaten ein).
 - Klassennamen: `styles.css` und `app.css` teilen sich den Namensraum (z. B. `.hinweis`, `.leer`, `.kopf`); neue Bausteine nutzen nur Tailwind-Utilities.
 
