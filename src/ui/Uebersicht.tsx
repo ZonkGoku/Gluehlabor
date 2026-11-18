@@ -24,6 +24,7 @@ import { kurzId, TicketRahmen } from './nacht/Ticket';
 import { Saisonverlauf } from './Saisonverlauf';
 import { LABELS, MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
+import { t } from '../i18n';
 
 /** Ohne Namen bleiben Bewertungen auf dem Gerät: Die Frage kommt, wenn noch kein Name da ist. */
 function NameKarte() {
@@ -40,7 +41,7 @@ function NameKarte() {
   };
   return (
     <div class="name-karte">
-      <label for="name-start">Wie sollen wir dich nennen? Ohne Namen kann niemand deine Bewertungen sehen.</label>
+      <label for="name-start">{t('Wie sollen wir dich nennen? Ohne Namen kann niemand deine Bewertungen sehen.')}</label>
       <div class="name-zeile">
         <input
           id="name-start"
@@ -48,7 +49,7 @@ function NameKarte() {
           type="text"
           maxLength={24}
           autocomplete="nickname"
-          placeholder="Name oder Spitzname"
+          placeholder={t('Name oder Spitzname')}
           value={wert}
           onInput={(e) => {
             setWert((e.target as HTMLInputElement).value);
@@ -57,12 +58,12 @@ function NameKarte() {
           onKeyDown={(e) => e.key === 'Enter' && void speichern()}
         />
         <button type="button" class="pillknopf" onClick={() => void speichern()}>
-          Speichern
+          {t('Speichern')}
         </button>
       </div>
       <p class="name-hinweis">
-        Der Name steht öffentlich neben deinen Bewertungen, auch bei denen, die du schon abgegeben hast. Besser kein voller echter Name.
-        {fehler && <span class="name-fehler"> {fehler}</span>}
+        {t('Der Name steht öffentlich neben deinen Bewertungen, auch bei denen, die du schon abgegeben hast. Besser kein voller echter Name.')}
+        {fehler && <span class="name-fehler"> {t(fehler)}</span>}
       </p>
     </div>
   );
@@ -75,14 +76,13 @@ function InstallHinweis() {
   if (zu || !ios) return null;
   return (
     <div class="name-karte">
-      <label>Tipp fürs iPhone: auf den Home-Bildschirm legen</label>
+      <label>{t('Tipp fürs iPhone: auf den Home-Bildschirm legen')}</label>
       <p class="name-hinweis" style={{ marginTop: 0 }}>
-        Tippe unten auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm". Sonst kann Safari nach einer Woche ohne Nutzung
-        deinen Namen und nicht gesendete Bewertungen vergessen.
+        {t('Tippe unten auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm". Sonst kann Safari nach einer Woche ohne Nutzung deinen Namen und nicht gesendete Bewertungen vergessen.')}
       </p>
       <div class="name-zeile">
         <button type="button" class="pillknopf" onClick={() => void schreibeEinstellung('installHinweisZu', true)}>
-          Verstanden
+          {t('Verstanden')}
         </button>
       </div>
     </div>
@@ -98,18 +98,18 @@ function AbendKarte({ abend: a, naechsteNr, klasse }: { abend: ReturnType<typeof
       kinder={
         <a href={a.bester ? `#/becher/${encodeURIComponent(a.bester.id)}` : '#/rangliste'} class="block p-5 pb-4 text-eis no-underline">
           <div class="flex items-center justify-between">
-            <span class="etikett !text-gold-300">Heute Abend</span>
+            <span class="etikett !text-gold-300">{t('Heute Abend')}</span>
             <span class="-rotate-3 rounded-md border border-gold-400/70 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-gold-300">
-              {a.markt ?? 'Dein Abend'}
+              {a.markt ?? t('Dein Abend')}
             </span>
           </div>
           <div class="mt-3 flex items-end gap-3">
             <span class="font-display text-[120px] leading-[0.86] licht-text drop-shadow-[0_0_26px_rgb(255_138_61/0.55)]">{a.anzahl}</span>
-            <span class="pb-2 font-display text-3xl uppercase tracking-wide text-eis">{a.anzahl === 1 ? 'Becher' : 'Becher'}</span>
+            <span class="pb-2 font-display text-3xl uppercase tracking-wide text-eis">{a.anzahl === 1 ? t('Becher') : t('Becher')}</span>
           </div>
           <p class="mt-3 text-sm text-dunst">
             {a.mittel !== null && <>Ø {zahl2(a.mittel)}</>}
-            {a.bester && <> · bester: {a.bester.stand}</>}
+            {a.bester && <> · {t('bester: {stand}', { stand: a.bester.stand })}</>}
           </p>
         </a>
       }
@@ -117,8 +117,8 @@ function AbendKarte({ abend: a, naechsteNr, klasse }: { abend: ReturnType<typeof
         <>
           <span class="font-display text-[34px] leading-none text-gold-300">{String(naechsteNr).padStart(2, '0')}</span>
           <div class="min-w-0 flex-1 leading-tight">
-            <div class="etikett !text-[9.5px]">Nächster Becher</div>
-            <div class="truncate text-xs text-dunst">Ticket #{kurzId(String(a.anzahl) + (a.markt ?? ''))}</div>
+            <div class="etikett !text-[9.5px]">{t('Nächster Becher')}</div>
+            <div class="truncate text-xs text-dunst">{t('Ticket')} #{kurzId(String(a.anzahl) + (a.markt ?? ''))}</div>
           </div>
         </>
       }
@@ -141,10 +141,10 @@ function ErfassenKnopf({ nr, erster, klasse }: { nr: number; erster: boolean; kl
         <Symbol name="flamme" groesse={26} />
       </span>
       <span class="flex-1 leading-none">
-        <span class="block font-display text-[30px] uppercase tracking-wide">{erster ? 'Becher erfassen' : 'Nächster Becher'}</span>
-        <span class="mt-1 block text-sm font-medium opacity-75">Bewerten, teilen, in die Rangliste</span>
+        <span class="block font-display text-[30px] uppercase tracking-wide">{erster ? t('Becher erfassen') : t('Nächster Becher')}</span>
+        <span class="mt-1 block text-sm font-medium opacity-75">{t('Bewerten, teilen, in die Rangliste')}</span>
       </span>
-      <span class="rounded-full bg-[#1a1020]/85 px-3 py-1.5 font-mono text-sm text-[#ffd98a]">Nr. {nr}</span>
+      <span class="rounded-full bg-[#1a1020]/85 px-3 py-1.5 font-mono text-sm text-[#ffd98a]">{t('Nr.')} {nr}</span>
     </a>
   );
 }
@@ -183,10 +183,10 @@ export function Uebersicht() {
   const status = saisonStatus(alle, typeof saison === 'number' ? saison : jahr, heute);
   const statusText =
     saison === 'alle'
-      ? `Alle Saisons · ${alle.length} Becher`
+      ? t('Alle Saisons · {n} Becher', { n: alle.length })
       : status.tag !== null
-        ? `Saison ${saison} · Tag ${status.tag}`
-        : `Saison ${saison} · ${status.becher} Becher`;
+        ? t('Saison {s} · Tag {tag}', { s: saison, tag: status.tag })
+        : t('Saison {s} · {n} Becher', { s: saison, n: status.becher });
 
   const verlauf = typeof saison === 'number' ? saisonVerlauf(alle, saison, gewichte, heute) : null;
   const neueste = neuesteBecher(auswahl, 5);
@@ -198,21 +198,21 @@ export function Uebersicht() {
       <div class="mb-5 mt-2 flex flex-wrap items-end justify-between gap-3">
         <div>
           <p class="etikett !text-gold-300">{statusText}</p>
-          <h1 class="mt-2 font-display text-[40px] uppercase leading-[1] tracking-wide text-eis sm:text-5xl">Wer glüht am besten?</h1>
+          <h1 class="mt-2 font-display text-[40px] uppercase leading-[1] tracking-wide text-eis sm:text-5xl">{t('Wer glüht am besten?')}</h1>
         </div>
-        <Chips optionen={['alle', ...jahre] as const} wert={saison} onWahl={setSaison} beschriftung="Saison" label={(o) => (o === 'alle' ? 'Alle' : String(o))} />
+        <Chips optionen={['alle', ...jahre] as const} wert={saison} onWahl={setSaison} beschriftung={t('Saison')} label={(o) => (o === 'alle' ? t('Alle') : String(o))} />
       </div>
 
       {zeilen.length === 0 && !abendModus ? (
         <div class="glas rounded-3xl p-8 text-center">
-          <p class="font-display text-3xl uppercase tracking-wide text-eis">Noch kein Becher in dieser Saison</p>
-          <p class="mt-2 text-dunst">Der erste Glühwein des Jahres wartet.</p>
+          <p class="font-display text-3xl uppercase tracking-wide text-eis">{t('Noch kein Becher in dieser Saison')}</p>
+          <p class="mt-2 text-dunst">{t('Der erste Glühwein des Jahres wartet.')}</p>
           <a
             href="#/erfassen"
             class="animate-puls mt-5 inline-flex items-center gap-2 rounded-full px-6 py-3 font-semibold text-[#1a1020] no-underline"
             style={{ background: 'linear-gradient(135deg,#ffe29a,#ff8a3d)' }}
           >
-            <Symbol name="plus" groesse={18} /> Ersten Becher erfassen
+            <Symbol name="plus" groesse={18} /> {t('Ersten Becher erfassen')}
           </a>
         </div>
       ) : (
@@ -226,28 +226,28 @@ export function Uebersicht() {
               <StandTopKarte
                 stand={spitze[0]}
                 titel={spitze.map((s) => s.stand).join(' & ')}
-                hinweis={spitze.length > 1 ? 'Teilen sich Platz 1' : undefined}
+                hinweis={spitze.length > 1 ? t('Teilen sich Platz 1') : undefined}
                 ort={[...new Set(spitze.map((s) => ortText(MARKTLISTE, standAlsZeile(s).eintrag)))].join(', ')}
               />
             )}
           </div>
 
           <ErfassenKnopf nr={naechsteNr} erster={heuteAbend.anzahl === 0} klasse="col-span-2" />
-          <Kennzahl wert={k.becher} label="Becher" />
-          <Kennzahl wert={k.maerkte} label="Märkte" />
-          <Kennzahl wert={k.staedte} label={k.staedte === 1 ? 'Stadt' : 'Städte'} />
-          <Kennzahl wert={zahl2(k.mittel)} label="Ø Note" />
+          <Kennzahl wert={k.becher} label={t('Becher')} />
+          <Kennzahl wert={k.maerkte} label={t('Märkte')} />
+          <Kennzahl wert={k.staedte} label={k.staedte === 1 ? t('Stadt') : t('Städte')} />
+          <Kennzahl wert={zahl2(k.mittel)} label={t('Ø Note')} />
 
           {letzter && (
             <p data-ein class="col-span-2 md:col-span-4 text-center text-sm text-dunst">
-              Zusammen an einer Bude?{' '}
+              {t('Zusammen an einer Bude?')}{' '}
               <a class="font-medium text-gold-300 no-underline hover:text-gold-400" href={`#/teilen?e=${encodeURIComponent(letzter.id)}`}>
-                QR-Code für {letzter.stand} zeigen
+                {t('QR-Code für {stand} zeigen', { stand: letzter.stand })}
               </a>
             </p>
           )}
 
-          <Kachel titel={`Rangliste ${saison === 'alle' ? '' : saison}`} link={{ href: '#/rangliste', text: `Alle ${staende.length}` }} klasse="col-span-2" innen="p-3">
+          <Kachel titel={`${t('Rangliste')} ${saison === 'alle' ? '' : saison}`} link={{ href: '#/rangliste', text: t('Alle {n}', { n: staende.length }) }} klasse="col-span-2" innen="p-3">
             <ol class="space-y-2">
               {staende.slice(0, 5).map((s) => (
                 <li>
@@ -257,7 +257,7 @@ export function Uebersicht() {
             </ol>
           </Kachel>
 
-          <Kachel titel="Neueste Becher" klasse="col-span-2" innen="p-3">
+          <Kachel titel={t('Neueste Becher')} klasse="col-span-2" innen="p-3">
             <ul class="space-y-2">
               {neueste.map((e) => {
                 const z = zeilen.find((x) => x.eintrag.id === e.id)!;
@@ -270,10 +270,10 @@ export function Uebersicht() {
                       <span class="min-w-0 flex-1">
                         <span class="block truncate font-semibold">{e.stand}</span>
                         <span class="block truncate text-xs text-dunst">
-                          {datumKurz(e.datum) ?? `Saison ${e.saison}`}
-                          {e.becherNr !== undefined ? ` · Nr. ${e.becherNr}` : ''}
-                          {e.name || istPruefstelle(e) ? ` · ${istPruefstelle(e) ? 'Prüfstelle' : anzeigeName(e)}` : ''}
-                          {e.sync === 'offen' ? ' · nur auf diesem Gerät' : ''}
+                          {datumKurz(e.datum) ?? t('Saison {s}', { s: e.saison })}
+                          {e.becherNr !== undefined ? ` · ${t('Nr.')} ${e.becherNr}` : ''}
+                          {e.name || istPruefstelle(e) ? ` · ${istPruefstelle(e) ? t('Prüfstelle') : anzeigeName(e)}` : ''}
+                          {e.sync === 'offen' ? ` · ${t('nur auf diesem Gerät')}` : ''}
                         </span>
                       </span>
                       <span class="font-display text-[26px] leading-none text-gold-300">{zahl2(z.wertung.gesamt)}</span>
@@ -285,16 +285,16 @@ export function Uebersicht() {
             </ul>
           </Kachel>
 
-          <Kachel titel="Wo ihr wart" link={{ href: '#/vergleich', text: 'Märkte' }} klasse="col-span-2">
+          <Kachel titel={t('Wo ihr wart')} link={{ href: '#/vergleich', text: t('Märkte') }} klasse="col-span-2">
             <Deutschlandkarte staedte={orte} />
           </Kachel>
 
-          <Kachel titel="Glühwein-Preise" klasse="col-span-2">
+          <Kachel titel={t('Glühwein-Preise')} klasse="col-span-2">
             {preise.zeilen.length === 0 ? (
               <p class="text-sm text-dunst">
                 {preise.meldungen === 0
-                  ? 'Noch keine Preise gemeldet. Trag bei der Erfassung den Preis ein, dann entsteht hier der Preisindex.'
-                  : `${preise.meldungen} von ${preise.schwelle} nötigen Preismeldungen. Eine Stadt erscheint hier ab ${preise.schwelle} Meldungen.`}
+                  ? t('Noch keine Preise gemeldet. Trag bei der Erfassung den Preis ein, dann entsteht hier der Preisindex.')
+                  : t('{n} von {schwelle} nötigen Preismeldungen. Eine Stadt erscheint hier ab {schwelle} Meldungen.', { n: preise.meldungen, schwelle: preise.schwelle })}
               </p>
             ) : (
               <>
@@ -302,7 +302,7 @@ export function Uebersicht() {
                   {preise.zeilen.slice(0, 6).map((p) => (
                     <li
                       class="flex items-center gap-3 rounded-2xl border border-rand bg-flaeche px-3.5 py-2.5"
-                      title={`${p.stadt}: Median ${euro(p.median)}, Mittel ${euro(p.mittel)}, ${euro(p.min)} bis ${euro(p.max)}, ${p.n} Meldungen`}
+                      title={t('{stadt}: Median {median}, Mittel {mittel}, {min} bis {max}, {n} Meldungen', { stadt: p.stadt, median: euro(p.median), mittel: euro(p.mittel), min: euro(p.min), max: euro(p.max), n: p.n })}
                     >
                       <span class="flex-1 font-semibold">{p.stadt}</span>
                       <span class="font-mono text-xs text-dunst">
@@ -312,21 +312,21 @@ export function Uebersicht() {
                     </li>
                   ))}
                 </ul>
-                <p class="mt-3 text-xs text-dunst">Median je Tasse, nach Meldungen der Bewertenden vor Ort. Alkoholfreies zählt nicht.</p>
+                <p class="mt-3 text-xs text-dunst">{t('Median je Tasse, nach Meldungen der Bewertenden vor Ort. Alkoholfreies zählt nicht.')}</p>
               </>
             )}
           </Kachel>
 
           {verlauf && (
-            <Kachel titel="Saisonverlauf · Becher je Abend" klasse="col-span-2 md:col-span-4">
+            <Kachel titel={t('Saisonverlauf · Becher je Abend')} klasse="col-span-2 md:col-span-4">
               <Saisonverlauf verlauf={verlauf} saison={saison as number} />
             </Kachel>
           )}
 
-          <Kachel titel="Selbstkontrolle" link={{ href: '#/statistik', text: 'Statistik' }} klasse="col-span-2 md:col-span-4">
+          <Kachel titel={t('Selbstkontrolle')} link={{ href: '#/statistik', text: t('Statistik') }} klasse="col-span-2 md:col-span-4">
             <p class="text-sm leading-relaxed text-eis">
               <span class="mr-2 rounded-md border border-gold-400/60 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.16em] text-gold-300">
-                {wichtig.schwere === 'warnung' ? 'Achtung' : wichtig.schwere === 'gut' ? 'OK' : 'Hinweis'}
+                {wichtig.schwere === 'warnung' ? t('Achtung') : wichtig.schwere === 'gut' ? t('OK') : t('Hinweis')}
               </span>
               {wichtig.text}
             </p>

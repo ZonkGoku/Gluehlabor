@@ -14,6 +14,7 @@ import {
 } from '../../lib/ortssuche';
 import { MARKTLISTE } from '../stammdaten';
 import { Symbol } from '../Symbol';
+import { t, tn } from '../../i18n';
 
 interface Props {
   /** Aktuelle Auswahl des Entwurfs; mit Stadt öffnet das Blatt gleich bei der Marktwahl. */
@@ -122,15 +123,15 @@ export function OrtBlatt({ start, bestand, onWahl, onZu }: Props) {
   };
 
   const suchePosition = () => {
-    if (!navigator.geolocation) return setNaehe({ stand: 'fehler', meldung: 'Dein Gerät kann den Standort nicht bestimmen.' });
+    if (!navigator.geolocation) return setNaehe({ stand: 'fehler', meldung: t('Dein Gerät kann den Standort nicht bestimmen.') });
     setNaehe({ stand: 'sucht' });
     navigator.geolocation.getCurrentPosition(
       (p) => {
         // Der Standort bleibt auf dem Gerät: Es wird nur die nächste Stadt gesucht.
         const n = naechsteOrte(orte ?? [], p.coords.latitude, p.coords.longitude, 5).map((o) => ({ name: o.name, land: o.land, km: o.km }));
-        setNaehe(n.length ? { stand: 'idle', orte: n } : { stand: 'fehler', meldung: 'Keine Stadt in der Nähe gefunden.' });
+        setNaehe(n.length ? { stand: 'idle', orte: n } : { stand: 'fehler', meldung: t('Keine Stadt in der Nähe gefunden.') });
       },
-      (f) => setNaehe({ stand: 'fehler', meldung: f.code === 1 ? 'Standort nicht erlaubt. Such die Stadt einfach oben.' : 'Standort gerade nicht verfügbar.' }),
+      (f) => setNaehe({ stand: 'fehler', meldung: f.code === 1 ? t('Standort nicht erlaubt. Such die Stadt einfach oben.') : t('Standort gerade nicht verfügbar.') }),
       { enableHighAccuracy: false, timeout: 10_000, maximumAge: 5 * 60_000 },
     );
   };
@@ -144,14 +145,14 @@ export function OrtBlatt({ start, bestand, onWahl, onZu }: Props) {
       const nahe: Eintrag[] = [];
       if (naehe.orte) {
         for (const o of naehe.orte) {
-          nahe.push({ id: `n-${o.name}`, symbol: 'ziel', titel: o.name, unter: o.land, rechts: o.km < 1 ? 'hier' : `${Math.round(o.km)} km`, wahl: () => waehleStadt(o.name) });
+          nahe.push({ id: `n-${o.name}`, symbol: 'ziel', titel: o.name, unter: t(o.land), rechts: o.km < 1 ? t('hier') : `${Math.round(o.km)} km`, wahl: () => waehleStadt(o.name) });
         }
       } else {
         nahe.push({
           id: 'nahe',
           symbol: 'ziel',
-          titel: naehe.stand === 'sucht' ? 'Suche deinen Standort …' : 'In meiner Nähe suchen',
-          unter: naehe.meldung ?? 'Der Standort bleibt auf deinem Gerät.',
+          titel: naehe.stand === 'sucht' ? t('Suche deinen Standort …') : t('In meiner Nähe suchen'),
+          unter: naehe.meldung ?? t('Der Standort bleibt auf deinem Gerät.'),
           hervor: true,
           wahl: suchePosition,
         });
@@ -159,7 +160,7 @@ export function OrtBlatt({ start, bestand, onWahl, onZu }: Props) {
       eintraege.push({ liste: nahe });
       if (zuletzt.length)
         eintraege.push({
-          titel: 'Zuletzt',
+          titel: t('Zuletzt'),
           liste: zuletzt.map((z) => ({
             id: `z-${z.stadt}-${z.markt ?? ''}`,
             symbol: 'uhr',
@@ -171,8 +172,8 @@ export function OrtBlatt({ start, bestand, onWahl, onZu }: Props) {
       const beliebt = beliebteStaedte(bestand, MARKTLISTE, 6).filter((b) => !zuletzt.some((z) => z.stadt === b.stadt && !z.markt));
       if (beliebt.length)
         eintraege.push({
-          titel: 'Schon bewertet',
-          liste: beliebt.map((b) => ({ id: `b-${b.stadt}`, symbol: 'pin', titel: b.stadt, rechts: `${b.becher} Becher`, wahl: () => waehleStadt(b.stadt) })),
+          titel: t('Schon bewertet'),
+          liste: beliebt.map((b) => ({ id: `b-${b.stadt}`, symbol: 'pin', titel: b.stadt, rechts: tn(b.becher, '{n} Becher', '{n} Becher'), wahl: () => waehleStadt(b.stadt) })),
         });
     } else {
       const treffer = sucheOrte(orte ?? [], qk, 8);
@@ -180,15 +181,15 @@ export function OrtBlatt({ start, bestand, onWahl, onZu }: Props) {
         id: `o-${o.name}-${o.land}`,
         symbol: 'pin',
         titel: o.name,
-        unter: o.land,
-        rechts: becherJeStadt.get(o.key) ? `${becherJeStadt.get(o.key)} Becher` : undefined,
+        unter: t(o.land),
+        rechts: becherJeStadt.get(o.key) ? tn(becherJeStadt.get(o.key)!, '{n} Becher', '{n} Becher') : undefined,
         markieren: true,
         wahl: () => waehleStadt(o.name),
       }));
       // Nur anbieten, wenn kein Treffer so beginnt: Wer „traunst" tippt, will Traunstein und keine eigene Stadt
       const beginnt = treffer.some((o) => o.key.startsWith(schluessel(qk)));
       if (!beginnt && schluessel(qk).length >= 2)
-        liste.push({ id: 'neu', symbol: 'haken', titel: `„${qk}" verwenden`, unter: 'Stadt, die in der Liste fehlt', hervor: true, wahl: () => waehleStadt(qk.replace(/\s+/g, ' ')) });
+        liste.push({ id: 'neu', symbol: 'haken', titel: t('„{q}" verwenden', { q: qk }), unter: t('Stadt, die in der Liste fehlt'), hervor: true, wahl: () => waehleStadt(qk.replace(/\s+/g, ' ')) });
       eintraege.push({ liste });
     }
   } else {
@@ -198,14 +199,14 @@ export function OrtBlatt({ start, bestand, onWahl, onZu }: Props) {
       id: `m-${m.markt}`,
       symbol: 'pin',
       titel: m.markt,
-      unter: m.gepflegt ? undefined : 'von anderen eingetragen',
+      unter: m.gepflegt ? undefined : t('von anderen eingetragen'),
       markieren: true,
-      rechts: m.becher ? `${m.becher} Becher` : undefined,
+      rechts: m.becher ? tn(m.becher, '{n} Becher', '{n} Becher') : undefined,
       hervor: start.stadt === stadt && start.markt === m.markt,
       wahl: () => onWahl(stadt, m.markt),
     }));
     if (qk && !markt.some((m) => schluessel(m.markt) === k))
-      liste.push({ id: 'neu', symbol: 'haken', titel: `„${qk}" verwenden`, unter: `Markt in ${stadt}`, hervor: true, wahl: () => onWahl(stadt, qk.replace(/\s+/g, ' ')) });
+      liste.push({ id: 'neu', symbol: 'haken', titel: t('„{q}" verwenden', { q: qk }), unter: t('Markt in {stadt}', { stadt }), hervor: true, wahl: () => onWahl(stadt, qk.replace(/\s+/g, ' ')) });
     eintraege.push({ liste });
   }
 
@@ -223,14 +224,14 @@ export function OrtBlatt({ start, bestand, onWahl, onZu }: Props) {
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Ort wählen"
+        aria-label={t('Ort wählen')}
         class="glas-stark flex h-[92dvh] w-full max-w-lg flex-col rounded-t-[28px] text-eis sm:h-[min(700px,88dvh)] sm:rounded-[28px]"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <header class="px-4 pb-3 pt-4">
           <div class="flex items-center gap-3">
-            <h2 class="flex-1 font-display text-[28px] uppercase leading-none tracking-wide">{stadt === null ? 'Wo bist du?' : 'Welcher Markt?'}</h2>
-            <button type="button" onClick={onZu} aria-label="Schließen" class="grid size-10 place-items-center rounded-full border border-rand bg-flaeche text-dunst hover:text-eis">
+            <h2 class="flex-1 font-display text-[28px] uppercase leading-none tracking-wide">{stadt === null ? t('Wo bist du?') : t('Welcher Markt?')}</h2>
+            <button type="button" onClick={onZu} aria-label={t('Schließen')} class="grid size-10 place-items-center rounded-full border border-rand bg-flaeche text-dunst hover:text-eis">
               <Symbol name="schliessen" groesse={20} />
             </button>
           </div>
@@ -239,11 +240,11 @@ export function OrtBlatt({ start, bestand, onWahl, onZu }: Props) {
               type="button"
               onClick={() => (setStadt(null), setQ(''))}
               class="mt-3 inline-flex items-center gap-2 rounded-full border border-rand bg-flaeche px-3.5 py-1.5 text-sm font-semibold text-gold-300"
-              aria-label={`Stadt ${stadt} ändern`}
+              aria-label={t('Stadt {stadt} ändern', { stadt })}
             >
               <Symbol name="pin" groesse={15} />
               {stadt}
-              <span class="text-dunst">ändern</span>
+              <span class="text-dunst">{t('ändern')}</span>
             </button>
           )}
           <label class="relative mt-3 block">
@@ -261,7 +262,7 @@ export function OrtBlatt({ start, bestand, onWahl, onZu }: Props) {
               role="combobox"
               aria-expanded="true"
               aria-controls="ort-liste"
-              placeholder={stadt === null ? 'Stadt suchen, z. B. Salzburg' : "Markt suchen oder eintippen"}
+              placeholder={stadt === null ? t('Stadt suchen, z. B. Salzburg') : t('Markt suchen oder eintippen')}
               value={q}
               onInput={(ev) => setQ((ev.target as HTMLInputElement).value)}
               onKeyDown={taste}
@@ -271,7 +272,7 @@ export function OrtBlatt({ start, bestand, onWahl, onZu }: Props) {
         </header>
 
         <div class="min-h-0 flex-1 overflow-y-auto px-2 pb-3" id="ort-liste" role="listbox">
-          {stadt === null && qk && !orte && <p class="px-4 py-6 text-center text-dunst">Lade Städte …</p>}
+          {stadt === null && qk && !orte && <p class="px-4 py-6 text-center text-dunst">{t('Lade Städte …')}</p>}
           {eintraege.map((a) => (
             <Fragment key={a.titel ?? 'x'}>
               {a.titel ? (
@@ -298,7 +299,7 @@ export function OrtBlatt({ start, bestand, onWahl, onZu }: Props) {
               )}
             </Fragment>
           ))}
-          {orte && flach.length === 0 && <p class="px-4 py-6 text-center text-dunst">Nichts gefunden.</p>}
+          {orte && flach.length === 0 && <p class="px-4 py-6 text-center text-dunst">{t('Nichts gefunden.')}</p>}
         </div>
 
         {stadt !== null && (
@@ -308,7 +309,7 @@ export function OrtBlatt({ start, bestand, onWahl, onZu }: Props) {
               onClick={() => onWahl(stadt, MARKTLISTE.sonstiger)}
               class="w-full rounded-2xl border border-rand bg-flaeche py-3.5 text-[16px] font-semibold text-eis hover:bg-flaeche-hover"
             >
-              Ohne Markt weiter
+              {t('Ohne Markt weiter')}
             </button>
           </footer>
         )}

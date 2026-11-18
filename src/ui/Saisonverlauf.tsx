@@ -2,12 +2,13 @@ import { useState } from 'preact/hooks';
 import { zahl2 } from '../lib/format';
 import type { Verlauf } from '../lib/startseite';
 import { datumKurz } from './bausteine';
+import { t, tn } from '../i18n';
 
 const WOCHENTAG = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 
 function beschriftung(datum: string): string {
   const d = new Date(`${datum}T12:00:00`);
-  return `${WOCHENTAG[d.getDay()]} ${datumKurz(datum)?.slice(0, 6)}`;
+  return `${t(WOCHENTAG[d.getDay()])} ${datumKurz(datum)?.slice(0, 5)}`;
 }
 
 /** Becher je Abend als Säulen. Antippen oder Fokussieren zeigt Datum, Zahl und Schnitt. */
@@ -19,8 +20,8 @@ export function Saisonverlauf({ verlauf, saison }: { verlauf: Verlauf; saison: n
     return (
       <p class="leer-hinweis">
         {ohneDatum > 0
-          ? `Die ${ohneDatum} Becher aus ${saison} haben kein Datum. Ab jetzt trägt die Erfassung jedes Datum automatisch ein, und der Verlauf zeigt jeden Abend.`
-          : 'Noch kein Becher in dieser Saison.'}
+          ? t('Die {n} Becher aus {saison} haben kein Datum. Ab jetzt trägt die Erfassung jedes Datum automatisch ein, und der Verlauf zeigt jeden Abend.', { n: ohneDatum, saison })
+          : t('Noch kein Becher in dieser Saison.')}
       </p>
     );
   }
@@ -37,7 +38,7 @@ export function Saisonverlauf({ verlauf, saison }: { verlauf: Verlauf; saison: n
             type="button"
             class={`saeule${t.anzahl === 0 ? ' leer' : ''}${t.datum === an.datum ? ' an' : ''}`}
             style={{ height: `${t.anzahl === 0 ? 4 : 12 + (t.anzahl / max) * 88}%` }}
-            aria-label={`${beschriftung(t.datum)}: ${t.anzahl} Becher`}
+            aria-label={`${beschriftung(t.datum)}: ${tn(t.anzahl, '{n} Becher', '{n} Becher')}`}
             aria-pressed={t.datum === an.datum}
             onClick={() => setGewaehlt(t.datum)}
             onFocus={() => setGewaehlt(t.datum)}
@@ -49,7 +50,7 @@ export function Saisonverlauf({ verlauf, saison }: { verlauf: Verlauf; saison: n
         {tage.length > 1 && <span>{beschriftung(tage.at(-1)!.datum)}</span>}
       </div>
       <p class="verlauf-text" aria-live="polite">
-        <b>{beschriftung(an.datum)}</b> · {an.anzahl} {an.anzahl === 1 ? 'Becher' : 'Becher'}
+        <b>{beschriftung(an.datum)}</b> · {tn(an.anzahl, '{n} Becher', '{n} Becher')}
         {an.mittel !== null && <> · Ø {zahl2(an.mittel)}</>}
       </p>
     </div>

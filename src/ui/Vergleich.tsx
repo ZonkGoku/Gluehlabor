@@ -4,6 +4,7 @@ import { Betreiber } from './bausteine';
 import { useEintraege, useGewichte } from './daten';
 import { staedte } from '../lib/orte';
 import { MARKTLISTE } from './stammdaten';
+import { t, tn } from '../i18n';
 
 const ENTWICKLUNG: Record<Entwicklung, string> = {
   besser: 'besser geworden',
@@ -15,8 +16,8 @@ const ENTWICKLUNG: Record<Entwicklung, string> = {
 
 function differenz(d: number | null): string {
   if (d === null) return '–';
-  const t = zahl2(Math.abs(d));
-  return d > 0 ? `▲ +${t}` : d < 0 ? `▼ −${t}` : '= 0.00';
+  const z = zahl2(Math.abs(d));
+  return d > 0 ? `▲ +${z}` : d < 0 ? `▼ −${z}` : '= 0.00';
 }
 
 export function Vergleich() {
@@ -43,31 +44,30 @@ export function Vergleich() {
     <>
       <div class="seitenkopf">
         <div>
-          <p class="eyebrow">Über die Jahre</p>
-          <h1>Vergleich</h1>
-          <p class="unterzeile">Stände, die in mehreren Saisons bewertet wurden, und Märkte, die noch fehlen.</p>
+          <p class="eyebrow">{t('Über die Jahre')}</p>
+          <h1>{t('Vergleich')}</h1>
+          <p class="unterzeile">{t('Stände, die in mehreren Saisons bewertet wurden, und Märkte, die noch fehlen.')}</p>
         </div>
       </div>
 
       <div class="raster">
         <section class="karte">
-          <h2>Wiederholungstäter</h2>
+          <h2>{t('Wiederholungstäter')}</h2>
           {mehrfach.length === 0 && (
             <p style={{ margin: '0 0 12px', color: 'var(--text-2)', fontSize: '14px' }}>
-              Noch kein Stand in zwei Saisons. Sobald ihr einen Stand aus {jahre[0]} wieder besucht, steht hier, ob er
-              besser geworden ist.
+              {t('Noch kein Stand in zwei Saisons. Sobald ihr einen Stand aus {jahr} wieder besucht, steht hier, ob er besser geworden ist.', { jahr: jahre[0] })}
             </p>
           )}
           <div style={{ overflowX: 'auto' }}>
             <table class="tabelle" style={{ cursor: 'default' }}>
               <thead>
                 <tr>
-                  <th>Stand</th>
+                  <th>{t('Stand')}</th>
                   {jahre.map((j) => (
                     <th class="num">{j}</th>
                   ))}
                   <th class="num">±</th>
-                  <th>Status</th>
+                  <th>{t('Status')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -82,7 +82,7 @@ export function Vergleich() {
                     ))}
                     <td class="num">{differenz(x.differenz)}</td>
                     <td>
-                      <span class={`entwicklung ${x.entwicklung}`}>{ENTWICKLUNG[x.entwicklung]}</span>
+                      <span class={`entwicklung ${x.entwicklung}`}>{t(ENTWICKLUNG[x.entwicklung])}</span>
                     </td>
                   </tr>
                 ))}
@@ -94,9 +94,9 @@ export function Vergleich() {
         {listen.map((l) => (
           <section class="karte">
             <h2>
-              Wo wart ihr noch nie? · {l.stadt}
+              {t('Wo wart ihr noch nie?')} · {l.stadt}
               <span class="mono" style={{ fontWeight: 500, color: 'var(--text-2)', fontSize: '13px' }}>
-                {l.besucht}/{l.checkliste.length} erkundet
+                {t('{a}/{b} erkundet', { a: l.besucht, b: l.checkliste.length })}
               </span>
             </h2>
             <div class="fortschritt">
@@ -106,7 +106,7 @@ export function Vergleich() {
               {l.checkliste.map((m) => (
                 <div class={`markt ${m.abdeckung === 'noch nie da' ? 'nie' : m.abdeckung === 'abgedeckt' ? 'abgedeckt' : ''}`}>
                   <div class="n">{m.markt}</div>
-                  <div class="z">{m.becher === 0 ? 'noch nie da' : `${m.becher} Becher · ${m.abdeckung}`}</div>
+                  <div class="z">{m.becher === 0 ? t('noch nie da') : `${t('{n} Becher', { n: m.becher })} · ${t(m.abdeckung)}`}</div>
                 </div>
               ))}
             </div>
@@ -115,14 +115,14 @@ export function Vergleich() {
 
         {unentdeckt.length > 0 && (
           <section class="karte">
-            <h2>Noch unentdeckt</h2>
+            <h2>{t('Noch unentdeckt')}</h2>
             <p style={{ margin: '0 0 12px', color: 'var(--text-2)', fontSize: '14px' }}>
-              In diesen Städten kennt Glühlabor schon Märkte, aber noch ohne euren Becher.
+              {t('In diesen Städten kennt Glühlabor schon Märkte, aber noch ohne euren Becher.')}
             </p>
             <div class="chips">
               {unentdeckt.map((l) => (
                 <span class="chip-klein">
-                  {l.stadt} · {l.anzahl} {l.anzahl === 1 ? 'Markt' : 'Märkte'}
+                  {l.stadt} · {tn(l.anzahl, '{n} Markt', '{n} Märkte')}
                 </span>
               ))}
             </div>
@@ -130,15 +130,15 @@ export function Vergleich() {
         )}
 
         <section class="karte">
-          <h2>Weitere Orte in Deutschland</h2>
+          <h2>{t('Weitere Orte in Deutschland')}</h2>
           <p style={{ margin: '0 0 12px', color: 'var(--text-2)', fontSize: '14px' }}>
-            Bewertet wird überall. Märkte außerhalb der gepflegten Listen tragt ihr bei der Erfassung als „Markt, Stadt" ein.
+            {t('Bewertet wird überall. Märkte außerhalb der gepflegten Listen tragt ihr bei der Erfassung als „Markt, Stadt" ein.')}
           </p>
           <div class="chips">
-            {weitere.length === 0 && <span class="chip-klein">Noch keine</span>}
+            {weitere.length === 0 && <span class="chip-klein">{t('Noch keine')}</span>}
             {weitere.map((o) => (
               <span class={o.stadt ? 'chip-klein gold' : 'chip-klein'}>
-                {o.stadt ?? 'Stadt nicht angegeben'} · {o.becher} Becher
+                {o.stadt ?? t('Stadt nicht angegeben')} · {t('{n} Becher', { n: o.becher })}
               </span>
             ))}
           </div>

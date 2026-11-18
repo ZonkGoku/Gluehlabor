@@ -5,6 +5,7 @@ import { befunde, diagnose, kriteriumStatistik, pegel, ueberblick } from '../lib
 import { Betreiber, SaisonSchalter } from './bausteine';
 import { useEintraege, useGewichte, useSaison } from './daten';
 import { LABELS } from './stammdaten';
+import { t, kriteriumLabel } from '../i18n';
 
 const STUFEN = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const pos = (stufe: number) => `${((stufe - 1) / 9) * 100}%`;
@@ -28,10 +29,10 @@ export function Statistik() {
     <>
       <div class="seitenkopf">
         <div>
-          <p class="eyebrow">Prüfer-Selbstkontrolle</p>
-          <h1>Benutzt ihr die Skala?</h1>
+          <p class="eyebrow">{t('Prüfer-Selbstkontrolle')}</p>
+          <h1>{t('Benutzt ihr die Skala?')}</h1>
           <p class="unterzeile">
-            {u.eintraege} Becher, {u.einzelnoten} Einzelnoten. Rechnet live mit, auch wenn ihr die Gewichte ändert.
+            {t('{a} Becher, {b} Einzelnoten. Rechnet live mit, auch wenn ihr die Gewichte ändert.', { a: u.eintraege, b: u.einzelnoten })}
           </p>
         </div>
         <SaisonSchalter saisons={jahre} wert={saison} onWahl={setSaison} />
@@ -39,11 +40,11 @@ export function Statistik() {
 
       <div class="raster">
         <section class="karte">
-          <h2>Befund</h2>
+          <h2>{t('Befund')}</h2>
           <ul class="befunde">
             {b.map((x) => (
               <li class={`befund s-${x.schwere}`}>
-                <span class="marke">{x.schwere === 'warnung' ? 'Achtung' : x.schwere === 'gut' ? 'OK' : 'Hinweis'}</span>
+                <span class="marke">{x.schwere === 'warnung' ? t('Achtung') : x.schwere === 'gut' ? t('OK') : t('Hinweis')}</span>
                 {x.text}
               </li>
             ))}
@@ -51,7 +52,7 @@ export function Statistik() {
         </section>
 
         <section class="karte">
-          <h2>Genutzte Stufen je Kriterium</h2>
+          <h2>{t('Genutzte Stufen je Kriterium')}</h2>
           <div class="skalennutzung">
             <div class="skalenkopf">
               <span />
@@ -65,10 +66,10 @@ export function Statistik() {
             {stats.map((s) => (
               <div
                 class="reihe"
-                title={`${LABELS[s.kriterium]}: ${s.min ?? '–'} bis ${s.max ?? '–'}, Ø ${zahl2(s.mittel)}, Stufen ${s.stufen.join(', ')}`}
+                title={t('{label}: {min} bis {max}, Ø {mittel}, Stufen {stufen}', { label: kriteriumLabel(LABELS[s.kriterium]), min: s.min ?? '–', max: s.max ?? '–', mittel: zahl2(s.mittel), stufen: s.stufen.join(', ') })}
               >
-                <span class="name">{LABELS[s.kriterium]}</span>
-                <div class="achse" role="img" aria-label={`${LABELS[s.kriterium]}: vergeben ${s.stufen.join(', ') || 'nichts'}`}>
+                <span class="name">{kriteriumLabel(LABELS[s.kriterium])}</span>
+                <div class="achse" role="img" aria-label={t('{label}: vergeben {stufen}', { label: kriteriumLabel(LABELS[s.kriterium]), stufen: s.stufen.join(', ') || t('nichts') })}>
                   {s.min !== null && s.max !== null && (
                     <div class="band" style={{ left: pos(s.min), width: `calc(${pos(s.max)} - ${pos(s.min)})` }} />
                   )}
@@ -83,28 +84,28 @@ export function Statistik() {
           </div>
           <div class="legende">
             <span>
-              <i style={{ width: '8px', borderRadius: '50%' }} /> vergebene Stufe
+              <i style={{ width: '8px', borderRadius: '50%' }} /> {t('vergebene Stufe')}
             </span>
             <span>
-              <i class="strich" /> Mittelwert
+              <i class="strich" /> {t('Mittelwert')}
             </span>
           </div>
         </section>
 
         <section class="karte">
-          <h2>Kennzahlen</h2>
+          <h2>{t('Kennzahlen')}</h2>
           <div style={{ overflowX: 'auto' }}>
             <table class="tabelle">
               <thead>
                 <tr>
-                  <th>Kriterium</th>
+                  <th>{t('Kriterium')}</th>
                   <th class="num">Ø</th>
                   <th class="num">Min</th>
                   <th class="num">Max</th>
-                  <th class="num">Spanne</th>
-                  <th class="num">Streuung</th>
-                  <th class="num">Korr. Geschmack</th>
-                  <th>Diagnose</th>
+                  <th class="num">{t('Spanne')}</th>
+                  <th class="num">{t('Streuung')}</th>
+                  <th class="num">{t('Korr. Geschmack')}</th>
+                  <th>{t('Diagnose')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -113,7 +114,7 @@ export function Statistik() {
                   return (
                     <tr style={{ cursor: 'default' }}>
                       <td>
-                        <b>{LABELS[s.kriterium]}</b>
+                        <b>{kriteriumLabel(LABELS[s.kriterium])}</b>
                       </td>
                       <td class="num">{zahl2(s.mittel)}</td>
                       <td class="num">{s.min ?? '–'}</td>
@@ -132,10 +133,10 @@ export function Statistik() {
 
         <div class="raster raster-2">
           <section class="karte">
-            <h2>Schmeckt es ab dem dritten besser?</h2>
+            <h2>{t('Schmeckt es ab dem dritten besser?')}</h2>
             <div class="pegel" role="list">
               {p.map((x) => (
-                <div class="saeule" role="listitem" title={`${x.becherNr}${x.becherNr === 5 ? '+' : ''}. Becher: ${x.anzahl}×, Ø ${zahl2(x.mittel)}`}>
+                <div class="saeule" role="listitem" title={t('{nr}. Becher: {n}×, Ø {mittel}', { nr: `${x.becherNr}${x.becherNr === 5 ? '+' : ''}`, n: x.anzahl, mittel: zahl2(x.mittel) })}>
                   <div
                     class={x.mittel === null ? 'fuellung ohne' : 'fuellung'}
                     style={{ height: `${((x.mittel ?? 0.2) / pMax) * 100}%` }}
@@ -148,29 +149,28 @@ export function Statistik() {
               ))}
             </div>
             <p style={{ fontSize: '13px', color: 'var(--text-2)', margin: '14px 0 0' }}>
-              Steigt die Note mit der Becher-Nr., bewertet ihr den Pegel mit. Dafür muss die Becher-Nr. bei der Erfassung
-              gesetzt sein; die App schlägt sie automatisch vor.
+              {t('Steigt die Note mit der Becher-Nr., bewertet ihr den Pegel mit. Dafür muss die Becher-Nr. bei der Erfassung gesetzt sein; die App schlägt sie automatisch vor.')}
             </p>
           </section>
 
           <section class="karte">
-            <h2>Überblick</h2>
+            <h2>{t('Überblick')}</h2>
             <div class="raster raster-kpi" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
               <div class="kpi" style={{ padding: 0 }}>
                 <div class="wert">{u.zehner}</div>
-                <div class="label">mal die 10</div>
+                <div class="label">{t('mal die 10')}</div>
               </div>
               <div class="kpi" style={{ padding: 0 }}>
                 <div class="wert">{u.einsOderZwei}</div>
-                <div class="label">mal eine 1 oder 2</div>
+                <div class="label">{t('mal eine 1 oder 2')}</div>
               </div>
               <div class="kpi" style={{ padding: 0 }}>
                 <div class="wert">{zahl2(u.beste)}</div>
-                <div class="label">beste Gesamtnote</div>
+                <div class="label">{t('beste Gesamtnote')}</div>
               </div>
               <div class="kpi" style={{ padding: 0 }}>
                 <div class="wert">{zahl2(u.schlechteste)}</div>
-                <div class="label">schlechteste Gesamtnote</div>
+                <div class="label">{t('schlechteste Gesamtnote')}</div>
               </div>
             </div>
           </section>

@@ -4,6 +4,7 @@ import { animate } from 'motion';
 import { useEffect, useRef } from 'preact/hooks';
 import { Symbol } from '../Symbol';
 import { weniger } from './bewegung';
+import { t } from '../../i18n';
 
 const PUNKTE = [
   { route: '', label: 'Übersicht', symbol: 'uebersicht' },
@@ -38,7 +39,7 @@ export function Navigation({ route }: { route: string }) {
 
   return (
     <nav
-      aria-label="Ansichten"
+      aria-label={t('Ansichten')}
       class="nm glas-stark fixed left-1/2 z-40 w-[min(92vw,440px)] -translate-x-1/2 rounded-full p-1.5"
       style={{ bottom: 'calc(env(safe-area-inset-bottom) + 14px)' }}
     >
@@ -64,7 +65,7 @@ export function Navigation({ route }: { route: string }) {
             <a
               key="plus"
               href="#/erfassen"
-              aria-label="Becher erfassen"
+              aria-label={t('Becher erfassen')}
               class="animate-puls relative z-10 mx-auto -mt-7 grid size-[60px] place-items-center rounded-[22px] text-[#1a1020] no-underline"
               style={{ background: 'linear-gradient(145deg, #ffe29a, #ff8a3d 55%, #f0344f)' }}
             >
@@ -80,7 +81,7 @@ export function Navigation({ route }: { route: string }) {
               }`}
             >
               <Symbol name={p.symbol} groesse={22} />
-              {p.label}
+              {t(p.label)}
             </a>
           ),
         )}

@@ -3,6 +3,7 @@
 
 import { useRef } from 'preact/hooks';
 import type { Note } from '../lib/modell';
+import { t } from '../i18n';
 
 interface Props {
   name: string;
@@ -77,7 +78,7 @@ export function Skala({ name, gewicht, wert, aktiv, onWert, onAktiv, onInfo }: P
         aria-valuemin={1}
         aria-valuemax={10}
         aria-valuenow={wert ?? undefined}
-        aria-valuetext={wert === null ? 'nicht bewertet' : String(wert)}
+        aria-valuetext={wert === null ? t('nicht bewertet') : String(wert)}
         onPointerDown={down}
         onPointerMove={move}
         onFocus={onAktiv}
@@ -88,7 +89,7 @@ export function Skala({ name, gewicht, wert, aktiv, onWert, onAktiv, onInfo }: P
           <Inhalt name={name} gewicht={gewicht} wert={wert} />
         </div>
       </div>
-      <button type="button" class="skala-info" aria-label={`Anker ${name}`} onClick={onInfo}>
+      <button type="button" class="skala-info" aria-label={t('Anker {name}', { name })} onClick={onInfo}>
         Anker
       </button>
     </div>

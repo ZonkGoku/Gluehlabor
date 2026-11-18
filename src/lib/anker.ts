@@ -2,6 +2,7 @@
 // selbst liegen in data/anker.json.
 
 import type { Kriterium, Note } from './modell';
+import { t } from '../i18n';
 
 export interface AnkerKriterium {
   label: string;
@@ -27,7 +28,7 @@ export function ankerFuer(def: AnkerKriterium, note: Note): AnkerZeile[] {
     .filter((s) => Number.isFinite(s))
     .sort((a, b) => b - a);
   if (stufen.length === 0) return [];
-  const zeile = (s: number) => ({ stufe: s, text: def.anker[String(s)] });
+  const zeile = (s: number) => ({ stufe: s, text: t(def.anker[String(s)]) });
 
   if (note === null) {
     const oben = stufen[0];

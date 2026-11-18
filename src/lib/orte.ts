@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 // Märkte und Städte. Bewertet wird in ganz Deutschland; gepflegte Listen gibt es
 // je Stadt (data/maerkte.json), frei eingegebene Märkte sind erlaubt. Reine Funktionen.
 
@@ -29,7 +30,7 @@ export function ortTeile(liste: MarktListe, e: { markt: string; stadt?: string }
 
 /** Ort für die Anzeige, z. B. „Salzburg" oder „Rathausmarkt · Hamburg"; ohne Angaben „Ort unbekannt". */
 export function ortText(liste: MarktListe, e: { markt: string; stadt?: string }): string {
-  return ortTeile(liste, e).join(' · ') || 'Ort unbekannt';
+  return ortTeile(liste, e).join(' · ') || t('Ort unbekannt');
 }
 
 /**

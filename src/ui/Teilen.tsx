@@ -11,6 +11,7 @@ import { useLive } from './hooks';
 import { Qr } from './Qr';
 import { MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
+import { t, tn } from '../i18n';
 
 function queryDerAdresse(): URLSearchParams {
   return new URLSearchParams(location.hash.split('?')[1] ?? '');
@@ -53,11 +54,11 @@ export function Teilen() {
     return (
       <main class="fokus">
         <div class="karte leer">
-          <b>Hier gibt es noch nichts zu teilen.</b>
-          Trag zuerst den Stand ein, dann erscheint der QR-Code.
+          <b>{t('Hier gibt es noch nichts zu teilen.')}</b>
+          {t('Trag zuerst den Stand ein, dann erscheint der QR-Code.')}
           <p style={{ margin: '14px 0 0' }}>
             <a class="pillknopf" href="#/erfassen">
-              Zur Erfassung
+              {t('Zur Erfassung')}
             </a>
           </p>
         </div>
@@ -69,7 +70,7 @@ export function Teilen() {
   const teile = async () => {
     try {
       if (navigator.share) {
-        await navigator.share({ title: `${MARKE.name}: ${besuch.stand}`, text: `Bewerte mit mir: ${besuch.stand}`, url: link });
+        await navigator.share({ title: `${MARKE.name}: ${besuch.stand}`, text: t('Bewerte mit mir: {stand}', { stand: besuch.stand }), url: link });
         return;
       }
     } catch {
@@ -80,7 +81,7 @@ export function Teilen() {
       setKopiert(true);
       setTimeout(() => setKopiert(false), 2500);
     } catch {
-      window.prompt?.('Link kopieren', link);
+      window.prompt?.(t('Link kopieren'), link);
     }
   };
 
@@ -95,25 +96,24 @@ export function Teilen() {
       </p>
 
       <div class="qr-box">
-        <Qr text={link} titel={`QR-Code zum Mitbewerten bei ${besuch.stand}`} />
+        <Qr text={link} titel={t('QR-Code zum Mitbewerten bei {stand}', { stand: besuch.stand })} />
       </div>
       <p class="fokus-hinweis">
-        Die anderen scannen den Code mit der Handykamera. Es öffnet sich das {MARKE.name} mit diesem Stand, jeder bewertet für
-        sich. Dafür braucht niemand ein Konto oder eine App.
+        {t('Die anderen scannen den Code mit der Handykamera. Es öffnet sich das {name} mit diesem Stand, jeder bewertet für sich. Dafür braucht niemand ein Konto oder eine App.', { name: MARKE.name })}
       </p>
 
       <div class="knopfreihe" style={{ justifyContent: 'center' }}>
         <button class="knopf primaer" onClick={() => void teile()}>
-          <Symbol name="plus" groesse={16} /> {kopiert ? 'Link kopiert' : 'Link teilen'}
+          <Symbol name="plus" groesse={16} /> {kopiert ? t('Link kopiert') : t('Link teilen')}
         </button>
         <a class="knopf" href={zurueck} style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
-          Fertig
+          {t('Fertig')}
         </a>
       </div>
 
       {namen.length > 0 && (
         <p class="fokus-hinweis" aria-live="polite">
-          <b>{namen.length === 1 ? '1 Bewertung' : `${namen.length} Bewertungen`} zu diesem Besuch:</b> {namen.join(', ')}
+          <b>{tn(namen.length, '{n} Bewertung', '{n} Bewertungen')} {t('zu diesem Besuch:')}</b> {namen.join(', ')}
         </p>
       )}
     </main>

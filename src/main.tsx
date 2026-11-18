@@ -13,8 +13,10 @@ import { App } from './App';
 import { starteDarstellung } from './daten/darstellung';
 import { starteSync } from './daten/sync';
 import { starteUpdates } from './daten/update';
+import { startSprache } from './i18n';
 
 starteDarstellung();
+startSprache();
 render(<App />, document.getElementById('app')!);
 starteSync();
 starteUpdates();

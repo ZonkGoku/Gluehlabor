@@ -3,7 +3,8 @@ import { MARKE } from '../../marke';
 import { LogoMarke, Wortmarke } from './Logo';
 import { Symbol } from '../Symbol';
 import { SyncAnzeige } from '../SyncAnzeige';
-import { MenueKnopf, ThemeKnopf } from './DarstellungKnoepfe';
+import { MenueKnopf, SpracheKnopf, ThemeKnopf } from './DarstellungKnoepfe';
+import { t } from '../../i18n';
 
 const PUNKTE = [
   { route: '', label: 'Übersicht', symbol: 'uebersicht' },
@@ -21,13 +22,13 @@ const KLEIN =
 export function Seitenleiste({ route, zeigeSync }: { route: string; zeigeSync: boolean }) {
   const aktiv = (r: string) => route === r || (r === 'rangliste' && route.startsWith('becher/'));
   return (
-    <aside aria-label="Menü" class="nm glas-stark fixed bottom-3.5 left-3.5 top-3.5 z-40 flex w-[248px] flex-col rounded-[28px] p-4">
-      <a href="#/" class="flex flex-col items-center gap-2 pb-4 pt-1 text-eis" aria-label={`${MARKE.name}, zur Übersicht`}>
+    <aside aria-label={t('Menü')} class="nm glas-stark fixed bottom-3.5 left-3.5 top-3.5 z-40 flex w-[248px] flex-col rounded-[28px] p-4">
+      <a href="#/" class="flex flex-col items-center gap-2 pb-4 pt-1 text-eis" aria-label={t('{name}, zur Übersicht', { name: MARKE.name })}>
         <LogoMarke groesse={112} />
         <Wortmarke gross klasse="items-center text-center" />
       </a>
 
-      <nav aria-label="Ansichten" class="flex flex-1 flex-col gap-1 overflow-y-auto">
+      <nav aria-label={t('Ansichten')} class="flex flex-1 flex-col gap-1 overflow-y-auto">
         {PUNKTE.map((p) => (
           <a
             href={`#/${p.route}`}
@@ -40,7 +41,7 @@ export function Seitenleiste({ route, zeigeSync }: { route: string; zeigeSync: b
               <span class="absolute inset-y-2 left-0 w-1 rounded-full" style={{ background: 'linear-gradient(180deg,var(--nm-licht-1),var(--color-wein-500))', boxShadow: '0 0 14px rgb(255 138 61 / 0.7)' }} />
             )}
             <Symbol name={p.symbol} groesse={20} />
-            {p.label}
+            {t(p.label)}
           </a>
         ))}
       </nav>
@@ -51,16 +52,17 @@ export function Seitenleiste({ route, zeigeSync }: { route: string; zeigeSync: b
         style={{ background: 'linear-gradient(135deg,#ffe29a,#ff8a3d 55%,#f0344f)' }}
       >
         <Symbol name="becher" groesse={22} />
-        Becher erfassen
+        {t('Becher erfassen')}
       </a>
 
       <div class="mt-3 flex items-center gap-2 border-t border-rand pt-3">
+        <SpracheKnopf klasse={KLEIN} />
         <ThemeKnopf klasse={KLEIN} />
         <MenueKnopf klasse={KLEIN} />
         <span class="flex-1" />
         {zeigeSync && <SyncAnzeige />}
       </div>
-      <p class="mt-3 text-[11px] leading-snug text-dunst">Gemacht und betrieben von David (Bayern) &amp; Philip (Hamburg). Bewertet wird in ganz Deutschland.</p>
+      <p class="mt-3 text-[11px] leading-snug text-dunst">{t('Gemacht und betrieben von David (Bayern) & Philip (Hamburg). Bewertet wird in ganz Deutschland.')}</p>
     </aside>
   );
 }

@@ -32,6 +32,7 @@ import { TicketBlatt } from './nacht/TicketBlatt';
 import { OrtBlatt } from './nacht/OrtBlatt';
 import { Symbol } from './Symbol';
 import { leseZuletzt, merkeOrt } from '../daten/zuletzt';
+import { t, kriteriumLabel } from '../i18n';
 
 
 const SORTE_LABEL: Record<Sorte, string> = {
@@ -167,7 +168,7 @@ export function Erfassen() {
     const jetzt = new Date();
     // Eine Bewertung je Stand und Abend. Dieselbe Regel prüft der Server.
     if (schonBewertet(bestand, geraetId, { stand, markt: e.markt.trim() || MARKTLISTE.sonstiger, stadt: e.stadt?.trim(), datum: abendDatum(jetzt), erstelltAm: jetzt.getTime() })) {
-      setWarnung('Heute Abend schon bewertet');
+      setWarnung(t('Heute Abend schon bewertet'));
       setTimeout(() => setWarnung(null), 3500);
       return;
     }
@@ -206,7 +207,7 @@ export function Erfassen() {
     setNotizOffen(false);
     setFehlt(false);
     setAktiv('geschmack');
-    setGespeichert(`Probe ${probeNr(anzahl + 1)} gesichert`);
+    setGespeichert(t('Probe {n} gesichert', { n: probeNr(anzahl + 1) }));
     setFertigId(eintrag.id);
     navigator.vibrate?.([20, 40, 20]);
     setTimeout(() => setGespeichert(null), 2200);
@@ -222,7 +223,7 @@ export function Erfassen() {
     location.hash = '#/teilen';
   };
 
-  const knopfText = warnung ?? gespeichert ?? (bewertet === 0 ? 'Noch keine Note' : 'Speichern');
+  const knopfText = warnung ?? gespeichert ?? (bewertet === 0 ? t('Noch keine Note') : t('Speichern'));
 
   return (
     <>
@@ -232,12 +233,12 @@ export function Erfassen() {
         <span class="titel" />
         <SyncAnzeige />
         {e.stand.trim() && (
-          <button type="button" class="kopf-knopf" onClick={zeigeQr} aria-label="QR-Code zum gemeinsamen Bewerten zeigen">
+          <button type="button" class="kopf-knopf" onClick={zeigeQr} aria-label={t('QR-Code zum gemeinsamen Bewerten zeigen')}>
             QR
           </button>
         )}
-        <a href="#/" aria-label="Zur Übersicht">
-          Fertig
+        <a href="#/" aria-label={t('Zur Übersicht')}>
+          {t('Fertig')}
         </a>
       </header>
 
@@ -251,13 +252,13 @@ export function Erfassen() {
             </span>
           </div>
           <button type="button" class="besuch-aus" onClick={() => setE({ ...e, gesperrt: false, besuchId: undefined })}>
-            Anderer Stand
+            {t('Anderer Stand')}
           </button>
         </div>
       ) : (
       <div class="stamm" style={{ position: 'relative' }}>
         {standFokus && vorschlaege.length > 0 && (
-          <ul class="vorschlaege" role="listbox" aria-label="Meintest du einen dieser Stände?">
+          <ul class="vorschlaege" role="listbox" aria-label={t('Meintest du einen dieser Stände?')}>
             {vorschlaege.map((v) => (
               <li role="option">
                 <button type="button" onPointerDown={(ev) => { ev.preventDefault(); uebernimm(v); }}>
@@ -273,8 +274,8 @@ export function Erfassen() {
           ref={standRef}
           class="feld"
           type="text"
-          placeholder="Stand"
-          aria-label="Stand"
+          placeholder={t('Stand')}
+          aria-label={t('Stand')}
           aria-invalid={fehlt && !e.stand.trim()}
           autocomplete="off"
           autocapitalize="words"
@@ -285,7 +286,7 @@ export function Erfassen() {
           onBlur={() => setTimeout(() => setStandFokus(false), 120)}
           onKeyDown={(ev) => ev.key === 'Enter' && (ev.target as HTMLInputElement).blur()}
         />
-        <button type="button" class={`ort-knopf${e.stadt ? '' : ' leer-ort'}`} onClick={() => setOrtOffen(true)} aria-label="Ort wählen: Stadt und Markt">
+        <button type="button" class={`ort-knopf${e.stadt ? '' : ' leer-ort'}`} onClick={() => setOrtOffen(true)} aria-label={t('Ort wählen: Stadt und Markt')}>
           <span class="ort-symbol">
             <Symbol name="pin" groesse={20} />
           </span>
@@ -293,12 +294,12 @@ export function Erfassen() {
             {e.stadt ? (
               <>
                 <b>{e.stadt}</b>
-                <small>{e.markt !== MARKTLISTE.sonstiger ? e.markt : 'Markt wählen (optional)'}</small>
+                <small>{e.markt !== MARKTLISTE.sonstiger ? e.markt : t('Markt wählen (optional)')}</small>
               </>
             ) : (
               <>
-                <b>Wo bist du?</b>
-                <small>Stadt suchen oder Standort nutzen</small>
+                <b>{t('Wo bist du?')}</b>
+                <small>{t('Stadt suchen oder Standort nutzen')}</small>
               </>
             )}
           </span>
@@ -314,8 +315,8 @@ export function Erfassen() {
           <input
             class="feld"
             type="text"
-            placeholder="Notiz"
-            aria-label="Notiz"
+            placeholder={t('Notiz')}
+            aria-label={t('Notiz')}
             autoFocus
             enterkeyhint="done"
             value={e.notiz}
@@ -323,25 +324,25 @@ export function Erfassen() {
             onKeyDown={(ev) => ev.key === 'Enter' && setNotizOffen(false)}
           />
           <button type="button" onClick={() => setNotizOffen(false)}>
-            OK
+            {t('OK')}
           </button>
         </div>
       ) : (
         <div class="meta">
           <select
             class={e.sorte ? 'chip gesetzt' : 'chip'}
-            aria-label="Sorte"
+            aria-label={t('Sorte')}
             value={e.sorte ?? ''}
             onChange={(ev) => setE({ ...e, sorte: ((ev.target as HTMLSelectElement).value || undefined) as Sorte })}
           >
-            <option value="">Sorte</option>
+            <option value="">{t('Sorte')}</option>
             {SORTEN.map((s) => (
-              <option value={s}>{SORTE_LABEL[s]}</option>
+              <option value={s}>{t(SORTE_LABEL[s])}</option>
             ))}
           </select>
           <select
             class={becherNr !== undefined ? 'chip gesetzt' : 'chip'}
-            aria-label="Becher-Nr. des Abends"
+            aria-label={t('Becher-Nr. des Abends')}
             value={becherNr ?? ''}
             onChange={(ev) => {
               const v = (ev.target as HTMLSelectElement).value;
@@ -349,40 +350,40 @@ export function Erfassen() {
               setE({ ...e, becherNr: v ? Number(v) : undefined });
             }}
           >
-            <option value="">Nr. –</option>
+            <option value="">{t('Nr.')} –</option>
             {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-              <option value={n}>Nr. {n}</option>
+              <option value={n}>{t('Nr.')} {n}</option>
             ))}
           </select>
           <select
             class={e.preis !== undefined ? 'chip gesetzt' : 'chip'}
-            aria-label="Preis"
+            aria-label={t('Preis')}
             value={e.preis ?? ''}
             onChange={(ev) => {
               const v = (ev.target as HTMLSelectElement).value;
               setE({ ...e, preis: v ? Number(v) : undefined });
             }}
           >
-            <option value="">Preis</option>
+            <option value="">{t('Preis')}</option>
             {PREISE.map((p) => (
               <option value={p}>{euro(p)}</option>
             ))}
           </select>
           <button type="button" class={e.notiz.trim() ? 'chip gesetzt' : 'chip'} onClick={() => setNotizOffen(true)}>
-            {e.notiz.trim() ? 'Notiz ✓' : 'Notiz'}
+            {e.notiz.trim() ? `${t('Notiz')} ✓` : t('Notiz')}
           </button>
           <label class={foto ? 'chip gesetzt' : 'chip'}>
-            {foto ? 'Foto ✓' : 'Foto'}
-            <input type="file" accept="image/*" capture="environment" aria-label="Foto" onChange={waehleFoto} />
+            {foto ? `${t('Foto')} ✓` : t('Foto')}
+            <input type="file" accept="image/*" capture="environment" aria-label={t('Foto')} onChange={waehleFoto} />
           </label>
         </div>
       )}
 
-      <section class="skalen" aria-label="Noten">
+      <section class="skalen" aria-label={t('Noten')}>
         {KRITERIEN.map((k) => (
           <Skala
             key={k}
-            name={ANKER[k].label}
+            name={kriteriumLabel(ANKER[k].label)}
             gewicht={gewichte[k]}
             wert={e.noten[k]}
             aktiv={aktiv === k}
@@ -396,9 +397,9 @@ export function Erfassen() {
       <section class="hinweis" aria-live="polite">
         <div class="zeilen">
           <div class="kriterium">
-            {def.label}
-            {def.zusatz ? ` · ${def.zusatz}` : ''}
-            {e.noten[aktiv] === null ? ' · nicht bewertet' : ''}
+            {kriteriumLabel(def.label)}
+            {def.zusatz ? ` · ${t(def.zusatz)}` : ''}
+            {e.noten[aktiv] === null ? ` · ${t('nicht bewertet')}` : ''}
           </div>
           {anker.map((a) => (
             <div class={anker.length === 1 ? 'zeile einzeln' : 'zeile'}>
@@ -409,7 +410,7 @@ export function Erfassen() {
         </div>
         {e.noten[aktiv] !== null && (
           <button type="button" onClick={() => setNote(aktiv, null)}>
-            Note löschen
+            {t('Note löschen')}
           </button>
         )}
       </section>
@@ -418,10 +419,10 @@ export function Erfassen() {
         <div class="messwert" aria-live="polite">
           <span class="kopfzeile">
             <span class={wertung.gesamt === null ? 'gesamt leer' : 'gesamt'}>{zahl2(wertung.gesamt)}</span>
-            <span class="urteil">{wertung.urteil ?? `${bewertet}/7`}</span>
+            <span class="urteil">{wertung.urteil ? t(wertung.urteil) : `${bewertet}/7`}</span>
           </span>
-          <span class="unter">Glühwein&nbsp;{zahl2(wertung.gluehwein)}</span>
-          <span class="unter">Drumherum&nbsp;{zahl2(wertung.drumherum)}</span>
+          <span class="unter">{t('Glühwein')}&nbsp;{zahl2(wertung.gluehwein)}</span>
+          <span class="unter">{t('Drumherum')}&nbsp;{zahl2(wertung.drumherum)}</span>
         </div>
         <button
           type="button"
@@ -429,7 +430,7 @@ export function Erfassen() {
           disabled={bewertet === 0 && !gespeichert}
           onClick={() => void speichern()}
         >
-          {fehlt && !e.stand.trim() ? 'Stand fehlt' : knopfText}
+          {fehlt && !e.stand.trim() ? t('Stand fehlt') : knopfText}
         </button>
       </footer>
     </main>

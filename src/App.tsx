@@ -14,9 +14,11 @@ import { Statistik } from './ui/Statistik';
 import { Teilen } from './ui/Teilen';
 import { Uebersicht } from './ui/Uebersicht';
 import { Vergleich } from './ui/Vergleich';
+import { useSprache } from './i18n/hooks';
 
 // Hash-Router: funktioniert unter jedem Pages-Unterpfad ohne 404-Tricks.
 export function App() {
+  useSprache(); // Sprachwechsel zeichnet alles neu
   const route = useRoute();
   if (route === 'erfassen') return <Erfassen />;
   if (route === 'teilen') return <Teilen />;

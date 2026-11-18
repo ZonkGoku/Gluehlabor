@@ -10,7 +10,7 @@ import { leereNoten } from '../lib/modell';
 import { abendDatum } from '../lib/abend';
 import { ortText } from '../lib/orte';
 import { bewerte, urteil } from '../lib/scoring';
-import { anzahlText, baueStaende, MIN_BEWERTUNGEN, schonBewertet, type Stand } from '../lib/staende';
+import { baueStaende, MIN_BEWERTUNGEN, schonBewertet, type Stand } from '../lib/staende';
 import { datumKurz, UrteilPill } from './bausteine';
 import { useEintraege, useGeraetId, useGewichte } from './daten';
 import { useAktuell, useLive } from './hooks';
@@ -19,6 +19,7 @@ import { StandTopKarte } from './nacht/StandKarten';
 import { MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
 import { URTEILE } from '../lib/auswertung';
+import { t, tn } from '../i18n';
 
 const FELD = 'glas w-full rounded-2xl px-3.5 py-2.5 text-sm text-eis outline-none focus-visible:ring-2 focus-visible:ring-gold-400/70';
 const KNOPF = 'glas rounded-full px-4 py-2.5 text-sm font-semibold text-eis transition hover:text-gold-300 disabled:opacity-50';
@@ -38,10 +39,10 @@ export function StandSeite({ id }: { id: string }) {
     return (
       <div class="nm">
         <div class="glas rounded-3xl p-8 text-center">
-          <p class="font-display text-3xl uppercase tracking-wide text-eis">Diesen Stand gibt es nicht (mehr)</p>
-          <p class="mt-2 text-dunst">Vielleicht wurde er umbenannt oder zusammengeführt.</p>
+          <p class="font-display text-3xl uppercase tracking-wide text-eis">{t('Diesen Stand gibt es nicht (mehr)')}</p>
+          <p class="mt-2 text-dunst">{t('Vielleicht wurde er umbenannt oder zusammengeführt.')}</p>
           <a href="#/rangliste" class="mt-4 inline-block font-semibold text-gold-300 no-underline">
-            Zur Rangliste
+            {t('Zur Rangliste')}
           </a>
         </div>
       </div>
@@ -54,7 +55,7 @@ export function StandSeite({ id }: { id: string }) {
   const bewerten = () => {
     const angefangen = leseEntwurf();
     if (entwurfHatInhalt(angefangen) && !(angefangen?.stand === s.stand && angefangen?.gesperrt)) {
-      if (!confirm('Du hast gerade eine angefangene Bewertung. Sie geht verloren, wenn du jetzt diesen Stand bewertest. Fortfahren?')) return;
+      if (!confirm(t('Du hast gerade eine angefangene Bewertung. Sie geht verloren, wenn du jetzt diesen Stand bewertest. Fortfahren?'))) return;
     }
     schreibeEntwurf({ stand: s.stand, markt: s.markt, marktFrei: false, stadt: s.stadt, gesperrt: true, notiz: '', noten: leereNoten() });
     location.hash = '#/erfassen';
@@ -71,21 +72,21 @@ export function StandSeite({ id }: { id: string }) {
   return (
     <div class="nm">
       <a class="zurueck" href="#/rangliste">
-        <Symbol name="zurueck" groesse={18} /> Rangliste
+        <Symbol name="zurueck" groesse={18} /> {t('Rangliste')}
       </a>
       <div class="mt-3 grid gap-4 md:grid-cols-2">
-        <StandTopKarte stand={s} ohneLink ort={ortText(MARKTLISTE, { markt: s.markt, stadt: s.stadt })} hinweis={s.rang ? `Platz ${s.rang} von ${staende.length}` : undefined} />
+        <StandTopKarte stand={s} ohneLink ort={ortText(MARKTLISTE, { markt: s.markt, stadt: s.stadt })} hinweis={s.rang ? t('Platz {r} von {n}', { r: s.rang, n: staende.length }) : undefined} />
         <div class="grid content-start gap-3">
           <div class="grid grid-cols-2 gap-3">
             <Kachel innen="p-4">
-              <p class="etikett">Prüfstelle · David &amp; Philip</p>
+              <p class="etikett">{t('Prüfstelle · David & Philip')}</p>
               <p class="mt-2 font-display text-[44px] leading-none text-gold-300">{zahl2(s.pruefstelle.gesamt)}</p>
-              <p class="mt-1 text-xs text-dunst">{s.pruefstelle.anzahl === 0 ? 'noch nicht bewertet' : anzahlText(s.pruefstelle.anzahl)}</p>
+              <p class="mt-1 text-xs text-dunst">{s.pruefstelle.anzahl === 0 ? t('noch nicht bewertet') : tn(s.pruefstelle.anzahl, '{n} Bewertung', '{n} Bewertungen')}</p>
             </Kachel>
             <Kachel innen="p-4">
-              <p class="etikett">Community</p>
+              <p class="etikett">{t('Community')}</p>
               <p class="mt-2 font-display text-[44px] leading-none text-gold-300">{zahl2(s.community.gesamt)}</p>
-              <p class="mt-1 text-xs text-dunst">{s.community.anzahl === 0 ? 'noch nicht bewertet' : anzahlText(s.community.anzahl)}</p>
+              <p class="mt-1 text-xs text-dunst">{s.community.anzahl === 0 ? t('noch nicht bewertet') : tn(s.community.anzahl, '{n} Bewertung', '{n} Bewertungen')}</p>
             </Kachel>
           </div>
           <button
@@ -95,19 +96,19 @@ export function StandSeite({ id }: { id: string }) {
             class="animate-puls flex items-center justify-center gap-2 rounded-full px-6 py-3.5 font-semibold text-[#1a1020] disabled:animate-none disabled:opacity-60"
             style={{ background: 'linear-gradient(135deg,#ffe29a,#ff8a3d)' }}
           >
-            <Symbol name="plus" groesse={18} /> {schon ? 'Heute Abend schon bewertet' : 'Diesen Stand bewerten'}
+            <Symbol name="plus" groesse={18} /> {schon ? t('Heute Abend schon bewertet') : t('Diesen Stand bewerten')}
           </button>
           {mein && (
             <a class="text-center text-sm font-medium text-gold-300 no-underline hover:text-gold-400" href={`#/teilen?e=${encodeURIComponent(mein.id)}`}>
-              QR-Code zum Mitbewerten zeigen
+              {t('QR-Code zum Mitbewerten zeigen')}
             </a>
           )}
-          {s.vorlaeufig && <p class="text-center text-xs text-dunst">Vorläufig: Ab {MIN_BEWERTUNGEN} Bewertungen zählt der Stand voll für die Reihenfolge.</p>}
-          <Kachel titel="Verteilung der Urteile" innen="p-4">
+          {s.vorlaeufig && <p class="text-center text-xs text-dunst">{t('Vorläufig: Ab {n} Bewertungen zählt der Stand voll für die Reihenfolge.', { n: MIN_BEWERTUNGEN })}</p>}
+          <Kachel titel={t('Verteilung der Urteile')} innen="p-4">
             <ul class="space-y-1.5">
               {URTEILE.map((u) => (
                 <li class="flex items-center gap-2 text-xs">
-                  <span class="w-24 shrink-0 text-dunst">{u}</span>
+                  <span class="w-24 shrink-0 text-dunst">{t(u)}</span>
                   <span class="h-2 flex-1 overflow-hidden rounded-full bg-spur">
                     <span class="block h-full rounded-full" style={{ width: `${(verteilung[u] / maxVerteilung) * 100}%`, background: 'linear-gradient(90deg,var(--nm-licht-1),var(--color-glut-500))' }} />
                   </span>
@@ -119,7 +120,7 @@ export function StandSeite({ id }: { id: string }) {
         </div>
       </div>
 
-      <h2 class="etikett mt-6 !text-[11px]">Alle Bewertungen · {s.bewertungen.length}</h2>
+      <h2 class="etikett mt-6 !text-[11px]">{t('Alle Bewertungen')} · {s.bewertungen.length}</h2>
       <ul class="mt-2 grid gap-2 md:grid-cols-2">
         {s.bewertungen.map((e) => {
           const w = bewerte(e.noten, gewichte);
@@ -130,10 +131,10 @@ export function StandSeite({ id }: { id: string }) {
                 <span class="min-w-0 flex-1">
                   <span class="flex items-center gap-2 font-semibold">
                     <span class="truncate">{pruef && !e.name ? 'David & Philip' : anzeigeName(e)}</span>
-                    {pruef && <span class="rounded-md border border-gold-400/70 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.16em] text-gold-300">Prüfstelle</span>}
+                    {pruef && <span class="rounded-md border border-gold-400/70 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.16em] text-gold-300">{t('Prüfstelle')}</span>}
                   </span>
                   <span class="block truncate text-xs text-dunst">
-                    {[datumKurz(e.datum) ?? `Saison ${e.saison}`, e.preis !== undefined ? euro(e.preis) : null].filter(Boolean).join(' · ')}
+                    {[datumKurz(e.datum) ?? t('Saison {s}', { s: e.saison }), e.preis !== undefined ? euro(e.preis) : null].filter(Boolean).join(' · ')}
                   </span>
                   {e.notiz && <span class="mt-1 block text-sm text-eis/90">„{e.notiz}"</span>}
                 </span>
@@ -147,16 +148,16 @@ export function StandSeite({ id }: { id: string }) {
                   type="button"
                   class="mt-2 text-xs text-wein-400 underline"
                   onClick={async () => {
-                    if (!confirm('Diese Bewertung ausblenden?')) return;
+                    if (!confirm(t('Diese Bewertung ausblenden?'))) return;
                     try {
                       await verstecke([e.id], true);
-                      setHinweis('Bewertung ausgeblendet.');
+                      setHinweis(t('Bewertung ausgeblendet.'));
                     } catch (err) {
                       setHinweis(fehlerText(err));
                     }
                   }}
                 >
-                  Ausblenden
+                  {t('Ausblenden')}
                 </button>
               )}
             </li>
@@ -183,7 +184,7 @@ function Pflege({ stand: s, alle, meldung }: { stand: Stand; alle: Stand[]; meld
   const ids = s.bewertungen.map((e) => e.id);
 
   const lauf = async (f: () => Promise<string>) => {
-    meldung('Einen Moment …');
+    meldung(t('Einen Moment …'));
     try {
       meldung(await f());
     } catch (err) {
@@ -194,18 +195,18 @@ function Pflege({ stand: s, alle, meldung }: { stand: Stand; alle: Stand[]; meld
 
   return (
     <section class="glas mt-6 rounded-3xl p-4">
-      <h2 class="etikett !text-[11px] !text-gold-300">Prüfstelle · Stand pflegen</h2>
+      <h2 class="etikett !text-[11px] !text-gold-300">{t('Prüfstelle · Stand pflegen')}</h2>
       <div class="mt-3 grid gap-2 md:grid-cols-3">
         <label class="text-xs text-dunst">
-          Name
+          {t('Name')}
           <input class={FELD} value={name} maxLength={80} onInput={(e) => setName((e.target as HTMLInputElement).value)} />
         </label>
         <label class="text-xs text-dunst">
-          Stadt
+          {t('Stadt')}
           <input class={FELD} value={stadt} maxLength={60} onInput={(e) => setStadt((e.target as HTMLInputElement).value)} />
         </label>
         <label class="text-xs text-dunst">
-          Markt
+          {t('Markt')}
           <input class={FELD} value={markt} maxLength={80} onInput={(e) => setMarkt((e.target as HTMLInputElement).value)} />
         </label>
       </div>
@@ -213,17 +214,17 @@ function Pflege({ stand: s, alle, meldung }: { stand: Stand; alle: Stand[]; meld
         <button
           type="button"
           class={KNOPF}
-          onClick={() => lauf(async () => `Gespeichert für ${await aendereStand(ids, name, markt, stadt)} Bewertungen.`)}
+          onClick={() => lauf(async () => t('Gespeichert für {n} Bewertungen.', { n: await aendereStand(ids, name, markt, stadt) }))}
         >
-          Speichern
+          {t('Speichern')}
         </button>
       </div>
 
       <div class="mt-4 border-t border-rand pt-3">
-        <p class="text-xs text-dunst">Doppelt angelegt? Alle Bewertungen dieses Stands wandern zu dem gewählten Stand.</p>
+        <p class="text-xs text-dunst">{t('Doppelt angelegt? Alle Bewertungen dieses Stands wandern zu dem gewählten Stand.')}</p>
         <div class="mt-2 flex flex-wrap gap-2">
-          <select class={`${FELD} !w-auto min-w-[14rem]`} value={ziel} onChange={(e) => setZiel((e.target as HTMLSelectElement).value)} aria-label="Zusammenführen mit">
-            <option value="">Zusammenführen mit …</option>
+          <select class={`${FELD} !w-auto min-w-[14rem]`} value={ziel} onChange={(e) => setZiel((e.target as HTMLSelectElement).value)} aria-label={t('Zusammenführen mit')}>
+            <option value="">{t('Zusammenführen mit …')}</option>
             {kandidaten.map((k) => (
               <option value={k.id}>
                 {k.stand} · {k.stadt ?? k.markt}
@@ -236,15 +237,15 @@ function Pflege({ stand: s, alle, meldung }: { stand: Stand; alle: Stand[]; meld
             disabled={!ziel}
             onClick={() => {
               const z = alle.find((x) => x.id === ziel);
-              if (!z || !confirm(`„${s.stand}" (${s.bewertungen.length} Bewertungen) in „${z.stand}" zusammenführen?`)) return;
+              if (!z || !confirm(t('„{a}" ({n} Bewertungen) in „{b}" zusammenführen?', { a: s.stand, n: s.bewertungen.length, b: z.stand }))) return;
               void lauf(async () => {
                 await aendereStand(ids, z.stand, z.markt, z.stadt ?? '');
                 location.hash = `#/stand/${encodeURIComponent(z.id)}`;
-                return 'Zusammengeführt.';
+                return t('Zusammengeführt.');
               });
             }}
           >
-            Zusammenführen
+            {t('Zusammenführen')}
           </button>
         </div>
       </div>
@@ -254,15 +255,15 @@ function Pflege({ stand: s, alle, meldung }: { stand: Stand; alle: Stand[]; meld
           type="button"
           class="text-sm text-wein-400 underline"
           onClick={() => {
-            if (!confirm(`Den ganzen Stand „${s.stand}" mit ${s.bewertungen.length} Bewertungen ausblenden?`)) return;
+            if (!confirm(t('Den ganzen Stand „{a}" mit {n} Bewertungen ausblenden?', { a: s.stand, n: s.bewertungen.length }))) return;
             void lauf(async () => {
               await verstecke(ids, true);
               location.hash = '#/rangliste';
-              return 'Stand ausgeblendet.';
+              return t('Stand ausgeblendet.');
             });
           }}
         >
-          Ganzen Stand ausblenden
+          {t('Ganzen Stand ausblenden')}
         </button>
       </div>
     </section>

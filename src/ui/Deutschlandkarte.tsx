@@ -1,5 +1,6 @@
 import { useKartenKoordinaten } from '../daten/orte';
 import { KARTE_BREITE, KARTE_HOEHE, kartenPunkte, umrisse } from '../lib/karte';
+import { t, tn } from '../i18n';
 
 const UMRISSE = umrisse();
 
@@ -19,14 +20,14 @@ export function Deutschlandkarte({ staedte }: { staedte: StadtZahl[] }) {
       <svg
         viewBox={`-6 -6 ${KARTE_BREITE + 12} ${KARTE_HOEHE + 12}`}
         role="img"
-        aria-label={`Karte von Deutschland und Österreich mit Bechern je Stadt: ${beschreibung || 'noch keine Stadt bekannt'}`}
+        aria-label={t('Karte von Deutschland und Österreich mit Bechern je Stadt: {text}', { text: beschreibung || t('noch keine Stadt bekannt') })}
       >
         {UMRISSE.map((u) => (
           <path d={u.pfad} class="umriss" data-land={u.land} />
         ))}
         {punkte.map((p) => (
           <g>
-            <title>{`${p.stadt}: ${p.becher} ${p.becher === 1 ? 'Becher' : 'Becher'}`}</title>
+            <title>{`${p.stadt}: ${tn(p.becher, '{n} Becher', '{n} Becher')}`}</title>
             <circle cx={p.x} cy={p.y} r={p.r} class="punkt" />
           </g>
         ))}
@@ -40,7 +41,7 @@ export function Deutschlandkarte({ staedte }: { staedte: StadtZahl[] }) {
         ))}
         {ohneOrt.length > 0 && (
           <li class="ohne">
-            <span class="name">Ohne bekannte Stadt</span>
+            <span class="name">{t('Ohne bekannte Stadt')}</span>
             <span class="zahl">{summe(ohneOrt)}</span>
           </li>
         )}

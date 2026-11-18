@@ -4,6 +4,7 @@ import type { Zeile } from '../../lib/auswertung';
 import { anzeigeName, istPruefstelle } from '../../lib/community';
 import { zahl2 } from '../../lib/format';
 import { kurzId } from './Ticket';
+import { t as uebersetze } from '../../i18n';
 
 export interface KartenDaten {
   rang: number | null;
@@ -153,7 +154,7 @@ export async function erzeugeKartenBild(d: KartenDaten): Promise<Blob> {
   c.fillStyle = '#a3accb';
   c.font = '26px "IBM Plex Mono"';
   c.letterSpacing = '6px';
-  c.fillText('PRÜFSTELLE FÜR GLÜHWEIN', B / 2, 316);
+  c.fillText(uebersetze('Prüfstelle für Glühwein').toUpperCase(), B / 2, 316);
   c.letterSpacing = '0px';
 
   // Karte auf eigener Fläche, damit die Kerben sauber ausgeschnitten werden können
@@ -196,14 +197,14 @@ export async function erzeugeKartenBild(d: KartenDaten): Promise<Blob> {
   k.fillStyle = '#a3accb';
   k.font = '30px "IBM Plex Mono"';
   k.letterSpacing = '6px';
-  k.fillText('PLATZ', pad + rangBreite + 24, 170);
+  k.fillText(uebersetze('Platz').toUpperCase(), pad + rangBreite + 24, 170);
   k.letterSpacing = '0px';
 
   // Stempel
   k.save();
   k.translate(kb - pad - 130, 110);
   k.rotate(-0.05);
-  const stempel = d.stempel ? d.stempel.toUpperCase() : d.pruefstelle ? 'PRÜFSTELLE' : 'COMMUNITY';
+  const stempel = d.stempel ? d.stempel.toUpperCase() : d.pruefstelle ? uebersetze('Prüfstelle').toUpperCase() : 'COMMUNITY';
   k.font = '28px "IBM Plex Mono"';
   k.letterSpacing = '5px';
   const sw = k.measureText(stempel).width + 52;
@@ -255,7 +256,7 @@ export async function erzeugeKartenBild(d: KartenDaten): Promise<Blob> {
     rund(k, pad, noteY + 34, uw, 66, 33);
     k.fill();
     k.fillStyle = fg;
-    k.fillText(d.urteil, pad + 30, noteY + 80);
+    k.fillText(uebersetze(d.urteil), pad + 30, noteY + 80);
   }
 
   // Messbalken rechts neben der Note
@@ -316,7 +317,7 @@ export async function erzeugeKartenBild(d: KartenDaten): Promise<Blob> {
   k.fillText(`${d.saison} · #${kurzId(d.id)}`, bx + 36, py + 100);
   k.letterSpacing = '0px';
   k.font = '30px "IBM Plex Sans"';
-  k.fillText(`von ${d.von}`, bx + 36, py + 146);
+  k.fillText(uebersetze('von {name}', { name: d.von }), bx + 36, py + 146);
 
   // Kerben
   k.globalCompositeOperation = 'destination-out';
@@ -336,7 +337,7 @@ export async function erzeugeKartenBild(d: KartenDaten): Promise<Blob> {
   // Aufruf unter der Karte
   c.textAlign = 'center';
   c.fillStyle = '#f4f1ff';
-  const aufruf = passeText(c, 'WIE SCHMECKT DEIN GLÜHWEIN?', 940, 96, 56, 1, (px) => `${px}px Anton`);
+  const aufruf = passeText(c, uebersetze('Wie schmeckt dein Glühwein?').toUpperCase(), 940, 96, 56, 1, (px) => `${px}px Anton`);
   c.font = `${aufruf.px}px Anton`;
   c.fillText(aufruf.zeilen[0], B / 2, 1610);
   c.font = '46px "IBM Plex Mono"';
@@ -347,9 +348,9 @@ export async function erzeugeKartenBild(d: KartenDaten): Promise<Blob> {
   c.fillText('gluehlabor.de', B / 2, 1695);
   c.fillStyle = '#a3accb';
   c.font = '28px "IBM Plex Sans"';
-  c.fillText('Gemacht von David (Bayern) & Philip (Hamburg)', B / 2, 1790);
+  c.fillText(uebersetze('Gemacht von David (Bayern) & Philip (Hamburg)'), B / 2, 1790);
 
-  return new Promise((ok, fehler) => cv.toBlob((b) => (b ? ok(b) : fehler(new Error('Bild konnte nicht erzeugt werden'))), 'image/png'));
+  return new Promise((ok, fehler) => cv.toBlob((b) => (b ? ok(b) : fehler(new Error('Image could not be created'))), 'image/png'));
 }
 
 /** Teilt das Bild mit dem Share-Dialog des Telefons; wo das nicht geht (Rechner), wird es heruntergeladen. */
@@ -358,7 +359,7 @@ export async function teileKartenBild(d: KartenDaten, link: string): Promise<'ge
     const blob = await erzeugeKartenBild(d);
     const name = `gluehlabor-${d.stand.toLowerCase().replace(/[^a-z0-9äöüß]+/g, '-').replace(/^-|-$/g, '') || 'becher'}.png`;
     const datei = new File([blob], name, { type: 'image/png' });
-    const text = `${d.stand}: ${zahl2(d.gesamt)} von 10 bei Glühlabor`;
+    const text = uebersetze('{stand}: {n} von 10 bei Glühlabor', { stand: d.stand, n: zahl2(d.gesamt) });
     if (navigator.canShare?.({ files: [datei] })) {
       await navigator.share({ files: [datei], title: 'Glühlabor', text: `${text} ${link}` });
       return 'geteilt';

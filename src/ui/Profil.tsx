@@ -8,6 +8,7 @@ import { GRENZEN, pruefeName } from '../lib/community';
 import { Betreiber } from './bausteine';
 import { useGeraetId, useName } from './daten';
 import { useLive } from './hooks';
+import { t, tn } from '../i18n';
 
 const VERBINDUNG: Record<SyncInfo['zustand'], string> = {
   bereit: 'Verbunden. Neue Becher gehen automatisch zum Server.',
@@ -36,25 +37,25 @@ export function Profil() {
 
   const speichereName = async () => {
     const p = pruefeName(name);
-    if (!p.ok) return setNameMeldung(p.grund);
-    if (!p.name) return setNameMeldung('Bitte einen Namen eingeben.');
+    if (!p.ok) return setNameMeldung(t(p.grund));
+    if (!p.name) return setNameMeldung(t('Bitte einen Namen eingeben.'));
     await setzeName(p.name);
     await schreibeEinstellung('nameFehler', '');
-    setNameMeldung(`Gespeichert: ${p.name}`);
+    setNameMeldung(t('Gespeichert: {name}', { name: p.name }));
     void synchronisiere();
   };
 
   const schalteFrei = async () => {
-    setCodeMeldung('Prüfe …');
+    setCodeMeldung(t('Prüfe …'));
     try {
       await api('/api/pruefstelle', { methode: 'POST', geraet: await holeGeraet(), body: { code: code.trim() } });
       await schreibeEinstellung('pruefstelle', true);
       setCode('');
-      setCodeMeldung('Dieses Gerät ist jetzt Prüfstelle.');
+      setCodeMeldung(t('Dieses Gerät ist jetzt Prüfstelle.'));
       void synchronisiere();
     } catch (err) {
-      if (err instanceof ApiFehler) setCodeMeldung(err.message);
-      else setCodeMeldung('Kein Netz. Bitte später erneut versuchen.');
+      if (err instanceof ApiFehler) setCodeMeldung(t(err.message));
+      else setCodeMeldung(t('Kein Netz. Bitte später erneut versuchen.'));
     }
   };
 
@@ -62,19 +63,17 @@ export function Profil() {
     <>
       <div class="seitenkopf">
         <div>
-          <p class="eyebrow">Anonym, ohne Konto</p>
-          <h1>Profil</h1>
+          <p class="eyebrow">{t('Anonym, ohne Konto')}</p>
+          <h1>{t('Profil')}</h1>
         </div>
       </div>
       <div class="raster">
         <section class="karte seite" style={{ padding: '18px' }}>
-          <h2 style={{ margin: 0 }}>Dein Name · nötig zum Bewerten</h2>
+          <h2 style={{ margin: 0 }}>{t('Dein Name · nötig zum Bewerten')}</h2>
           <p style={{ margin: '8px 0 0' }}>
-            Er steht öffentlich neben deinen Bewertungen. Wenn du dir zum ersten Mal einen Namen gibst, gilt er auch für Becher,
-            die du schon abgegeben hast. Ohne Namen kannst du nicht bewerten. Ein Spitzname reicht, besser kein voller echter Name. Ein Konto
-            brauchst du nicht.
+            {t('Er steht öffentlich neben deinen Bewertungen. Wenn du dir zum ersten Mal einen Namen gibst, gilt er auch für Becher, die du schon abgegeben hast. Ohne Namen kannst du nicht bewerten. Ein Spitzname reicht, besser kein voller echter Name. Ein Konto brauchst du nicht.')}
           </p>
-          <label for="name">Name oder Spitzname</label>
+          <label for="name">{t('Name oder Spitzname')}</label>
           <input
             id="name"
             class="feld"
@@ -90,53 +89,52 @@ export function Profil() {
           />
           <div class="knopfreihe">
             <button class="knopf primaer" onClick={() => void speichereName()}>
-              Speichern
+              {t('Speichern')}
             </button>
           </div>
-          {(nameMeldung || nameFehler) && <div class="meldung">{nameMeldung || `Der Server hat den Namen abgelehnt: ${nameFehler}`}</div>}
+          {(nameMeldung || nameFehler) && <div class="meldung">{nameMeldung || t('Der Server hat den Namen abgelehnt: {grund}', { grund: t(nameFehler) })}</div>}
         </section>
 
         <section class="karte seite" style={{ padding: '18px' }}>
-          <h2 style={{ margin: 0 }}>Verbindung</h2>
-          <p style={{ margin: '8px 0 0' }}>{VERBINDUNG[info.zustand]}</p>
-          {info.meldung && <div class="meldung">{info.meldung}</div>}
+          <h2 style={{ margin: 0 }}>{t('Verbindung')}</h2>
+          <p style={{ margin: '8px 0 0' }}>{t(VERBINDUNG[info.zustand])}</p>
+          {info.meldung && <div class="meldung">{t(info.meldung)}</div>}
           <div class="knopfreihe">
             <button class="knopf" disabled={!HAT_SERVER} onClick={() => void synchronisiere()}>
-              Jetzt synchronisieren ({offen} offen)
+              {t('Jetzt synchronisieren ({n} offen)', { n: offen })}
             </button>
           </div>
           {abgelehnt > 0 && (
             <p class="meldung" style={{ color: 'var(--warnung)' }}>
-              {abgelehnt} {abgelehnt === 1 ? 'Becher wurde' : 'Becher wurden'} vom Server abgelehnt und bleiben nur auf diesem Gerät.
+              {tn(abgelehnt, '{n} Becher wurde vom Server abgelehnt und bleibt nur auf diesem Gerät.', '{n} Becher wurden vom Server abgelehnt und bleiben nur auf diesem Gerät.')}
             </p>
           )}
           <p style={{ fontSize: '12.5px' }}>
-            Geräte-Kennung:{' '}
+            {t('Geräte-Kennung:')}{' '}
             <span class="mono" style={{ wordBreak: 'break-all', userSelect: 'all' }}>
-              {geraetId ?? 'wird beim ersten Becher angelegt'}
+              {geraetId ?? t('wird beim ersten Becher angelegt')}
             </span>
-            . Sie ist zufällig und enthält keine persönlichen Daten. Mit ihr können wir auf Wunsch deinen Namen oder deine
-            Bewertungen löschen, siehe <a href="#/datenschutz">Datenschutz</a>.
+            . {t('Sie ist zufällig und enthält keine persönlichen Daten. Mit ihr können wir auf Wunsch deinen Namen oder deine Bewertungen löschen, siehe')} <a href="#/datenschutz">{t('Datenschutz')}</a>.
           </p>
         </section>
 
         <section class="karte seite" style={{ padding: '18px' }}>
-          <h2 style={{ margin: 0 }}>Prüfstelle · nur David &amp; Philip</h2>
+          <h2 style={{ margin: 0 }}>{t('Prüfstelle · nur David & Philip')}</h2>
           {pruefstelle ? (
             <>
-              <p style={{ margin: '8px 0 0' }}>Dieses Gerät ist als Prüfstelle freigeschaltet. Eure Bewertungen tragen das Siegel „Prüfstelle" und zählen in der Wertung der Prüfstelle.</p>
+              <p style={{ margin: '8px 0 0' }}>{t('Dieses Gerät ist als Prüfstelle freigeschaltet. Eure Bewertungen tragen das Siegel „Prüfstelle" und zählen in der Wertung der Prüfstelle.')}</p>
               <div class="knopfreihe">
                 <a class="knopf" href="#/moderation" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
-                  Moderation öffnen
+                  {t('Moderation öffnen')}
                 </a>
               </div>
             </>
           ) : (
             <>
               <p style={{ margin: '8px 0 0' }}>
-                Mit dem Prüfstellen-Code tragen eure Bewertungen das Siegel „Prüfstelle". Alle anderen erscheinen als Community.
+                {t('Mit dem Prüfstellen-Code tragen eure Bewertungen das Siegel „Prüfstelle". Alle anderen erscheinen als Community.')}
               </p>
-              <label for="code">Prüfstellen-Code</label>
+              <label for="code">{t('Prüfstellen-Code')}</label>
               <input
                 id="code"
                 class="feld"
@@ -148,7 +146,7 @@ export function Profil() {
               />
               <div class="knopfreihe">
                 <button class="knopf" disabled={!HAT_SERVER || !code.trim()} onClick={() => void schalteFrei()}>
-                  Freischalten
+                  {t('Freischalten')}
                 </button>
               </div>
               {codeMeldung && <div class="meldung">{codeMeldung}</div>}

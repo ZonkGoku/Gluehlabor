@@ -8,6 +8,7 @@ import { anzeigeName, pruefeName } from '../lib/community';
 import { leereNoten } from '../lib/modell';
 import { useName } from './daten';
 import { useLive } from './hooks';
+import { t } from '../i18n';
 
 export function Mitbewerten() {
   const besuch = leseBesuch(location.hash.split('?')[1] ?? '');
@@ -21,11 +22,11 @@ export function Mitbewerten() {
     return (
       <main class="fokus">
         <div class="karte leer">
-          <b>Dieser Link funktioniert nicht.</b>
-          {besuch.grund} Bitte den QR-Code noch einmal scannen oder um einen neuen Link bitten.
+          <b>{t('Dieser Link funktioniert nicht.')}</b>
+          {t(besuch.grund)} {t('Bitte den QR-Code noch einmal scannen oder um einen neuen Link bitten.')}
           <p style={{ margin: '14px 0 0' }}>
             <a class="pillknopf" href="#/">
-              Zur Startseite
+              {t('Zur Startseite')}
             </a>
           </p>
         </div>
@@ -39,8 +40,8 @@ export function Mitbewerten() {
     if (frageNachName) {
       // Ohne Namen keine Bewertung
       const p = pruefeName(name);
-      if (!p.ok) return setFehler(p.grund);
-      if (!p.name) return setFehler('Bitte einen Namen eingeben.');
+      if (!p.ok) return setFehler(t(p.grund));
+      if (!p.name) return setFehler(t('Bitte einen Namen eingeben.'));
       await setzeName(p.name);
       void synchronisiere();
     }
@@ -64,33 +65,32 @@ export function Mitbewerten() {
 
   return (
     <main class="fokus">
-      <p class="eyebrow">Du wurdest eingeladen</p>
+      <p class="eyebrow">{t('Du wurdest eingeladen')}</p>
       <h1 class="fokus-titel">{b.stand}</h1>
       <p class="fokus-unter">
         {b.markt}
         {b.stadt ? ` · ${b.stadt}` : ''}
       </p>
       <p class="fokus-hinweis">
-        Bewerte diesen Glühwein selbst, zusammen mit den anderen am Stand. Sieben Noten, dauert etwa eine halbe Minute.
-        Dafür brauchst du kein Konto.
+        {t('Bewerte diesen Glühwein selbst, zusammen mit den anderen am Stand. Sieben Noten, dauert etwa eine halbe Minute. Dafür brauchst du kein Konto.')}
       </p>
 
       {mitDabei.length > 0 && (
         <p class="fokus-hinweis">
-          <b>Schon dabei:</b> {mitDabei.map((e) => anzeigeName(e)).join(', ')}
+          <b>{t('Schon dabei:')}</b> {mitDabei.map((e) => anzeigeName(e)).join(', ')}
         </p>
       )}
 
       {frageNachName && (
         <div class="name-karte">
-          <label for="name-scan">Wie heißt du? Der Name ist nötig, um zu bewerten.</label>
+          <label for="name-scan">{t('Wie heißt du? Der Name ist nötig, um zu bewerten.')}</label>
           <input
             id="name-scan"
             class="feld"
             type="text"
             maxLength={24}
             autocomplete="nickname"
-            placeholder="Name oder Spitzname"
+            placeholder={t('Name oder Spitzname')}
             value={name}
             onInput={(e) => {
               setName((e.target as HTMLInputElement).value);
@@ -98,7 +98,7 @@ export function Mitbewerten() {
             }}
           />
           <p class="name-hinweis">
-            Der Name steht öffentlich neben deinen Bewertungen. Ein Spitzname reicht, besser kein voller echter Name.
+            {t('Der Name steht öffentlich neben deinen Bewertungen. Ein Spitzname reicht, besser kein voller echter Name.')}
             {fehler && <span class="name-fehler"> {fehler}</span>}
           </p>
         </div>
@@ -107,21 +107,20 @@ export function Mitbewerten() {
       {bestehtInhalt && verwerfen ? (
         <div class="karte" style={{ marginBottom: '12px' }}>
           <p style={{ margin: '0 0 10px' }}>
-            Du hast gerade eine angefangene Bewertung ({angefangen?.stand || 'ohne Stand'}). Sie geht verloren, wenn du jetzt
-            hier mitbewertest.
+            {t('Du hast gerade eine angefangene Bewertung ({stand}). Sie geht verloren, wenn du jetzt hier mitbewertest.', { stand: angefangen?.stand || t('ohne Stand') })}
           </p>
           <div class="knopfreihe">
             <button class="knopf primaer" onClick={() => void starten()}>
-              Verwerfen und mitbewerten
+              {t('Verwerfen und mitbewerten')}
             </button>
             <a class="knopf" href="#/erfassen" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
-              Zurück zur Bewertung
+              {t('Zurück zur Bewertung')}
             </a>
           </div>
         </div>
       ) : (
         <button class="plus-balken" style={{ width: '100%', border: 0, cursor: 'pointer' }} onClick={() => (bestehtInhalt ? setVerwerfen(true) : void starten())}>
-          Jetzt bewerten
+          {t('Jetzt bewerten')}
         </button>
       )}
     </main>

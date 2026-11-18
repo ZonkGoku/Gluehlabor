@@ -3,6 +3,7 @@
 import { api, ApiFehler } from './api';
 import { holeGeraet } from './db';
 import { holeBecher } from './sync';
+import { t } from '../i18n';
 
 export interface Meldung {
   id: string;
@@ -24,8 +25,8 @@ async function admin<T>(pfad: string, body?: unknown): Promise<T> {
 
 /** Wandelt Fehler in lesbaren Text. */
 export function fehlerText(err: unknown): string {
-  if (err instanceof ApiFehler) return err.status === 401 ? 'Dieses Gerät ist keine Prüfstelle (mehr).' : err.message;
-  return 'Kein Netz. Bitte später erneut versuchen.';
+  if (err instanceof ApiFehler) return err.status === 401 ? t('Dieses Gerät ist keine Prüfstelle (mehr).') : t(err.message);
+  return t('Kein Netz. Bitte später erneut versuchen.');
 }
 
 export const ladeMeldungen = async () => (await admin<{ meldungen: Meldung[] }>('meldungen')).meldungen;

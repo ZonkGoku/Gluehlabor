@@ -15,6 +15,7 @@ import { TopKarte } from './nacht/Ticket';
 import { useEintraege, useGeraetId, useGewichte } from './daten';
 import { ANKER, MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
+import { t, kriteriumLabel } from '../i18n';
 
 const SORTE: Record<string, string> = {
   rot: 'Rot',
@@ -51,8 +52,8 @@ export function Detail({ id }: { id: string }) {
   if (!e)
     return (
       <div class="karte leer">
-        <b>Diesen Becher gibt es nicht.</b>
-        <a href="#/rangliste">Zur Rangliste</a>
+        <b>{t('Diesen Becher gibt es nicht.')}</b>
+        <a href="#/rangliste">{t('Zur Rangliste')}</a>
       </div>
     );
 
@@ -61,40 +62,40 @@ export function Detail({ id }: { id: string }) {
   const rang = saisonZeilen.find((z) => z.eintrag.id === e.id)?.rang;
   const meta = [
     ...ortTeile(MARKTLISTE, e),
-    `von ${istPruefstelle(e) ? 'David & Philip' : anzeigeName(e)}`,
-    `Saison ${e.saison}`,
+    t('von {name}', { name: istPruefstelle(e) ? 'David & Philip' : anzeigeName(e) }),
+    t('Saison {s}', { s: e.saison }),
     datumKurz(e.datum),
-    e.sorte && SORTE[e.sorte],
-    e.becherNr !== undefined && `${e.becherNr}. Becher des Abends`,
+    e.sorte && t(SORTE[e.sorte]),
+    e.becherNr !== undefined && t('{n}. Becher des Abends', { n: e.becherNr }),
     e.preis !== undefined && euro(e.preis),
   ].filter(Boolean) as string[];
 
   return (
     <>
       <a class="zurueck" href="#/rangliste">
-        <Symbol name="zurueck" groesse={18} /> Rangliste
+        <Symbol name="zurueck" groesse={18} /> {t('Rangliste')}
       </a>
       <div class="detail-kopf">
         <TopKarte
           zeile={{ rang: rang ?? null, eintrag: e, wertung: w }}
           ort={ortText(MARKTLISTE, e)}
-          hinweis={rang ? `Platz ${rang} von ${saisonZeilen.length}` : undefined}
+          hinweis={rang ? t('Platz {r} von {n}', { r: rang, n: saisonZeilen.length }) : undefined}
           ohneLink
         />
         <section class="karte">
-          <h2>Protokoll</h2>
+          <h2>{t('Protokoll')}</h2>
           <div class="metaliste">
-            {istPruefstelle(e) && <span class="chip-klein gold">Prüfstelle</span>}
+            {istPruefstelle(e) && <span class="chip-klein gold">{t('Prüfstelle')}</span>}
             {meta.map((m) => (
               <span class="chip-klein">{m}</span>
             ))}
           </div>
           {e.notiz && <p style={{ margin: '14px 0 0', lineHeight: 1.5 }}>„{e.notiz}"</p>}
-          {fotoUrl && <img class="foto" src={fotoUrl} alt={`Foto vom Stand ${e.stand}`} />}
+          {fotoUrl && <img class="foto" src={fotoUrl} alt={t('Foto vom Stand {stand}', { stand: e.stand })} />}
           {e.geraet === geraetId && e.besuchId && (
             <p style={{ margin: '14px 0 0' }}>
               <a class="pillknopf" href={`#/teilen?e=${encodeURIComponent(e.id)}`}>
-                QR zum Mitbewerten zeigen
+                {t('QR zum Mitbewerten zeigen')}
               </a>
             </p>
           )}
@@ -102,14 +103,14 @@ export function Detail({ id }: { id: string }) {
             <div style={{ marginTop: '14px' }}>
               {!meldenOffen ? (
                 <button type="button" class="besuch-aus" style={{ padding: 0 }} onClick={() => setMeldenOffen(true)}>
-                  Diesen Eintrag melden
+                  {t('Diesen Eintrag melden')}
                 </button>
               ) : (
                 <div class="melde-form">
-                  <label for="melde-grund">Was stimmt nicht?</label>
+                  <label for="melde-grund">{t('Was stimmt nicht?')}</label>
                   <select id="melde-grund" class="auswahl" value={grund} onChange={(ev) => setGrund((ev.target as HTMLSelectElement).value)}>
                     {MELDEGRUENDE.map((g) => (
-                      <option value={g.wert}>{g.label}</option>
+                      <option value={g.wert}>{t(g.label)}</option>
                     ))}
                   </select>
                   <input
@@ -117,8 +118,8 @@ export function Detail({ id }: { id: string }) {
                     style={{ height: '40px', fontSize: '15px' }}
                     type="text"
                     maxLength={300}
-                    placeholder="Kurze Erklärung (freiwillig)"
-                    aria-label="Erklärung zur Meldung"
+                    placeholder={t('Kurze Erklärung (freiwillig)')}
+                    aria-label={t('Erklärung zur Meldung')}
                     value={meldeText}
                     onInput={(ev) => setMeldeText((ev.target as HTMLInputElement).value)}
                   />
@@ -127,20 +128,20 @@ export function Detail({ id }: { id: string }) {
                       type="button"
                       class="pillknopf"
                       onClick={async () => {
-                        setMeldung('Sende …');
+                        setMeldung(t('Sende …'));
                         try {
                           await meldeBecher(e.id, grund, meldeText);
-                          setMeldung('Danke. Wir sehen uns den Eintrag an.');
+                          setMeldung(t('Danke. Wir sehen uns den Eintrag an.'));
                           setMeldenOffen(false);
                         } catch (err) {
-                          setMeldung(err instanceof ApiFehler ? err.message : 'Kein Netz. Bitte später erneut versuchen.');
+                          setMeldung(err instanceof ApiFehler ? t(err.message) : t('Kein Netz. Bitte später erneut versuchen.'));
                         }
                       }}
                     >
-                      Melden
+                      {t('Melden')}
                     </button>
                     <button type="button" class="pillknopf" onClick={() => setMeldenOffen(false)}>
-                      Abbrechen
+                      {t('Abbrechen')}
                     </button>
                   </div>
                 </div>
@@ -150,14 +151,14 @@ export function Detail({ id }: { id: string }) {
           )}
           {e.sync === 'offen' && (
             <p style={{ color: 'var(--warnung)', fontSize: '13px', margin: '14px 0 0' }}>
-              Noch nur auf diesem Gerät. Wird synchronisiert, sobald Netz da ist.
+              {t('Noch nur auf diesem Gerät. Wird synchronisiert, sobald Netz da ist.')}
             </p>
           )}
         </section>
       </div>
 
       <section class="karte" style={{ marginTop: '14px' }}>
-        <h2>Profil der sieben Noten</h2>
+        <h2>{t('Profil der sieben Noten')}</h2>
         <div class="profil">
           {KRITERIEN.map((k) => {
             const n = e.noten[k];
@@ -166,17 +167,17 @@ export function Detail({ id }: { id: string }) {
             return (
               <div class="kriterium">
                 <span class="krit">
-                  {ANKER[k].label}
+                  {kriteriumLabel(ANKER[k].label)}
                   <small>×{gewichte[k]}</small>
                 </span>
                 <span class="wert">{n ?? '–'}</span>
-                <div class="spur" role="img" aria-label={`${ANKER[k].label}: ${n ?? 'nicht bewertet'} von 10, Durchschnitt ${zahl2(schnitt)}`}>
+                <div class="spur" role="img" aria-label={t('{label}: {n} von 10, Durchschnitt {schnitt}', { label: kriteriumLabel(ANKER[k].label), n: n ?? t('nicht bewertet'), schnitt: zahl2(schnitt) })}>
                   <div class="fuell" style={{ width: `${(n ?? 0) * 10}%` }} />
                   {schnitt !== null && <div class="schnitt" style={{ left: `${schnitt * 10}%` }} />}
                 </div>
                 <span class="anker">
                   {n === null
-                    ? 'Nicht bewertet. Zählt weder in Zähler noch Nenner.'
+                    ? t('Nicht bewertet. Zählt weder in Zähler noch Nenner.')
                     : anker.map((a) => `${a.stufe}: ${a.text}`).join('  ·  ')}
                 </span>
               </div>
@@ -185,10 +186,10 @@ export function Detail({ id }: { id: string }) {
         </div>
         <div class="legende">
           <span>
-            <i /> diese Note
+            <i /> {t('diese Note')}
           </span>
           <span>
-            <i class="strich" /> Ø aller Becher
+            <i class="strich" /> {t('Ø aller Becher')}
           </span>
         </div>
       </section>

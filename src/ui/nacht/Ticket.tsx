@@ -10,6 +10,7 @@ import { Symbol } from '../Symbol';
 import { useNeigung, useZaehler } from './bewegung';
 import { kartenDaten, teileKartenBild } from './karteBild';
 import { kurzId } from './kennung';
+import { t } from '../../i18n';
 
 /** Farben je Platz: Rahmenverlauf und Leuchtfarbe. */
 const STUFEN = {
@@ -153,10 +154,10 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
   const teilen = async (ev: Event) => {
     ev.preventDefault();
     ev.stopPropagation();
-    setMeldung('Erzeuge …');
+    setMeldung(t('Erzeuge …'));
     const link = `${location.origin}${location.pathname}${teilenLink ?? `#/becher/${encodeURIComponent(e.id)}`}`;
     const r = await teileKartenBild(kartenDaten(zeile, ort, titel, stempel === undefined ? undefined : { stempel, von }), link);
-    setMeldung(r === 'gespeichert' ? 'Bild gespeichert' : '');
+    setMeldung(r === 'gespeichert' ? t('Bild gespeichert') : '');
     if (r === 'gespeichert') setTimeout(() => setMeldung(''), 2600);
   };
   return (
@@ -169,16 +170,16 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
           <div class="flex items-start justify-between gap-3">
             <div class="flex items-baseline gap-2">
               <span class={`font-display leading-none licht-text ${klein ? 'text-[40px]' : 'text-[52px]'}`}>{String(rang ?? '–').padStart(2, '0')}</span>
-              <span class="etikett">Platz</span>
+              <span class="etikett">{t('Platz')}</span>
             </div>
             {stempel !== undefined ? (
               <span class="whitespace-nowrap rounded-md border border-[var(--nm-rand-stark)] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-dunst">{stempel}</span>
             ) : pruef ? (
               <span class="-rotate-3 rounded-md border border-gold-400/70 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-gold-300">
-                Prüfstelle
+                {t('Prüfstelle')}
               </span>
             ) : (
-              <span class="rounded-md border border-[var(--nm-rand-stark)] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-dunst">Community</span>
+              <span class="rounded-md border border-[var(--nm-rand-stark)] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-dunst">{t('Community')}</span>
             )}
           </div>
           <h2 class={`mt-3 line-clamp-2 font-display uppercase leading-[0.98] tracking-wide text-eis ${klein ? 'min-h-[1.96em] text-[27px]' : 'text-[36px]'}`}>
@@ -188,13 +189,13 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
           <div class="mt-3 flex flex-wrap items-end gap-x-4 gap-y-2">
             <div
               class={`font-display leading-[0.9] licht-text drop-shadow-[0_0_26px_rgb(255_138_61/0.55)] ${klein ? 'text-[72px]' : 'text-[112px]'}`}
-              aria-label={`Gesamtnote ${zahl2(w.gesamt)}`}
+              aria-label={t('Gesamtnote {n}', { n: zahl2(w.gesamt) })}
             >
               {zahl}
             </div>
             <div class="min-w-[8.5rem] flex-1 basis-[8.5rem] space-y-2 pb-1.5">
-              <Messer etikett="Glühwein" wert={w.gluehwein} />
-              <Messer etikett="Drumherum" wert={w.drumherum} />
+              <Messer etikett={t('Glühwein')} wert={w.gluehwein} />
+              <Messer etikett={t('Drumherum')} wert={w.drumherum} />
             </div>
           </div>
           <div class="mt-3">
@@ -209,7 +210,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
             <div class="etikett truncate whitespace-nowrap !text-[9.5px] !tracking-[0.12em]">
               {e.saison} · #{kurzId(e.id)}
             </div>
-            <div class="truncate text-xs text-dunst">{von ?? (pruef ? 'von David & Philip' : `bewertet von ${anzeigeName(e)}`)}</div>
+            <div class="truncate text-xs text-dunst">{von ?? (pruef ? t('von David & Philip') : t('bewertet von {name}', { name: anzeigeName(e) }))}</div>
           </div>
           <button
             type="button"
@@ -217,7 +218,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
             class="glas flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-2 text-xs font-semibold text-gold-300 transition hover:text-gold-400"
           >
             <Symbol name="teilen" groesse={15} />
-            {meldung || 'Teilen'}
+            {meldung || t('Teilen')}
           </button>
         </>
       }

@@ -13,6 +13,7 @@ import { Chips } from './nacht/Chips';
 import { StandTopKarte, StandZeile } from './nacht/StandKarten';
 import { MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
+import { t, tn } from '../i18n';
 
 const FELD =
   'glas appearance-none rounded-full bg-no-repeat py-2.5 pl-4 pr-9 text-sm text-eis outline-none transition focus-visible:ring-2 focus-visible:ring-gold-400/70';
@@ -49,24 +50,24 @@ export function Rangliste() {
     <div class="nm">
       <div class="mb-5 mt-2">
         <p class="etikett !text-gold-300">
-          {zeilen.length} {zeilen.length === 1 ? 'Stand' : 'Stände'} · {bewertungen} {bewertungen === 1 ? 'Bewertung' : 'Bewertungen'}
+          {tn(zeilen.length, '{n} Stand', '{n} Stände')} · {tn(bewertungen, '{n} Bewertung', '{n} Bewertungen')}
         </p>
-        <h1 class="mt-2 font-display text-[44px] uppercase leading-[1] tracking-wide text-eis sm:text-5xl">Rangliste</h1>
+        <h1 class="mt-2 font-display text-[44px] uppercase leading-[1] tracking-wide text-eis sm:text-5xl">{t('Rangliste')}</h1>
         <div class="mt-4 flex flex-wrap items-center gap-2.5">
-          <Chips optionen={['alle', ...jahre] as const} wert={saison} onWahl={setSaison} beschriftung="Saison" label={(o) => (o === 'alle' ? 'Alle' : String(o))} />
+          <Chips optionen={['alle', ...jahre] as const} wert={saison} onWahl={setSaison} beschriftung={t('Saison')} label={(o) => (o === 'alle' ? t('Alle') : String(o))} />
           <Chips
             optionen={['alle', 'pruefstelle', 'community'] as const}
             wert={quelle}
             onWahl={setQuelle}
-            beschriftung="Wertung von"
-            label={(o) => (o === 'alle' ? 'Alle' : o === 'pruefstelle' ? 'Prüfstelle' : 'Community')}
+            beschriftung={t('Wertung von')}
+            label={(o) => (o === 'alle' ? t('Alle') : o === 'pruefstelle' ? t('Prüfstelle') : t('Community'))}
           />
           <span class="relative">
-            <select class={FELD} aria-label="Markt" value={markt} onChange={(e) => setMarkt((e.target as HTMLSelectElement).value)}>
-              <option value="alle">Ganz Deutschland</option>
+            <select class={FELD} aria-label={t('Markt')} value={markt} onChange={(e) => setMarkt((e.target as HTMLSelectElement).value)}>
+              <option value="alle">{t('Ganz Deutschland')}</option>
               {stadtGruppen.map(([stadt, ms]) => (
-                <optgroup label={stadt}>
-                  {stadt !== 'Ohne Stadt' && <option value={`stadt:${stadt}`}>Ganz {stadt}</option>}
+                <optgroup label={stadt === 'Ohne Stadt' ? t('Ohne Stadt') : stadt}>
+                  {stadt !== 'Ohne Stadt' && <option value={`stadt:${stadt}`}>{t('Ganz {stadt}', { stadt })}</option>}
                   {[...ms]
                     .sort((a, b) => a.localeCompare(b, 'de'))
                     .map((m) => (
@@ -85,22 +86,22 @@ export function Rangliste() {
             onClick={() => setGewichteOffen(!gewichteOffen)}
             class={`glas rounded-full px-4 py-2.5 text-sm transition ${gewichteOffen ? 'text-gold-300' : 'text-eis hover:text-gold-300'}`}
           >
-            Gewichtung <span class="ml-1 font-mono text-xs text-dunst">{KRITERIEN.map((k) => gewichte[k]).join('·')}</span>
+            {t('Gewichtung')} <span class="ml-1 font-mono text-xs text-dunst">{KRITERIEN.map((k) => gewichte[k]).join('·')}</span>
           </button>
         </div>
       </div>
 
       {gewichteOffen && (
         <section class="glas mb-4 rounded-3xl p-4">
-          <h2 class="etikett mb-3 !text-[11px]">Gewichtung · rechnet alles sofort neu</h2>
+          <h2 class="etikett mb-3 !text-[11px]">{t('Gewichtung · rechnet alles sofort neu')}</h2>
           <GewichteEditor gewichte={gewichte} />
         </section>
       )}
 
       {zeilen.length === 0 ? (
         <div class="glas rounded-3xl p-8 text-center">
-          <p class="font-display text-3xl uppercase tracking-wide text-eis">Keine Stände für diese Auswahl</p>
-          <p class="mt-2 text-dunst">Andere Saison, anderen Markt oder eine andere Wertung wählen.</p>
+          <p class="font-display text-3xl uppercase tracking-wide text-eis">{t('Keine Stände für diese Auswahl')}</p>
+          <p class="mt-2 text-dunst">{t('Andere Saison, anderen Markt oder eine andere Wertung wählen.')}</p>
         </div>
       ) : (
         <div ref={wurzel}>
@@ -128,7 +129,7 @@ export function Rangliste() {
         <span class="mt-0.5 shrink-0">
           <Symbol name="pfeil" groesse={12} />
         </span>
-        Ein Stand zählt den Durchschnitt aller Bewertungen. Wenige Bewertungen zählen für die Reihenfolge weniger (vorläufig), angezeigt wird immer der echte Durchschnitt. Glühwein = Geschmack, Geruch, Temperatur · Drumherum = Personal, Atmosphäre, Preis/Leistung, Becher.
+        {t('Ein Stand zählt den Durchschnitt aller Bewertungen. Wenige Bewertungen zählen für die Reihenfolge weniger (vorläufig), angezeigt wird immer der echte Durchschnitt. Glühwein = Geschmack, Geruch, Temperatur · Drumherum = Personal, Atmosphäre, Preis/Leistung, Becher.')}
       </p>
       <Betreiber />
     </div>

@@ -1,5 +1,6 @@
 // Statistik: Benutzt ihr die Skala noch brauchbar? Reine Funktionen.
 
+import { aktuelleSprache, t, kriteriumLabel } from '../i18n';
 import { KRITERIEN, type Eintrag, type Gewichte, type Kriterium } from './modell';
 import { bewerte } from './scoring';
 
@@ -174,13 +175,16 @@ const SPANNE_SCHWELLE = 5;
 /** Kurzdiagnose je Kriterium, wie im alten Statistik-Tab. */
 export function diagnose(s: KriteriumStatistik): string[] {
   const d: string[] = [];
-  if (s.spanne !== null && s.n >= 3 && s.spanne < SPANNE_SCHWELLE) d.push('Skala zu eng');
-  if (s.korrGeschmack !== null && s.korrGeschmack > KORR_SCHWELLE) d.push('doppelt sich mit Geschmack');
-  if (s.streuung !== null && s.n >= 3 && s.streuung < 1) d.push('kaum Streuung');
+  if (s.spanne !== null && s.n >= 3 && s.spanne < SPANNE_SCHWELLE) d.push(t('Skala zu eng'));
+  if (s.korrGeschmack !== null && s.korrGeschmack > KORR_SCHWELLE) d.push(t('doppelt sich mit Geschmack'));
+  if (s.streuung !== null && s.n >= 3 && s.streuung < 1) d.push(t('kaum Streuung'));
   return d;
 }
 
-const komma = (x: number, stellen = 2) => x.toFixed(stellen).replace('.', ',').replace('-', '−');
+const komma = (x: number, stellen = 2) => {
+  const z = x.toFixed(stellen).replace('-', '−');
+  return aktuelleSprache() === 'en' ? z : z.replace('.', ',');
+};
 
 /**
  * Formuliert die Auffälligkeiten als Sätze. `labels` liefert die Anzeigenamen
@@ -189,11 +193,12 @@ const komma = (x: number, stellen = 2) => x.toFixed(stellen).replace('.', ',').r
 export function befunde(
   eintraege: readonly Eintrag[],
   gewichte: Gewichte,
-  labels: Record<Kriterium, string>,
+  labelsDe: Record<Kriterium, string>,
 ): Befund[] {
+  const labels = Object.fromEntries(KRITERIEN.map((k) => [k, kriteriumLabel(labelsDe[k])])) as Record<Kriterium, string>;
   const out: Befund[] = [];
   if (eintraege.length < 3) {
-    return [{ schwere: 'hinweis', text: 'Noch zu wenige Becher für eine belastbare Statistik. Ab drei geht es los.' }];
+    return [{ schwere: 'hinweis', text: t('Noch zu wenige Becher für eine belastbare Statistik. Ab drei geht es los.') }];
   }
   const stats = KRITERIEN.map((k) => kriteriumStatistik(eintraege, k));
   const u = ueberblick(eintraege, gewichte);
@@ -202,7 +207,7 @@ export function befunde(
     if (s.spanne !== null && s.n >= 3 && s.spanne < SPANNE_SCHWELLE) {
       out.push({
         schwere: 'warnung',
-        text: `Beim ${labels[s.kriterium]} habt ihr nur ${s.min} bis ${s.max} vergeben. Die Skala hat zehn Stufen.`,
+        text: t('Beim {label} habt ihr nur {min} bis {max} vergeben. Die Skala hat zehn Stufen.', { label: labels[s.kriterium], min: s.min ?? '', max: s.max ?? '' }),
       });
     }
   }
@@ -210,7 +215,7 @@ export function befunde(
   if (u.einzelnoten >= 20 && u.zehner === 0) {
     out.push({
       schwere: 'warnung',
-      text: `Die 10 ist in ${u.einzelnoten} Einzelnoten kein einziges Mal gefallen. Sie darf vergeben werden.`,
+      text: t('Die 10 ist in {n} Einzelnoten kein einziges Mal gefallen. Sie darf vergeben werden.', { n: u.einzelnoten }),
     });
   }
 
@@ -218,7 +223,7 @@ export function befunde(
     if (s.korrGeschmack !== null && s.korrGeschmack > KORR_SCHWELLE) {
       out.push({
         schwere: 'warnung',
-        text: `${labels[s.kriterium]} läuft zu ${komma(s.korrGeschmack)} mit dem Geschmack mit. Es misst kaum etwas Eigenes.`,
+        text: t('{label} läuft zu {r} mit dem Geschmack mit. Es misst kaum etwas Eigenes.', { label: labels[s.kriterium], r: komma(s.korrGeschmack) }),
       });
     }
   }
@@ -234,8 +239,8 @@ export function befunde(
           schwere: 'hinweis',
           text:
             r > 0
-              ? `${labels[a]} und ${labels[b]} hängen zu ${komma(r)} zusammen. Vielleicht bewertet ihr dasselbe zweimal.`
-              : `${labels[a]} und ${labels[b]} laufen gegeneinander (${komma(r)}). Gutes Personal an ungemütlichen Ständen, oder umgekehrt.`,
+              ? t('{a} und {b} hängen zu {r} zusammen. Vielleicht bewertet ihr dasselbe zweimal.', { a: labels[a], b: labels[b], r: komma(r) })
+              : t('{a} und {b} laufen gegeneinander ({r}). Gutes Personal an ungemütlichen Ständen, oder umgekehrt.', { a: labels[a], b: labels[b], r: komma(r) }),
         });
       }
     }
@@ -245,22 +250,22 @@ export function befunde(
   if (st === null) {
     out.push({
       schwere: 'hinweis',
-      text: 'Ob der Pegel mitbewertet wird, lässt sich noch nicht sagen. Dafür fehlt die Becher-Nr. bei genug Einträgen.',
+      text: t('Ob der Pegel mitbewertet wird, lässt sich noch nicht sagen. Dafür fehlt die Becher-Nr. bei genug Einträgen.'),
     });
   } else if (st.steigung > 0.25) {
     out.push({
       schwere: 'warnung',
-      text: `Mit jedem weiteren Becher steigt die Note um ${komma(st.steigung)}. Ihr bewertet den Pegel, nicht den Wein.`,
+      text: t('Mit jedem weiteren Becher steigt die Note um {n}. Ihr bewertet den Pegel, nicht den Wein.', { n: komma(st.steigung) }),
     });
   } else {
     out.push({
       schwere: 'gut',
-      text: 'Die Noten steigen nicht mit der Becher-Nr. Der Pegel bewertet nicht mit.',
+      text: t('Die Noten steigen nicht mit der Becher-Nr. Der Pegel bewertet nicht mit.'),
     });
   }
 
   if (!out.some((b) => b.schwere === 'warnung')) {
-    out.unshift({ schwere: 'gut', text: 'Keine Auffälligkeiten. Ihr nutzt die Skala brauchbar.' });
+    out.unshift({ schwere: 'gut', text: t('Keine Auffälligkeiten. Ihr nutzt die Skala brauchbar.') });
   }
   return out;
 }

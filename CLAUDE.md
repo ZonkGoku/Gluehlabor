@@ -20,6 +20,10 @@ Gamification und Teilen-auf-Social. Bewertungen von David & Philip laufen weiter
 
 **Ablaufplan für den Start (Mo 23.11.2026): `ABLAUFPLAN.md`.** `npm run launch-check` zeigt, was noch fehlt.
 
+## Sprachen (Deutsch, Englisch)
+
+`src/i18n/`: **der deutsche Text ist der Schlüssel**: `t('Rangliste')`, `t('Alle {n}', { n })`, `tn(n, '{n} Bewertung', '{n} Bewertungen')`. Englisch steht in `src/i18n/en.ts` (Schlüssel = deutscher Text; fehlt er, erscheint Deutsch). Neue Texte also deutsch schreiben **und** in `en.ts` ergänzen; `src/i18n/i18n.test.ts` schlägt fehl, wenn ein `t('…')` im Code keine Übersetzung hat oder Platzhalter abweichen. Gleiche deutsche Form für Ein-/Mehrzahl (z. B. „{n} Becher"): englische Einzahl als Schlüssel `„{n} Becher|1"`. Kriterien-Namen über `kriteriumLabel` (Becher = „Mug"). Die Sprache wird pro Gerät gemerkt (`gluehlabor.sprache`), ohne Wahl gilt die Browsersprache (de → Deutsch, sonst Englisch); Umschalter in Einstellungen, Seitenleiste und Kopfzeile am Rechner. Ein Wechsel zeichnet alles neu (`useSprache` in `App.tsx`). Auch Texte aus `data/anker.json` und `data/regeln.json`, Meldungen des Servers (`t(err.message)`) und die Befund-Sätze der Statistik laufen durch `t`. Der Server liefert weiter deutsche Meldungen, die App übersetzt sie. Impressum und Datenschutz haben eine englische Arbeitsübersetzung mit Hinweis, dass die deutsche Fassung maßgeblich ist. Zahlen: Punkt als Dezimaltrenner in beiden Sprachen, Preise `€4.50` (en) bzw. `4,50 €` (de).
+
 ## Stände und Bewertungen (seit 18.11.2026)
 
 Ein Eintrag (Becher) ist **eine Bewertung einer Person**; ein **Stand** ist die Gruppe aller Bewertungen mit gleichem Namen (Kern: Groß/Klein, Satzzeichen, Emoji egal), Markt und Stadt (`standIdent` in `src/lib/community.ts`, 1:1 in PHP).

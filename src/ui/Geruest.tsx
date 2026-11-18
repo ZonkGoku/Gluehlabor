@@ -4,7 +4,7 @@ import type { ComponentChildren } from 'preact';
 import { useMedia, useMenue } from '../daten/darstellung';
 import { MARKE } from '../marke';
 import { useMeineAnzahl } from './daten';
-import { ICONKNOPF, MenueKnopf, ThemeKnopf } from './nacht/DarstellungKnoepfe';
+import { ICONKNOPF, MenueKnopf, SpracheKnopf, ThemeKnopf } from './nacht/DarstellungKnoepfe';
 import { Hintergrund } from './nacht/Hintergrund';
 import { Navigation } from './nacht/Navigation';
 import { LogoMarke, Wortmarke } from './nacht/Logo';
@@ -12,6 +12,7 @@ import { Lichterkette } from './nacht/Lichterkette';
 import { Seitenleiste } from './nacht/Seitenleiste';
 import { Symbol } from './Symbol';
 import { SyncAnzeige } from './SyncAnzeige';
+import { t } from '../i18n';
 
 export function Geruest({ route, children }: { route: string; children: ComponentChildren }) {
   const darf = useMeineAnzahl() > 0; // Sync-Status erst zeigen, wenn von diesem Gerät etwas erfasst wurde
@@ -33,21 +34,22 @@ export function Geruest({ route, children }: { route: string; children: Componen
             style={{ paddingTop: 'calc(env(safe-area-inset-top) + 12px)', background: 'light-dark(rgb(251 246 242 / 0.88), rgb(7 11 26 / 0.86))' }}
           >
             <Lichterkette />
-            <a href="#/" class="flex items-center gap-2.5 text-eis" aria-label={`${MARKE.name}, zur Übersicht`}>
+            <a href="#/" class="flex items-center gap-2.5 text-eis" aria-label={t('{name}, zur Übersicht', { name: MARKE.name })}>
               <LogoMarke groesse={42} strich={4} />
               <Wortmarke taglineKlasse="hidden min-[470px]:block" />
             </a>
             <span class="flex-1" />
             {darf && <SyncAnzeige />}
+            {breit && <SpracheKnopf />}
             {breit && <MenueKnopf />}
             <ThemeKnopf />
-            <a class={ICONKNOPF} href="#/spickzettel" aria-label="Spickzettel">
+            <a class={ICONKNOPF} href="#/spickzettel" aria-label={t('Spickzettel')}>
               <Symbol name="spickzettel" groesse={20} />
             </a>
-            <a class={ICONKNOPF} href="#/profil" aria-label="Profil">
+            <a class={ICONKNOPF} href="#/profil" aria-label={t('Profil')}>
               <Symbol name="profil" groesse={20} />
             </a>
-            <a class={ICONKNOPF} href="#/einstellungen" aria-label="Einstellungen">
+            <a class={ICONKNOPF} href="#/einstellungen" aria-label={t('Einstellungen')}>
               <Symbol name="einstellungen" groesse={20} />
             </a>
           </header>
