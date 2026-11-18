@@ -1680,3 +1680,34 @@ a.karte.spitze {
     order: 8;
   }
 }
+
+/* Knöpfe auf Fokus-Seiten (QR teilen, Einladung): die Stile aus den Einstellungsseiten gelten dort nicht */
+.fokus .knopfreihe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.fokus .knopf {
+  height: 44px;
+  padding: 0 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--linie-stark);
+  background: var(--flaeche);
+  color: var(--text);
+  font-size: 15px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+.fokus .knopf.primaer {
+  background: var(--knopf);
+  color: var(--auf-knopf);
+  border-color: transparent;
+  font-weight: 600;
+}
+.fokus .karte:not(.leer) {
+  text-align: left;
+}
