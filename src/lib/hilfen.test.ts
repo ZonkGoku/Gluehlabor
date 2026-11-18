@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { abendDatum, naechsteBecherNr } from './abend';
 import { ankerFuer, type AnkerDaten } from './anker';
+import { euro, probeNr, zahl2 } from './format';
 import { KRITERIEN } from './modell';
 
 const anker: AnkerDaten = JSON.parse(readFileSync(resolve(process.cwd(), 'data/anker.json'), 'utf8'));
@@ -62,4 +63,15 @@ describe('naechsteBecherNr', () => {
   it('höchstens 7', () => {
     expect(naechsteBecherNr([{ datum: 'x', becherNr: 7 }], 'x')).toBe(7);
   });
+});
+
+
+describe('format', () => {
+  it('zahl2', () => {
+    expect(zahl2(76 / 12)).toBe('6.33');
+    expect(zahl2(10)).toBe('10.00');
+    expect(zahl2(null)).toBe('–');
+  });
+  it('euro', () => expect(euro(4.5)).toBe('4,50 €'));
+  it('probeNr', () => expect(probeNr(15)).toBe('015'));
 });

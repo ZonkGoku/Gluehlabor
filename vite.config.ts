@@ -69,7 +69,7 @@ export default defineConfig({
       // Kein Neuladen mitten in einer Erfassung.
       registerType: 'prompt',
       injectRegister: null,
-      includeAssets: ['icon.svg', 'apple-touch-icon.png'],
+      includeAssets: ['icon.svg', 'logo.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Becherwerk',
         short_name: 'Becherwerk',

@@ -1,0 +1,606 @@
+/* Becherwerk – Prüfbericht-Anmutung. Zwei eigenständig abgestimmte Themes. */
+
+:root {
+  --accent: #7b1e2b;
+  --gold: #d9a640;
+  --bg-hell: #fbf7f6;
+  --bg-dunkel: #17100f;
+
+  --sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  --radius: 6px;
+  --gap: 8px;
+  --rand: 12px;
+}
+
+/* Hell: Papier, Tinte, Bordeaux als Messbalken, Gold nur als Markierung. */
+:root,
+:root[data-theme='hell'] {
+  color-scheme: light;
+  --bg: var(--bg-hell);
+  --flaeche: #ffffff;
+  --text: #1f1615;
+  --text-2: #6d5c59;
+  --linie: #e3d7d4;
+  --linie-stark: #c9b8b4;
+  --skala-leer: #f3ebe9;
+  --skala-voll: var(--accent);
+  --auf-voll: #fbf7f6;
+  --auf-voll-2: rgba(251, 247, 246, 0.62);
+  --strich: rgba(31, 22, 21, 0.13);
+  --strich-voll: rgba(251, 247, 246, 0.22);
+  --zahl: var(--accent);
+  --markierung: var(--gold);
+  --knopf: var(--accent);
+  --auf-knopf: #fbf7f6;
+  --warnung: #9a5b00;
+}
+
+/* Dunkel: Kellerlabor. Bordeaux angehoben, damit es auf Schwarzrot nicht absäuft; Zahlen in Gold. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='hell']) {
+    color-scheme: dark;
+    --bg: var(--bg-dunkel);
+    --flaeche: #211715;
+    --text: #f2e8e5;
+    --text-2: #a8948f;
+    --linie: #3a2b28;
+    --linie-stark: #574340;
+    --skala-leer: #241a18;
+    --skala-voll: #9a2c3d;
+    --auf-voll: #fff5f2;
+    --auf-voll-2: rgba(255, 245, 242, 0.6);
+    --strich: rgba(242, 232, 229, 0.09);
+    --strich-voll: rgba(255, 245, 242, 0.2);
+    --zahl: var(--gold);
+    --markierung: var(--gold);
+    --knopf: var(--gold);
+    --auf-knopf: #17100f;
+    --warnung: #e7b45a;
+  }
+}
+:root[data-theme='dunkel'] {
+  color-scheme: dark;
+  --bg: var(--bg-dunkel);
+  --flaeche: #211715;
+  --text: #f2e8e5;
+  --text-2: #a8948f;
+  --linie: #3a2b28;
+  --linie-stark: #574340;
+  --skala-leer: #241a18;
+  --skala-voll: #9a2c3d;
+  --auf-voll: #fff5f2;
+  --auf-voll-2: rgba(255, 245, 242, 0.6);
+  --strich: rgba(242, 232, 229, 0.09);
+  --strich-voll: rgba(255, 245, 242, 0.2);
+  --zahl: var(--gold);
+  --markierung: var(--gold);
+  --knopf: var(--gold);
+  --auf-knopf: #17100f;
+  --warnung: #e7b45a;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.35;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+.mono,
+.zahl {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--markierung);
+  outline-offset: 2px;
+}
+
+/* ───────── Erfassung ───────── */
+
+.erf {
+  height: 100vh;
+  height: 100dvh;
+  max-width: 560px;
+  margin: 0 auto;
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
+  gap: var(--gap);
+  padding: calc(env(safe-area-inset-top) + 6px) var(--rand) calc(env(safe-area-inset-bottom) + 10px);
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+.kopf {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-height: 28px;
+  border-bottom: 1px solid var(--linie-stark);
+  padding-bottom: 4px;
+}
+.kopf .marke {
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.kopf .titel {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-2);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kopf a {
+  flex: none;
+  color: var(--text-2);
+  font-size: 12px;
+  font-family: var(--mono);
+  text-decoration: none;
+  padding: 6px 0 6px 8px;
+}
+
+.sync {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-2);
+  white-space: nowrap;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.sync::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--linie-stark);
+}
+.sync[data-zustand='synchron']::before {
+  background: #4f8a5b;
+}
+.sync[data-zustand='offen']::before {
+  background: var(--markierung);
+}
+.sync[data-zustand='problem'] {
+  color: var(--warnung);
+}
+.sync[data-zustand='problem']::before {
+  background: var(--warnung);
+}
+
+/* Stand + Markt */
+.stamm {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: var(--gap);
+}
+
+.feld {
+  height: 48px;
+  border: 1px solid var(--linie-stark);
+  background: var(--flaeche);
+  border-radius: var(--radius);
+  padding: 0 12px;
+  font-size: 17px;
+  width: 100%;
+  min-width: 0;
+}
+.feld::placeholder {
+  color: var(--text-2);
+}
+.feld[aria-invalid='true'] {
+  border-color: var(--warnung);
+  box-shadow: inset 0 0 0 1px var(--warnung);
+}
+select.feld {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-2) 50%),
+    linear-gradient(135deg, var(--text-2) 50%, transparent 50%);
+  background-position:
+    calc(100% - 17px) 21px,
+    calc(100% - 12px) 21px;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 28px;
+  text-overflow: ellipsis;
+}
+
+/* Metadaten-Chips */
+.meta {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+.chip {
+  position: relative;
+  height: 42px;
+  border: 1px solid var(--linie);
+  background: transparent;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-family: var(--mono);
+  padding: 0 4px;
+  text-align: center;
+  text-align-last: center;
+  color: var(--text-2);
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.chip.gesetzt {
+  border-color: var(--linie-stark);
+  background: var(--flaeche);
+  color: var(--text);
+}
+.chip input[type='file'] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.notizzeile {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+}
+.notizzeile .feld {
+  height: 42px;
+  font-size: 16px;
+}
+.notizzeile button {
+  height: 42px;
+  padding: 0 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--linie-stark);
+  background: var(--flaeche);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+/* Sieben Skalen */
+.skalen {
+  display: grid;
+  grid-template-rows: repeat(7, minmax(40px, 62px));
+  align-content: space-evenly;
+  gap: 6px;
+  min-height: 0;
+}
+
+.skala-zeile {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  gap: 6px;
+  min-height: 0;
+}
+
+.skala {
+  position: relative;
+  border-radius: var(--radius);
+  background-color: var(--skala-leer);
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent 0,
+    transparent calc(10% - 1px),
+    var(--strich) calc(10% - 1px),
+    var(--strich) 10%
+  );
+  border: 1px solid var(--linie);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: ew-resize;
+  overflow: hidden;
+}
+.skala-zeile[data-aktiv='true'] .skala {
+  border-color: var(--markierung);
+  box-shadow: inset 3px 0 0 var(--markierung);
+}
+
+.skala-fuellung {
+  position: absolute;
+  inset: 0;
+  background-color: var(--skala-voll);
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent 0,
+    transparent calc(10% - 1px),
+    var(--strich-voll) calc(10% - 1px),
+    var(--strich-voll) 10%
+  );
+  color: var(--auf-voll);
+  pointer-events: none;
+  transition: clip-path 70ms linear;
+}
+
+.skala-inhalt {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 6px;
+  pointer-events: none;
+}
+.skala-inhalt .name {
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.skala-inhalt .gewicht {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-2);
+}
+.skala-fuellung .gewicht {
+  color: var(--auf-voll-2);
+}
+.skala-inhalt .wert {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 22px;
+  font-weight: 600;
+  min-width: 2ch;
+  text-align: right;
+  color: var(--zahl);
+}
+.skala-inhalt .wert.leer {
+  color: var(--text-2);
+  font-weight: 400;
+}
+.skala-fuellung .wert {
+  color: var(--auf-voll);
+}
+
+.skala-info {
+  border: 1px solid var(--linie);
+  background: transparent;
+  border-radius: var(--radius);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: -0.02em;
+  color: var(--text-2);
+  padding: 0;
+  cursor: pointer;
+}
+.skala-zeile[data-aktiv='true'] .skala-info {
+  border-color: var(--markierung);
+  color: var(--text);
+  background: var(--flaeche);
+}
+
+/* Ankerzeile */
+.hinweis {
+  height: 54px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  border-top: 1px solid var(--linie);
+  border-bottom: 1px solid var(--linie);
+  font-size: 13px;
+  line-height: 1.3;
+}
+.hinweis .zeilen {
+  min-width: 0;
+}
+.hinweis .zeile {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+.hinweis .zeile .stufe {
+  font-family: var(--mono);
+  color: var(--zahl);
+  font-weight: 600;
+  flex: none;
+  width: 2ch;
+  text-align: right;
+}
+.hinweis .zeile .text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hinweis .zeile.einzeln .text {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.hinweis .kriterium {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.hinweis button {
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--linie);
+  border-radius: var(--radius);
+  background: transparent;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+/* Fuß: Messwert + Speichern im Daumenbereich */
+.fuss {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: var(--gap);
+  align-items: stretch;
+}
+.messwert {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+.messwert .gesamt {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.05;
+  color: var(--zahl);
+}
+.messwert .gesamt.leer {
+  color: var(--text-2);
+  font-weight: 400;
+}
+.messwert .unter {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.messwert .kopfzeile {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+.messwert .urteil {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.speichern {
+  height: 60px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--knopf);
+  color: var(--auf-knopf);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+.speichern:disabled {
+  background: var(--skala-leer);
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid var(--linie);
+}
+.speichern.ok {
+  background: #3f7a4c;
+  color: #fff;
+}
+
+/* ───────── Einfache Seiten ───────── */
+
+.seite {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: calc(env(safe-area-inset-top) + 12px) 16px 40px;
+}
+.seite h1 {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 600;
+  border-bottom: 1px solid var(--linie-stark);
+  padding-bottom: 6px;
+  margin: 0 0 16px;
+}
+.seite label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-2);
+  margin: 16px 0 6px;
+}
+.seite p {
+  color: var(--text-2);
+  font-size: 14px;
+}
+.seite .knopfreihe {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.seite .knopf {
+  height: 44px;
+  padding: 0 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--linie-stark);
+  background: var(--flaeche);
+  cursor: pointer;
+}
+.seite .knopf.primaer {
+  background: var(--knopf);
+  color: var(--auf-knopf);
+  border-color: transparent;
+}
+.seite a {
+  color: var(--zahl);
+}
+.impressum {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 16px;
+  align-items: center;
+  margin-top: 40px;
+  padding-top: 16px;
+  border-top: 1px solid var(--linie);
+}
+.impressum img {
+  width: 96px;
+  height: 96px;
+}
+.impressum p {
+  margin: 0;
+}
+.seite .meldung {
+  font-family: var(--mono);
+  font-size: 13px;
+  margin-top: 10px;
+}
