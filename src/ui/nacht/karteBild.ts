@@ -92,7 +92,7 @@ async function ladeBild(src: string): Promise<HTMLImageElement | null> {
 
 export async function erzeugeKartenBild(d: KartenDaten): Promise<Blob> {
   await Promise.all([document.fonts.load('120px Anton'), document.fonts.load('40px "IBM Plex Mono"'), document.fonts.load('40px "IBM Plex Sans"')]);
-  const siegel = await ladeBild('./logo.svg');
+  const siegel = await ladeBild('./logo.png');
 
   const cv = document.createElement('canvas');
   cv.width = B;
@@ -143,7 +143,7 @@ export async function erzeugeKartenBild(d: KartenDaten): Promise<Blob> {
 
   // Kopf: Siegel und Name
   c.textAlign = 'center';
-  if (siegel) c.drawImage(siegel, B / 2 - 55, 82, 110, 110);
+  if (siegel) c.drawImage(siegel, B / 2 - 62, 70, 124, 124);
   c.fillStyle = '#f4f1ff';
   c.font = '72px Anton';
   c.fillText('GLÜHLABOR', B / 2, 270);

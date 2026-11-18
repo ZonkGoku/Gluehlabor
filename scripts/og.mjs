@@ -9,7 +9,7 @@ const { chromium } = createRequire(import.meta.url)('playwright');
 const pfad = (p) => fileURLToPath(new URL(p, import.meta.url));
 // Schriften als data-URL einbetten: von about:blank aus dürfen file://-Adressen nicht geladen werden.
 const schrift = (name, datei) => `@font-face{font-family:'${name}';src:url(data:font/woff2;base64,${readFileSync(pfad(datei)).toString('base64')}) format('woff2')}`;
-const logo = readFileSync(pfad('../public/logo.svg'), 'utf8');
+const logo = `data:image/png;base64,${readFileSync(pfad('../public/logo.png')).toString('base64')}`;
 
 const html = `<!doctype html><meta charset="utf-8"><style>
 ${schrift('Anton', '../node_modules/@fontsource/anton/files/anton-latin-400-normal.woff2')}
@@ -24,11 +24,11 @@ body{width:1200px;height:630px;overflow:hidden;position:relative;color:#f4f1ff;f
   linear-gradient(180deg,#060919,#0a1030 60%,#0b0d24)}
 .licht{position:absolute;border-radius:50%}
 svg.kabel{position:absolute;left:0;top:0;width:1200px;height:90px}
-.links{position:absolute;left:72px;top:150px;width:600px}
+.links{position:absolute;left:72px;top:218px;width:600px}
 .marke{font-family:PlexMono;letter-spacing:.2em;font-size:20px;color:#a3accb;text-transform:uppercase}
-h1{font-family:Anton;font-weight:400;text-transform:uppercase;font-size:112px;line-height:.98;letter-spacing:.01em;margin-top:18px}
+h1{font-family:Anton;font-weight:400;text-transform:uppercase;font-size:100px;line-height:.98;letter-spacing:.01em}
 h1 em{font-style:normal;background:linear-gradient(180deg,#ffe29a,#ffa05c 55%,#f0344f);-webkit-background-clip:text;color:transparent}
-p{margin-top:26px;font-size:30px;line-height:1.35;color:#c9cfe6;max-width:560px}
+p{margin-top:20px;font-size:27px;line-height:1.35;color:#c9cfe6;max-width:560px}
 .url{position:absolute;left:72px;bottom:52px;font-family:PlexMono;font-size:26px;color:#ffc857;letter-spacing:.04em}
 .karte{position:absolute;right:70px;top:96px;width:400px;height:438px;border-radius:40px;padding:30px 34px;
  background:linear-gradient(160deg,rgba(26,34,82,.95),rgba(10,15,40,.95));border:3px solid transparent;
@@ -39,23 +39,24 @@ p{margin-top:26px;font-size:30px;line-height:1.35;color:#c9cfe6;max-width:560px}
 .note{font-family:Anton;font-size:178px;line-height:1;margin-top:10px;background:linear-gradient(180deg,#ffe29a,#ffa05c 52%,#f0344f);-webkit-background-clip:text;color:transparent;filter:drop-shadow(0 0 30px rgba(255,138,61,.55))}
 .bal{height:12px;border-radius:6px;background:rgba(255,255,255,.12);margin-top:12px;overflow:hidden}
 .bal i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#ffc857,#ff8a3d 60%,#f0344f)}
-.siegel{position:absolute;left:72px;top:46px;width:84px;height:84px}
+.siegel{position:absolute;left:72px;top:38px;width:150px;height:150px;border-radius:50%;box-shadow:0 0 0 3px rgba(255,138,61,.85),0 0 60px -4px rgba(240,52,79,.75)}
 </style>
 <svg class="kabel" viewBox="0 0 1200 90" preserveAspectRatio="none"><path d="M0 18 Q 150 70 300 28 T 600 36 T 900 28 T 1200 24" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="2"/></svg>
 ${[[60, 40, 12, '#ffc857'], [210, 62, 9, '#ff8a3d'], [380, 32, 13, '#f0344f'], [560, 54, 9, '#ffe29a'], [740, 38, 12, '#ff8a3d'], [900, 56, 9, '#ffc857'], [1060, 30, 13, '#f0344f'], [1160, 52, 9, '#ffe29a']]
   .map(([x, y, r, f]) => `<span class="licht" style="left:${x}px;top:${y}px;width:${r}px;height:${r}px;background:${f};box-shadow:0 0 ${r * 4}px ${r}px ${f}66"></span>`)
   .join('')}
-<div class="siegel">${logo.replace('<svg ', '<svg width="84" height="84" ')}</div>
+<img class="siegel" src="${logo}" alt="">
+<div class="marke" style="position:absolute;left:250px;top:96px">Prüfstelle für Glühwein</div>
 <div class="links">
-  <div class="marke" style="margin-left:112px;margin-top:-92px">Prüfstelle für Glühwein</div>
+  
   <h1>Wer glüht<br><em>am besten?</em></h1>
-  <p>Bewerte Glühwein auf Weihnachtsmärkten in ganz Deutschland. Ohne Konto, mit Rangliste und Ticket zum Teilen.</p>
+  <p>Bewerte Glühwein auf Weihnachtsmärkten. Ohne Konto, mit Rangliste und Ticket.</p>
 </div>
 <div class="url">gluehlabor.de</div>
 <div class="karte">
   <span class="stempel">PRÜFSTELLE</span>
   <div class="rang">01</div>
-  <div class="stand">Salz Chrom</div>
+  <div class="stand">Chrom</div>
   <div class="note">6.33</div>
   <div class="bal"><i style="width:66%"></i></div><div class="bal"><i style="width:60%"></i></div>
 </div>`;

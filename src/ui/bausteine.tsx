@@ -41,7 +41,7 @@ export function SaisonSchalter({
 export function Betreiber() {
   return (
     <footer class="betreiber">
-      <img src="./logo.svg" alt="" />
+      <img src="./logo.png" alt="" />
       <span>
         {MARKE.name} ist die {MARKE.claim} auf Weihnachtsmärkten in ganz Deutschland. Gemacht und
         betrieben von David aus Bayern und Philip aus Hamburg, seit 2025.

@@ -116,9 +116,9 @@ src/ui/                  Preact-Komponenten. KEINE Rechenlogik hier (auch keine 
 src/styles.css           Tokens beider Themes + Erfassungsscreen
 src/app.css              Gerüst und Auswertungsansichten
 data/orte.json          ca. 4.100 Orte in Deutschland und Österreich (GeoNames, CC BY 4.0, erzeugt von scripts/orte.mjs; Quelle im Impressum nennen). Wird nachgeladen (eigener Chunk, 49 KB gzip)
-public/                  og.jpg (Link-Vorschau, erzeugt von scripts/og.mjs), icon.svg (PWA-Zeichen), logo.svg (Siegel mit „David & Philip"), PNG-Icons
+public/                  logo.png (das richtige Logo: zwei Köpfe mit Mützen, Kolben mit Tasse, „GLÜHLABOR"), favicon.png, App-Symbole (icon-*.png, apple-touch-icon.png), og.jpg (Link-Vorschau). Alles erzeugt aus assets/logo-original.jpeg mit scripts/logo.mjs bzw. scripts/og.mjs
 scripts/launch-check.ts  Startcheck (npm run launch-check)
-scripts/icons.mjs        rastert icon.svg zu den PNG-Icons (nutzt Playwright aus der Umgebung)
+scripts/logo.mjs         erzeugt alle Logo- und Icon-Dateien aus assets/logo-original.jpeg (Playwright aus der Umgebung)
 ```
 
 ## Scoring-Regeln (verbindlich, siehe Tests in src/lib/scoring.test.ts)
