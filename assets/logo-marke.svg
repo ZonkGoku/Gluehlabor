@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%" fill="none" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Glühlabor: David und Philip mit Mützen, dazwischen Kolben und dampfende Tasse">
+  <defs>
+    <linearGradient id="gl-neon" gradientUnits="userSpaceOnUse" x1="30" y1="30" x2="170" y2="175">
+      <stop offset="0" stop-color="#ffc857"/>
+      <stop offset="0.5" stop-color="#ff8a3d"/>
+      <stop offset="1" stop-color="#f0344f"/>
+    </linearGradient>
+    <radialGradient id="gl-nacht" cx="0.5" cy="0.38" r="0.7">
+      <stop offset="0" stop-color="#15233a"/>
+      <stop offset="0.6" stop-color="#0b131f"/>
+      <stop offset="1" stop-color="#070b11"/>
+    </radialGradient>
+    <clipPath id="gl-rund"><circle cx="100" cy="100" r="95"/></clipPath>
+  </defs>
+  <circle cx="100" cy="100" r="99" fill="url(#gl-nacht)"/>
+  <g clip-path="url(#gl-rund)" style="stroke-width:var(--sw,3.2)">
+    <!-- David: Gesicht neon, Mütze weiß -->
+    <g transform="translate(-22 0)">
+      <path d="M87 94 C86 98 92 102 92 106 L94 111 L88 113 L89 118 L86 120.5 L89 124 L88 130 C88 136 84 140 78 142 L78 176" stroke="url(#gl-neon)"/>
+      <path d="M56 176 L56 142 C44 130 42 104 47 94" stroke="#f4f1ff"/>
+      <path d="M45 82 C44 54 62 42 80 46 C88 49 88 66 86 82" stroke="#f4f1ff"/>
+      <rect x="42" y="82" width="48" height="12" rx="6" stroke="#f4f1ff"/>
+      <circle cx="64" cy="39" r="6" stroke="#f4f1ff"/>
+    </g>
+    <!-- Philip: gespiegelt, Gesicht weiß, Mütze neon -->
+    <g transform="translate(222 0) scale(-1 1)">
+      <path d="M87 94 C86 98 92 102 92 106 L94 111 L88 113 L89 118 L86 120.5 L89 124 L88 130 C88 136 84 140 78 142 L78 176" stroke="#f4f1ff"/>
+      <path d="M56 176 L56 142 C44 130 42 104 47 94" stroke="url(#gl-neon)"/>
+      <path d="M45 82 C44 54 62 42 80 46 C88 49 88 66 86 82" stroke="url(#gl-neon)"/>
+      <rect x="42" y="82" width="48" height="12" rx="6" stroke="url(#gl-neon)"/>
+      <circle cx="64" cy="39" r="6" stroke="url(#gl-neon)"/>
+    </g>
+    <!-- Kolben und Tasse in einem Strich: Henkel, Flüssigkeit, Dampf -->
+    <path d="M96 62 V88 L84 124 Q82 134 92 134 H108 Q118 134 116 124 L104 88 V62 M93 62 H107" stroke="#f4f1ff"/>
+    <path d="M114 108 q10 1 10 9 t-9 10" stroke="#f4f1ff"/>
+    <path d="M88 118 Q94 113 100 118 T112 118" stroke="url(#gl-neon)"/>
+    <path d="M96.5 54 q-4.5 -5.5 0 -10.5 t0 -10 M103.5 54 q-4.5 -5.5 0 -10.5 t0 -10" stroke="url(#gl-neon)"/>
+    <circle cx="96" cy="127" r="1.6" stroke="url(#gl-neon)" style="stroke-width:1.4"/>
+    <circle cx="104" cy="123.5" r="1.2" stroke="url(#gl-neon)" style="stroke-width:1.4"/>
+  </g>
+  <circle cx="100" cy="100" r="97.5" stroke="url(#gl-neon)" style="stroke-width:3"/>
+</svg>

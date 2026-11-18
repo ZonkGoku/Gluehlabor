@@ -1,5 +1,6 @@
 // Seitenleiste für den Rechner (umschaltbar gegen die schwebende Leiste, siehe Einstellungen).
 import { MARKE } from '../../marke';
+import { LogoMarke, Wortmarke } from './Logo';
 import { Symbol } from '../Symbol';
 import { SyncAnzeige } from '../SyncAnzeige';
 import { MenueKnopf, ThemeKnopf } from './DarstellungKnoepfe';
@@ -22,11 +23,8 @@ export function Seitenleiste({ route, zeigeSync }: { route: string; zeigeSync: b
   return (
     <aside aria-label="Menü" class="nm glas-stark fixed bottom-3.5 left-3.5 top-3.5 z-40 flex w-[248px] flex-col rounded-[28px] p-4">
       <a href="#/" class="flex flex-col items-center gap-2 pb-4 pt-1 text-eis" aria-label={`${MARKE.name}, zur Übersicht`}>
-        <img src="./logo.png" alt="" class="size-[104px] rounded-full" />
-        <span class="text-center leading-none">
-          <span class="block font-display text-[26px] uppercase tracking-wider">{MARKE.name}</span>
-          <span class="etikett mt-1.5 block !text-[9.5px]">{MARKE.claim}</span>
-        </span>
+        <LogoMarke groesse={112} />
+        <Wortmarke gross klasse="items-center text-center" />
       </a>
 
       <nav aria-label="Ansichten" class="flex flex-1 flex-col gap-1 overflow-y-auto">
@@ -52,7 +50,7 @@ export function Seitenleiste({ route, zeigeSync }: { route: string; zeigeSync: b
         class="animate-puls mt-3 flex items-center justify-center gap-2 rounded-2xl py-3.5 font-display text-xl uppercase tracking-wide text-[#1a1020]"
         style={{ background: 'linear-gradient(135deg,#ffe29a,#ff8a3d 55%,#f0344f)' }}
       >
-        <Symbol name="flamme" groesse={22} />
+        <Symbol name="becher" groesse={22} />
         Becher erfassen
       </a>
 

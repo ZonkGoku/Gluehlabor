@@ -36,6 +36,8 @@
   --animate-funkeln: funkeln 4.2s ease-in-out infinite;
   --animate-schimmer: schimmer 7.5s ease-in-out infinite;
   --animate-puls: puls 3s ease-in-out infinite;
+  --animate-schnee: schnee 14s linear infinite;
+  --animate-flackern: flackern 5s ease-in-out infinite;
 
   @keyframes funkeln {
     0%,
@@ -46,6 +48,35 @@
     50% {
       opacity: 1;
       transform: scale(1.2);
+    }
+  }
+  @keyframes schnee {
+    0% {
+      transform: translate3d(0, -6vh, 0);
+      opacity: 0;
+    }
+    8%,
+    88% {
+      opacity: var(--o, 0.6);
+    }
+    50% {
+      transform: translate3d(var(--w, 18px), 55vh, 0);
+    }
+    100% {
+      transform: translate3d(calc(var(--w, 18px) * -0.4), 108vh, 0);
+      opacity: 0;
+    }
+  }
+  @keyframes flackern {
+    0%,
+    100% {
+      opacity: 0.85;
+    }
+    35% {
+      opacity: 1;
+    }
+    60% {
+      opacity: 0.7;
     }
   }
   @keyframes schimmer {
@@ -247,6 +278,8 @@ body {
 /* Bewegung nur, wenn gewünscht */
 @media (prefers-reduced-motion: reduce) {
   .animate-funkeln,
+  .animate-schnee,
+  .animate-flackern,
   .animate-schimmer,
   .animate-puls {
     animation: none !important;
