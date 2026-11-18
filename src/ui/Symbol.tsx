@@ -11,6 +11,10 @@ const PFADE: Record<string, string> = {
   zurueck: 'M15 6l-6 6 6 6',
   schliessen: 'M6 6l12 12M18 6L6 18',
   pfeil: 'M9 6l6 6-6 6',
+  pokal: 'M8 4h8v5a4 4 0 0 1-8 0V4zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8 20h8M10 17h4',
+  teilen: 'M12 3v12M8 7l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7',
+  flamme: 'M12 3c1 3.4 4 4.8 4 8.8a4 4 0 0 1-8 0c0-1.7.7-2.8 1.6-3.8C10.2 9.6 11.2 7.4 12 3z',
+  becher: 'M5 8h11v7a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4V8zM16 10h2a2 2 0 0 1 0 4h-2M8 3.5c0 1 1 1 1 2.5M12 3.5c0 1 1 1 1 2.5',
 };
 
 export function Symbol({ name, groesse = 22 }: { name: keyof typeof PFADE | string; groesse?: number }) {

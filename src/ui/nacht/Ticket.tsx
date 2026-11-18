@@ -1,0 +1,199 @@
+// Ticket-Karte: so sieht eine Bewertung aus, wenn man sie als Screenshot in die Story legt.
+// Verlaufsrahmen nach Platz (Gold, Silber, Kupfer), Kerben an der Abrisslinie, Strichcode-Stummel, Schimmer auf Platz 1.
+import type { ComponentChildren } from 'preact';
+import { useState } from 'preact/hooks';
+import type { Zeile } from '../../lib/auswertung';
+import { anzeigeName, istPruefstelle } from '../../lib/community';
+import { zahl2 } from '../../lib/format';
+import { UrteilPill } from '../bausteine';
+import { Symbol } from '../Symbol';
+import { useNeigung, useZaehler } from './bewegung';
+import { teileLink } from './teilen';
+
+/** Farben je Platz: Rahmenverlauf und Leuchtfarbe. */
+const STUFEN = {
+  1: { rahmen: 'linear-gradient(135deg,#ffe29a,#ff8a3d 50%,#f0344f)', glow: 'rgb(255 138 61 / 0.55)', name: 'Gold' },
+  2: { rahmen: 'linear-gradient(135deg,#f4f7ff,#9fb0e8 50%,#5d6fb8)', glow: 'rgb(150 170 255 / 0.45)', name: 'Silber' },
+  3: { rahmen: 'linear-gradient(135deg,#ffd2ae,#e08a45 50%,#9a4630)', glow: 'rgb(224 138 69 / 0.45)', name: 'Kupfer' },
+} as const;
+const NORMAL = { rahmen: 'linear-gradient(135deg,rgb(255 255 255/.22),rgb(255 255 255/.06))', glow: 'rgb(163 172 203 / 0.25)', name: '' };
+
+export const stufe = (rang: number | null) => (rang === 1 || rang === 2 || rang === 3 ? STUFEN[rang] : NORMAL);
+
+/** Kurze, stabile Kennung aus der ID für den Stummel (#3F2A). */
+export function kurzId(id: string): string {
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619);
+  return ((h >>> 0) & 0xffff).toString(16).toUpperCase().padStart(4, '0');
+}
+
+/** Strichcode, der nur aus der ID entsteht. Dekor, kein echter Code. */
+function Strichcode({ id }: { id: string }) {
+  let h = 2166136261;
+  const balken: number[] = [];
+  for (let i = 0; i < 34; i++) {
+    h = Math.imul(h ^ (id.charCodeAt(i % id.length) + i), 16777619);
+    balken.push(1 + ((h >>> 0) % 3));
+  }
+  let x = 0;
+  return (
+    <svg viewBox="0 0 120 26" class="h-6 w-[70px] shrink-0 text-eis/80" aria-hidden="true" preserveAspectRatio="none">
+      {balken.map((b, i) => {
+        const r = <rect x={x} y="0" width={b * 0.9} height="26" fill="currentColor" opacity={i % 5 === 0 ? 1 : 0.75} />;
+        x += b * 0.9 + 1.2;
+        return r;
+      })}
+    </svg>
+  );
+}
+
+interface RahmenProps {
+  rang: number | null;
+  klein?: boolean;
+  kinder: ComponentChildren;
+  stummel: ComponentChildren;
+  /** zusätzliche Klassen der äußeren Hülle */
+  klasse?: string;
+}
+
+/** Hülle mit Rahmen, Kerben, Leuchten beim Darüberfahren und Neigung zur Maus. */
+export function TicketRahmen({ rang, klein, kinder, stummel, klasse = '' }: RahmenProps) {
+  const ref = useNeigung<HTMLDivElement>(klein ? 5 : 7);
+  const s = stufe(rang);
+  const erster = rang === 1;
+  return (
+    <div
+      ref={ref}
+      class={`group rounded-[28px] shadow-[0_0_46px_-24px_var(--glow)] transition-shadow duration-300 hover:shadow-[0_0_84px_-14px_var(--glow)] will-change-transform ${klasse}`}
+      style={{ '--glow': s.glow }}
+    >
+      <div class="ticket-kerbe rahmen-licht glas relative overflow-hidden rounded-[28px]" style={{ '--rahmen': s.rahmen }}>
+        {/* Lichtfleck folgt der Maus */}
+        <div
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          style={{ background: 'radial-gradient(420px circle at var(--mx,50%) var(--my,30%), rgb(255 226 154 / 0.14), transparent 62%)' }}
+        />
+        {erster && (
+          <div aria-hidden="true" class="pointer-events-none absolute inset-0 overflow-hidden">
+            <span class="animate-schimmer absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/[0.13] to-transparent" />
+          </div>
+        )}
+        <div class="relative z-10">{kinder}</div>
+        {/* Abrisslinie */}
+        <div class="relative z-10 border-t-2 border-dashed border-white/15" />
+        <div class="relative z-10 flex h-[74px] items-center gap-3 px-5">{stummel}</div>
+      </div>
+    </div>
+  );
+}
+
+function Messer({ etikett, wert }: { etikett: string; wert: number | null }) {
+  return (
+    <div>
+      <div class="flex items-baseline justify-between">
+        <span class="etikett">{etikett}</span>
+        <span class="font-mono text-xs text-eis">{zahl2(wert)}</span>
+      </div>
+      <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
+        <div
+          class="h-full rounded-full"
+          style={{
+            width: `${(wert ?? 0) * 10}%`,
+            background: 'linear-gradient(90deg,#ffc857,#ff8a3d 60%,#f0344f)',
+            boxShadow: '0 0 12px rgb(255 138 61 / 0.7)',
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+interface TopKarteProps {
+  zeile: Zeile;
+  ort: string;
+  /** Überschreibt den Standnamen, etwa bei geteiltem ersten Platz. */
+  titel?: string;
+  hinweis?: string;
+  klein?: boolean;
+  klasse?: string;
+}
+
+/** Die Karte für einen Spitzenplatz. */
+export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse }: TopKarteProps) {
+  const { eintrag: e, wertung: w, rang } = zeile;
+  const pruef = istPruefstelle(e);
+  const zahl = useZaehler(w.gesamt);
+  const [meldung, setMeldung] = useState('');
+  const teilen = async (ev: Event) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    const r = await teileLink('Glühlabor', `${e.stand}: ${zahl2(w.gesamt)} von 10 bei Glühlabor`, `#/becher/${encodeURIComponent(e.id)}`);
+    if (r === 'kopiert') {
+      setMeldung('Link kopiert');
+      setTimeout(() => setMeldung(''), 2200);
+    }
+  };
+  return (
+    <TicketRahmen
+      rang={rang}
+      klein={klein}
+      klasse={klasse}
+      kinder={
+        <a href={`#/becher/${encodeURIComponent(e.id)}`} class="block p-5 pb-4 text-eis no-underline">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-baseline gap-2">
+              <span class={`font-display leading-none licht-text ${klein ? 'text-[40px]' : 'text-[52px]'}`}>{String(rang ?? '–').padStart(2, '0')}</span>
+              <span class="etikett">Platz</span>
+            </div>
+            {pruef ? (
+              <span class="-rotate-3 rounded-md border border-gold-400/70 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-gold-300">
+                Prüfstelle
+              </span>
+            ) : (
+              <span class="rounded-md border border-white/15 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-dunst">Community</span>
+            )}
+          </div>
+          <h2 class={`mt-3 font-display uppercase leading-[0.98] tracking-wide text-eis ${klein ? 'text-[27px]' : 'text-[36px]'}`}>
+            {titel ?? e.stand}
+          </h2>
+          <p class="mt-1 text-sm text-dunst">{hinweis ? `${hinweis} · ${ort}` : ort}</p>
+          <div class="mt-3 flex items-end gap-4">
+            <div
+              class={`font-display leading-[0.9] licht-text drop-shadow-[0_0_26px_rgb(255_138_61/0.55)] ${klein ? 'text-[72px]' : 'text-[112px]'}`}
+              aria-label={`Gesamtnote ${zahl2(w.gesamt)}`}
+            >
+              {zahl}
+            </div>
+            <div class="min-w-0 flex-1 space-y-2 pb-1.5">
+              <Messer etikett="Glühwein" wert={w.gluehwein} />
+              <Messer etikett="Drumherum" wert={w.drumherum} />
+            </div>
+          </div>
+          <div class="mt-3">
+            <UrteilPill urteil={w.urteil} />
+          </div>
+        </a>
+      }
+      stummel={
+        <>
+          <Strichcode id={e.id} />
+          <div class="min-w-0 flex-1 leading-tight">
+            <div class="etikett whitespace-nowrap !text-[9.5px] !tracking-[0.12em]">
+              {e.saison} · #{kurzId(e.id)}
+            </div>
+            <div class="truncate text-xs text-dunst">{pruef ? 'von David & Philip' : `bewertet von ${anzeigeName(e)}`}</div>
+          </div>
+          <button
+            type="button"
+            onClick={teilen}
+            class="glas flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold text-gold-300 transition hover:text-gold-400"
+          >
+            <Symbol name="teilen" groesse={15} />
+            {meldung || 'Teilen'}
+          </button>
+        </>
+      }
+    />
+  );
+}

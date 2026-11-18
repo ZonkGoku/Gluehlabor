@@ -3,17 +3,18 @@ import '@fontsource/ibm-plex-sans/latin-500.css';
 import '@fontsource/ibm-plex-sans/latin-600.css';
 import '@fontsource/ibm-plex-mono/latin-400.css';
 import '@fontsource/ibm-plex-mono/latin-600.css';
+import '@fontsource/anton/latin-400.css';
 import './styles.css';
 import './app.css';
+import './nacht.css';
 
 import { render } from 'preact';
 import { App } from './App';
-import { leseEinstellung } from './daten/db';
 import { starteSync } from './daten/sync';
 import { starteUpdates } from './daten/update';
-import { wendeThemeAn } from './ui/Einstellungen';
 
-void leseEinstellung<'auto' | 'hell' | 'dunkel'>('theme', 'auto').then(wendeThemeAn);
+// Es gibt nur noch das Nacht-Theme (src/nacht.css).
+document.documentElement.setAttribute('data-theme', 'dunkel');
 render(<App />, document.getElementById('app')!);
 starteSync();
 starteUpdates();

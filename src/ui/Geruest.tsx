@@ -1,91 +1,48 @@
-// App-Gerüst: Kopf + Tab-Leiste am Telefon, Seitenleiste am Rechner.
+// App-Gerüst „Night Market": Nachthimmel, schwebender Kopf, Inhalt, schwebende Navigation unten (auch am Rechner).
 import type { ComponentChildren } from 'preact';
 import { MARKE } from '../marke';
 import { useMeineAnzahl } from './daten';
+import { Hintergrund } from './nacht/Hintergrund';
+import { Navigation } from './nacht/Navigation';
 import { Symbol } from './Symbol';
 import { SyncAnzeige } from './SyncAnzeige';
 
-const NAV = [
-  { route: '', label: 'Übersicht', symbol: 'uebersicht' },
-  { route: 'rangliste', label: 'Rangliste', symbol: 'rangliste' },
-  { route: 'vergleich', label: 'Vergleich', symbol: 'vergleich' },
-  { route: 'statistik', label: 'Statistik', symbol: 'statistik' },
-  { route: 'spickzettel', label: 'Spickzettel', symbol: 'spickzettel' },
-];
+const ICONKNOPF =
+  'glas grid size-10 place-items-center rounded-full text-dunst no-underline transition duration-200 hover:text-gold-300 hover:shadow-glut';
 
 export function Geruest({ route, children }: { route: string; children: ComponentChildren }) {
-  const darf = useMeineAnzahl() > 0; // zeigt den Sync-Status erst, wenn von diesem Gerät etwas erfasst wurde
-  const aktiv = (r: string) => (route === r || (r === 'rangliste' && route.startsWith('becher/')) ? 'page' : undefined);
+  const darf = useMeineAnzahl() > 0; // Sync-Status erst zeigen, wenn von diesem Gerät etwas erfasst wurde
   return (
-    <div class="app">
-      <aside class="seitenleiste">
-        <img class="logo" src="./logo.svg" alt={`${MARKE.name} – gemacht und betrieben von David & Philip`} />
-        <div class="titel">
-          {MARKE.name}
-          <small>{MARKE.claim}</small>
-        </div>
-        {NAV.map((n) => (
-          <a class="navpunkt" href={`#/${n.route}`} aria-current={aktiv(n.route)}>
-            <Symbol name={n.symbol} groesse={20} />
-            {n.label}
-          </a>
-        ))}
-        <a class="navpunkt" href="#/profil" aria-current={aktiv('profil')}>
-          <Symbol name="profil" groesse={20} />
-          Profil
-        </a>
-        <a class="navpunkt" href="#/einstellungen" aria-current={aktiv('einstellungen')}>
-          <Symbol name="einstellungen" groesse={20} />
-          Einstellungen
-        </a>
-        <a class="navpunkt erfassen" href="#/erfassen">
-          <Symbol name="plus" groesse={20} />
-          Becher erfassen
-        </a>
-        <div class="fussnote">
-          {darf && <SyncAnzeige />}
-          <div>Gemacht und betrieben von David (Bayern) &amp; Philip (Hamburg). Bewertet wird in ganz Deutschland.</div>
-        </div>
-      </aside>
+    <div class="relative min-h-dvh font-sans text-eis">
+      <Hintergrund />
 
-      <header class="app-kopf">
-        <img class="zeichen" src="./icon.svg" alt="" />
-        <div class="name">
-          {MARKE.name}
-          <small>Bayern × Hamburg</small>
-        </div>
-        {darf && <SyncAnzeige />}
-        <a class="symbolknopf" href="#/spickzettel" aria-label="Spickzettel">
-          <Symbol name="spickzettel" />
+      <header
+        class="nm sticky top-0 z-30 flex items-center gap-3 px-4 pb-2"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 12px)' }}
+      >
+        <a href="#/" class="flex items-center gap-2.5 text-eis no-underline" aria-label={`${MARKE.name}, zur Übersicht`}>
+          <img src="./icon.svg" alt="" class="size-9 rounded-xl shadow-[0_0_24px_-4px_rgb(240_52_79/0.7)]" />
+          <span class="flex flex-col leading-none">
+            <span class="font-display text-[22px] uppercase tracking-wider">{MARKE.name}</span>
+            <span class="etikett mt-1 !text-[9.5px]">Bayern × Hamburg</span>
+          </span>
         </a>
-        <a class="symbolknopf" href="#/einstellungen" aria-label="Einstellungen">
-          <Symbol name="einstellungen" />
+        <span class="flex-1" />
+        {darf && <SyncAnzeige />}
+        <a class={ICONKNOPF} href="#/spickzettel" aria-label="Spickzettel">
+          <Symbol name="spickzettel" groesse={20} />
+        </a>
+        <a class={ICONKNOPF} href="#/profil" aria-label="Profil">
+          <Symbol name="profil" groesse={20} />
+        </a>
+        <a class={ICONKNOPF} href="#/einstellungen" aria-label="Einstellungen">
+          <Symbol name="einstellungen" groesse={20} />
         </a>
       </header>
 
       <main class="inhalt">{children}</main>
 
-      <nav class="tabs" aria-label="Ansichten">
-        <a class="tab" href="#/" aria-current={aktiv('')}>
-          <Symbol name="uebersicht" />
-          Übersicht
-        </a>
-        <a class="tab" href="#/rangliste" aria-current={aktiv('rangliste')}>
-          <Symbol name="rangliste" />
-          Rangliste
-        </a>
-        <a class="tab-plus" href="#/erfassen" aria-label="Becher erfassen">
-          <Symbol name="plus" groesse={28} />
-        </a>
-        <a class="tab" href="#/vergleich" aria-current={aktiv('vergleich')}>
-          <Symbol name="vergleich" />
-          Vergleich
-        </a>
-        <a class="tab" href="#/statistik" aria-current={aktiv('statistik')}>
-          <Symbol name="statistik" />
-          Statistik
-        </a>
-      </nav>
+      <Navigation route={route} />
     </div>
   );
 }

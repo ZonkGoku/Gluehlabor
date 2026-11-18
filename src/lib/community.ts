@@ -140,3 +140,8 @@ export function pruefeEinreichung(x: unknown, jetzt: number): EinreichungPruefun
 export function anzeigeName(e: { name?: string }): string {
   return e.name?.trim() || 'Anonym';
 }
+
+/** Prüfstellen-Becher: vom Server gesiegelt, oder die lokal importierten Bestandsdaten von 2025. */
+export function istPruefstelle(e: { pruefstelle?: boolean; sync?: string }): boolean {
+  return e.pruefstelle === true || e.sync === 'bestand';
+}

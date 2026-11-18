@@ -163,15 +163,27 @@ Rangliste Top 5, Deutschlandkarte, neueste Becher, Saisonverlauf, wichtigster Be
   Nach dem ersten eigenen Becher fragt eine Karte freiwillig nach dem Namen.
 - Die 14 Becher aus 2025 haben kein Datum; der Saisonverlauf sagt das, statt zu raten.
 
-## Gestaltung
+## Gestaltung („Night Market", seit 18.11.2026)
 
-Prüfbericht, nicht Weihnachtsmarkt. Farben `--accent #7B1E2B`, `--gold #D9A640`,
-`--bg-hell #FBF7F6`, `--bg-dunkel #17100F`. Zahlen in IBM Plex Mono, Text in IBM Plex Sans
-(beide lokal über @fontsource, damit offline). Hell und Dunkel sind getrennt abgestimmt
-(`src/styles.css`). Keine Emoji, kein Schnee, keine Tannen. Modern (Karten, Tab-Leiste,
-große Monospace-Zahlen), aber nüchtern. Urteilsfarben `--u1..u5` folgen den Farben des alten Sheets.
-Achtung bei Klassennamen: `styles.css` und `app.css` teilen sich den Namensraum
-(z. B. sind `.hinweis`, `.leer`, `.kopf` schon belegt).
+Immersive, mobile-first Konsumenten-App statt Prüfbericht. **Nur ein Theme: Nacht** (Mitternachtsblau `#070B1A`, Glühwein-Rot `#F0344F`,
+Glut-Orange `#FF8A3D`, Gold `#FFC857`, Text `#F4F1FF`/`#A3ACCB`). Es gibt keinen Hell/Dunkel-Schalter mehr.
+- **Design-System in `src/nacht.css`**: Tailwind v4 **ohne Preflight** (nur Theme und Utilities), damit die noch nicht umgebauten Ansichten
+  nicht verändert werden. Eigene Utilities: `glas`, `glas-stark` (Milchglas), `licht-text` (Zahlen im Lichtverlauf), `rahmen-licht`
+  (Verlaufsrahmen, Farben über `--rahmen`), `ticket-kerbe`, `etikett`. Die alten Tokens (`--bg`, `--karte`, `--zahl` …) sind dort auf Nachtfarben
+  gesetzt (Selektor `html:root:root`), `.karte` bekommt Milchglas. Mini-Reset nur für Bausteine mit Klasse `.nm` (Spezifität 0).
+  **Stolperstein:** `backdrop-filter` nur unpräfixiert schreiben, sonst verwirft der Minifier die unpräfixierte Zeile.
+- Schrift: Anton (Überschriften, Zahlen, nur Großbuchstaben bei Titeln), IBM Plex Sans (Text), IBM Plex Mono (Etiketten, `etikett`).
+- Bausteine in `src/ui/nacht/`: `Hintergrund` (Nachthimmel, Lichterkette), `Navigation` (schwebende Pille, Blase wandert per Feder),
+  `Ticket` (`TicketRahmen`, `TopKarte`: Sammelkarte mit Verlaufsrahmen nach Platz Gold/Silber/Kupfer, Kerben, Strichcode, Teilen),
+  `Kachel`/`Kennzahl` (Bento), `Chips`, `RangZeile` (leicht, ohne Glasfilter wegen langer Listen), `bewegung.ts`, `teilen.ts`.
+- Bewegung mit **Motion** (`motion`, die Engine von Framer Motion ohne React, läuft mit Preact; ca. 28 KB gzip): gestaffeltes Einblenden
+  (`useEinblenden`, Kinder mit `data-ein`), Neigung zur Maus und Einfedern (`useNeigung`), Zahl zählt hoch (`useZaehler`). Alles respektiert
+  „Bewegung reduzieren". Hover-Leuchten und Schimmer sind reines CSS.
+- Umgebaut: Gerüst, Übersicht (Bento), Rangliste. **Noch im alten Stil, aber mit Nacht-Tokens:** Erfassen, Detail, Vergleich, Statistik,
+  Spickzettel, Profil, Teilen. Nächste Kandidaten: Erfassen als Ticket, Detail als Sammelkarte.
+- Keine Emoji, kein Schnee, keine Tannen. Prüfstellen-Becher tragen den Stempel „Prüfstelle" (`istPruefstelle` in `src/lib/community.ts`,
+  schließt lokale Bestandsdaten ein).
+- Klassennamen: `styles.css` und `app.css` teilen sich den Namensraum (z. B. `.hinweis`, `.leer`, `.kopf`); neue Bausteine nutzen nur Tailwind-Utilities.
 
 ## Stand der Arbeit
 

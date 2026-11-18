@@ -1,34 +1,15 @@
-// Gewichtung, gemeinsamer Datenbestand (Sync), Darstellung. Kein Token, kein Konto.
-import { useEffect, useState } from 'preact/hooks';
+// Gewichtung und gemeinsamer Datenbestand (Sync). Kein Token, kein Konto. Es gibt nur das Nacht-Theme.
 import { HAT_SERVER } from '../daten/config';
-import { db, leseEinstellung, schreibeEinstellung } from '../daten/db';
+import { db } from '../daten/db';
 import { synchronisiere } from '../daten/sync';
 import { Betreiber } from './bausteine';
 import { useGewichte } from './daten';
 import { GewichteEditor } from './GewichteEditor';
 import { useLive } from './hooks';
 
-type Theme = 'auto' | 'hell' | 'dunkel';
-
-export function wendeThemeAn(t: Theme) {
-  if (t === 'auto') document.documentElement.removeAttribute('data-theme');
-  else document.documentElement.setAttribute('data-theme', t);
-}
-
 export function Einstellungen() {
-  const [theme, setTheme] = useState<Theme>('auto');
   const gewichte = useGewichte();
   const offen = useLive(() => db.eintraege.where('sync').equals('offen').count(), [], 0);
-
-  useEffect(() => {
-    void leseEinstellung<Theme>('theme', 'auto').then(setTheme);
-  }, []);
-
-  const waehleTheme = async (t: Theme) => {
-    setTheme(t);
-    wendeThemeAn(t);
-    await schreibeEinstellung('theme', t);
-  };
 
   return (
     <>
@@ -63,16 +44,6 @@ export function Einstellungen() {
           </div>
         </section>
 
-        <section class="karte seite" style={{ padding: '18px' }}>
-          <h2 style={{ margin: 0 }}>Darstellung</h2>
-          <div class="knopfreihe">
-            {(['auto', 'hell', 'dunkel'] as Theme[]).map((t) => (
-              <button class={theme === t ? 'knopf primaer' : 'knopf'} onClick={() => waehleTheme(t)}>
-                {t === 'auto' ? 'Wie System' : t === 'hell' ? 'Hell' : 'Dunkel'}
-              </button>
-            ))}
-          </div>
-        </section>
       </div>
       <Betreiber />
     </>
