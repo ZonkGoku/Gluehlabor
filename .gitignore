@@ -5,6 +5,7 @@ dist
 .dev.vars
 .wrangler
 .env
-daten/
+/daten/
+/php/api/daten/
 dist-server/
 out/
