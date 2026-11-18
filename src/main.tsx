@@ -4,6 +4,7 @@ import '@fontsource/ibm-plex-sans/latin-600.css';
 import '@fontsource/ibm-plex-mono/latin-400.css';
 import '@fontsource/ibm-plex-mono/latin-600.css';
 import './styles.css';
+import './app.css';
 
 import { render } from 'preact';
 import { registerSW } from 'virtual:pwa-register';

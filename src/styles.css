@@ -35,6 +35,26 @@
   --knopf: var(--accent);
   --auf-knopf: #fbf7f6;
   --warnung: #9a5b00;
+  --karte: #ffffff;
+  --karte-2: #f6efed;
+  --schatten: 0 1px 2px rgba(60, 20, 25, 0.05), 0 6px 24px -12px rgba(60, 20, 25, 0.18);
+  --balken: var(--accent);
+  --balken-leer: #efe5e3;
+  --akzent-weich: #f5e4e6;
+  --gold-weich: #fbf0d8;
+  --gold-text: #8a6413;
+  --u1-bg: #2f7a45;
+  --u1-fg: #ffffff;
+  --u2-bg: #dcefd9;
+  --u2-fg: #22562f;
+  --u3-bg: #fbf0cc;
+  --u3-fg: #6e5410;
+  --u4-bg: #fbe0cc;
+  --u4-fg: #87430f;
+  --u5-bg: #c8423f;
+  --u5-fg: #ffffff;
+  --gut: #2f7a45;
+  --leiste: rgba(251, 247, 246, 0.86);
 }
 
 /* Dunkel: Kellerlabor. Bordeaux angehoben, damit es auf Schwarzrot nicht absäuft; Zahlen in Gold. */
@@ -58,6 +78,26 @@
     --knopf: var(--gold);
     --auf-knopf: #17100f;
     --warnung: #e7b45a;
+  --karte: #1f1614;
+  --karte-2: #281d1b;
+  --schatten: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 8px 28px -14px rgba(0, 0, 0, 0.7);
+  --balken: #c4495c;
+  --balken-leer: #2c201e;
+  --akzent-weich: #33191d;
+  --gold-weich: #2f2516;
+  --gold-text: #e8bd62;
+  --u1-bg: #3e9b5a;
+  --u1-fg: #0f1a12;
+  --u2-bg: #1e3a26;
+  --u2-fg: #9fd8ae;
+  --u3-bg: #3a3018;
+  --u3-fg: #f0d58a;
+  --u4-bg: #3d2717;
+  --u4-fg: #f3b98a;
+  --u5-bg: #b53a37;
+  --u5-fg: #ffffff;
+  --gut: #6cc487;
+  --leiste: rgba(23, 16, 15, 0.84);
   }
 }
 :root[data-theme='dunkel'] {
@@ -79,6 +119,26 @@
   --knopf: var(--gold);
   --auf-knopf: #17100f;
   --warnung: #e7b45a;
+  --karte: #1f1614;
+  --karte-2: #281d1b;
+  --schatten: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 8px 28px -14px rgba(0, 0, 0, 0.7);
+  --balken: #c4495c;
+  --balken-leer: #2c201e;
+  --akzent-weich: #33191d;
+  --gold-weich: #2f2516;
+  --gold-text: #e8bd62;
+  --u1-bg: #3e9b5a;
+  --u1-fg: #0f1a12;
+  --u2-bg: #1e3a26;
+  --u2-fg: #9fd8ae;
+  --u3-bg: #3a3018;
+  --u3-fg: #f0d58a;
+  --u4-bg: #3d2717;
+  --u4-fg: #f3b98a;
+  --u5-bg: #b53a37;
+  --u5-fg: #ffffff;
+  --gut: #6cc487;
+  --leiste: rgba(23, 16, 15, 0.84);
 }
 
 *,

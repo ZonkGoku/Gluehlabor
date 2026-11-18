@@ -1,0 +1,56 @@
+// Kleine, wiederverwendete Anzeigebausteine. Keine Rechenlogik.
+import type { Urteil } from '../lib/scoring';
+import type { SaisonWahl } from './daten';
+
+export function UrteilPill({ urteil }: { urteil: Urteil | null }) {
+  if (!urteil) return <span class="urteil-pill">–</span>;
+  const klasse = 'u-' + urteil.replace(/ /g, '-').replace('ß', 'ss');
+  return <span class={`urteil-pill ${klasse}`}>{urteil}</span>;
+}
+
+export function Notenbalken({ wert }: { wert: number | null }) {
+  return (
+    <div class="notenbalken" aria-hidden="true">
+      <span style={{ width: `${wert === null ? 0 : wert * 10}%` }} />
+    </div>
+  );
+}
+
+export function SaisonSchalter({
+  saisons,
+  wert,
+  onWahl,
+}: {
+  saisons: number[];
+  wert: SaisonWahl;
+  onWahl: (s: SaisonWahl) => void;
+}) {
+  const optionen: SaisonWahl[] = ['alle', ...saisons];
+  return (
+    <div class="segmente" role="group" aria-label="Saison">
+      {optionen.map((o) => (
+        <button type="button" aria-pressed={wert === o} onClick={() => onWahl(o)}>
+          {o === 'alle' ? 'Alle' : o}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function Betreiber() {
+  return (
+    <footer class="betreiber">
+      <img src="./logo.svg" alt="" />
+      <span>
+        Becherwerk ist die Prüfstelle für Glühwein auf Hamburger Weihnachtsmärkten.
+        Gemacht und betrieben von David &amp; Philip, seit 2025.
+      </span>
+    </footer>
+  );
+}
+
+export function datumKurz(iso?: string): string | null {
+  if (!iso) return null;
+  const [j, m, t] = iso.split('-');
+  return `${t}.${m}.${j}`;
+}

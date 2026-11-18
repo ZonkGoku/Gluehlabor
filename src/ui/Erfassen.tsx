@@ -145,8 +145,8 @@ export function Erfassen() {
         <span class="marke">Becherwerk</span>
         <span class="titel" />
         <SyncAnzeige />
-        <a href="#/einstellungen" aria-label="Einstellungen">
-          Menü
+        <a href="#/" aria-label="Zur Übersicht">
+          Fertig
         </a>
       </header>
 

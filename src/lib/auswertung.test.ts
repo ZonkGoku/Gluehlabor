@@ -14,6 +14,7 @@ import { importiereCsv } from './csvImport';
 import { DEFAULT_GEWICHTE, KRITERIEN, leereNoten, type Eintrag, type Kriterium } from './modell';
 import {
   befunde,
+  diagnose,
   korrelation,
   korrelationZwischen,
   kriteriumStatistik,
@@ -56,7 +57,20 @@ describe('Statistik – Befunde aus Saison 2025 (Abnahme laut Auftrag)', () => {
     expect(kriteriumStatistik(bestand, 'becher').spanne).toBe(7);
     const u = ueberblick(bestand, DEFAULT_GEWICHTE);
     expect(u.einsOderZwei).toBe(6);
+    expect(u.mittelGesamt).toBeCloseTo(5.255952381, 8);
     expect(u.spanneGesamt).toBeCloseTo(2.666666667, 8);
+  });
+});
+
+describe('diagnose – wie im Sheet', () => {
+  it('Geschmack, Geruch, Personal: Skala zu eng; P/L zusätzlich doppelt', () => {
+    const d = Object.fromEntries(KRITERIEN.map((k) => [k, diagnose(kriteriumStatistik(bestand, k))]));
+    expect(d.geschmack).toEqual(['Skala zu eng']);
+    expect(d.geruch).toEqual(['Skala zu eng']);
+    expect(d.personal).toEqual(['Skala zu eng']);
+    expect(d.preisLeistung).toEqual(['Skala zu eng', 'doppelt sich mit Geschmack']);
+    expect(d.temperatur).toEqual([]);
+    expect(d.becher).toEqual([]);
   });
 });
 

@@ -1,0 +1,1243 @@
+/* App-Gerüst und Auswertungsansichten. Tokens kommen aus styles.css. */
+
+/* ───────── Gerüst ───────── */
+
+.app {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.app-kopf {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: calc(env(safe-area-inset-top) + 10px) 16px 10px;
+  background: var(--leiste);
+  backdrop-filter: saturate(1.4) blur(14px);
+  -webkit-backdrop-filter: saturate(1.4) blur(14px);
+  border-bottom: 1px solid var(--linie);
+}
+.app-kopf .zeichen {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  flex: none;
+}
+.app-kopf .name {
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+  flex: 1;
+  min-width: 0;
+}
+.app-kopf .name small {
+  display: block;
+  font-family: var(--mono);
+  font-weight: 400;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  margin-top: -1px;
+}
+.symbolknopf {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: var(--text-2);
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+.symbolknopf:hover {
+  background: var(--karte-2);
+  color: var(--text);
+}
+
+.inhalt {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 16px 16px calc(env(safe-area-inset-bottom) + 104px);
+}
+
+/* Untere Tab-Leiste (Telefon) */
+.tabs {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: end;
+  padding: 6px 8px calc(env(safe-area-inset-bottom) + 6px);
+  background: var(--leiste);
+  backdrop-filter: saturate(1.4) blur(16px);
+  -webkit-backdrop-filter: saturate(1.4) blur(16px);
+  border-top: 1px solid var(--linie);
+}
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 0 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-2);
+  text-decoration: none;
+  border-radius: 12px;
+}
+.tab[aria-current='page'] {
+  color: var(--zahl);
+}
+.tab[aria-current='page'] svg {
+  stroke-width: 2.2;
+}
+.tab-plus {
+  justify-self: center;
+  width: 58px;
+  height: 58px;
+  margin-top: -22px;
+  border-radius: 20px;
+  background: var(--knopf);
+  color: var(--auf-knopf);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 10px 24px -8px rgba(123, 30, 43, 0.55);
+  text-decoration: none;
+}
+
+/* Seitenleiste (Rechner) */
+.seitenleiste {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .app {
+    display: grid;
+    grid-template-columns: 248px minmax(0, 1fr);
+  }
+  .app-kopf,
+  .tabs {
+    display: none;
+  }
+  .seitenleiste {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    padding: 24px 16px;
+    border-right: 1px solid var(--linie);
+    background: var(--karte-2);
+  }
+  .seitenleiste .logo {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 8px;
+    display: block;
+  }
+  .seitenleiste .titel {
+    text-align: center;
+    font-weight: 600;
+    font-size: 18px;
+    margin-bottom: 18px;
+  }
+  .seitenleiste .titel small {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-2);
+    margin-top: 2px;
+  }
+  .navpunkt {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    color: var(--text-2);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .navpunkt:hover {
+    background: var(--karte);
+    color: var(--text);
+  }
+  .navpunkt[aria-current='page'] {
+    background: var(--karte);
+    color: var(--text);
+    box-shadow: var(--schatten);
+  }
+  .navpunkt[aria-current='page'] svg {
+    color: var(--zahl);
+  }
+  .seitenleiste .erfassen {
+    margin-top: 14px;
+    justify-content: center;
+    background: var(--knopf);
+    color: var(--auf-knopf);
+    font-weight: 600;
+  }
+  .seitenleiste .erfassen:hover {
+    background: var(--knopf);
+    color: var(--auf-knopf);
+    filter: brightness(1.08);
+  }
+  .seitenleiste .fussnote {
+    margin-top: auto;
+    font-size: 12px;
+    color: var(--text-2);
+    line-height: 1.45;
+  }
+  .seitenleiste .fussnote .sync {
+    margin-bottom: 8px;
+  }
+  .inhalt {
+    padding: 32px 40px 64px;
+  }
+}
+
+/* ───────── Bausteine ───────── */
+
+.seitenkopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 16px;
+  margin-bottom: 18px;
+}
+.seitenkopf h1 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+.seitenkopf .unterzeile {
+  margin: 6px 0 0;
+  color: var(--text-2);
+  font-size: 14px;
+}
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  margin: 0 0 8px;
+  font-weight: 500;
+}
+
+.karte {
+  background: var(--karte);
+  border: 1px solid var(--linie);
+  border-radius: 18px;
+  box-shadow: var(--schatten);
+  padding: 18px;
+  min-width: 0;
+}
+.karte > h2 {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.karte > h2 a {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--zahl);
+  text-decoration: none;
+}
+
+.raster {
+  display: grid;
+  gap: 14px;
+}
+@media (min-width: 700px) {
+  .raster-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .raster-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.raster-kpi {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (min-width: 700px) {
+  .raster-kpi {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.breit {
+  grid-column: 1 / -1;
+}
+
+.kpi {
+  padding: 14px 16px;
+}
+.kpi .wert {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.kpi .label {
+  font-size: 12.5px;
+  color: var(--text-2);
+  margin-top: 4px;
+}
+.kpi .zusatz {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--text-2);
+  margin-top: 6px;
+}
+
+/* Segmentierte Auswahl */
+.segmente {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--karte-2);
+  border: 1px solid var(--linie);
+  gap: 2px;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.segmente button {
+  border: 0;
+  background: transparent;
+  padding: 7px 14px;
+  border-radius: 9px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-2);
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: var(--mono);
+}
+.segmente button[aria-pressed='true'] {
+  background: var(--karte);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.filterreihe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.auswahl {
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--linie);
+  background: var(--karte-2);
+  padding: 0 32px 0 12px;
+  font-size: 13.5px;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-2) 50%),
+    linear-gradient(135deg, var(--text-2) 50%, transparent 50%);
+  background-position:
+    calc(100% - 16px) 17px,
+    calc(100% - 11px) 17px;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+  max-width: 100%;
+}
+.pillknopf {
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--linie);
+  background: var(--karte-2);
+  padding: 0 14px;
+  font-size: 13.5px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--text);
+  text-decoration: none;
+}
+.pillknopf[aria-expanded='true'] {
+  background: var(--karte);
+  border-color: var(--linie-stark);
+}
+
+/* Urteil */
+.urteil-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.u-Nachschenken {
+  background: var(--u1-bg);
+  color: var(--u1-fg);
+}
+.u-Richtig-gut {
+  background: var(--u2-bg);
+  color: var(--u2-fg);
+}
+.u-Geht-klar {
+  background: var(--u3-bg);
+  color: var(--u3-fg);
+}
+.u-Einmal-reicht {
+  background: var(--u4-bg);
+  color: var(--u4-fg);
+}
+.u-Weggiessen {
+  background: var(--u5-bg);
+  color: var(--u5-fg);
+}
+
+.zahl-gross {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+/* Notenbalken 0..10 */
+.notenbalken {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--balken-leer);
+  overflow: hidden;
+}
+.notenbalken > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: var(--balken);
+}
+
+/* ───────── Übersicht ───────── */
+
+.spitze {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgba(217, 166, 64, 0.22), transparent 55%),
+    linear-gradient(160deg, #7b1e2b, #5a1520);
+  color: #fbf7f6;
+  border: 0;
+  padding: 22px;
+}
+.spitze .eyebrow {
+  color: rgba(251, 247, 246, 0.7);
+}
+.spitze .stand {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.spitze .geteilt {
+  font-size: 14px;
+  color: rgba(251, 247, 246, 0.75);
+  margin-top: 4px;
+}
+.spitze .zahlen {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+.spitze .zahl-gross {
+  font-size: 56px;
+  line-height: 0.9;
+  color: #f2c86a;
+}
+.spitze .teil {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: rgba(251, 247, 246, 0.78);
+  line-height: 1.6;
+}
+.spitze .teil b {
+  color: #fbf7f6;
+  font-weight: 600;
+}
+.spitze .urteil-pill {
+  background: rgba(251, 247, 246, 0.16);
+  color: #fbf7f6;
+}
+.spitze .siegel {
+  position: absolute;
+  right: -26px;
+  bottom: -26px;
+  width: 150px;
+  opacity: 0.16;
+  pointer-events: none;
+}
+.spitze a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.topliste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+.topliste a {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 64px;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  row-gap: 6px;
+  align-items: center;
+  padding: 9px 6px;
+  border-radius: 10px;
+  color: inherit;
+  text-decoration: none;
+}
+.topliste a:hover {
+  background: var(--karte-2);
+}
+.topliste .rang {
+  grid-row: 1 / 3;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text-2);
+  text-align: center;
+}
+.topliste .name {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topliste .note {
+  grid-row: 1 / 3;
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 17px;
+  text-align: right;
+}
+
+.verteilung {
+  display: grid;
+  gap: 10px;
+}
+.verteilung .reihe {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.verteilung .spur {
+  height: 22px;
+  border-radius: 6px;
+  background: var(--balken-leer);
+  overflow: hidden;
+}
+.verteilung .spur > span {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  min-width: 0;
+}
+.verteilung .anzahl {
+  font-family: var(--mono);
+  text-align: right;
+  font-weight: 600;
+}
+
+.fortschritt {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--balken-leer);
+  overflow: hidden;
+  margin: 10px 0 12px;
+}
+.fortschritt > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), #c48a24);
+  border-radius: 999px;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chip-klein {
+  font-size: 12.5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--karte-2);
+  border: 1px solid var(--linie);
+  color: var(--text-2);
+}
+.chip-klein.gold {
+  background: var(--gold-weich);
+  color: var(--gold-text);
+  border-color: transparent;
+}
+
+/* Befunde */
+.befunde {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.befund {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--karte-2);
+  font-size: 14.5px;
+  line-height: 1.45;
+}
+.befund .marke {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 6px;
+  margin-top: 1px;
+}
+.befund.warnung .marke {
+  background: var(--u4-bg);
+  color: var(--u4-fg);
+}
+.befund.hinweis .marke {
+  background: var(--u3-bg);
+  color: var(--u3-fg);
+}
+.befund.gut .marke {
+  background: var(--u2-bg);
+  color: var(--u2-fg);
+}
+
+/* ───────── Rangliste ───────── */
+
+.gewichte {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+.gewicht {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 6px 6px 12px;
+  border-radius: 12px;
+  background: var(--karte-2);
+  border: 1px solid var(--linie);
+  font-size: 13.5px;
+}
+.gewicht .stepper {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.gewicht button {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  border: 1px solid var(--linie);
+  background: var(--karte);
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--text);
+}
+.gewicht button:disabled {
+  opacity: 0.35;
+}
+.gewicht .w {
+  width: 22px;
+  text-align: center;
+  font-family: var(--mono);
+  font-weight: 600;
+}
+
+.tabelle {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.tabelle th {
+  text-align: left;
+  font-weight: 500;
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  padding: 0 10px 10px;
+  border-bottom: 1px solid var(--linie);
+  white-space: nowrap;
+}
+.tabelle td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--linie);
+  vertical-align: middle;
+}
+.tabelle tr:last-child td {
+  border-bottom: 0;
+}
+.tabelle .num {
+  text-align: right;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+.tabelle tbody tr {
+  cursor: pointer;
+}
+.tabelle tbody tr:hover td {
+  background: var(--karte-2);
+}
+.tabelle .erster td:first-child {
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+.tabelle .rangzelle {
+  font-family: var(--mono);
+  color: var(--text-2);
+  width: 40px;
+}
+.tabelle .standzelle b {
+  font-weight: 600;
+}
+.tabelle .standzelle small {
+  display: block;
+  color: var(--text-2);
+  font-size: 12px;
+  margin-top: 2px;
+}
+.tabelle .notezelle {
+  width: 180px;
+}
+.tabelle .notezelle .innen {
+  display: grid;
+  grid-template-columns: 46px 1fr;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.rangkarten {
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.rangkarten a {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: center;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--linie);
+  color: inherit;
+  text-decoration: none;
+}
+.rangkarten li:last-child a {
+  border-bottom: 0;
+}
+.rangkarten .rang {
+  grid-row: 1 / 3;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 14px;
+  background: var(--karte-2);
+  color: var(--text-2);
+}
+.rangkarten .rang.eins {
+  background: var(--gold-weich);
+  color: var(--gold-text);
+}
+.rangkarten .name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rangkarten .unter {
+  font-size: 12.5px;
+  color: var(--text-2);
+  font-family: var(--mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rangkarten .note {
+  grid-row: 1 / 3;
+  text-align: right;
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+}
+.rangkarten .note .zahl-gross {
+  font-size: 20px;
+}
+@media (max-width: 699px) {
+  .nur-breit {
+    display: none;
+  }
+  .rangkarten {
+    display: block;
+  }
+}
+
+.leer {
+  text-align: center;
+  padding: 36px 16px;
+  color: var(--text-2);
+}
+.leer b {
+  display: block;
+  color: var(--text);
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+
+/* ───────── Detail ───────── */
+
+.zurueck {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-2);
+  text-decoration: none;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+.detail-kopf {
+  display: grid;
+  gap: 14px;
+}
+@media (min-width: 700px) {
+  .detail-kopf {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  }
+}
+.metaliste {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.profil {
+  display: grid;
+  gap: 14px;
+}
+.profil .kriterium {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 12px;
+}
+.profil .krit {
+  font-weight: 500;
+  font-size: 14px;
+}
+.profil .krit small {
+  font-family: var(--mono);
+  color: var(--text-2);
+  font-size: 11px;
+  margin-left: 6px;
+}
+.profil .wert {
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 15px;
+  text-align: right;
+}
+.profil .spur {
+  grid-column: 1 / -1;
+  position: relative;
+  height: 12px;
+  border-radius: 999px;
+  background-color: var(--balken-leer);
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent 0,
+    transparent calc(10% - 2px),
+    var(--karte) calc(10% - 2px),
+    var(--karte) 10%
+  );
+}
+.profil .spur > .fuell {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: var(--balken);
+}
+.profil .spur > .schnitt {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--text);
+  border-radius: 2px;
+}
+.profil .anker {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.legende {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text-2);
+  margin-top: 14px;
+}
+.legende span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.legende i {
+  display: inline-block;
+  width: 14px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--balken);
+}
+.legende i.strich {
+  width: 2px;
+  height: 14px;
+  background: var(--text);
+}
+.foto {
+  width: 100%;
+  border-radius: 14px;
+  display: block;
+  margin-top: 12px;
+}
+
+/* ───────── Statistik ───────── */
+
+.skalennutzung {
+  display: grid;
+  gap: 4px;
+}
+.skalennutzung .reihe {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr) 48px;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 14px;
+}
+.skalennutzung .reihe .name {
+  font-weight: 500;
+}
+.skalennutzung .achse {
+  position: relative;
+  height: 26px;
+}
+.skalennutzung .achse .stufe {
+  position: absolute;
+  top: 9px;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  border-radius: 50%;
+  background: var(--balken-leer);
+}
+.skalennutzung .achse .stufe.an {
+  background: var(--balken);
+}
+.skalennutzung .achse .band {
+  position: absolute;
+  top: 11px;
+  height: 4px;
+  background: var(--balken);
+  opacity: 0.35;
+  border-radius: 2px;
+}
+.skalennutzung .achse .mittel {
+  position: absolute;
+  top: 3px;
+  width: 2px;
+  height: 20px;
+  margin-left: -1px;
+  background: var(--text);
+  border-radius: 2px;
+}
+.skalennutzung .wert {
+  font-family: var(--mono);
+  text-align: right;
+  font-weight: 600;
+}
+.skalennutzung .skalenkopf {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr) 48px;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-2);
+}
+.skalennutzung .skalenkopf .zahlen {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 1px;
+}
+
+.pegel {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+  height: 160px;
+}
+.pegel .saeule {
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+  height: 100%;
+  text-align: center;
+  gap: 6px;
+}
+.pegel .saeule .fuellung {
+  align-self: end;
+  border-radius: 8px 8px 4px 4px;
+  background: var(--balken);
+  min-height: 2px;
+}
+.pegel .saeule .fuellung.leer {
+  background: var(--balken-leer);
+}
+.pegel .saeule .w {
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 13px;
+}
+.pegel .saeule .l {
+  font-size: 11.5px;
+  color: var(--text-2);
+}
+
+.diagnose {
+  font-size: 12.5px;
+  color: var(--warnung);
+}
+
+/* ───────── Vergleich ───────── */
+
+.entwicklung {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.entwicklung.besser {
+  background: var(--u2-bg);
+  color: var(--u2-fg);
+}
+.entwicklung.schlechter {
+  background: var(--u4-bg);
+  color: var(--u4-fg);
+}
+.entwicklung.unveraendert,
+.entwicklung.einmalig {
+  background: var(--karte-2);
+  color: var(--text-2);
+}
+.entwicklung.neu {
+  background: var(--gold-weich);
+  color: var(--gold-text);
+}
+
+.marktgitter {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+.markt {
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--linie);
+  background: var(--karte-2);
+}
+.markt .n {
+  font-weight: 600;
+  font-size: 14px;
+}
+.markt .z {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-2);
+  margin-top: 4px;
+}
+.markt.nie {
+  background: transparent;
+  border-style: dashed;
+}
+.markt.abgedeckt {
+  background: var(--u2-bg);
+  border-color: transparent;
+}
+.markt.abgedeckt .n,
+.markt.abgedeckt .z {
+  color: var(--u2-fg);
+}
+
+/* ───────── Spickzettel ───────── */
+
+.regeln {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: r;
+  display: grid;
+  gap: 10px;
+}
+.regeln li {
+  counter-increment: r;
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 10px;
+  font-size: 15px;
+  line-height: 1.45;
+}
+.regeln li::before {
+  content: counter(r, decimal-leading-zero);
+  font-family: var(--mono);
+  color: var(--zahl);
+  font-weight: 600;
+  font-size: 13px;
+  padding-top: 2px;
+}
+.ankertafel {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+.ankertafel div {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.ankertafel dt {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--zahl);
+  text-align: right;
+}
+.ankertafel dd {
+  margin: 0;
+}
+
+/* ───────── Fuß ───────── */
+
+.betreiber {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 28px;
+  padding: 16px 4px 0;
+  border-top: 1px solid var(--linie);
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.betreiber img {
+  width: 56px;
+  height: 56px;
+  flex: none;
+}
+
+.karte.seite {
+  max-width: none;
+  margin: 0;
+}
+
+a.karte {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.topliste .rang {
+  grid-column: 1;
+}
+.topliste .name {
+  grid-column: 2;
+  grid-row: 1;
+}
+.topliste .note {
+  grid-column: 3;
+}
+.topliste .notenbalken {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.rangkarten .rang {
+  grid-column: 1;
+}
+.rangkarten .name {
+  grid-column: 2;
+  grid-row: 1;
+}
+.rangkarten .unter {
+  grid-column: 2;
+  grid-row: 2;
+}
+.rangkarten .note {
+  grid-column: 3;
+}
+.skalennutzung .skalenkopf .zahlen {
+  position: relative;
+  display: block;
+  height: 14px;
+}
+.skalennutzung .skalenkopf .zahlen span {
+  position: absolute;
+  transform: translateX(-50%);
+}
+.pegel .saeule .fuellung.leer {
+  height: 4px !important;
+}

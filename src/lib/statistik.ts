@@ -90,6 +90,8 @@ export interface Ueberblick {
   einsOderZwei: number;
   beste: number | null;
   schlechteste: number | null;
+  /** Durchschnittliche Gesamtnote. */
+  mittelGesamt: number | null;
   spanneGesamt: number | null;
   /** Wie viele der zehn Stufen über alle Kriterien mindestens einmal vergeben wurden. */
   genutzteStufen: number;
@@ -107,6 +109,7 @@ export function ueberblick(eintraege: readonly Eintrag[], gewichte: Gewichte): U
     einsOderZwei: noten.filter((n) => n <= 2).length,
     beste,
     schlechteste,
+    mittelGesamt: mittelwert(gesamt),
     spanneGesamt: beste === null || schlechteste === null ? null : beste - schlechteste,
     genutzteStufen: new Set(noten).size,
   };
@@ -167,6 +170,15 @@ export interface Befund {
 
 const KORR_SCHWELLE = 0.6;
 const SPANNE_SCHWELLE = 5;
+
+/** Kurzdiagnose je Kriterium, wie im alten Statistik-Tab. */
+export function diagnose(s: KriteriumStatistik): string[] {
+  const d: string[] = [];
+  if (s.spanne !== null && s.n >= 3 && s.spanne < SPANNE_SCHWELLE) d.push('Skala zu eng');
+  if (s.korrGeschmack !== null && s.korrGeschmack > KORR_SCHWELLE) d.push('doppelt sich mit Geschmack');
+  if (s.streuung !== null && s.n >= 3 && s.streuung < 1) d.push('kaum Streuung');
+  return d;
+}
 
 const komma = (x: number, stellen = 2) => x.toFixed(stellen).replace('.', ',').replace('-', '−');
 
