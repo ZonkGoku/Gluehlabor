@@ -1,5 +1,12 @@
 name: Deploy auf GitHub Pages
 
+# Veröffentlicht immer den Stand von main (dorthin schreibt auch die App).
+#
+# GitHub erlaubt Pages-Deploys standardmäßig nur vom Standard-Branch des Repos.
+# Ist main nicht der Standard-Branch, stößt ein Push auf main deshalb einen
+# workflow_dispatch auf dem Standard-Branch an; dieser Lauf checkt main aus.
+# Ist main Standard-Branch, wird direkt gebaut.
+
 on:
   push:
     branches: [main]
@@ -9,18 +16,29 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  actions: write
 
-# Jeder synchronisierte Becher ist ein Commit auf main. Laufende Deploys
-# werden vom neuesten abgelöst, damit sich nichts staut.
 concurrency:
-  group: pages
+  group: pages-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:
+  weiterleiten:
+    if: github.event_name == 'push' && github.ref_name != github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy auf dem Standard-Branch anstoßen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy.yml --repo "${{ github.repository }}" --ref "${{ github.event.repository.default_branch }}"
+
   build:
+    if: github.event_name == 'workflow_dispatch' || github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - uses: actions/setup-node@v4
         with:
           node-version: 22
