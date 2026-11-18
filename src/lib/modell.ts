@@ -62,6 +62,14 @@ export interface Eintrag {
   foto?: string; // relativer Pfad im veröffentlichten Datenbestand
   noten: Noten;
   erstelltAm: number; // ms seit Epoche
+  /** Anonyme Kennung des Geräts, das den Becher erfasst hat. */
+  geraet?: string;
+  /** Freiwilliger Anzeigename des Bewertenden. */
+  name?: string;
+  /** Vom Server gesetzt: Bewertung der Prüfstelle (David & Philip). */
+  pruefstelle?: boolean;
+  /** Gemeinsamer Besuch an einer Bude (QR-Code). Mehrere Bewertende teilen sich eine Besuchs-Nr. */
+  besuchId?: string;
 }
 
 export function leereNoten(): Noten {

@@ -1,0 +1,440 @@
+// Becherwerk Community-Server: alle Endpunkte. Läuft auf Cloudflare Workers + D1.
+//
+// Grundsätze
+// - Keine Konten. Ein Gerät wählt eine Kennung und einen Schlüssel und meldet sich damit an.
+//   Der Server kennt nur den Hash des Schlüssels.
+// - Der Server vertraut nichts aus der App: jede Einreichung läuft durch dieselbe
+//   Prüfung wie in der App (src/lib/community.ts).
+// - Das Prüfstellen-Siegel gibt es nur über einen Code, den David und Philip kennen.
+// - Ausgeblendete Becher werden als Platzhalter ausgeliefert, damit Geräte sie entfernen.
+
+import { pruefeEinreichung, pruefeName } from '../../src/lib/community';
+import type { D1Like } from './db';
+
+export interface Env {
+  DB: D1Like;
+  /** Geheimnis für Moderation und Import. */
+  ADMIN_TOKEN?: string;
+  /** Geheimer Code, mit dem sich ein Gerät als Prüfstelle ausweist. */
+  PRUEFSTELLE_CODE?: string;
+  /** Kommagetrennte Ursprünge, die schreiben dürfen. */
+  ERLAUBTE_URSPRUENGE?: string;
+}
+
+const LIMITS = {
+  geraeteJeIpUndStunde: 30,
+  becherJeGeraetUndTag: 100,
+  becherJeGeraetUndTagPruefstelle: 1000,
+  anfragenJeIpUndMinute: 120,
+  maxBodyBytes: 64_000,
+  maxEintraegeJeAnfrage: 20,
+  maxImport: 100,
+};
+const MIN = 60_000;
+const STUNDE = 60 * MIN;
+const TAG = 24 * STUNDE;
+
+// ───────── Hilfen ─────────
+
+function json(daten: unknown, status: number, kopf: HeadersInit = {}): Response {
+  return new Response(JSON.stringify(daten), {
+    status,
+    headers: { 'Content-Type': 'application/json; charset=utf-8', ...kopf },
+  });
+}
+
+class HttpFehler extends Error {
+  constructor(
+    public status: number,
+    message: string,
+    public extra: Record<string, unknown> = {},
+  ) {
+    super(message);
+  }
+}
+
+async function sha256Hex(s: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** Vergleich ohne Zeitunterschiede. */
+function gleich(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+async function lesen(request: Request): Promise<Record<string, unknown>> {
+  const text = await request.text();
+  if (text.length > LIMITS.maxBodyBytes) throw new HttpFehler(413, 'Anfrage zu groß.');
+  try {
+    const x = JSON.parse(text);
+    if (!x || typeof x !== 'object' || Array.isArray(x)) throw new Error();
+    return x as Record<string, unknown>;
+  } catch {
+    throw new HttpFehler(400, 'Kein gültiges JSON.');
+  }
+}
+
+/** Zähler je Schlüssel und Zeitfenster. true = noch erlaubt. */
+async function begrenze(db: D1Like, schluessel: string, fensterMs: number, max: number, jetzt: number): Promise<boolean> {
+  const fenster = Math.floor(jetzt / fensterMs);
+  await db
+    .prepare(
+      `INSERT INTO limits (schluessel, fenster, anzahl) VALUES (?, ?, 1)
+       ON CONFLICT(schluessel) DO UPDATE SET
+         anzahl = CASE WHEN fenster = excluded.fenster THEN anzahl + 1 ELSE 1 END,
+         fenster = excluded.fenster`,
+    )
+    .bind(schluessel, fenster)
+    .run();
+  const z = await db.prepare('SELECT anzahl FROM limits WHERE schluessel = ?').bind(schluessel).first<{ anzahl: number }>();
+  return (z?.anzahl ?? 0) <= max;
+}
+
+interface GeraetZeile {
+  id: string;
+  schluessel_hash: string;
+  name: string | null;
+  pruefstelle: number;
+  gesperrt: number;
+}
+
+async function anmelden(request: Request, db: D1Like): Promise<GeraetZeile> {
+  const kopf = request.headers.get('Authorization') ?? '';
+  const m = /^Bearer ([A-Za-z0-9_-]{16,64})\.([0-9a-f]{64})$/.exec(kopf);
+  if (!m) throw new HttpFehler(401, 'Anmeldung fehlt.');
+  const g = await db.prepare('SELECT * FROM geraete WHERE id = ?').bind(m[1]).first<GeraetZeile>();
+  if (!g || !gleich(g.schluessel_hash, await sha256Hex(m[2]))) throw new HttpFehler(401, 'Unbekanntes Gerät.');
+  if (g.gesperrt) throw new HttpFehler(403, 'Dieses Gerät ist gesperrt.');
+  return g;
+}
+
+function istAdmin(request: Request, env: Env): boolean {
+  const kopf = request.headers.get('Authorization') ?? '';
+  const m = /^Bearer (.+)$/.exec(kopf);
+  return Boolean(env.ADMIN_TOKEN && m && gleich(m[1], env.ADMIN_TOKEN));
+}
+
+const NAECHSTE_SEQ = '(SELECT COALESCE(MAX(seq), 0) + 1 FROM becher)';
+
+interface BecherZeile {
+  seq: number;
+  id: string;
+  geraet_id: string;
+  name: string | null;
+  pruefstelle: number;
+  besuch_id: string | null;
+  stand: string;
+  markt: string;
+  stadt: string | null;
+  saison: number;
+  datum: string | null;
+  sorte: string | null;
+  becher_nr: number | null;
+  preis: number | null;
+  notiz: string | null;
+  geschmack: number | null;
+  geruch: number | null;
+  temperatur: number | null;
+  personal: number | null;
+  atmosphaere: number | null;
+  preis_leistung: number | null;
+  becher: number | null;
+  erstellt_am: number;
+  versteckt: number;
+}
+
+function alsEintrag(z: BecherZeile): Record<string, unknown> {
+  if (z.versteckt) return { id: z.id, versteckt: true, seq: z.seq };
+  const e: Record<string, unknown> = {
+    id: z.id,
+    seq: z.seq,
+    stand: z.stand,
+    markt: z.markt,
+    saison: z.saison,
+    noten: {
+      geschmack: z.geschmack,
+      geruch: z.geruch,
+      temperatur: z.temperatur,
+      personal: z.personal,
+      atmosphaere: z.atmosphaere,
+      preisLeistung: z.preis_leistung,
+      becher: z.becher,
+    },
+    erstelltAm: z.erstellt_am,
+    geraet: z.geraet_id,
+    pruefstelle: Boolean(z.pruefstelle),
+  };
+  if (z.stadt) e.stadt = z.stadt;
+  if (z.datum) e.datum = z.datum;
+  if (z.sorte) e.sorte = z.sorte;
+  if (z.becher_nr !== null) e.becherNr = z.becher_nr;
+  if (z.preis !== null) e.preis = z.preis;
+  if (z.notiz) e.notiz = z.notiz;
+  if (z.name) e.name = z.name;
+  if (z.besuch_id) e.besuchId = z.besuch_id;
+  return e;
+}
+
+type Eintragsdaten = Extract<ReturnType<typeof pruefeEinreichung>, { ok: true }>['eintrag'];
+
+function einfuegen(db: D1Like, e: Eintragsdaten, geraetId: string, name: string | null, pruefstelle: boolean, jetzt: number) {
+  return db
+    .prepare(
+      `INSERT INTO becher (seq, id, geraet_id, name, pruefstelle, besuch_id, stand, markt, stadt, saison, datum, sorte,
+         becher_nr, preis, notiz, geschmack, geruch, temperatur, personal, atmosphaere, preis_leistung, becher,
+         erstellt_am, eingegangen_am, versteckt)
+       VALUES (${NAECHSTE_SEQ}, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
+    )
+    .bind(
+      e.id, geraetId, name, pruefstelle ? 1 : 0, e.besuchId ?? null, e.stand, e.markt, e.stadt ?? null, e.saison,
+      e.datum ?? null, e.sorte ?? null, e.becherNr ?? null, e.preis ?? null, e.notiz ?? null,
+      e.noten.geschmack, e.noten.geruch, e.noten.temperatur, e.noten.personal, e.noten.atmosphaere,
+      e.noten.preisLeistung, e.noten.becher, e.erstelltAm, jetzt,
+    );
+}
+
+// ───────── Ursprünge (CORS) ─────────
+
+function erlaubteUrspruenge(env: Env): string[] {
+  return (env.ERLAUBTE_URSPRUENGE ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+}
+
+function corsKopf(request: Request, env: Env, nurLesen: boolean): Record<string, string> {
+  const ursprung = request.headers.get('Origin');
+  const basis = { Vary: 'Origin' };
+  if (nurLesen) return { ...basis, 'Access-Control-Allow-Origin': '*' };
+  if (ursprung && erlaubteUrspruenge(env).includes(ursprung)) return { ...basis, 'Access-Control-Allow-Origin': ursprung };
+  return basis;
+}
+
+// ───────── Einstieg ─────────
+
+export async function handle(request: Request, env: Env, jetzt: number = Date.now()): Promise<Response> {
+  const url = new URL(request.url);
+  const pfad = url.pathname.replace(/\/+$/, '') || '/';
+  const methode = request.method.toUpperCase();
+  const nurLesen = methode === 'GET' && (pfad === '/api/becher' || pfad === '/api/status');
+  const cors = corsKopf(request, env, nurLesen);
+
+  try {
+    if (methode === 'OPTIONS') {
+      const ursprung = request.headers.get('Origin');
+      const ok = !ursprung || erlaubteUrspruenge(env).includes(ursprung);
+      return new Response(null, {
+        status: ok ? 204 : 403,
+        headers: {
+          ...corsKopf(request, env, false),
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
+          'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+          'Access-Control-Max-Age': '86400',
+        },
+      });
+    }
+
+    // Schreibende Anfragen aus Browsern nur von erlaubten Seiten.
+    if (methode !== 'GET') {
+      const ursprung = request.headers.get('Origin');
+      if (ursprung && !erlaubteUrspruenge(env).includes(ursprung)) throw new HttpFehler(403, 'Ursprung nicht erlaubt.');
+    }
+
+    const ip = request.headers.get('CF-Connecting-IP') ?? 'unbekannt';
+    if (!(await begrenze(env.DB, `anfrage:${ip}`, MIN, LIMITS.anfragenJeIpUndMinute, jetzt))) {
+      throw new HttpFehler(429, 'Zu viele Anfragen. Bitte kurz warten.');
+    }
+
+    const antwort = await route(request, env, pfad, methode, ip, jetzt);
+    for (const [k, v] of Object.entries(cors)) antwort.headers.set(k, v);
+    return antwort;
+  } catch (err) {
+    if (err instanceof HttpFehler) return json({ fehler: err.message, ...err.extra }, err.status, cors);
+    console.error(err);
+    return json({ fehler: 'Interner Fehler.' }, 500, cors);
+  }
+}
+
+async function route(request: Request, env: Env, pfad: string, methode: string, ip: string, jetzt: number): Promise<Response> {
+  const db = env.DB;
+
+  if (pfad === '/api/status' && methode === 'GET') return json({ ok: true, zeit: jetzt }, 200);
+
+  // ── Gerät anmelden ──
+  if (pfad === '/api/geraete' && methode === 'POST') {
+    if (!(await begrenze(db, `geraete:${ip}`, STUNDE, LIMITS.geraeteJeIpUndStunde, jetzt))) {
+      throw new HttpFehler(429, 'Zu viele neue Geräte von dieser Adresse. Bitte später erneut versuchen.');
+    }
+    const b = await lesen(request);
+    if (typeof b.id !== 'string' || !/^[A-Za-z0-9_-]{16,64}$/.test(b.id)) throw new HttpFehler(400, 'Ungültige Kennung.');
+    if (typeof b.schluessel !== 'string' || !/^[0-9a-f]{64}$/.test(b.schluessel)) throw new HttpFehler(400, 'Ungültiger Schlüssel.');
+    const vorhanden = await db.prepare('SELECT id FROM geraete WHERE id = ?').bind(b.id).first();
+    if (vorhanden) throw new HttpFehler(409, 'Diese Kennung ist schon vergeben.');
+    await db
+      .prepare('INSERT INTO geraete (id, schluessel_hash, erstellt_am) VALUES (?, ?, ?)')
+      .bind(b.id, await sha256Hex(b.schluessel), jetzt)
+      .run();
+    return json({ ok: true }, 201);
+  }
+
+  // ── Eigene Daten ──
+  if (pfad === '/api/ich') {
+    const g = await anmelden(request, db);
+    if (methode === 'GET') return json({ id: g.id, name: g.name, pruefstelle: Boolean(g.pruefstelle) }, 200);
+    if (methode === 'PUT') {
+      const b = await lesen(request);
+      const p = pruefeName(b.name, Boolean(g.pruefstelle));
+      if (!p.ok) throw new HttpFehler(422, p.grund);
+      await db.prepare('UPDATE geraete SET name = ? WHERE id = ?').bind(p.name, g.id).run();
+      // Wer sich erst nach dem ersten Becher einen Namen gibt, soll nicht rückwirkend anonym bleiben:
+      // bisher namenlose Becher dieses Geräts bekommen den Namen. Schon benannte bleiben, wie sie sind.
+      let nachbenannt = 0;
+      if (p.name) {
+        const { results } = await db.prepare('SELECT id FROM becher WHERE geraet_id = ? AND name IS NULL').bind(g.id).all<{ id: string }>();
+        for (const z of results) {
+          await db.prepare(`UPDATE becher SET name = ?, seq = ${NAECHSTE_SEQ} WHERE id = ?`).bind(p.name, z.id).run();
+          nachbenannt++;
+        }
+      }
+      return json({ ok: true, name: p.name, nachbenannt }, 200);
+    }
+  }
+
+  if (pfad === '/api/pruefstelle' && methode === 'POST') {
+    const g = await anmelden(request, db);
+    const b = await lesen(request);
+    if (!(await begrenze(db, `code:${g.id}`, STUNDE, 10, jetzt))) throw new HttpFehler(429, 'Zu viele Versuche.');
+    if (!env.PRUEFSTELLE_CODE || typeof b.code !== 'string' || !gleich(b.code, env.PRUEFSTELLE_CODE)) {
+      throw new HttpFehler(403, 'Falscher Code.');
+    }
+    await db.prepare('UPDATE geraete SET pruefstelle = 1 WHERE id = ?').bind(g.id).run();
+    return json({ ok: true, pruefstelle: true }, 200);
+  }
+
+  // ── Becher ──
+  if (pfad === '/api/becher' && methode === 'POST') {
+    const g = await anmelden(request, db);
+    const b = await lesen(request);
+    if (!Array.isArray(b.eintraege) || b.eintraege.length === 0 || b.eintraege.length > LIMITS.maxEintraegeJeAnfrage) {
+      throw new HttpFehler(400, `Bitte 1 bis ${LIMITS.maxEintraegeJeAnfrage} Einträge senden.`);
+    }
+    const limit = g.pruefstelle ? LIMITS.becherJeGeraetUndTagPruefstelle : LIMITS.becherJeGeraetUndTag;
+    const schonHeute = (
+      await db
+        .prepare('SELECT COUNT(*) AS n FROM becher WHERE geraet_id = ? AND eingegangen_am > ?')
+        .bind(g.id, jetzt - TAG)
+        .first<{ n: number }>()
+    )?.n ?? 0;
+    let frei = Math.max(0, limit - schonHeute);
+
+    const ergebnisse: { id: unknown; status: 'ok' | 'bereits' | 'abgelehnt' | 'zu-viele'; grund?: string }[] = [];
+    for (const roh of b.eintraege) {
+      const rohId = (roh as { id?: unknown } | null)?.id;
+      const p = pruefeEinreichung(roh, jetzt);
+      if (!p.ok) {
+        ergebnisse.push({ id: rohId, status: 'abgelehnt', grund: p.grund });
+        continue;
+      }
+      const vorhanden = await db.prepare('SELECT geraet_id FROM becher WHERE id = ?').bind(p.eintrag.id).first<{ geraet_id: string }>();
+      if (vorhanden) {
+        ergebnisse.push(
+          vorhanden.geraet_id === g.id
+            ? { id: p.eintrag.id, status: 'bereits' }
+            : { id: p.eintrag.id, status: 'abgelehnt', grund: 'ID ist schon vergeben.' },
+        );
+        continue;
+      }
+      if (frei <= 0) {
+        ergebnisse.push({ id: p.eintrag.id, status: 'zu-viele', grund: 'Tageslimit erreicht.' });
+        continue;
+      }
+      await einfuegen(db, p.eintrag, g.id, g.name, Boolean(g.pruefstelle), jetzt).run();
+      frei--;
+      ergebnisse.push({ id: p.eintrag.id, status: 'ok' });
+    }
+    return json({ ergebnisse }, 200);
+  }
+
+  if (pfad === '/api/becher' && methode === 'GET') {
+    const q = new URL(request.url).searchParams;
+    const nach = Math.max(0, Math.floor(Number(q.get('nach') ?? 0)) || 0);
+    const limit = Math.min(500, Math.max(1, Math.floor(Number(q.get('limit') ?? 200)) || 200));
+    const { results } = await db
+      .prepare('SELECT * FROM becher WHERE seq > ? ORDER BY seq ASC LIMIT ?')
+      .bind(nach, limit + 1)
+      .all<BecherZeile>();
+    const mehr = results.length > limit;
+    const seite = mehr ? results.slice(0, limit) : results;
+    return json(
+      { eintraege: seite.map(alsEintrag), naechste: seite.at(-1)?.seq ?? nach, mehr },
+      200,
+      { 'Cache-Control': 'public, max-age=15' },
+    );
+  }
+
+  // ── Moderation ──
+  if (pfad.startsWith('/api/admin/')) {
+    if (!istAdmin(request, env)) throw new HttpFehler(401, 'Nur für die Prüfstelle.');
+    const b = await lesen(request);
+
+    if (pfad === '/api/admin/verstecken' && methode === 'POST') {
+      if (typeof b.id !== 'string' || typeof b.versteckt !== 'boolean') throw new HttpFehler(400, 'id und versteckt nötig.');
+      const r = await db
+        .prepare(`UPDATE becher SET versteckt = ?, seq = ${NAECHSTE_SEQ} WHERE id = ?`)
+        .bind(b.versteckt ? 1 : 0, b.id)
+        .run();
+      if (r.meta.changes === 0) throw new HttpFehler(404, 'Becher nicht gefunden.');
+      return json({ ok: true }, 200);
+    }
+
+    if (pfad === '/api/admin/sperren' && methode === 'POST') {
+      if (typeof b.geraet !== 'string' || typeof b.gesperrt !== 'boolean') throw new HttpFehler(400, 'geraet und gesperrt nötig.');
+      const r = await db.prepare('UPDATE geraete SET gesperrt = ? WHERE id = ?').bind(b.gesperrt ? 1 : 0, b.geraet).run();
+      if (r.meta.changes === 0) throw new HttpFehler(404, 'Gerät nicht gefunden.');
+      // Alle Becher des Geräts ein- oder ausblenden, einzeln, damit jeder eine neue Sync-Nummer bekommt.
+      const { results } = await db.prepare('SELECT id FROM becher WHERE geraet_id = ?').bind(b.geraet).all<{ id: string }>();
+      for (const z of results) {
+        await db
+          .prepare(`UPDATE becher SET versteckt = ?, seq = ${NAECHSTE_SEQ} WHERE id = ?`)
+          .bind(b.gesperrt ? 1 : 0, z.id)
+          .run();
+      }
+      return json({ ok: true, betroffen: results.length }, 200);
+    }
+
+    if (pfad === '/api/admin/import' && methode === 'POST') {
+      if (!Array.isArray(b.eintraege) || b.eintraege.length === 0 || b.eintraege.length > LIMITS.maxImport) {
+        throw new HttpFehler(400, `Bitte 1 bis ${LIMITS.maxImport} Einträge senden.`);
+      }
+      await db
+        .prepare(
+          `INSERT OR IGNORE INTO geraete (id, schluessel_hash, name, pruefstelle, erstellt_am)
+           VALUES ('bestand-pruefstelle', '-', 'Prüfstelle', 1, ?)`,
+        )
+        .bind(jetzt)
+        .run();
+      let neu = 0;
+      const abgelehnt: { id: unknown; grund: string }[] = [];
+      for (const roh of b.eintraege) {
+        // Bestandsdaten dürfen älter sein als das Einreichfenster der App.
+        const p = pruefeEinreichung(
+          { ...(roh as object), erstelltAm: Math.min(Math.max((roh as { erstelltAm?: number }).erstelltAm ?? jetzt, jetzt - 100 * TAG), jetzt) },
+          jetzt,
+        );
+        if (!p.ok) {
+          abgelehnt.push({ id: (roh as { id?: unknown })?.id, grund: p.grund });
+          continue;
+        }
+        const e = { ...p.eintrag, erstelltAm: (roh as { erstelltAm: number }).erstelltAm ?? p.eintrag.erstelltAm };
+        const r = await db.prepare('SELECT id FROM becher WHERE id = ?').bind(e.id).first();
+        if (r) continue;
+        await einfuegen(db, e, 'bestand-pruefstelle', 'Prüfstelle', true, jetzt).run();
+        neu++;
+      }
+      return json({ neu, abgelehnt }, 200);
+    }
+  }
+
+  throw new HttpFehler(404, 'Nicht gefunden.');
+}

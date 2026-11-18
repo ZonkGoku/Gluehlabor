@@ -1,0 +1,17 @@
+name = "becherwerk-api"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+
+[vars]
+# Seiten, die schreiben dürfen (Browser-Ursprünge, kommagetrennt)
+ERLAUBTE_URSPRUENGE = "https://zonkgoku.github.io,http://localhost:4173,http://localhost:5173"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "becherwerk"
+database_id = "LOKAL"          # wird beim Einrichten durch die echte ID ersetzt
+migrations_dir = "migrations"
+
+# Geheimnisse (nie ins Repo): ADMIN_TOKEN, PRUEFSTELLE_CODE
+#   wrangler secret put ADMIN_TOKEN
+#   wrangler secret put PRUEFSTELLE_CODE
