@@ -115,6 +115,14 @@ interface TopKarteProps {
   klasse?: string;
   /** Auf der Detailseite selbst führt die Karte nirgendwohin. */
   ohneLink?: boolean;
+  /** Ziel der Karte, wenn nicht der einzelne Becher (z. B. die Stand-Seite). */
+  href?: string;
+  /** Statt Prüfstelle/Community: Beschriftung des Stempels oben rechts (z. B. 12 Bewertungen). */
+  stempel?: string;
+  /** Zeile im Abriss unten statt bewertet von. */
+  von?: string;
+  /** Adresse, die beim Teilen mitgeht. */
+  teilenLink?: string;
 }
 
 /** Kopfteil der Karte: Link zur Detailseite oder einfacher Block. */
@@ -130,7 +138,7 @@ function Inhalt({ href, children }: { href?: string; children: ComponentChildren
 }
 
 /** Die Karte für einen Spitzenplatz. */
-export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, ohneLink = false }: TopKarteProps) {
+export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, ohneLink = false, href, stempel, von, teilenLink }: TopKarteProps) {
   const { eintrag: e, wertung: w, rang } = zeile;
   const pruef = istPruefstelle(e);
   const zahl = useZaehler(w.gesamt);
@@ -139,8 +147,8 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
     ev.preventDefault();
     ev.stopPropagation();
     setMeldung('Erzeuge …');
-    const link = `${location.origin}${location.pathname}#/becher/${encodeURIComponent(e.id)}`;
-    const r = await teileKartenBild(kartenDaten(zeile, ort, titel), link);
+    const link = `${location.origin}${location.pathname}${teilenLink ?? `#/becher/${encodeURIComponent(e.id)}`}`;
+    const r = await teileKartenBild(kartenDaten(zeile, ort, titel, stempel === undefined ? undefined : { stempel, von }), link);
     setMeldung(r === 'gespeichert' ? 'Bild gespeichert' : '');
     if (r === 'gespeichert') setTimeout(() => setMeldung(''), 2600);
   };
@@ -150,13 +158,15 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
       klein={klein}
       klasse={klasse}
       kinder={
-        <Inhalt href={ohneLink ? undefined : `#/becher/${encodeURIComponent(e.id)}`}>
+        <Inhalt href={ohneLink ? undefined : (href ?? `#/becher/${encodeURIComponent(e.id)}`)}>
           <div class="flex items-start justify-between gap-3">
             <div class="flex items-baseline gap-2">
               <span class={`font-display leading-none licht-text ${klein ? 'text-[40px]' : 'text-[52px]'}`}>{String(rang ?? '–').padStart(2, '0')}</span>
               <span class="etikett">Platz</span>
             </div>
-            {pruef ? (
+            {stempel !== undefined ? (
+              <span class="rounded-md border border-[var(--nm-rand-stark)] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-dunst">{stempel}</span>
+            ) : pruef ? (
               <span class="-rotate-3 rounded-md border border-gold-400/70 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-gold-300">
                 Prüfstelle
               </span>
@@ -192,7 +202,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
             <div class="etikett whitespace-nowrap !text-[9.5px] !tracking-[0.12em]">
               {e.saison} · #{kurzId(e.id)}
             </div>
-            <div class="truncate text-xs text-dunst">{pruef ? 'von David & Philip' : `bewertet von ${anzeigeName(e)}`}</div>
+            <div class="truncate text-xs text-dunst">{von ?? (pruef ? 'von David & Philip' : `bewertet von ${anzeigeName(e)}`)}</div>
           </div>
           <button
             type="button"

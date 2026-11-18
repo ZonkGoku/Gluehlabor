@@ -20,6 +20,15 @@ Gamification und Teilen-auf-Social. Bewertungen von David & Philip laufen weiter
 
 **Ablaufplan für den Start (Mo 23.11.2026): `ABLAUFPLAN.md`.** `npm run launch-check` zeigt, was noch fehlt.
 
+## Stände und Bewertungen (seit 18.11.2026)
+
+Ein Eintrag (Becher) ist **eine Bewertung einer Person**; ein **Stand** ist die Gruppe aller Bewertungen mit gleichem Namen (Kern: Groß/Klein, Satzzeichen, Emoji egal), Markt und Stadt (`standIdent` in `src/lib/community.ts`, 1:1 in PHP).
+- **Name ist Pflicht** zum Bewerten (2–24 Zeichen, nicht eindeutig). Der Server antwortet ohne Namen mit `name-fehlt`, der Becher bleibt in der App `offen`. Die App fragt über `ui/nacht/NameBlatt.tsx` beim ersten Speichern, `Mitbewerten` verlangt ihn ebenfalls.
+- **Eine Bewertung je Gerät, Stand und Abend** (`abendVon`: Datum, sonst Tag der Erfassung). Server: Status `abgelehnt` mit Grund; App prüft vorher mit `schonBewertet`. Ausgeblendete zählen nicht. Anlegen eines Stands = erste Bewertung (keine leeren Stände). „Bewerten" auf der Stand-Seite füllt einen gesperrten Entwurf (wie der QR-Link).
+- **Rangliste nach Ständen** (`src/lib/staende.ts`, `baueStaende`): Durchschnitt der Gesamtnoten aller Bewertungen; für die Reihenfolge werden Stände mit wenigen Bewertungen zum Gesamtmittel hingezogen (`VORWERT_GEWICHT` 3), unter `MIN_BEWERTUNGEN` 3 gilt „vorläufig". Angezeigt wird immer der echte Durchschnitt. Umschalter Alle / Prüfstelle / Community (`Quelle`); die Stand-Seite (`#/stand/<id>`, `ui/Stand.tsx`) zeigt beide Wertungen nebeneinander. Die Scoring-Regeln oben bleiben je Bewertung unverändert.
+- **Prüfstelle = Super-User** ohne Konto: Gerät mit Prüfstellen-Code (Profil). Solche Geräte dürfen die Admin-Endpunkte auch mit ihrer Geräte-Anmeldung nutzen (`pruefeModeration`), also im Browser: `#/moderation` (`ui/Moderation.tsx`, `daten/moderation.ts`: Meldungen, Ausblenden, Sperren, Löschen auf Anfrage, Zugang entziehen) und auf der Stand-Seite „Stand pflegen" (umbenennen, Stadt/Markt, **zusammenführen**, ganz ausblenden; Endpunkt `POST /api/admin/stand-aendern`). `POST /api/admin/pruefstelle-zuruecksetzen` {behalten} entzieht allen anderen Geräten die Rechte (danach `PRUEFSTELLE_CODE` ändern; Siegel alter Becher bleibt).
+- Nicht gebaut: eine Bewertung am selben Abend nachträglich ändern (man kann sie nur über die Moderation ausblenden lassen).
+
 ## Stack
 
 - **Vite 6 + Preact 10 + TypeScript**, Hash-Router (`#/erfassen`, `#/einstellungen`, …)
@@ -198,7 +207,7 @@ Auswahl in `src/daten/darstellung.ts` (localStorage, `public/theme-init.js` setz
 
 ## Stand der Arbeit
 
-Gebaut und getestet (453 Tests, dazu Browser-Tests mit zwei Geräten gegen den lokalen Server, QR-Code mit
+Gebaut und getestet (ca. 530 Tests, dazu Browser-Tests mit zwei Geräten gegen den lokalen Server, QR-Code mit
 echtem Leser dekodiert): Scoring, alle Ansichten, Startseite mit Preisindex, Community-Server mit anonymer
 Kennung, Sync, freiwilligem Namen, Prüfstellen-Siegel, Melden, Moderation, Löschen auf Anfrage, QR-Mitbewerten,
 Impressum und Datenschutz (Entwurf), iPhone-Hinweis.

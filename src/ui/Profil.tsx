@@ -37,10 +37,10 @@ export function Profil() {
   const speichereName = async () => {
     const p = pruefeName(name);
     if (!p.ok) return setNameMeldung(p.grund);
-    await setzeName(p.name ?? '');
+    if (!p.name) return setNameMeldung('Bitte einen Namen eingeben.');
+    await setzeName(p.name);
     await schreibeEinstellung('nameFehler', '');
-    await schreibeEinstellung('nameAbgelehnt', true); // die Frage auf der Startseite entfällt
-    setNameMeldung(p.name ? `Gespeichert: ${p.name}` : 'Du bist jetzt anonym.');
+    setNameMeldung(`Gespeichert: ${p.name}`);
     void synchronisiere();
   };
 
@@ -48,6 +48,7 @@ export function Profil() {
     setCodeMeldung('Prüfe …');
     try {
       await api('/api/pruefstelle', { methode: 'POST', geraet: await holeGeraet(), body: { code: code.trim() } });
+      await schreibeEinstellung('pruefstelle', true);
       setCode('');
       setCodeMeldung('Dieses Gerät ist jetzt Prüfstelle.');
       void synchronisiere();
@@ -67,10 +68,10 @@ export function Profil() {
       </div>
       <div class="raster">
         <section class="karte seite" style={{ padding: '18px' }}>
-          <h2 style={{ margin: 0 }}>Dein Name · freiwillig</h2>
+          <h2 style={{ margin: 0 }}>Dein Name · nötig zum Bewerten</h2>
           <p style={{ margin: '8px 0 0' }}>
             Er steht öffentlich neben deinen Bewertungen. Wenn du dir zum ersten Mal einen Namen gibst, gilt er auch für Becher,
-            die du schon abgegeben hast. Ohne Namen erscheinst du als „Anonym". Besser kein voller echter Name. Ein Konto
+            die du schon abgegeben hast. Ohne Namen kannst du nicht bewerten. Ein Spitzname reicht, besser kein voller echter Name. Ein Konto
             brauchst du nicht.
           </p>
           <label for="name">Name oder Spitzname</label>
@@ -122,7 +123,14 @@ export function Profil() {
         <section class="karte seite" style={{ padding: '18px' }}>
           <h2 style={{ margin: 0 }}>Prüfstelle · nur David &amp; Philip</h2>
           {pruefstelle ? (
-            <p style={{ margin: '8px 0 0' }}>Dieses Gerät ist als Prüfstelle freigeschaltet. Eure Bewertungen tragen das Siegel „Prüfstelle".</p>
+            <>
+              <p style={{ margin: '8px 0 0' }}>Dieses Gerät ist als Prüfstelle freigeschaltet. Eure Bewertungen tragen das Siegel „Prüfstelle" und zählen in der Wertung der Prüfstelle.</p>
+              <div class="knopfreihe">
+                <a class="knopf" href="#/moderation" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
+                  Moderation öffnen
+                </a>
+              </div>
+            </>
           ) : (
             <>
               <p style={{ margin: '8px 0 0' }}>

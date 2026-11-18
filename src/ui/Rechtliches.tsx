@@ -124,14 +124,14 @@ export function Datenschutz() {
         <h2>3. Auf dem Server (Community)</h2>
         <p>
           Wenn du Bewertungen abgibst, speichert unser Server: die zufällige Geräte-Kennung, einen Hash deines
-          Geräteschlüssels (nicht den Schlüssel selbst), deinen freiwilligen Namen sowie zu jeder Bewertung Stand, Markt,
+          Geräteschlüssels (nicht den Schlüssel selbst), den Namen, den du dir gibst (Spitzname genügt; zum Bewerten ist ein Name nötig), sowie zu jeder Bewertung Stand, Markt,
           Stadt, Datum, Sorte, Becher-Nr., Preis, Noten, Notiz, die Besuchs-Nr. und Zeitpunkte. Es gibt kein Konto, keine
           E-Mail-Adresse und keine Telefonnummer.
         </p>
         <p>
-          <b>Öffentlich:</b> Bewertungen mit deinem Namen (oder „Anonym") und der Geräte-Kennung kann jeder abrufen, auch ohne
+          <b>Öffentlich:</b> Bewertungen mit deinem Namen und der Geräte-Kennung kann jeder abrufen, auch ohne
           die App. Wer mehrere Bewertungen derselben Kennung sieht, erkennt, dass sie vom selben Gerät stammen. Schreib deshalb
-          keine persönlichen Daten in Namen oder Notizen.
+          keine persönlichen Daten in Namen oder Notizen. Je Stand und Abend kannst du ein Gerät nur einmal bewerten; Prüfstellen-Geräte (David und Philip) können außerdem Bewertungen ausblenden und Stände zusammenführen.
         </p>
         <p>
           Meldest du einen Eintrag, speichern wir deine Geräte-Kennung, den Grund und deinen optionalen Text, bis wir die
@@ -141,7 +141,7 @@ export function Datenschutz() {
         <h2>4. Rechtsgrundlagen</h2>
         <p>
           Bereitstellung der Bewertungsfunktion: Art. 6 Abs. 1 lit. b DSGVO. Dein Name: deine Einwilligung, Art. 6 Abs. 1
-          lit. a DSGVO, freiwillig und jederzeit widerruflich. Schutz vor Missbrauch und Sicherheit des Dienstes: berechtigtes
+          lit. a DSGVO; du wählst ihn selbst und kannst ihn jederzeit entfernen lassen (dann kannst du nicht mehr bewerten, bis du dir einen neuen gibst). Schutz vor Missbrauch und Sicherheit des Dienstes: berechtigtes
           Interesse, Art. 6 Abs. 1 lit. f DSGVO.
         </p>
 

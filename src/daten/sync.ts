@@ -34,7 +34,7 @@ export function abonniereSync(h: (i: SyncInfo) => void): () => void {
 
 interface Antwortzeile {
   id: string;
-  status: 'ok' | 'bereits' | 'abgelehnt' | 'zu-viele';
+  status: 'ok' | 'bereits' | 'abgelehnt' | 'zu-viele' | 'name-fehlt';
   grund?: string;
 }
 
@@ -85,7 +85,8 @@ async function sendeBecher(geraet: Awaited<ReturnType<typeof holeGeraet>>): Prom
     for (const r of antwort.ergebnisse) {
       if (r.status === 'ok' || r.status === 'bereits') await db.eintraege.update(r.id, { sync: 'fertig', syncFehler: undefined });
       else if (r.status === 'abgelehnt') await db.eintraege.update(r.id, { sync: 'abgelehnt', syncFehler: r.grund });
-      // 'zu-viele': bleibt offen und wird später erneut versucht
+      // 'zu-viele' und 'name-fehlt': bleibt offen und wird später erneut versucht
+      else if (r.status === 'name-fehlt') await db.eintraege.update(r.id, { syncFehler: r.grund });
     }
     if (antwort.ergebnisse.some((r) => r.status === 'zu-viele')) {
       throw new ApiFehler(429, 'Tageslimit erreicht. Der Rest folgt morgen.');

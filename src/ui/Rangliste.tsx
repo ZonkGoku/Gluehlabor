@@ -1,15 +1,16 @@
 // Rangliste „Night Market": die ersten drei als Sammelkarten zum Wischen, danach die Liste.
 import { useState } from 'preact/hooks';
-import { filtere, ranglisteMitWertung, saisons } from '../lib/auswertung';
+import { filtere, saisons } from '../lib/auswertung';
+import { baueStaende, type Quelle } from '../lib/staende';
 import { KRITERIEN } from '../lib/modell';
-import { ortText, stadtVon } from '../lib/orte';
+import { stadtVon } from '../lib/orte';
 import { Betreiber } from './bausteine';
+import { useAktuell } from './hooks';
 import { useEintraege, useGewichte, useSaison } from './daten';
 import { GewichteEditor } from './GewichteEditor';
 import { useEinblenden } from './nacht/bewegung';
 import { Chips } from './nacht/Chips';
-import { RangZeile } from './nacht/RangZeile';
-import { TopKarte } from './nacht/Ticket';
+import { StandTopKarte, StandZeile } from './nacht/StandKarten';
 import { MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
 
@@ -17,10 +18,12 @@ const FELD =
   'glas appearance-none rounded-full bg-no-repeat py-2.5 pl-4 pr-9 text-sm text-eis outline-none transition focus-visible:ring-2 focus-visible:ring-gold-400/70';
 
 export function Rangliste() {
+  useAktuell();
   const alle = useEintraege();
   const gewichte = useGewichte();
   const [saison, setSaison] = useSaison(alle);
   const [markt, setMarkt] = useState<string>('alle');
+  const [quelle, setQuelle] = useState<Quelle>('alle');
   const [gewichteOffen, setGewichteOffen] = useState(false);
   const wurzel = useEinblenden<HTMLDivElement>();
   if (!alle) return null;
@@ -36,18 +39,28 @@ export function Rangliste() {
     a === 'Ohne Stadt' ? 1 : b === 'Ohne Stadt' ? -1 : a.localeCompare(b, 'de'),
   );
   const filter = markt.startsWith('stadt:') ? { saison, markt: 'alle', stadt: markt.slice(6) } : { saison, markt };
-  const zeilen = ranglisteMitWertung(filtere(alle, filter, MARKTLISTE), gewichte);
-  const ortVon = (z: (typeof zeilen)[number]) => ortText(MARKTLISTE, z.eintrag);
+  const gewaehlt = filtere(alle, filter, MARKTLISTE);
+  const zeilen = baueStaende(gewaehlt, MARKTLISTE, gewichte, quelle);
+  const bewertungen = zeilen.reduce((n, s) => n + s.wert.anzahl, 0);
   const podest = zeilen.slice(0, 3);
   const rest = zeilen.slice(3);
 
   return (
     <div class="nm">
       <div class="mb-5 mt-2">
-        <p class="etikett !text-gold-300">{zeilen.length} Becher · absteigend nach Gesamtnote</p>
+        <p class="etikett !text-gold-300">
+          {zeilen.length} {zeilen.length === 1 ? 'Stand' : 'Stände'} · {bewertungen} {bewertungen === 1 ? 'Bewertung' : 'Bewertungen'}
+        </p>
         <h1 class="mt-2 font-display text-[44px] uppercase leading-[1] tracking-wide text-eis sm:text-5xl">Rangliste</h1>
         <div class="mt-4 flex flex-wrap items-center gap-2.5">
           <Chips optionen={['alle', ...jahre] as const} wert={saison} onWahl={setSaison} beschriftung="Saison" label={(o) => (o === 'alle' ? 'Alle' : String(o))} />
+          <Chips
+            optionen={['alle', 'pruefstelle', 'community'] as const}
+            wert={quelle}
+            onWahl={setQuelle}
+            beschriftung="Wertung von"
+            label={(o) => (o === 'alle' ? 'Alle' : o === 'pruefstelle' ? 'Prüfstelle' : 'Community')}
+          />
           <span class="relative">
             <select class={FELD} aria-label="Markt" value={markt} onChange={(e) => setMarkt((e.target as HTMLSelectElement).value)}>
               <option value="alle">Ganz Deutschland</option>
@@ -86,8 +99,8 @@ export function Rangliste() {
 
       {zeilen.length === 0 ? (
         <div class="glas rounded-3xl p-8 text-center">
-          <p class="font-display text-3xl uppercase tracking-wide text-eis">Keine Becher für diese Auswahl</p>
-          <p class="mt-2 text-dunst">Andere Saison oder anderen Markt wählen.</p>
+          <p class="font-display text-3xl uppercase tracking-wide text-eis">Keine Stände für diese Auswahl</p>
+          <p class="mt-2 text-dunst">Andere Saison, anderen Markt oder eine andere Wertung wählen.</p>
         </div>
       ) : (
         <div ref={wurzel}>
@@ -95,7 +108,7 @@ export function Rangliste() {
           <ol class="ohne-balken -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-6 pt-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0">
             {podest.map((z) => (
               <li data-ein class="w-[86%] shrink-0 snap-center md:w-auto">
-                <TopKarte zeile={z} ort={ortVon(z)} klein={podest.length > 1} />
+                <StandTopKarte stand={z} quelle={quelle} klein={podest.length > 1} />
               </li>
             ))}
           </ol>
@@ -104,7 +117,7 @@ export function Rangliste() {
             <ol class="grid gap-2 md:grid-cols-2">
               {rest.map((z) => (
                 <li data-ein>
-                  <RangZeile zeile={z} />
+                  <StandZeile stand={z} />
                 </li>
               ))}
             </ol>
@@ -115,7 +128,7 @@ export function Rangliste() {
         <span class="mt-0.5 shrink-0">
           <Symbol name="pfeil" groesse={12} />
         </span>
-        Glühwein = Geschmack, Geruch, Temperatur · Drumherum = Personal, Atmosphäre, Preis/Leistung, Becher. Gleiche Note, gleicher Platz.
+        Ein Stand zählt den Durchschnitt aller Bewertungen. Wenige Bewertungen zählen für die Reihenfolge weniger (vorläufig), angezeigt wird immer der echte Durchschnitt. Glühwein = Geschmack, Geruch, Temperatur · Drumherum = Personal, Atmosphäre, Preis/Leistung, Becher.
       </p>
       <Betreiber />
     </div>

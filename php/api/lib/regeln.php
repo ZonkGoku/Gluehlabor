@@ -3,7 +3,7 @@
 // Ändert sich dort etwas, muss es hier mitziehen; php/test prüft beides gegen dieselben Fälle.
 declare(strict_types=1);
 
-const GRENZEN = ['stand' => 80, 'markt' => 80, 'stadt' => 60, 'notiz' => 500, 'name' => 24];
+const GRENZEN = ['stand' => 80, 'markt' => 80, 'stadt' => 60, 'notiz' => 500, 'name' => 24, 'nameMin' => 2];
 const RESERVIERTE_NAMEN = ['david', 'philip', 'prüfstelle', 'pruefstelle', 'admin', 'becherwerk', 'gluehlabor', 'glühlabor', 'moderator'];
 const KRITERIEN = ['geschmack', 'geruch', 'temperatur', 'personal', 'atmosphaere', 'preisLeistung', 'becher'];
 const SORTEN = ['rot', 'weiss', 'kirsch', 'winzer', 'feuerzangen', 'alkoholfrei', 'sonstiges'];
@@ -55,6 +55,9 @@ function pruefeName(mixed $roh, bool $istPruefstelle = false): array
     $name = saeubere($roh);
     if ($name === '') {
         return ['ok' => true, 'name' => null];
+    }
+    if (laenge($name) < GRENZEN['nameMin']) {
+        return ['ok' => false, 'grund' => 'Mindestens ' . GRENZEN['nameMin'] . ' Zeichen.'];
     }
     if (laenge($name) > GRENZEN['name']) {
         return ['ok' => false, 'grund' => 'Höchstens ' . GRENZEN['name'] . ' Zeichen.'];
@@ -207,4 +210,23 @@ function pruefeEinreichung(mixed $e, int $jetzt): array
         'besuchId' => is_string($besuch) ? $besuch : null,
     ];
     return ['ok' => true, 'eintrag' => $eintrag];
+}
+
+/** Der Stand ohne Groß/Klein, Satzzeichen, Leerraum und Emoji. Port von standKern in community.ts. */
+function standKern(string $stand): string
+{
+    $s = mb_strtolower(saeubere($stand), 'UTF-8');
+    return trim(preg_replace('/[^\p{L}\p{N}]+/u', ' ', $s) ?? '');
+}
+
+/** Derselbe Stand: gleicher Name (Kern), gleicher Markt, gleiche Stadt. Port von standIdent. */
+function standIdent(string $stand, string $markt, ?string $stadt): string
+{
+    return standKern($stand) . '|' . mb_strtolower(saeubere($markt), 'UTF-8') . '|' . mb_strtolower(saeubere($stadt ?? ''), 'UTF-8');
+}
+
+/** Der Abend einer Bewertung: das Datum, sonst der Tag der Erfassung (UTC). Port von abendVon. */
+function abendVon(?string $datum, int $erstelltAm): string
+{
+    return $datum !== null && $datum !== '' ? $datum : gmdate('Y-m-d', intdiv($erstelltAm, 1000));
 }

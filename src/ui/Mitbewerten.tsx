@@ -1,6 +1,6 @@
 // Landeseite des QR-Codes: zeigt den Stand, fragt freiwillig nach dem Namen und startet die Bewertung.
 import { useState } from 'preact/hooks';
-import { leseEinstellung, schreibeEinstellung, setzeName, db } from '../daten/db';
+import { setzeName, db } from '../daten/db';
 import { entwurfHatInhalt, leseEntwurf, schreibeEntwurf, type Entwurf } from '../daten/entwurf';
 import { synchronisiere } from '../daten/sync';
 import { leseBesuch } from '../lib/besuch';
@@ -12,7 +12,6 @@ import { useLive } from './hooks';
 export function Mitbewerten() {
   const besuch = leseBesuch(location.hash.split('?')[1] ?? '');
   const gespeicherterName = useName();
-  const abgelehnt = useLive(() => leseEinstellung<boolean>('nameAbgelehnt', false), [], false);
   const mitDabei = useLive(async () => (besuch.ok ? db.eintraege.where('besuchId').equals(besuch.besuch.id).toArray() : []), [location.hash], []);
   const [name, setName] = useState('');
   const [fehler, setFehler] = useState('');
@@ -34,18 +33,17 @@ export function Mitbewerten() {
     );
   }
   const b = besuch.besuch;
-  const frageNachName = !gespeicherterName && !abgelehnt;
+  const frageNachName = !gespeicherterName;
 
   const starten = async () => {
-    if (frageNachName && name.trim()) {
+    if (frageNachName) {
+      // Ohne Namen keine Bewertung
       const p = pruefeName(name);
       if (!p.ok) return setFehler(p.grund);
-      if (p.name) {
-        await setzeName(p.name);
-        void synchronisiere();
-      }
+      if (!p.name) return setFehler('Bitte einen Namen eingeben.');
+      await setzeName(p.name);
+      void synchronisiere();
     }
-    if (frageNachName) await schreibeEinstellung('nameAbgelehnt', true); // gefragt, nicht noch einmal fragen
     const entwurf: Entwurf = {
       stand: b.stand,
       markt: b.markt,
@@ -85,7 +83,7 @@ export function Mitbewerten() {
 
       {frageNachName && (
         <div class="name-karte">
-          <label for="name-scan">Wie sollen wir dich nennen? Freiwillig.</label>
+          <label for="name-scan">Wie heißt du? Der Name ist nötig, um zu bewerten.</label>
           <input
             id="name-scan"
             class="feld"
@@ -100,8 +98,7 @@ export function Mitbewerten() {
             }}
           />
           <p class="name-hinweis">
-            Der Name steht öffentlich neben deinen Bewertungen. Besser kein voller echter Name. Ohne Eingabe bist du
-            „{anzeigeName({})}".
+            Der Name steht öffentlich neben deinen Bewertungen. Ein Spitzname reicht, besser kein voller echter Name.
             {fehler && <span class="name-fehler"> {fehler}</span>}
           </p>
         </div>

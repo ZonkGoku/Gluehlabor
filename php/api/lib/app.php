@@ -15,6 +15,7 @@ const LIMITS = [
     'maxEintraegeJeAnfrage' => 20,
     'maxImport' => 100,
 ];
+const MAX_STAND_IDS = 200;
 const MELDEGRUENDE = ['unpassend', 'spam', 'falsch', 'persoenlich', 'sonstiges'];
 const MIN_MS = 60_000;
 const STUNDE_MS = 3_600_000;
@@ -125,6 +126,23 @@ function anmelden(Anfrage $a, Db $db): array
         throw new HttpFehler(403, 'Dieses Gerät ist gesperrt.');
     }
     return $g;
+}
+
+/** Moderation darf, wer das Admin-Token kennt (Kommandozeile) oder ein Gerät ist, das sich als Prüfstelle ausgewiesen hat (Browser). */
+function pruefeModeration(Anfrage $a, Db $db, array $env): void
+{
+    if (istAdmin($a, $env)) {
+        return;
+    }
+    try {
+        $g = anmelden($a, $db);
+        if ((int) $g['pruefstelle'] !== 0) {
+            return;
+        }
+    } catch (HttpFehler) {
+        // kein gültiges Gerät
+    }
+    throw new HttpFehler(401, 'Nur für die Prüfstelle.');
 }
 
 function istAdmin(Anfrage $a, array $env): bool
@@ -380,6 +398,14 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
         if (!is_array($liste) || !array_is_list($liste) || count($liste) === 0 || count($liste) > LIMITS['maxEintraegeJeAnfrage']) {
             throw new HttpFehler(400, 'Bitte 1 bis ' . LIMITS['maxEintraegeJeAnfrage'] . ' Einträge senden.');
         }
+        // Bewerten kann nur, wer einen Namen hat. Die Becher bleiben in der App „offen" und gehen mit dem Namen später durch.
+        if ($g['name'] === null || $g['name'] === '') {
+            $fehlt = [];
+            foreach ($liste as $roh) {
+                $fehlt[] = ['id' => is_array($roh) ? ($roh['id'] ?? null) : null, 'status' => 'name-fehlt', 'grund' => 'Bitte zuerst einen Namen eingeben.'];
+            }
+            return new Antwort(200, ['ergebnisse' => $fehlt]);
+        }
         $limit = (int) $g['pruefstelle'] !== 0 ? LIMITS['becherJeGeraetUndTagPruefstelle'] : LIMITS['becherJeGeraetUndTag'];
         $schonHeute = (int) ($db->eins('SELECT COUNT(*) AS n FROM becher WHERE geraet_id = ? AND eingegangen_am > ?', [$g['id'], $jetzt - TAG_MS])['n'] ?? 0);
         $frei = max(0, $limit - $schonHeute);
@@ -402,6 +428,20 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
             }
             if ($frei <= 0) {
                 $ergebnisse[] = ['id' => $e['id'], 'status' => 'zu-viele', 'grund' => 'Tageslimit erreicht.'];
+                continue;
+            }
+            // Eine Bewertung je Gerät, Stand und Abend. Ein neuer Abend ist ein neuer Besuch.
+            $ident = standIdent($e['stand'], $e['markt'], $e['stadt']);
+            $abend = abendVon($e['datum'], (int) $e['erstelltAm']);
+            $doppelt = false;
+            foreach ($db->alle('SELECT stand, markt, stadt, datum, erstellt_am FROM becher WHERE geraet_id = ? AND versteckt = 0 AND erstellt_am > ?', [$g['id'], $e['erstelltAm'] - 4 * TAG_MS]) as $z) {
+                if (standIdent((string) $z['stand'], (string) $z['markt'], $z['stadt']) === $ident && abendVon($z['datum'], (int) $z['erstellt_am']) === $abend) {
+                    $doppelt = true;
+                    break;
+                }
+            }
+            if ($doppelt) {
+                $ergebnisse[] = ['id' => $e['id'], 'status' => 'abgelehnt', 'grund' => 'Diesen Stand hast du an diesem Abend schon bewertet.'];
                 continue;
             }
             fuegeEin($db, $e, (string) $g['id'], $g['name'], (int) $g['pruefstelle'] !== 0, $jetzt);
@@ -446,9 +486,7 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
 
     // ── Moderation ──
     if (str_starts_with($pfad, '/api/admin/')) {
-        if (!istAdmin($a, $env)) {
-            throw new HttpFehler(401, 'Nur für die Prüfstelle.');
-        }
+        pruefeModeration($a, $db, $env);
         if ($pfad === '/api/admin/meldungen' && $methode === 'GET') {
             $zeilen = $db->alle(
                 'SELECT m.becher_id AS id, COUNT(*) AS anzahl, MAX(m.erstellt_am) AS zuletzt, GROUP_CONCAT(m.grund) AS gruende,
@@ -492,6 +530,46 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
                 $db->lauf('UPDATE meldungen SET bearbeitet = 1 WHERE becher_id = ?', [$b['id']]);
             }
             return new Antwort(200, ['ok' => true]);
+        }
+
+        // Stand umbenennen oder zusammenführen: gibt allen genannten Bewertungen denselben Stand, Markt und dieselbe Stadt.
+        if ($pfad === '/api/admin/stand-aendern') {
+            $ids = $b['ids'] ?? null;
+            if (!is_array($ids) || !array_is_list($ids) || count($ids) === 0 || count($ids) > MAX_STAND_IDS) {
+                throw new HttpFehler(400, 'Bitte 1 bis ' . MAX_STAND_IDS . ' Bewertungen nennen.');
+            }
+            foreach ($ids as $id) {
+                if (!is_string($id)) {
+                    throw new HttpFehler(400, 'Bitte 1 bis ' . MAX_STAND_IDS . ' Bewertungen nennen.');
+                }
+            }
+            $stand = pruefeText($b['stand'] ?? null, 'Stand', GRENZEN['stand'], true);
+            if (!$stand['ok']) {
+                throw new HttpFehler(422, $stand['grund']);
+            }
+            $markt = pruefeText($b['markt'] ?? null, 'Markt', GRENZEN['markt'], true);
+            if (!$markt['ok']) {
+                throw new HttpFehler(422, $markt['grund']);
+            }
+            $stadt = pruefeText($b['stadt'] ?? null, 'Stadt', GRENZEN['stadt'], false);
+            if (!$stadt['ok']) {
+                throw new HttpFehler(422, $stadt['grund']);
+            }
+            $betroffen = 0;
+            foreach ($ids as $id) {
+                if ($db->eins('SELECT id FROM becher WHERE id = ? AND versteckt = 0', [$id])) {
+                    aendere($db, 'stand = ?, markt = ?, stadt = ?', [$stand['wert'], $markt['wert'], $stadt['wert']], $id);
+                    $betroffen++;
+                }
+            }
+            return new Antwort(200, ['ok' => true, 'betroffen' => $betroffen]);
+        }
+
+        // Zugang entziehen (Handy verloren): alle Geräte verlieren die Prüfstellen-Rechte, außer dem genannten. Danach den Code ändern.
+        if ($pfad === '/api/admin/pruefstelle-zuruecksetzen') {
+            $behalten = is_string($b['behalten'] ?? null) ? $b['behalten'] : '';
+            $r = $db->lauf("UPDATE geraete SET pruefstelle = 0 WHERE pruefstelle = 1 AND id != 'bestand-pruefstelle' AND id != ?", [$behalten]);
+            return new Antwort(200, ['ok' => true, 'betroffen' => $r]);
         }
 
         if ($pfad === '/api/admin/sperren') {

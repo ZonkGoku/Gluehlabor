@@ -52,19 +52,22 @@ async function ruf(methode: string, pfad: string, o: Opt = {}) {
 
 const hex = (n: number) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, '0')).join('');
 
-/** Neues Gerät anmelden. Liefert den Bearer-Wert. */
-async function geraet(o: Opt = {}) {
+/** Neues Gerät anmelden. Liefert den Bearer-Wert. Standardmäßig mit Namen: ohne Namen nimmt der Server keine Bewertung an. */
+async function geraet(o: Opt & { name?: string | null } = {}) {
   const id = crypto.randomUUID();
   const schluessel = hex(32);
-  const r = await ruf('POST', '/api/geraete', { ...o, body: { id, schluessel } });
+  const { name = 'Tester', ...rest } = o;
+  const r = await ruf('POST', '/api/geraete', { ...rest, body: { id, schluessel } });
   expect(r.status).toBe(201);
-  return { id, schluessel, auth: `${id}.${schluessel}` };
+  const auth = `${id}.${schluessel}`;
+  if (name) expect((await ruf('PUT', '/api/ich', { ...rest, auth, body: { name } })).status).toBe(200);
+  return { id, schluessel, auth };
 }
 
 let zaehler = 0;
 const becher = (patch: Record<string, unknown> = {}) => ({
   id: `becher-${++zaehler}-${hex(4)}`,
-  stand: 'Glühweinkönig',
+  stand: `Glühweinkönig ${zaehler}`,
   markt: 'Christkindlesmarkt',
   stadt: 'Nürnberg',
   saison: 2026,
@@ -110,10 +113,10 @@ describe('Gerät anmelden', () => {
   ])('lehnt ab: %s', async (_n, body) => expect((await ruf('POST', '/api/geraete', { body })).status).toBe(400));
 
   it('begrenzt neue Geräte je Adresse und Stunde, andere Adressen bleiben frei', async () => {
-    for (let i = 0; i < 150; i++) await geraet({ ip: '9.9.9.9' });
+    for (let i = 0; i < 150; i++) await geraet({ ip: '9.9.9.9', name: null });
     const r = await ruf('POST', '/api/geraete', { ip: '9.9.9.9', body: { id: crypto.randomUUID(), schluessel: hex(32) } });
     expect(r.status).toBe(429);
-    await geraet({ ip: '8.8.8.8' });
+    await geraet({ ip: '8.8.8.8', name: null });
     // eine Stunde später geht es wieder
     const spaeter = await ruf('POST', '/api/geraete', { ip: '9.9.9.9', jetzt: JETZT + 61 * 60_000, body: { id: crypto.randomUUID(), schluessel: hex(32) } });
     expect(spaeter.status).toBe(201);
@@ -133,7 +136,7 @@ describe('Anmeldung bei Aufrufen', () => {
   it('liefert die eigenen Daten', async () => {
     const g = await geraet();
     const r = await ruf('GET', '/api/ich', { auth: g.auth });
-    expect(r.json).toEqual({ id: g.id, name: null, pruefstelle: false });
+    expect(r.json).toEqual({ id: g.id, name: 'Tester', pruefstelle: false });
   });
 });
 
@@ -162,6 +165,8 @@ describe('Name', () => {
   it('der erste Name gilt auch für bisher anonyme Becher; schon benannte bleiben, ein späteres Löschen ändert nichts', async () => {
     const g = await geraet();
     await sende(g, [becher({ id: 'anon-1-123456' }), becher({ id: 'anon-2-123456' })]);
+    // Altbestand ohne Namen (vor der Namenspflicht eingereicht)
+    await ruf('POST', '/api/admin/loeschen', { auth: ADMIN, body: { geraet: g.id, modus: 'name' } });
     const vorher = (await liste()).json;
     const r = await ruf('PUT', '/api/ich', { auth: g.auth, body: { name: 'Anna' } });
     expect(r.json.nachbenannt).toBe(2);
@@ -180,15 +185,26 @@ describe('Name', () => {
     const b = await geraet();
     await sende(a, [becher({ id: 'von-a-1234567' })]);
     await sende(b, [becher({ id: 'von-b-1234567' })]);
+    await ruf('POST', '/api/admin/loeschen', { auth: ADMIN, body: { geraet: a.id, modus: 'name' } });
     await ruf('PUT', '/api/ich', { auth: a.auth, body: { name: 'Anna' } });
     const e = (await liste()).json.eintraege;
     expect(e.find((x: any) => x.id === 'von-a-1234567').name).toBe('Anna');
-    expect(e.find((x: any) => x.id === 'von-b-1234567')).not.toHaveProperty('name');
+    expect(e.find((x: any) => x.id === 'von-b-1234567').name).toBe('Tester');
   });
-  it('anonym: kein Name im Eintrag', async () => {
-    const g = await geraet();
-    await sende(g, [becher({ id: 'anon-12345678' })]);
-    expect((await liste()).json.eintraege[0]).not.toHaveProperty('name');
+  it('ohne Namen keine Bewertung: der Becher bleibt in der App offen und geht mit dem Namen durch', async () => {
+    const g = await geraet({ name: null });
+    const b = becher({ id: 'anon-12345678' });
+    const r = await sende(g, [b]);
+    expect(r.status).toBe(200);
+    expect(r.json.ergebnisse).toEqual([{ id: 'anon-12345678', status: 'name-fehlt', grund: 'Bitte zuerst einen Namen eingeben.' }]);
+    expect((await liste()).json.eintraege).toHaveLength(0);
+    await ruf('PUT', '/api/ich', { auth: g.auth, body: { name: 'Anna' } });
+    expect((await sende(g, [b])).json.ergebnisse[0].status).toBe('ok');
+    expect((await liste()).json.eintraege[0].name).toBe('Anna');
+  });
+  it('ein Name mit nur einem Zeichen ist zu kurz', async () => {
+    const g = await geraet({ name: null });
+    expect((await ruf('PUT', '/api/ich', { auth: g.auth, body: { name: 'A' } })).status).toBe(422);
   });
 });
 
@@ -199,7 +215,7 @@ describe('Becher einreichen', () => {
     const r = await sende(g, [b]);
     expect(r.json.ergebnisse).toEqual([{ id: 'eins-12345678', status: 'ok' }]);
     const e = (await liste()).json.eintraege[0];
-    expect(e).toMatchObject({ id: 'eins-12345678', stand: 'Glühweinkönig', stadt: 'Nürnberg', sorte: 'kirsch', becherNr: 3, preis: 4.5, notiz: 'lecker', geraet: g.id, pruefstelle: false });
+    expect(e).toMatchObject({ id: 'eins-12345678', stand: expect.stringMatching(/^Glühweinkönig/), stadt: 'Nürnberg', sorte: 'kirsch', becherNr: 3, preis: 4.5, notiz: 'lecker', geraet: g.id, pruefstelle: false });
     expect(e.noten).toEqual({ geschmack: 8, geruch: 7, temperatur: null, personal: null, atmosphaere: null, preisLeistung: null, becher: null });
   });
 
@@ -234,7 +250,7 @@ describe('Becher einreichen', () => {
     const e = (await liste()).json.eintraege[0];
     expect(e.pruefstelle).toBe(false);
     expect(e.geraet).toBe(g.id);
-    expect(e).not.toHaveProperty('name');
+    expect(e.name).toBe('Tester'); // der Name kommt vom Gerät, nicht aus der Anfrage
   });
 
   it('ohne Anmeldung: 401', async () => {
@@ -385,7 +401,7 @@ describe('Moderation', () => {
     expect(nachher.eintraege[0].seq).toBeGreaterThan(vorher.naechste);
     await ruf('POST', '/api/admin/verstecken', { ...admin, body: { id: 'weg-12345678', versteckt: false } });
     const zurueck = (await liste(`?nach=${nachher.naechste}`)).json.eintraege[0];
-    expect(zurueck.stand).toBe('Glühweinkönig');
+    expect(zurueck.stand).toMatch(/^Glühweinkönig/);
   });
   it('Verstecken: unbekannter Becher 404', async () => {
     expect((await ruf('POST', '/api/admin/verstecken', { ...admin, body: { id: 'gibts-nicht', versteckt: true } })).status).toBe(404);
@@ -402,12 +418,12 @@ describe('Moderation', () => {
     expect((await ruf('GET', '/api/ich', { auth: spam.auth })).status).toBe(403);
     const alle = (await liste()).json.eintraege;
     expect(alle.filter((e: any) => e.versteckt).map((e: any) => e.id).sort()).toEqual(['spam-1-123456', 'spam-2-123456']);
-    expect(alle.find((e: any) => e.id === 'gut-1-1234567').stand).toBe('Glühweinkönig');
+    expect(alle.find((e: any) => e.id === 'gut-1-1234567').stand).toMatch(/^Glühweinkönig/);
     await ruf('POST', '/api/admin/sperren', { ...admin, body: { geraet: spam.id, gesperrt: false } });
     expect((await ruf('GET', '/api/ich', { auth: spam.auth })).status).toBe(200);
     const danach = (await liste()).json.eintraege;
     expect(danach.filter((e: any) => e.versteckt)).toHaveLength(0);
-    expect(danach.map((e: any) => e.stand)).toEqual(['Glühweinkönig', 'Glühweinkönig', 'Glühweinkönig']);
+    expect(danach.every((e: any) => /^Glühweinkönig/.test(e.stand))).toBe(true);
   });
 
   it('Import der Bestandsdaten: Siegel, eigener Name, alte Zeitstempel, idempotent', async () => {
@@ -558,7 +574,7 @@ describe('Melden', () => {
     await ruf('POST', '/api/admin/meldung-verwerfen', { auth: ADMIN, body: { id: 'zwei-1234567x' } });
     expect(await offen()).toHaveLength(0);
     const e = (await liste()).json.eintraege;
-    expect(e.find((x: any) => x.id === 'zwei-1234567x').stand).toBe('Glühweinkönig'); // noch sichtbar
+    expect(e.find((x: any) => x.id === 'zwei-1234567x').stand).toMatch(/^Glühweinkönig/); // noch sichtbar
   });
 });
 
@@ -586,7 +602,7 @@ describe('Löschen auf Anfrage', () => {
     expect(neu).toHaveLength(2); // geändert, also erneut ausgeliefert
     for (const e of neu) {
       expect(e).not.toHaveProperty('name');
-      expect(e.stand).toBe('Glühweinkönig');
+      expect(e.stand).toMatch(/^Glühweinkönig/);
     }
     expect((await liste()).json.eintraege.find((e: any) => e.id === 'b-1-12345678').name).toBe('Berta');
     expect((await ruf('GET', '/api/ich', { auth: g.auth })).json.name).toBeNull();
@@ -605,5 +621,107 @@ describe('Löschen auf Anfrage', () => {
     expect(roh).toMatchObject({ name: null, notiz: null, stadt: null, stand: '-', markt: '-', geschmack: null, preis: null, versteckt: 1 });
     expect((await ruf('GET', '/api/ich', { auth: g.auth })).status).toBe(401);
     expect(((await ruf('GET', '/api/admin/meldungen', { auth: ADMIN })).json.meldungen as unknown[]).length).toBe(0);
+  });
+});
+
+describe('Eine Bewertung je Gerät, Stand und Abend', () => {
+  const am = (stand: string, patch: Record<string, unknown> = {}) => becher({ stand, markt: 'Rathausmarkt', stadt: 'Hamburg', ...patch });
+
+  it('derselbe Stand am selben Abend wird abgelehnt, auch bei anderer Schreibweise', async () => {
+    const g = await geraet();
+    expect((await sende(g, [am('Chrom')])).json.ergebnisse[0].status).toBe('ok');
+    const r = await sende(g, [am(' CHROM! ')]);
+    expect(r.json.ergebnisse[0].status).toBe('abgelehnt');
+    expect(r.json.ergebnisse[0].grund).toMatch(/schon bewertet/);
+    expect((await liste()).json.eintraege).toHaveLength(1);
+  });
+  it('auch innerhalb einer Anfrage', async () => {
+    const g = await geraet();
+    const r = await sende(g, [am('Chrom'), am('chrom')]);
+    expect(r.json.ergebnisse.map((x: any) => x.status)).toEqual(['ok', 'abgelehnt']);
+  });
+  it('ein anderer Abend, ein anderer Stand, ein anderer Markt und ein anderes Gerät sind erlaubt', async () => {
+    const g = await geraet();
+    const h = await geraet();
+    const r = await sende(g, [
+      am('Chrom'),
+      am('Chrom', { datum: '2026-12-06' }),
+      am('Gustl'),
+      am('Chrom', { markt: 'Winterwald' }),
+    ]);
+    expect(r.json.ergebnisse.map((x: any) => x.status)).toEqual(['ok', 'ok', 'ok', 'ok']);
+    expect((await sende(h, [am('Chrom')])).json.ergebnisse[0].status).toBe('ok');
+  });
+  it('ausgeblendete Bewertungen zählen nicht mehr', async () => {
+    const g = await geraet();
+    await sende(g, [am('Chrom', { id: 'erste-1234567' })]);
+    await ruf('POST', '/api/admin/verstecken', { auth: ADMIN, body: { id: 'erste-1234567', versteckt: true } });
+    expect((await sende(g, [am('Chrom')])).json.ergebnisse[0].status).toBe('ok');
+  });
+});
+
+describe('Moderation mit dem Prüfstellen-Gerät', () => {
+  it('ein Prüfstellen-Gerät darf moderieren, ein normales nicht', async () => {
+    const pruef = await geraet();
+    const normal = await geraet();
+    await ruf('POST', '/api/pruefstelle', { auth: pruef.auth, body: { code: CODE } });
+    await sende(normal, [becher({ id: 'ziel-12345678' })]);
+    expect((await ruf('GET', '/api/admin/meldungen', { auth: normal.auth })).status).toBe(401);
+    expect((await ruf('POST', '/api/admin/verstecken', { auth: normal.auth, body: { id: 'ziel-12345678', versteckt: true } })).status).toBe(401);
+    expect((await ruf('GET', '/api/admin/meldungen', { auth: pruef.auth })).status).toBe(200);
+    expect((await ruf('POST', '/api/admin/verstecken', { auth: pruef.auth, body: { id: 'ziel-12345678', versteckt: true } })).status).toBe(200);
+    expect((await liste()).json.eintraege[0].versteckt).toBe(true);
+  });
+  it('ein gesperrtes Prüfstellen-Gerät verliert den Zugang', async () => {
+    const pruef = await geraet();
+    await ruf('POST', '/api/pruefstelle', { auth: pruef.auth, body: { code: CODE } });
+    await ruf('POST', '/api/admin/sperren', { auth: ADMIN, body: { geraet: pruef.id, gesperrt: true } });
+    expect((await ruf('GET', '/api/admin/meldungen', { auth: pruef.auth })).status).toBe(401);
+  });
+
+  it('Stand ändern: benennt alle genannten Bewertungen um und bringt sie mit neuer Sync-Nummer', async () => {
+    const pruef = await geraet();
+    await ruf('POST', '/api/pruefstelle', { auth: pruef.auth, body: { code: CODE } });
+    const a = await geraet();
+    const b = await geraet();
+    await sende(a, [becher({ id: 'alt-a-1234567', stand: 'Gluehweinkoenig' })]);
+    await sende(b, [becher({ id: 'alt-b-1234567', stand: 'Glühweinkönig' })]);
+    const vorher = (await liste()).json;
+    const r = await ruf('POST', '/api/admin/stand-aendern', {
+      auth: pruef.auth,
+      body: { ids: ['alt-a-1234567', 'gibt-es-nicht'], stand: ' Glühweinkönig ', markt: 'Rathausmarkt', stadt: 'Hamburg' },
+    });
+    expect(r.status).toBe(200);
+    expect(r.json.betroffen).toBe(1);
+    const neu = (await liste(`?nach=${vorher.naechste}`)).json.eintraege;
+    expect(neu).toHaveLength(1);
+    expect(neu[0]).toMatchObject({ id: 'alt-a-1234567', stand: 'Glühweinkönig', markt: 'Rathausmarkt', stadt: 'Hamburg' });
+  });
+  it.each([
+    ['ohne Liste', { stand: 'X', markt: 'Y' }],
+    ['leere Liste', { ids: [], stand: 'X', markt: 'Y' }],
+    ['Stand fehlt', { ids: ['a'], markt: 'Y' }],
+    ['Link im Stand', { ids: ['a'], stand: 'www.x.de', markt: 'Y' }],
+    ['zu viele', { ids: Array.from({ length: 201 }, (_, i) => `id-${i}`), stand: 'X', markt: 'Y' }],
+  ])('Stand ändern lehnt ab: %s', async (_n, body) => {
+    const r = await ruf('POST', '/api/admin/stand-aendern', { auth: ADMIN, body });
+    expect([400, 422]).toContain(r.status);
+  });
+  it('Stand ändern ist nur für die Prüfstelle', async () => {
+    const g = await geraet();
+    expect((await ruf('POST', '/api/admin/stand-aendern', { auth: g.auth, body: { ids: ['a'], stand: 'X', markt: 'Y' } })).status).toBe(401);
+  });
+
+  it('Zugang entziehen: alle Prüfstellen-Geräte außer dem genannten verlieren die Rechte, das Siegel alter Becher bleibt', async () => {
+    const p1 = await geraet();
+    const p2 = await geraet();
+    for (const p of [p1, p2]) await ruf('POST', '/api/pruefstelle', { auth: p.auth, body: { code: CODE } });
+    await sende(p2, [becher({ id: 'siegel-1234567' })]);
+    const r = await ruf('POST', '/api/admin/pruefstelle-zuruecksetzen', { auth: p1.auth, body: { behalten: p1.id } });
+    expect(r.json.betroffen).toBe(1);
+    expect((await ruf('GET', '/api/ich', { auth: p1.auth })).json.pruefstelle).toBe(true);
+    expect((await ruf('GET', '/api/ich', { auth: p2.auth })).json.pruefstelle).toBe(false);
+    expect((await ruf('GET', '/api/admin/meldungen', { auth: p2.auth })).status).toBe(401);
+    expect((await liste()).json.eintraege.find((e: any) => e.id === 'siegel-1234567').pruefstelle).toBe(true);
   });
 });

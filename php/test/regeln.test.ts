@@ -2,7 +2,7 @@
 import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import { adressSchluessel } from '../../worker/src/app';
-import { pruefeEinreichung, pruefeName, pruefeText } from '../../src/lib/community';
+import { abendVon, pruefeEinreichung, pruefeName, pruefeText, standIdent } from '../../src/lib/community';
 import { leereNoten } from '../../src/lib/modell';
 
 const JETZT = Date.parse('2026-12-05T20:00:00Z');
@@ -12,12 +12,16 @@ const gut = (p: Record<string, unknown> = {}) => ({
 });
 
 const NAMEN: [unknown, boolean][] = [
-  ['Anna', false], ['  Anna   Maria ', false], ['', false], ['   ', false], [null, false], [undefined, false], [42, false],
+  ['Anna', false], ['  Anna   Maria ', false], ['A', false], ['Zo', false], ['', false], ['   ', false], [null, false], [undefined, false], [42, false],
   ['David', false], ['david', true], ['DAVID', false], ['Philip', false], ['Glühlabor', false], ['GLÜHLABOR', false], ['Prüfstelle', false],
   ['x'.repeat(24), false], ['x'.repeat(25), false], ['ä'.repeat(24), false], ['ä'.repeat(25), false], ['😀'.repeat(5), false],
   ['http://x.de', false], ['www.x.de', false], ['a@b', false], ['a:/b', false], ['Anna_B-C.D\'E', false], ['Anna!', false], ['_Anna', false],
   ['Ann\u0000a', false], ['An\u200bna', false], ['An\u00a0na', false], ['An\u2003na', false], ['Zoë', false], ['Zoe\u0308', false], ['Çağlar', false], ['張偉', false],
   ['\u202eAnna', false], ['Anna\n\tMaria', false], ['1234', false], ['-Anna', false],
+];
+const STAENDE: [string, string, string | null, string | null, number][] = [
+  ['Salz-Chrom', 'Sonstiger', 'Salzburg', '2026-12-05', JETZT], ['salz chrom', 'SONSTIGER', 'salzburg', null, JETZT],
+  ['Glühweinkönig 💛', 'Rathausmarkt', null, null, Date.parse('2026-12-05T23:30:00Z')], ['ÄÖÜ  ß!', 'X', 'Köln', '', 0], ['  ', 'M', 'S', null, JETZT],
 ];
 const TEXTE: [unknown, number, boolean][] = [
   ['Hallo', 80, true], ['', 80, true], [null, 80, true], [undefined, 80, false], ['  ', 80, false], [5, 80, false], ['a'.repeat(81), 80, true],
@@ -51,7 +55,7 @@ describe('PHP-Regeln entsprechen community.ts', () => {
     name: ohneUndefined(NAMEN),
     text: ohneUndefined(TEXTE),
     einreichung: EINREICHUNGEN.map((e) => [e, JETZT]),
-    adresse: [['salz', 'schreiben', '203.0.113.5', JETZT], ['salz', 'geraete', '::1', JETZT + 86_400_000], ['äö', 'x', '1.2.3.4', 0]],
+    stand: STAENDE, adresse: [['salz', 'schreiben', '203.0.113.5', JETZT], ['salz', 'geraete', '::1', JETZT + 86_400_000], ['äö', 'x', '1.2.3.4', 0]],
   });
 
   it.each(NAMEN.map((n, i) => [JSON.stringify(n), i] as const))('Name %s', (_t, i) => {
@@ -73,6 +77,10 @@ describe('PHP-Regeln entsprechen community.ts', () => {
     const e = rund(ts.eintrag);
     const pe = Object.fromEntries(Object.entries(p.eintrag).filter(([, v]) => v !== null));
     expect(pe).toEqual(e);
+  });
+  it.each(STAENDE.map((x, i) => [x[0], i] as const))('Stand %s', (_t, i) => {
+    const [stand, markt, stadt, datum, ms] = STAENDE[i];
+    expect(r.stand[i]).toEqual([standIdent({ stand, markt, stadt }), abendVon({ datum, erstelltAm: ms })]);
   });
   it('Adressen-Hash ist in beiden Fassungen identisch', async () => {
     const faelle = [['salz', 'schreiben', '203.0.113.5', JETZT], ['salz', 'geraete', '::1', JETZT + 86_400_000], ['äö', 'x', '1.2.3.4', 0]] as const;

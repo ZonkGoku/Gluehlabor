@@ -17,10 +17,12 @@ export interface KartenDaten {
   saison: number;
   id: string;
   von: string;
+  /** Stempel eines Stands statt Prüfstelle/Community, z. B. 12 Bewertungen. */
+  stempel?: string;
 }
 
-export function kartenDaten(z: Zeile, ort: string, titel?: string): KartenDaten {
-  const pruef = istPruefstelle(z.eintrag);
+export function kartenDaten(z: Zeile, ort: string, titel?: string, stand?: { stempel: string; von?: string }): KartenDaten {
+  const pruef = stand ? false : istPruefstelle(z.eintrag);
   return {
     rang: z.rang,
     stand: titel ?? z.eintrag.stand,
@@ -32,7 +34,8 @@ export function kartenDaten(z: Zeile, ort: string, titel?: string): KartenDaten 
     pruefstelle: pruef,
     saison: z.eintrag.saison,
     id: z.eintrag.id,
-    von: pruef ? 'David & Philip' : anzeigeName(z.eintrag),
+    von: stand ? (stand.von ?? stand.stempel) : pruef ? 'David & Philip' : anzeigeName(z.eintrag),
+    stempel: stand?.stempel,
   };
 }
 
@@ -200,7 +203,7 @@ export async function erzeugeKartenBild(d: KartenDaten): Promise<Blob> {
   k.save();
   k.translate(kb - pad - 130, 110);
   k.rotate(-0.05);
-  const stempel = d.pruefstelle ? 'PRÜFSTELLE' : 'COMMUNITY';
+  const stempel = d.stempel ? d.stempel.toUpperCase() : d.pruefstelle ? 'PRÜFSTELLE' : 'COMMUNITY';
   k.font = '28px "IBM Plex Mono"';
   k.letterSpacing = '5px';
   const sw = k.measureText(stempel).width + 52;

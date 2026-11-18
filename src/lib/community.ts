@@ -4,7 +4,7 @@
 import { KRITERIEN, SORTEN, type Eintrag, type Noten } from './modell';
 import { istGueltigeNote } from './scoring';
 
-export const GRENZEN = { stand: 80, markt: 80, stadt: 60, notiz: 500, name: 24 } as const;
+export const GRENZEN = { stand: 80, markt: 80, stadt: 60, notiz: 500, name: 24, nameMin: 2 } as const;
 
 /** Diese Namen kann nur die Prüfstelle führen. Das Siegel „Prüfstelle" hängt trotzdem nicht am Namen. */
 export const RESERVIERTE_NAMEN = ['david', 'philip', 'prüfstelle', 'pruefstelle', 'admin', 'becherwerk', 'gluehlabor', 'glühlabor', 'moderator'];
@@ -20,12 +20,13 @@ export function saeubere(s: string): string {
 
 export type NamePruefung = { ok: true; name: string | null } | { ok: false; grund: string };
 
-/** Freiwilliger Anzeigename. Leer heißt „anonym". */
+/** Anzeigename. Leer (null) heißt „kein Name"; bewerten darf man aber nur mit Namen (2 bis 24 Zeichen), das erzwingt der Server. */
 export function pruefeName(roh: unknown, istPruefstelle = false): NamePruefung {
   if (roh === null || roh === undefined) return { ok: true, name: null };
   if (typeof roh !== 'string') return { ok: false, grund: 'Der Name muss Text sein.' };
   const name = saeubere(roh);
   if (name === '') return { ok: true, name: null };
+  if ([...name].length < GRENZEN.nameMin) return { ok: false, grund: `Mindestens ${GRENZEN.nameMin} Zeichen.` };
   if ([...name].length > GRENZEN.name) return { ok: false, grund: `Höchstens ${GRENZEN.name} Zeichen.` };
   if (LINK.test(name)) return { ok: false, grund: 'Links und Adressen sind im Namen nicht erlaubt.' };
   if (!/^[\p{L}\p{N}][\p{L}\p{N} .'_-]*$/u.test(name)) {
@@ -144,4 +145,19 @@ export function anzeigeName(e: { name?: string }): string {
 /** Prüfstellen-Becher: vom Server gesiegelt, oder die lokal importierten Bestandsdaten von 2025. */
 export function istPruefstelle(e: { pruefstelle?: boolean; sync?: string }): boolean {
   return e.pruefstelle === true || e.sync === 'bestand';
+}
+
+/** Der Stand ohne Groß/Klein, Satzzeichen, Leerraum und Emoji: „Salz-Chrom" = „salz chrom". Identisch in PHP (php/api/lib/regeln.php). */
+export function standKern(stand: string): string {
+  return saeubere(stand).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+}
+
+/** Derselbe Stand: gleicher Name (Kern), gleiche Stadt, gleicher Markt. */
+export function standIdent(e: { stand: string; markt: string; stadt?: string | null }): string {
+  return `${standKern(e.stand)}|${saeubere(e.markt).toLowerCase()}|${saeubere(e.stadt ?? '').toLowerCase()}`;
+}
+
+/** Der Abend einer Bewertung: das Datum, sonst der Tag der Erfassung (UTC). */
+export function abendVon(e: { datum?: string | null; erstelltAm: number }): string {
+  return e.datum || new Date(e.erstelltAm).toISOString().slice(0, 10);
 }

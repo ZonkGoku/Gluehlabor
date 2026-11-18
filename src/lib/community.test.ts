@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { anzeigeName, GRENZEN, pruefeEinreichung, pruefeName, saeubere } from './community';
+import { abendVon, anzeigeName, GRENZEN, standIdent, pruefeEinreichung, pruefeName, saeubere } from './community';
 import { leereNoten } from './modell';
 
 const JETZT = Date.parse('2026-12-05T20:00:00Z');
@@ -35,9 +35,13 @@ describe('pruefeName', () => {
     ['Zoë', 'Zoë'],
   ])('erlaubt %s', (roh, name) => expect(pruefeName(roh)).toEqual({ ok: true, name }));
 
-  it.each([null, undefined, '', '   '])('leer (%s) heißt anonym', (roh) =>
+  it.each([null, undefined, '', '   '])('leer (%s) heißt kein Name', (roh) =>
     expect(pruefeName(roh)).toEqual({ ok: true, name: null }));
 
+  it('mindestens zwei Zeichen', () => {
+    expect(pruefeName('A').ok).toBe(false);
+    expect(pruefeName('Al').ok).toBe(true);
+  });
   it('zu lang', () => {
     expect(pruefeName('x'.repeat(GRENZEN.name + 1)).ok).toBe(false);
     expect(pruefeName('x'.repeat(GRENZEN.name)).ok).toBe(true);
@@ -143,5 +147,16 @@ describe('istPruefstelle', () => {
     const { istPruefstelle } = await import('./community');
     expect(istPruefstelle({})).toBe(false);
     expect(istPruefstelle({ pruefstelle: false, sync: 'fertig' })).toBe(false);
+  });
+});
+
+describe('Stand und Abend', () => {
+  it('derselbe Stand trotz Schreibweise', () => {
+    expect(standIdent({ stand: 'Salz-Chrom', markt: 'Sonstiger', stadt: 'Salzburg' })).toBe(standIdent({ stand: ' salz  chrom! ', markt: 'sonstiger', stadt: 'SALZBURG' }));
+    expect(standIdent({ stand: 'Chrom', markt: 'A', stadt: 'X' })).not.toBe(standIdent({ stand: 'Chrom', markt: 'B', stadt: 'X' }));
+  });
+  it('Abend: Datum, sonst Tag der Erfassung', () => {
+    expect(abendVon({ datum: '2026-12-05', erstelltAm: 0 })).toBe('2026-12-05');
+    expect(abendVon({ erstelltAm: Date.parse('2026-12-06T01:00:00Z') })).toBe('2026-12-06');
   });
 });

@@ -9,7 +9,7 @@
 // - Das Prüfstellen-Siegel gibt es nur über einen Code, den David und Philip kennen.
 // - Ausgeblendete Becher werden als Platzhalter ausgeliefert, damit Geräte sie entfernen.
 
-import { pruefeEinreichung, pruefeName, saeubere } from '../../src/lib/community';
+import { abendVon, pruefeEinreichung, pruefeName, pruefeText, saeubere, standIdent, GRENZEN } from '../../src/lib/community';
 import type { D1Like } from './db';
 
 export interface Env {
@@ -34,6 +34,7 @@ const LIMITS = {
   maxEintraegeJeAnfrage: 20,
   maxImport: 100,
 };
+const MAX_STAND_IDS = 200;
 const MELDEGRUENDE = ['unpassend', 'spam', 'falsch', 'persoenlich', 'sonstiges'];
 const MIN = 60_000;
 const STUNDE = 60 * MIN;
@@ -132,6 +133,18 @@ async function anmelden(request: Request, db: D1Like): Promise<GeraetZeile> {
   if (!g || !gleich(g.schluessel_hash, await sha256Hex(m[2]))) throw new HttpFehler(401, 'Unbekanntes Gerät.');
   if (g.gesperrt) throw new HttpFehler(403, 'Dieses Gerät ist gesperrt.');
   return g;
+}
+
+/** Moderation darf, wer das Admin-Token kennt (Kommandozeile) oder ein Gerät ist, das sich als Prüfstelle ausgewiesen hat (Browser). */
+async function pruefeModeration(request: Request, env: Env, db: D1Like): Promise<void> {
+  if (istAdmin(request, env)) return;
+  try {
+    const g = await anmelden(request, db);
+    if (g.pruefstelle) return;
+  } catch {
+    /* kein gültiges Gerät */
+  }
+  throw new HttpFehler(401, 'Nur für die Prüfstelle.');
 }
 
 function istAdmin(request: Request, env: Env): boolean {
@@ -354,6 +367,15 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
     if (!Array.isArray(b.eintraege) || b.eintraege.length === 0 || b.eintraege.length > LIMITS.maxEintraegeJeAnfrage) {
       throw new HttpFehler(400, `Bitte 1 bis ${LIMITS.maxEintraegeJeAnfrage} Einträge senden.`);
     }
+    // Bewerten kann nur, wer einen Namen hat. Die Becher bleiben in der App „offen" und gehen mit dem Namen später durch.
+    if (!g.name) {
+      return json(
+        {
+          ergebnisse: b.eintraege.map((roh) => ({ id: (roh as { id?: unknown } | null)?.id, status: 'name-fehlt', grund: 'Bitte zuerst einen Namen eingeben.' })),
+        },
+        200,
+      );
+    }
     const limit = g.pruefstelle ? LIMITS.becherJeGeraetUndTagPruefstelle : LIMITS.becherJeGeraetUndTag;
     const schonHeute = (
       await db
@@ -363,7 +385,7 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
     )?.n ?? 0;
     let frei = Math.max(0, limit - schonHeute);
 
-    const ergebnisse: { id: unknown; status: 'ok' | 'bereits' | 'abgelehnt' | 'zu-viele'; grund?: string }[] = [];
+    const ergebnisse: { id: unknown; status: 'ok' | 'bereits' | 'abgelehnt' | 'zu-viele' | 'name-fehlt'; grund?: string }[] = [];
     for (const roh of b.eintraege) {
       const rohId = (roh as { id?: unknown } | null)?.id;
       const p = pruefeEinreichung(roh, jetzt);
@@ -382,6 +404,17 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
       }
       if (frei <= 0) {
         ergebnisse.push({ id: p.eintrag.id, status: 'zu-viele', grund: 'Tageslimit erreicht.' });
+        continue;
+      }
+      // Eine Bewertung je Gerät, Stand und Abend. Ein neuer Abend ist ein neuer Besuch.
+      const ident = standIdent(p.eintrag);
+      const abend = abendVon(p.eintrag);
+      const { results: eigene } = await db
+        .prepare('SELECT stand, markt, stadt, datum, erstellt_am FROM becher WHERE geraet_id = ? AND versteckt = 0 AND erstellt_am > ?')
+        .bind(g.id, p.eintrag.erstelltAm - 4 * TAG)
+        .all<{ stand: string; markt: string; stadt: string | null; datum: string | null; erstellt_am: number }>();
+      if (eigene.some((z) => standIdent(z) === ident && abendVon({ datum: z.datum, erstelltAm: z.erstellt_am }) === abend)) {
+        ergebnisse.push({ id: p.eintrag.id, status: 'abgelehnt', grund: 'Diesen Stand hast du an diesem Abend schon bewertet.' });
         continue;
       }
       await einfuegen(db, p.eintrag, g.id, g.name, Boolean(g.pruefstelle), jetzt).run();
@@ -432,7 +465,7 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
 
   // ── Moderation ──
   if (pfad.startsWith('/api/admin/')) {
-    if (!istAdmin(request, env)) throw new HttpFehler(401, 'Nur für die Prüfstelle.');
+    await pruefeModeration(request, env, db);
 
     if (pfad === '/api/admin/meldungen' && methode === 'GET') {
       const { results } = await db
@@ -466,6 +499,38 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
       if (r.meta.changes === 0) throw new HttpFehler(404, 'Becher nicht gefunden.');
       if (b.versteckt) await db.prepare('UPDATE meldungen SET bearbeitet = 1 WHERE becher_id = ?').bind(b.id).run();
       return json({ ok: true }, 200);
+    }
+
+    // Stand umbenennen oder zusammenführen: gibt allen genannten Bewertungen denselben Stand, Markt und dieselbe Stadt.
+    if (pfad === '/api/admin/stand-aendern' && methode === 'POST') {
+      if (!Array.isArray(b.ids) || b.ids.length === 0 || b.ids.length > MAX_STAND_IDS || !b.ids.every((x) => typeof x === 'string')) {
+        throw new HttpFehler(400, `Bitte 1 bis ${MAX_STAND_IDS} Bewertungen nennen.`);
+      }
+      const stand = pruefeText(b.stand, 'Stand', GRENZEN.stand, true);
+      if (!stand.ok) throw new HttpFehler(422, stand.grund);
+      const markt = pruefeText(b.markt, 'Markt', GRENZEN.markt, true);
+      if (!markt.ok) throw new HttpFehler(422, markt.grund);
+      const stadt = pruefeText(b.stadt, 'Stadt', GRENZEN.stadt, false);
+      if (!stadt.ok) throw new HttpFehler(422, stadt.grund);
+      let betroffen = 0;
+      for (const id of b.ids as string[]) {
+        const r = await db
+          .prepare(`UPDATE becher SET stand = ?, markt = ?, stadt = ?, seq = ${NAECHSTE_SEQ} WHERE id = ? AND versteckt = 0`)
+          .bind(stand.wert, markt.wert, stadt.wert ?? null, id)
+          .run();
+        betroffen += r.meta.changes;
+      }
+      return json({ ok: true, betroffen }, 200);
+    }
+
+    // Zugang entziehen (Handy verloren): alle Geräte verlieren die Prüfstellen-Rechte, außer dem genannten. Danach den Code ändern.
+    if (pfad === '/api/admin/pruefstelle-zuruecksetzen' && methode === 'POST') {
+      const behalten = typeof b.behalten === 'string' ? b.behalten : '';
+      const r = await db
+        .prepare("UPDATE geraete SET pruefstelle = 0 WHERE pruefstelle = 1 AND id != 'bestand-pruefstelle' AND id != ?")
+        .bind(behalten)
+        .run();
+      return json({ ok: true, betroffen: r.meta.changes }, 200);
     }
 
     if (pfad === '/api/admin/sperren' && methode === 'POST') {

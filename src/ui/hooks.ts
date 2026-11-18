@@ -1,5 +1,6 @@
 import { liveQuery } from 'dexie';
 import { useEffect, useState } from 'preact/hooks';
+import { synchronisiere } from '../daten/sync';
 
 /** Abonniert eine Dexie-Abfrage; rendert bei jeder Datenänderung neu. */
 export function useLive<T>(abfrage: () => Promise<T>, deps: unknown[], start: T): T {
@@ -23,4 +24,13 @@ export function useRoute(): string {
     return () => removeEventListener('hashchange', h);
   }, []);
   return hash.replace(/^#\/?/, '').split('?')[0];
+}
+
+/** Holt vom Server regelmäßig Neues, solange die Ansicht offen und sichtbar ist (Bewertungen anderer erscheinen von selbst). */
+export function useAktuell(sekunden = 20): void {
+  useEffect(() => {
+    void synchronisiere();
+    const t = setInterval(() => document.visibilityState === 'visible' && void synchronisiere(), sekunden * 1000);
+    return () => clearInterval(t);
+  }, [sekunden]);
 }

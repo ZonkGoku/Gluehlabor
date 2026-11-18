@@ -18,29 +18,29 @@ import { Deutschlandkarte } from './Deutschlandkarte';
 import { useEinblenden, useNeigung } from './nacht/bewegung';
 import { Chips } from './nacht/Chips';
 import { Kachel, Kennzahl } from './nacht/Kachel';
-import { RangZeile } from './nacht/RangZeile';
-import { kurzId, TicketRahmen, TopKarte } from './nacht/Ticket';
+import { StandTopKarte, StandZeile } from './nacht/StandKarten';
+import { baueStaende, standAlsZeile } from '../lib/staende';
+import { kurzId, TicketRahmen } from './nacht/Ticket';
 import { Saisonverlauf } from './Saisonverlauf';
 import { LABELS, MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
 
-/** Einmalige, freiwillige Frage nach dem Namen, sobald von diesem Gerät etwas erfasst wurde. */
+/** Ohne Namen bleiben Bewertungen auf dem Gerät: Die Frage kommt, wenn noch kein Name da ist. */
 function NameKarte() {
   const name = useName();
-  const abgelehnt = useLive(() => leseEinstellung<boolean>('nameAbgelehnt', false), [], false);
   const [wert, setWert] = useState('');
   const [fehler, setFehler] = useState('');
-  if (name || abgelehnt) return null;
+  if (name) return null;
   const speichern = async () => {
     const p = pruefeName(wert);
     if (!p.ok) return setFehler(p.grund);
-    if (p.name === null) return schreibeEinstellung('nameAbgelehnt', true);
+    if (p.name === null) return setFehler('Bitte einen Namen eingeben.');
     await setzeName(p.name);
     void synchronisiere();
   };
   return (
     <div class="name-karte">
-      <label for="name-start">Wie sollen wir dich nennen? Freiwillig.</label>
+      <label for="name-start">Wie sollen wir dich nennen? Ohne Namen kann niemand deine Bewertungen sehen.</label>
       <div class="name-zeile">
         <input
           id="name-start"
@@ -58,9 +58,6 @@ function NameKarte() {
         />
         <button type="button" class="pillknopf" onClick={() => void speichern()}>
           Speichern
-        </button>
-        <button type="button" class="pillknopf" onClick={() => void schreibeEinstellung('nameAbgelehnt', true)}>
-          Anonym bleiben
         </button>
       </div>
       <p class="name-hinweis">
@@ -167,7 +164,8 @@ export function Uebersicht() {
   const jahre = [...new Set([...saisons(alle), jahr])].sort();
   const auswahl = filtere(alle, { saison, markt: 'alle' });
   const zeilen = ranglisteMitWertung(auswahl, gewichte);
-  const spitze = zeilen.filter((z) => z.rang === 1);
+  const staende = baueStaende(auswahl, MARKTLISTE, gewichte);
+  const spitze = staende.filter((s) => s.rang === 1);
   const k = kennzahlen(auswahl, MARKTLISTE, gewichte);
   const orte = staedte(MARKTLISTE, auswahl);
   const preise = preisindex(auswahl, MARKTLISTE);
@@ -181,7 +179,6 @@ export function Uebersicht() {
     1,
   )[0];
   const naechsteNr = heuteAbend.anzahl === 0 ? 1 : heuteAbend.naechsteNr;
-  const ortVon = (z: (typeof zeilen)[number]) => ortText(MARKTLISTE, z.eintrag);
 
   const status = saisonStatus(alle, typeof saison === 'number' ? saison : jahr, heute);
   const statusText =
@@ -226,11 +223,11 @@ export function Uebersicht() {
             {abendModus ? (
               <AbendKarte abend={heuteAbend} naechsteNr={naechsteNr} />
             ) : (
-              <TopKarte
-                zeile={spitze[0]}
-                titel={spitze.map((z) => z.eintrag.stand).join(' & ')}
+              <StandTopKarte
+                stand={spitze[0]}
+                titel={spitze.map((s) => s.stand).join(' & ')}
                 hinweis={spitze.length > 1 ? 'Teilen sich Platz 1' : undefined}
-                ort={[...new Set(spitze.map(ortVon))].join(', ')}
+                ort={[...new Set(spitze.map((s) => ortText(MARKTLISTE, standAlsZeile(s).eintrag)))].join(', ')}
               />
             )}
           </div>
@@ -250,11 +247,11 @@ export function Uebersicht() {
             </p>
           )}
 
-          <Kachel titel={`Rangliste ${saison === 'alle' ? '' : saison}`} link={{ href: '#/rangliste', text: `Alle ${zeilen.length}` }} klasse="col-span-2" innen="p-3">
+          <Kachel titel={`Rangliste ${saison === 'alle' ? '' : saison}`} link={{ href: '#/rangliste', text: `Alle ${staende.length}` }} klasse="col-span-2" innen="p-3">
             <ol class="space-y-2">
-              {zeilen.slice(0, 5).map((z) => (
+              {staende.slice(0, 5).map((s) => (
                 <li>
-                  <RangZeile zeile={z} ort={ortVon(z)} />
+                  <StandZeile stand={s} />
                 </li>
               ))}
             </ol>

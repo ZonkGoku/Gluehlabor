@@ -2,7 +2,7 @@
 // Keine Rechenlogik hier: Wertung, Anker, Becher-Nr. kommen aus src/lib.
 
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { db, leseGewichte, speichereNeuenEintrag } from '../daten/db';
+import { db, leseEinstellung, leseGewichte, speichereNeuenEintrag } from '../daten/db';
 import {
   leseEntwurf,
   leseEntwurfFoto,
@@ -22,7 +22,10 @@ import { ANKER, MARKTLISTE } from './stammdaten';
 import { euro, probeNr, zahl2 } from '../lib/format';
 import { DEFAULT_GEWICHTE, KRITERIEN, leereNoten, SORTEN, type Eintrag, type Kriterium, type Sorte } from '../lib/modell';
 import { bewerte } from '../lib/scoring';
+import { schonBewertet } from '../lib/staende';
+import { useGeraetId } from './daten';
 import { useLive } from './hooks';
+import { NameBlatt } from './nacht/NameBlatt';
 import { Skala } from './Skala';
 import { SyncAnzeige } from './SyncAnzeige';
 import { TicketBlatt } from './nacht/TicketBlatt';
@@ -85,6 +88,9 @@ export function Erfassen() {
 
   const [e, setE] = useState<Entwurf>(startEntwurf);
   const [ortOffen, setOrtOffen] = useState(false);
+  const [nameOffen, setNameOffen] = useState(false);
+  const [warnung, setWarnung] = useState<string | null>(null);
+  const geraetId = useGeraetId();
   const [becherNrAngefasst, setBecherNrAngefasst] = useState(() => leseEntwurf()?.becherNr !== undefined);
   const [foto, setFoto] = useState<Blob | null>(null);
   const [aktiv, setAktiv] = useState<Kriterium>('geschmack');
@@ -146,7 +152,7 @@ export function Erfassen() {
     setOrtOffen(false);
   };
 
-  const speichern = async () => {
+  const speichern = async (nameBestaetigt = false) => {
     const stand = kanonischerStand(bestand, e.stand, e.markt, e.stadt);
     if (!stand) {
       setFehlt(true);
@@ -159,6 +165,17 @@ export function Erfassen() {
       return;
     }
     const jetzt = new Date();
+    // Eine Bewertung je Stand und Abend. Dieselbe Regel prüft der Server.
+    if (schonBewertet(bestand, geraetId, { stand, markt: e.markt.trim() || MARKTLISTE.sonstiger, stadt: e.stadt?.trim(), datum: abendDatum(jetzt), erstelltAm: jetzt.getTime() })) {
+      setWarnung('Heute Abend schon bewertet');
+      setTimeout(() => setWarnung(null), 3500);
+      return;
+    }
+    // Ohne Namen keine Bewertung: erst fragen, dann weiter.
+    if (!nameBestaetigt && !(await leseEinstellung<string>('name', ''))) {
+      setNameOffen(true);
+      return;
+    }
     const eintrag: Eintrag = {
       id: neueId(),
       stand,
@@ -205,7 +222,7 @@ export function Erfassen() {
     location.hash = '#/teilen';
   };
 
-  const knopfText = gespeichert ?? (bewertet === 0 ? 'Noch keine Note' : 'Speichern');
+  const knopfText = warnung ?? gespeichert ?? (bewertet === 0 ? 'Noch keine Note' : 'Speichern');
 
   return (
     <>
@@ -410,7 +427,7 @@ export function Erfassen() {
           type="button"
           class={gespeichert ? 'speichern ok' : 'speichern'}
           disabled={bewertet === 0 && !gespeichert}
-          onClick={speichern}
+          onClick={() => void speichern()}
         >
           {fehlt && !e.stand.trim() ? 'Stand fehlt' : knopfText}
         </button>
@@ -422,6 +439,15 @@ export function Erfassen() {
         bestand={bestand}
         onWahl={waehleOrt}
         onZu={() => setOrtOffen(false)}
+      />
+    )}
+    {nameOffen && (
+      <NameBlatt
+        onZu={() => setNameOffen(false)}
+        onFertig={() => {
+          setNameOffen(false);
+          void speichern(true);
+        }}
       />
     )}
     {fertigId && <TicketBlatt id={fertigId} onNaechster={() => setFertigId(null)} />}
