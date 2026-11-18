@@ -454,3 +454,64 @@ body {
   text-align: left;
   min-height: 0;
 }
+
+/* Erfassung: Stand und Ort untereinander, der Ort als großer Knopf (öffnet die Ortswahl) */
+.erf .stamm {
+  grid-template-columns: minmax(0, 1fr);
+}
+.erf .ort-knopf {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 14px;
+  text-align: left;
+  color: var(--text);
+  background: var(--karte);
+  border: 1px solid var(--linie-stark);
+  border-radius: 14px;
+  cursor: pointer;
+}
+.erf .ort-knopf:hover {
+  border-color: var(--nm-akzent);
+}
+.erf .ort-knopf.leer-ort {
+  border-color: var(--nm-akzent);
+  box-shadow: 0 0 0 3px rgb(255 138 61 / 0.18);
+}
+.erf .ort-symbol {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--nm-flaeche);
+  color: var(--nm-akzent-text);
+}
+.erf .ort-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.erf .ort-text b {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.erf .ort-text small {
+  font-size: 13px;
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.erf .ort-pfeil {
+  flex: none;
+  color: var(--text-2);
+}

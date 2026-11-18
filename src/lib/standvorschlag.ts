@@ -77,17 +77,18 @@ function treffer(key: string, eingabe: string): number {
 }
 
 /**
- * Bis zu `max` Stände, die zur Eingabe passen. Stände am selben Markt kommen zuerst, dann nach Treffergüte und Zahl der Becher.
+ * Bis zu `max` Stände, die zur Eingabe passen. Stände am selben Markt und in derselben Stadt kommen zuerst, dann nach Treffergüte und Zahl der Becher.
  * Leer, wenn die Eingabe zu kurz ist.
  */
-export function schlageStaendeVor(eintraege: readonly StandEintrag[], eingabe: string, markt?: string, max = 5): Vorschlag[] {
+export function schlageStaendeVor(eintraege: readonly StandEintrag[], eingabe: string, markt?: string, max = 5, stadt?: string): Vorschlag[] {
   const e = kern(eingabe);
   if (e.length < 2) return [];
   const m = markt ? marktSchluessel(markt) : null;
+  const st = stadt?.trim().toLowerCase() || null;
   return gruppiere(eintraege)
     .map((g) => {
       const t = treffer(g.key, e);
-      return { g, wert: t === 0 ? 0 : t + (m && marktSchluessel(g.markt) === m ? 20 : 0) + Math.min(g.anzahl, 5) };
+      return { g, wert: t === 0 ? 0 : t + (m && marktSchluessel(g.markt) === m ? 20 : 0) + (st && (g.stadt ?? '').trim().toLowerCase() === st ? 12 : 0) + Math.min(g.anzahl, 5) };
     })
     .filter((x) => x.wert > 0)
     .sort((a, b) => b.wert - a.wert || b.g.anzahl - a.g.anzahl || schoenste(a.g).localeCompare(schoenste(b.g), 'de'))

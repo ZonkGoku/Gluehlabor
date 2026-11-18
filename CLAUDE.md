@@ -100,6 +100,7 @@ src/lib/                 REINE Funktionen ohne UI/DOM, alle getestet
   orte.ts                Märkte ↔ Städte, freie Eingabe „Markt, Stadt"
   startseite.ts          Standard-Saison, Saison-Tag, Abend, Saisonverlauf, neueste Becher, Kennzahlen
   karte.ts               Projektion und Umriss der Deutschlandkarte, Kartenpunkte
+  ortssuche.ts           Ortssuche (Umlaute, ß, Rang nach Einwohnern), nächste Orte, beliebte Städte, Märkte je Stadt
   standvorschlag.ts      Vorschläge beim Erfassen (Stand existiert schon?), Schreibweise vereinheitlichen
   anker.ts, abend.ts, format.ts, veroeffentlichung.ts
 src/daten/               Speicher und Netz: db.ts (inkl. Gerätekennung), api.ts, sync.ts, update.ts, entwurf.ts, foto.ts, config.ts
@@ -114,6 +115,7 @@ src/ui/                  Preact-Komponenten. KEINE Rechenlogik hier (auch keine 
   daten.ts               Live-Hooks (Einträge, Gewichte, Saison-Auswahl)
 src/styles.css           Tokens beider Themes + Erfassungsscreen
 src/app.css              Gerüst und Auswertungsansichten
+data/orte.json          ca. 4.100 Orte in Deutschland und Österreich (GeoNames, CC BY 4.0, erzeugt von scripts/orte.mjs; Quelle im Impressum nennen). Wird nachgeladen (eigener Chunk, 49 KB gzip)
 public/                  og.jpg (Link-Vorschau, erzeugt von scripts/og.mjs), icon.svg (PWA-Zeichen), logo.svg (Siegel mit „David & Philip"), PNG-Icons
 scripts/launch-check.ts  Startcheck (npm run launch-check)
 scripts/icons.mjs        rastert icon.svg zu den PNG-Icons (nutzt Playwright aus der Umgebung)
@@ -149,7 +151,7 @@ scripts/icons.mjs        rastert icon.svg zu den PNG-Icons (nutzt Playwright aus
 - Zusatzfelder eines Eintrags: `geraet` (anonyme Kennung), `name`, `pruefstelle` (nur Server), `besuchId` (QR-Besuch, Schritt 2).
 - „Heute Abend" und die Becher-Nr. zählen nur die eigenen Becher dieses Geräts (`geraet === eigene Kennung`), nicht die der Community.
 - Fotos bleiben vorerst nur lokal (`fotoBlob`); der Server nimmt noch keine an (Schritt 3, R2).
-- `stadt` (optional) wird nur gespeichert, wenn sie nicht aus der gepflegten Liste folgt. Beim Markt „Sonstiger" gibt es in der Erfassung ein eigenes Stadtfeld (Vorschläge aus Karte, Marktliste und schon bewerteten Städten). Anzeige immer über `ortText`/`ortTeile` (src/lib/orte.ts): „Sonstiger" erscheint nie als Ort.
+- `stadt` (optional) wird nur gespeichert, wenn sie nicht aus der gepflegten Liste folgt. **Die Erfassung ist stadt-zuerst:** Der Ort-Knopf öffnet `ui/nacht/OrtBlatt.tsx` (Stadt suchen mit Vorschlägen, „In meiner Nähe" per Geolocation nur auf dem Gerät, zuletzt gewählt, schon bewertet; danach optional der Markt, gepflegte und von Nutzern eingetragene). Ohne Stadt wird nicht gespeichert; `stadt` steht jetzt bei jedem neuen Becher, Markt „Sonstiger" heißt „kein bestimmter Markt". Alte Entwürfe werden mit `migriere()` umgestellt. Anzeige immer über `ortText`/`ortTeile` (src/lib/orte.ts): „Sonstiger" erscheint nie als Ort.
   Die Stadt eines Eintrags immer über `stadtVon(MARKTLISTE, e)` holen. Freie Eingabe im
   Erfassungsscreen: „Markt, Stadt" (`zerlegeFreienMarkt`).
 - Statistik-Schwellen wie im alten Sheet: Spanne (max − min) unter 5 = Skala zu eng,

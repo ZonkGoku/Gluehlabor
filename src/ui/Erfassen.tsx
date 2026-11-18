@@ -2,7 +2,7 @@
 // Keine Rechenlogik hier: Wertung, Anker, Becher-Nr. kommen aus src/lib.
 
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { db, leseEinstellung, leseGewichte, schreibeEinstellung, speichereNeuenEintrag } from '../daten/db';
+import { db, leseGewichte, speichereNeuenEintrag } from '../daten/db';
 import {
   leseEntwurf,
   leseEntwurfFoto,
@@ -17,9 +17,8 @@ import { besuchIdAusBytes } from '../lib/besuch';
 import { MARKE } from '../marke';
 import { ankerFuer } from '../lib/anker';
 import { ortTeile, stadtVon, zerlegeFreienMarkt } from '../lib/orte';
-import staedteJson from '../../data/staedte.json';
 import { kanonischerStand, schlageStaendeVor, type Vorschlag } from '../lib/standvorschlag';
-import { ANKER, MAERKTE, MARKTLISTE } from './stammdaten';
+import { ANKER, MARKTLISTE } from './stammdaten';
 import { euro, probeNr, zahl2 } from '../lib/format';
 import { DEFAULT_GEWICHTE, KRITERIEN, leereNoten, SORTEN, type Eintrag, type Kriterium, type Sorte } from '../lib/modell';
 import { bewerte } from '../lib/scoring';
@@ -27,6 +26,9 @@ import { useLive } from './hooks';
 import { Skala } from './Skala';
 import { SyncAnzeige } from './SyncAnzeige';
 import { TicketBlatt } from './nacht/TicketBlatt';
+import { OrtBlatt } from './nacht/OrtBlatt';
+import { Symbol } from './Symbol';
+import { leseZuletzt, merkeOrt } from '../daten/zuletzt';
 
 
 const SORTE_LABEL: Record<Sorte, string> = {
@@ -49,8 +51,30 @@ function neueId(): string {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
-function leererEntwurf(markt: string, sorte?: Sorte): Entwurf {
-  return { stand: '', markt, marktFrei: false, sorte, notiz: '', noten: leereNoten() };
+function leererEntwurf(stadt?: string, markt?: string, sorte?: Sorte): Entwurf {
+  return { stand: '', markt: markt?.trim() || MARKTLISTE.sonstiger, stadt, marktFrei: false, sorte, notiz: '', noten: leereNoten() };
+}
+
+/** Alte Entwürfe (Marktliste, freie Eingabe „Markt, Stadt") auf Stadt + Markt bringen. */
+function migriere(e: Entwurf): Entwurf {
+  if (e.gesperrt) return e;
+  let { markt, stadt } = e;
+  if (e.marktFrei) {
+    const frei = zerlegeFreienMarkt(markt);
+    markt = frei.markt;
+    stadt ||= frei.stadt;
+  }
+  markt = markt?.trim() || MARKTLISTE.sonstiger;
+  stadt = stadt?.trim() || stadtVon(MARKTLISTE, { markt }) || undefined;
+  return { ...e, markt, stadt, marktFrei: false };
+}
+
+/** Beim ersten Öffnen: zuletzt gewählter Ort, sonst leer. */
+function startEntwurf(): Entwurf {
+  const gespeichert = leseEntwurf();
+  if (gespeichert) return migriere(gespeichert);
+  const z = leseZuletzt()[0];
+  return leererEntwurf(z?.stadt, z?.markt);
 }
 
 export function Erfassen() {
@@ -59,7 +83,8 @@ export function Erfassen() {
   const heute = abendDatum(new Date());
   const heutige = useLive(() => db.eintraege.where('datum').equals(heute).toArray(), [heute], []);
 
-  const [e, setE] = useState<Entwurf>(() => leseEntwurf() ?? leererEntwurf(MAERKTE[0]));
+  const [e, setE] = useState<Entwurf>(startEntwurf);
+  const [ortOffen, setOrtOffen] = useState(false);
   const [becherNrAngefasst, setBecherNrAngefasst] = useState(() => leseEntwurf()?.becherNr !== undefined);
   const [foto, setFoto] = useState<Blob | null>(null);
   const [aktiv, setAktiv] = useState<Kriterium>('geschmack');
@@ -72,13 +97,6 @@ export function Erfassen() {
   // Alle Becher dieses Geräts, auch die schon synchronisierten der Community: daraus kommen die Vorschläge.
   const bestand = useLive(() => db.eintraege.toArray(), [], []);
 
-  // Beim ersten Öffnen ohne Entwurf: zuletzt benutzten Markt vorschlagen.
-  useEffect(() => {
-    if (leseEntwurf()) return;
-    void leseEinstellung<string>('letzterMarkt', '').then((m) => {
-      if (m) setE((x) => ({ ...x, markt: m, marktFrei: !MAERKTE.includes(m) }));
-    });
-  }, []);
   useEffect(() => {
     void leseEntwurfFoto().then(setFoto);
   }, []);
@@ -90,28 +108,20 @@ export function Erfassen() {
   const vorschlagNr = naechsteBecherNr(heutige, heute);
   const becherNr = becherNrAngefasst ? e.becherNr : vorschlagNr;
 
-  // Städte für die Auswahl: Karte, gepflegte Liste und alles, was schon bewertet wurde
-  const bekannteStaedte = useMemo(() => {
-    const alle = new Set<string>([...Object.keys(staedteJson).filter((k) => !k.startsWith('_')), ...MARKTLISTE.staedte.map((x) => x.stadt)]);
-    for (const b of bestand) {
-      const st = b.stadt?.trim();
-      if (st) alle.add(st);
-    }
-    return [...alle].sort((a, b) => a.localeCompare(b, 'de'));
-  }, [bestand]);
-
   const wertung = useMemo(() => bewerte(e.noten, gewichte), [e.noten, gewichte]);
   // Vorschläge nur aus echten Ständen, nie der eigenen halb getippten Eingabe: der Entwurf zählt erst nach dem Speichern.
   const vorschlaege = useMemo(() => {
-    const markt = !e.marktFrei && e.markt !== MARKTLISTE.sonstiger ? e.markt : undefined;
+    const markt = e.markt !== MARKTLISTE.sonstiger ? e.markt : undefined;
     const alle = schlageStaendeVor(
-      bestand.map((b) => ({ stand: b.stand, markt: b.markt, stadt: b.stadt })),
+      bestand.map((b) => ({ stand: b.stand, markt: b.markt, stadt: stadtVon(MARKTLISTE, b) ?? undefined })),
       e.stand,
       markt,
+      5,
+      e.stadt,
     );
     // Genau die Eingabe am selben Markt braucht keinen Vorschlag
     return alle.filter((v) => !(v.stand === e.stand.trim() && (!markt || v.markt === markt)));
-  }, [bestand, e.stand, e.markt, e.marktFrei]);
+  }, [bestand, e.stand, e.markt, e.stadt]);
   const bewertet = KRITERIEN.filter((k) => e.noten[k] !== null).length;
 
   const setNote = (k: Kriterium, n: number | null) => setE((x) => ({ ...x, noten: { ...x.noten, [k]: n } }));
@@ -124,29 +134,28 @@ export function Erfassen() {
     await schreibeEntwurfFoto(klein);
   };
 
-  /** Vorschlag übernehmen: Stand und Markt (samt Stadt) aus dem vorhandenen Becher. */
+  /** Vorschlag übernehmen: Stand, Markt und Stadt aus dem vorhandenen Becher. */
   const uebernimm = (v: Vorschlag) => {
-    const stadt = v.stadt ?? stadtVon(MARKTLISTE, { markt: v.markt });
-    // In der Auswahlliste, wenn der Markt dort steht und die Stadt dazu passt; sonst als freie Eingabe „Markt, Stadt".
-    const gelistet = MAERKTE.includes(v.markt) && (!v.stadt || stadtVon(MARKTLISTE, { markt: v.markt }) === v.stadt);
-    const sonstiger = v.markt === MARKTLISTE.sonstiger;
-    setE((x) => ({
-      ...x,
-      stand: v.stand,
-      // „Sonstiger" bleibt in der Auswahl, die Stadt kommt in ihr eigenes Feld
-      markt: sonstiger ? v.markt : gelistet ? v.markt : stadt ? `${v.markt}, ${stadt}` : v.markt,
-      marktFrei: sonstiger ? false : !gelistet,
-      stadt: sonstiger ? (v.stadt ?? undefined) : undefined,
-    }));
+    setE((x) => ({ ...x, stand: v.stand, markt: v.markt, stadt: v.stadt ?? stadtVon(MARKTLISTE, { markt: v.markt }) ?? undefined, marktFrei: false }));
     setStandFokus(false);
   };
 
+  const waehleOrt = (stadt: string, markt: string) => {
+    setE((x) => ({ ...x, stadt, markt, marktFrei: false }));
+    merkeOrt(stadt, markt === MARKTLISTE.sonstiger ? undefined : markt);
+    setOrtOffen(false);
+  };
+
   const speichern = async () => {
-    const freiOrt = e.marktFrei ? zerlegeFreienMarkt(e.markt) : null;
-    const stand = kanonischerStand(bestand, e.stand, freiOrt?.markt ?? e.markt, freiOrt?.stadt ?? (e.markt === MARKTLISTE.sonstiger ? e.stadt?.trim() : undefined));
+    const stand = kanonischerStand(bestand, e.stand, e.markt, e.stadt);
     if (!stand) {
       setFehlt(true);
       standRef.current?.focus();
+      return;
+    }
+    if (!e.gesperrt && !e.stadt?.trim()) {
+      // Ohne Stadt keine Bewertung: Sie ist das Wichtigste für Rangliste und Karte.
+      setOrtOffen(true);
       return;
     }
     const jetzt = new Date();
@@ -161,20 +170,9 @@ export function Erfassen() {
     };
     // Jeder Becher gehört zu einem Besuch. Wer den QR-Code zeigt oder scannt, teilt sich dieselbe Nr.
     eintrag.besuchId = e.besuchId ?? besuchIdAusBytes(crypto.getRandomValues(new Uint8Array(8)));
-    if (e.gesperrt) {
-      // Stand, Markt und Stadt stammen aus dem gescannten Besuch.
-      eintrag.markt = e.markt;
-      if (e.stadt) eintrag.stadt = e.stadt;
-    } else if (e.marktFrei) {
-      // Freie Eingabe „Markt, Stadt" – bewertet wird in ganz Deutschland.
-      const frei = zerlegeFreienMarkt(e.markt);
-      if (frei.markt) eintrag.markt = frei.markt;
-      if (frei.stadt) eintrag.stadt = frei.stadt;
-    } else if (e.markt.trim()) {
-      eintrag.markt = e.markt.trim();
-      // „Sonstiger" sagt nichts über den Ort: die Stadt kommt aus dem eigenen Feld.
-      if (eintrag.markt === MARKTLISTE.sonstiger && e.stadt?.trim()) eintrag.stadt = e.stadt.trim();
-    }
+    // Stadt und Markt: aus dem gescannten Besuch oder aus der Ortswahl. „Sonstiger" heißt: kein bestimmter Markt.
+    eintrag.markt = e.markt.trim() || MARKTLISTE.sonstiger;
+    if (e.stadt?.trim()) eintrag.stadt = e.stadt.trim();
     if (e.sorte) eintrag.sorte = e.sorte;
     if (becherNr !== undefined) eintrag.becherNr = becherNr;
     if (e.preis !== undefined) eintrag.preis = e.preis;
@@ -182,9 +180,9 @@ export function Erfassen() {
 
     await speichereNeuenEintrag(eintrag, foto ?? undefined);
     // Ab hier ist der Becher sicher auf dem Gerät.
-    await schreibeEinstellung('letzterMarkt', e.markt.trim() || eintrag.markt);
+    if (eintrag.stadt) merkeOrt(eintrag.stadt, eintrag.markt === MARKTLISTE.sonstiger ? undefined : eintrag.markt);
     await schreibeEntwurfFoto(null);
-    const neu = { ...leererEntwurf(e.markt.trim() || eintrag.markt, e.sorte), marktFrei: e.marktFrei };
+    const neu = leererEntwurf(eintrag.stadt, eintrag.markt, e.sorte);
     setE(neu);
     setBecherNrAngefasst(false);
     setFoto(null);
@@ -270,62 +268,28 @@ export function Erfassen() {
           onBlur={() => setTimeout(() => setStandFokus(false), 120)}
           onKeyDown={(ev) => ev.key === 'Enter' && (ev.target as HTMLInputElement).blur()}
         />
-        {e.marktFrei ? (
-          <input
-            class="feld"
-            type="text"
-            placeholder="Markt, Stadt"
-            aria-label="Markt und Stadt, mit Komma getrennt"
-            value={e.markt}
-            onInput={(ev) => setE({ ...e, markt: (ev.target as HTMLInputElement).value })}
-            onBlur={() => !e.markt.trim() && setE({ ...e, markt: MAERKTE[0], marktFrei: false })}
-          />
-        ) : (
-          <select
-            class="feld"
-            aria-label="Markt"
-            value={e.markt}
-            onChange={(ev) => {
-              const v = (ev.target as HTMLSelectElement).value;
-              setE(v === '__frei' ? { ...e, markt: '', marktFrei: true, stadt: undefined } : { ...e, markt: v, stadt: v === MARKTLISTE.sonstiger ? e.stadt : undefined });
-            }}
-          >
-            {MARKTLISTE.staedte.map((s) => (
-              <optgroup label={s.stadt}>
-                {s.maerkte.map((m) => (
-                  <option value={m}>{m}</option>
-                ))}
-              </optgroup>
-            ))}
-            <optgroup label="Woanders in Deutschland">
-              <option value={MARKTLISTE.sonstiger}>{MARKTLISTE.sonstiger}</option>
-              <option value="__frei">Anderer Markt, andere Stadt …</option>
-            </optgroup>
-          </select>
-        )}
+        <button type="button" class={`ort-knopf${e.stadt ? '' : ' leer-ort'}`} onClick={() => setOrtOffen(true)} aria-label="Ort wählen: Stadt und Markt">
+          <span class="ort-symbol">
+            <Symbol name="pin" groesse={20} />
+          </span>
+          <span class="ort-text">
+            {e.stadt ? (
+              <>
+                <b>{e.stadt}</b>
+                <small>{e.markt !== MARKTLISTE.sonstiger ? e.markt : 'Markt wählen (optional)'}</small>
+              </>
+            ) : (
+              <>
+                <b>Wo bist du?</b>
+                <small>Stadt suchen oder Standort nutzen</small>
+              </>
+            )}
+          </span>
+          <span class="ort-pfeil">
+            <Symbol name="pfeil" groesse={18} />
+          </span>
+        </button>
       </div>
-      )}
-
-      {!e.gesperrt && !e.marktFrei && e.markt === MARKTLISTE.sonstiger && (
-        <div class="stadtzeile">
-          <input
-            class="feld"
-            type="text"
-            list="bekannte-staedte"
-            placeholder="Stadt, z. B. Salzburg"
-            aria-label="Stadt"
-            autocomplete="off"
-            autocapitalize="words"
-            maxLength={60}
-            value={e.stadt ?? ''}
-            onInput={(ev) => setE({ ...e, stadt: (ev.target as HTMLInputElement).value })}
-          />
-          <datalist id="bekannte-staedte">
-            {bekannteStaedte.map((s) => (
-              <option value={s} />
-            ))}
-          </datalist>
-        </div>
       )}
 
       {notizOffen ? (
@@ -452,6 +416,14 @@ export function Erfassen() {
         </button>
       </footer>
     </main>
+    {ortOffen && (
+      <OrtBlatt
+        start={{ stadt: e.stadt, markt: e.markt }}
+        bestand={bestand}
+        onWahl={waehleOrt}
+        onZu={() => setOrtOffen(false)}
+      />
+    )}
     {fertigId && <TicketBlatt id={fertigId} onNaechster={() => setFertigId(null)} />}
     </>
   );

@@ -1,7 +1,6 @@
-import { KARTE_BREITE, KARTE_HOEHE, kartenPunkte, umrisse, type Koordinaten } from '../lib/karte';
-import staedteJson from '../../data/staedte.json';
+import { useKartenKoordinaten } from '../daten/orte';
+import { KARTE_BREITE, KARTE_HOEHE, kartenPunkte, umrisse } from '../lib/karte';
 
-const ORTE = staedteJson as unknown as Koordinaten;
 const UMRISSE = umrisse();
 
 export interface StadtZahl {
@@ -11,7 +10,8 @@ export interface StadtZahl {
 
 /** Ein Punkt je Stadt, Fläche nach Zahl der Becher. Namen stehen darunter als Liste. */
 export function Deutschlandkarte({ staedte }: { staedte: StadtZahl[] }) {
-  const { punkte, ohneOrt } = kartenPunkte(staedte, ORTE);
+  // Gepflegte Städte sofort, alle anderen (aus der Ortssuche) sobald die Ortsdaten geladen sind
+  const { punkte, ohneOrt } = kartenPunkte(staedte, useKartenKoordinaten());
   const summe = (a: StadtZahl[]) => a.reduce((s, x) => s + x.becher, 0);
   const beschreibung = punkte.map((p) => `${p.stadt} ${p.becher}`).join(', ');
   return (

@@ -74,6 +74,14 @@ describe('gleicher Name in verschiedenen Städten (Markt „Sonstiger")', () => 
   });
 });
 
+describe('Stadt als Hinweis', () => {
+  it('gleiche Stadt kommt vor gleich gutem Stand in anderer Stadt', () => {
+    const B = [E('Max', 'Sonstiger', 'Salzburg'), E('Max', 'Sonstiger', 'Traunstein')];
+    expect(schlageStaendeVor(B, 'max', undefined, 5, 'Traunstein')[0].stadt).toBe('Traunstein');
+    expect(schlageStaendeVor(B, 'max', undefined, 5, 'salzburg')[0].stadt).toBe('Salzburg');
+  });
+});
+
 describe('kanonischerStand', () => {
   it('übernimmt die Schreibweise des vorhandenen Stands am selben Markt', () => {
     expect(kanonischerStand(BESTAND, 'SALZ-CHROM', 'sonstiger')).toBe('Salz Chrom');

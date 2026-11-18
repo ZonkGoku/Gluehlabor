@@ -66,6 +66,18 @@ export function Impressum() {
           Detailansicht über „Diesen Eintrag melden" melden oder uns per E-Mail schreiben. Gemeldete Einträge prüfen wir und
           blenden sie bei Verstößen aus.
         </p>
+        <h2>Quellen</h2>
+        <p>
+          Die Ortsliste (Städte in Deutschland und Österreich mit Lage) stammt von{' '}
+          <a href="https://www.geonames.org" target="_blank" rel="noopener">
+            GeoNames
+          </a>{' '}
+          und steht unter der Lizenz{' '}
+          <a href="https://creativecommons.org/licenses/by/4.0/deed.de" target="_blank" rel="noopener">
+            CC BY 4.0
+          </a>
+          .
+        </p>
         <h2>Haftung für Links</h2>
         <p>
           Für Inhalte externer Seiten, auf die verlinkt wird, sind deren Betreiber verantwortlich.
@@ -100,8 +112,13 @@ export function Datenschutz() {
           Die App speichert in deinem Browser: deine Bewertungen, eine angefangene Bewertung, deine Einstellungen (Name,
           Saison, Gewichtung, Darstellung) sowie eine zufällige Geräte-Kennung mit Schlüssel. Außerdem legt die installierbare
           Web-App Dateien zwischen, damit sie ohne Netz funktioniert. Es gibt keine Cookies, keine Werbung und keine
-          Analyse- oder Tracking-Dienste. Du kannst alles jederzeit über die Browser-Einstellungen („Websitedaten löschen")
+          Analyse- oder Tracking-Dienste. Die zuletzt gewählten Orte bleiben ebenfalls nur auf deinem Gerät. Du kannst alles jederzeit über die Browser-Einstellungen („Websitedaten löschen")
           entfernen.
+        </p>
+        <p>
+          <b>Standort:</b> Nur wenn du in der Ortswahl „In meiner Nähe suchen" antippst, fragt dein Browser nach deinem Standort.
+          Er wird ausschließlich auf deinem Gerät benutzt, um die nächste Stadt zu finden. Er wird nicht gesendet und nicht
+          gespeichert.
         </p>
 
         <h2>3. Auf dem Server (Community)</h2>
