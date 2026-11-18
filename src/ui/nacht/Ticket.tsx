@@ -6,6 +6,7 @@ import type { Zeile } from '../../lib/auswertung';
 import { anzeigeName, istPruefstelle } from '../../lib/community';
 import { zahl2 } from '../../lib/format';
 import { UrteilPill } from '../bausteine';
+import { PruefSiegel } from './PruefSiegel';
 import { Symbol } from '../Symbol';
 import { useNeigung, useZaehler } from './bewegung';
 import { kartenDaten, teileKartenBild } from './karteBild';
@@ -131,6 +132,8 @@ interface TopKarteProps {
   von?: string;
   /** Adresse, die beim Teilen mitgeht. */
   teilenLink?: string;
+  /** Prüfsiegel zeigen (Stand mit Bewertung der Prüfstelle). */
+  siegel?: boolean;
 }
 
 /** Kopfteil der Karte: Link zur Detailseite oder einfacher Block. */
@@ -146,9 +149,10 @@ function Inhalt({ href, children }: { href?: string; children: ComponentChildren
 }
 
 /** Die Karte für einen Spitzenplatz. */
-export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, ohneLink = false, href, stempel, von, teilenLink }: TopKarteProps) {
+export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, ohneLink = false, href, stempel, von, teilenLink, siegel = false }: TopKarteProps) {
   const { eintrag: e, wertung: w, rang } = zeile;
   const pruef = istPruefstelle(e);
+  const zeigeSiegel = siegel || (stempel === undefined && pruef);
   const zahl = useZaehler(w.gesamt);
   const [meldung, setMeldung] = useState('');
   const teilen = async (ev: Event) => {
@@ -156,7 +160,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
     ev.stopPropagation();
     setMeldung(t('Erzeuge …'));
     const link = `${location.origin}${location.pathname}${teilenLink ?? `#/becher/${encodeURIComponent(e.id)}`}`;
-    const r = await teileKartenBild(kartenDaten(zeile, ort, titel, stempel === undefined ? undefined : { stempel, von }), link);
+    const r = await teileKartenBild(kartenDaten(zeile, ort, titel, stempel === undefined ? undefined : { stempel, von, geprueft: zeigeSiegel }), link);
     setMeldung(r === 'gespeichert' ? t('Bild gespeichert') : '');
     if (r === 'gespeichert') setTimeout(() => setMeldung(''), 2600);
   };
@@ -170,8 +174,10 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
           <div class="flex items-start justify-between gap-3">
             <div class="flex items-baseline gap-2">
               <span class={`font-display leading-none licht-text ${klein ? 'text-[40px]' : 'text-[52px]'}`}>{String(rang ?? '–').padStart(2, '0')}</span>
-              <span class="etikett">{t('Platz')}</span>
+              <span class={`etikett ${klein && zeigeSiegel ? 'hidden' : ''}`}>{t('Platz')}</span>
             </div>
+            <div class="flex items-center gap-2">
+            {zeigeSiegel && <PruefSiegel groesse={klein ? 34 : 42} />}
             {stempel !== undefined ? (
               <span class="whitespace-nowrap rounded-md border border-[var(--nm-rand-stark)] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-dunst">{stempel}</span>
             ) : pruef ? (
@@ -181,6 +187,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
             ) : (
               <span class="rounded-md border border-[var(--nm-rand-stark)] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-dunst">{t('Community')}</span>
             )}
+            </div>
           </div>
           <h2 class={`mt-3 line-clamp-2 font-display uppercase leading-[0.98] tracking-wide text-eis ${klein ? 'min-h-[1.96em] text-[27px]' : 'text-[36px]'}`}>
             {titel ?? e.stand}

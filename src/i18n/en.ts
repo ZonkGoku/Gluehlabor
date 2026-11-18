@@ -570,4 +570,8 @@ export const EN: Record<string, string> = {
   "Auswahl löschen ({n})": "Delete selection ({n})",
   "Auswählen: {stand}": "Select: {stand}",
   "Es werden die neuesten {n} gezeigt. Mit der Suche findest du die übrigen.": "Showing the latest {n}. Use search to find the rest.",
+  "Von der Prüfstelle geprüft": "Tested by the rating lab",
+  "Geprüft": "Tested",
+  "Von der Prüfstelle geprüft: {n}": "Tested by the rating lab: {n}",
+  "Das Siegel trägt jeder Stand, den die Prüfstelle (David & Philip) selbst getestet hat.": "The seal marks every stall the rating lab (David & Philip) has tested themselves.",
 };

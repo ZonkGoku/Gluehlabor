@@ -20,9 +20,11 @@ export interface KartenDaten {
   von: string;
   /** Stempel eines Stands statt Prüfstelle/Community, z. B. 12 Bewertungen. */
   stempel?: string;
+  /** Prüfsiegel zeichnen. */
+  geprueft?: boolean;
 }
 
-export function kartenDaten(z: Zeile, ort: string, titel?: string, stand?: { stempel: string; von?: string }): KartenDaten {
+export function kartenDaten(z: Zeile, ort: string, titel?: string, stand?: { stempel: string; von?: string; geprueft?: boolean }): KartenDaten {
   const pruef = stand ? false : istPruefstelle(z.eintrag);
   return {
     rang: z.rang,
@@ -37,6 +39,7 @@ export function kartenDaten(z: Zeile, ort: string, titel?: string, stand?: { ste
     id: z.eintrag.id,
     von: stand ? (stand.von ?? stand.stempel) : pruef ? 'David & Philip' : anzeigeName(z.eintrag),
     stempel: stand?.stempel,
+    geprueft: stand?.geprueft === true || (!stand && pruef),
   };
 }
 
@@ -199,6 +202,38 @@ export async function erzeugeKartenBild(d: KartenDaten): Promise<Blob> {
   k.letterSpacing = '6px';
   k.fillText(uebersetze('Platz').toUpperCase(), pad + rangBreite + 24, 170);
   k.letterSpacing = '0px';
+
+  // Prüfsiegel links neben dem Stempel
+  if (d.geprueft) {
+    k.save();
+    k.translate(kb - pad - 130 - 190, 108);
+    const sg = k.createLinearGradient(-50, -50, 50, 50);
+    sg.addColorStop(0, GOLD);
+    sg.addColorStop(0.55, '#ffa05c');
+    sg.addColorStop(1, WEIN);
+    k.fillStyle = 'rgba(255,200,87,.12)';
+    k.beginPath();
+    k.arc(0, 0, 50, 0, Math.PI * 2);
+    k.fill();
+    k.strokeStyle = sg;
+    k.lineWidth = 6;
+    k.stroke();
+    k.lineWidth = 2;
+    k.setLineDash([4, 6]);
+    k.beginPath();
+    k.arc(0, 0, 39, 0, Math.PI * 2);
+    k.stroke();
+    k.setLineDash([]);
+    k.lineWidth = 8;
+    k.lineCap = 'round';
+    k.lineJoin = 'round';
+    k.beginPath();
+    k.moveTo(-18, 2);
+    k.lineTo(-4, 16);
+    k.lineTo(22, -14);
+    k.stroke();
+    k.restore();
+  }
 
   // Stempel
   k.save();

@@ -33,6 +33,7 @@ export function StandTopKarte({ stand, klein, quelle = 'alle', hinweis, klasse, 
       ohneLink={ohneLink}
       teilenLink={standHref(stand)}
       stempel={stempel(stand)}
+      siegel={stand.pruefstelle.anzahl > 0}
       von={quelle === 'alle' ? seitenText(stand) || tt('Alle Bewertungen') : quelle === 'pruefstelle' ? tt('Wertung der Prüfstelle') : tt('Wertung der Community')}
     />
   );
@@ -40,5 +41,5 @@ export function StandTopKarte({ stand, klein, quelle = 'alle', hinweis, klasse, 
 
 export function StandZeile({ stand }: { stand: Stand }) {
   const zeile = standAlsZeile(stand);
-  return <RangZeile zeile={zeile} ort={ortText(MARKTLISTE, zeile.eintrag)} href={standHref(stand)} zusatz={stempel(stand)} />;
+  return <RangZeile zeile={zeile} ort={ortText(MARKTLISTE, zeile.eintrag)} href={standHref(stand)} zusatz={stempel(stand)} siegel={stand.pruefstelle.anzahl > 0} />;
 }

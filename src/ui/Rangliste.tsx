@@ -10,6 +10,7 @@ import { useEintraege, useGewichte, useSaison } from './daten';
 import { GewichteEditor } from './GewichteEditor';
 import { useEinblenden } from './nacht/bewegung';
 import { Chips } from './nacht/Chips';
+import { PruefSiegel } from './nacht/PruefSiegel';
 import { StandTopKarte, StandZeile } from './nacht/StandKarten';
 import { MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
@@ -129,7 +130,8 @@ export function Rangliste() {
         <span class="mt-0.5 shrink-0">
           <Symbol name="pfeil" groesse={12} />
         </span>
-        {t('Ein Stand zählt den Durchschnitt aller Bewertungen. Wenige Bewertungen zählen für die Reihenfolge weniger (vorläufig), angezeigt wird immer der echte Durchschnitt. Glühwein = Geschmack, Geruch, Temperatur · Drumherum = Personal, Atmosphäre, Preis/Leistung, Becher.')}
+        <span class="mr-1 inline-block align-middle"><PruefSiegel groesse={16} /></span>
+        {t('Das Siegel trägt jeder Stand, den die Prüfstelle (David & Philip) selbst getestet hat.')} {t('Ein Stand zählt den Durchschnitt aller Bewertungen. Wenige Bewertungen zählen für die Reihenfolge weniger (vorläufig), angezeigt wird immer der echte Durchschnitt. Glühwein = Geschmack, Geruch, Temperatur · Drumherum = Personal, Atmosphäre, Preis/Leistung, Becher.')}
       </p>
       <Betreiber />
     </div>
