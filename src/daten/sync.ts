@@ -128,6 +128,21 @@ export async function holeBecher(): Promise<number> {
   return neu;
 }
 
+export const MELDEGRUENDE: { wert: string; label: string }[] = [
+  { wert: 'spam', label: 'Spam oder Werbung' },
+  { wert: 'unpassend', label: 'Beleidigend oder unpassend' },
+  { wert: 'falsch', label: 'Falsche Angaben' },
+  { wert: 'persoenlich', label: 'Enthält persönliche Daten' },
+  { wert: 'sonstiges', label: 'Sonstiges' },
+];
+
+/** Meldet einen Becher beim Server (Meldeverfahren). Wirft ApiFehler mit lesbarer Meldung. */
+export async function meldeBecher(id: string, grund: string, text: string): Promise<void> {
+  const geraet = await holeGeraet();
+  await anmelden(geraet);
+  await api('/api/melden', { methode: 'POST', geraet, body: { id, grund, ...(text.trim() ? { text: text.trim() } : {}) } });
+}
+
 let laufend: Promise<void> | null = null;
 
 export function synchronisiere(): Promise<void> {

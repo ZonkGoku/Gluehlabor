@@ -13,6 +13,7 @@ import {
 import { verkleinereFoto } from '../daten/foto';
 import { synchronisiere } from '../daten/sync';
 import { abendDatum, naechsteBecherNr } from '../lib/abend';
+import { besuchIdAusBytes } from '../lib/besuch';
 import { ankerFuer } from '../lib/anker';
 import { zerlegeFreienMarkt } from '../lib/orte';
 import { ANKER, MAERKTE, MARKTLISTE } from './stammdaten';
@@ -111,7 +112,13 @@ export function Erfassen() {
       noten: { ...e.noten },
       erstelltAm: jetzt.getTime(),
     };
-    if (e.marktFrei) {
+    // Jeder Becher gehört zu einem Besuch. Wer den QR-Code zeigt oder scannt, teilt sich dieselbe Nr.
+    eintrag.besuchId = e.besuchId ?? besuchIdAusBytes(crypto.getRandomValues(new Uint8Array(8)));
+    if (e.gesperrt) {
+      // Stand, Markt und Stadt stammen aus dem gescannten Besuch.
+      eintrag.markt = e.markt;
+      if (e.stadt) eintrag.stadt = e.stadt;
+    } else if (e.marktFrei) {
       // Freie Eingabe „Markt, Stadt" – bewertet wird in ganz Deutschland.
       const frei = zerlegeFreienMarkt(e.markt);
       if (frei.markt) eintrag.markt = frei.markt;
@@ -143,6 +150,13 @@ export function Erfassen() {
 
   const def = ANKER[aktiv];
   const anker = ankerFuer(def, e.noten[aktiv]);
+  // Besuch teilen: Besuchs-Nr. vergeben, Entwurf sofort sichern, dann QR zeigen.
+  const zeigeQr = () => {
+    const besuchId = e.besuchId ?? besuchIdAusBytes(crypto.getRandomValues(new Uint8Array(8)));
+    schreibeEntwurf({ ...e, besuchId });
+    location.hash = '#/teilen';
+  };
+
   const knopfText = gespeichert ?? (bewertet === 0 ? 'Noch keine Note' : 'Speichern');
 
   return (
@@ -151,11 +165,30 @@ export function Erfassen() {
         <span class="marke">Becherwerk</span>
         <span class="titel" />
         <SyncAnzeige />
+        {e.stand.trim() && (
+          <button type="button" class="kopf-knopf" onClick={zeigeQr} aria-label="QR-Code zum gemeinsamen Bewerten zeigen">
+            QR
+          </button>
+        )}
         <a href="#/" aria-label="Zur Übersicht">
           Fertig
         </a>
       </header>
 
+      {e.gesperrt ? (
+        <div class="besuch-zeile">
+          <div class="besuch-text">
+            <b>{e.stand}</b>
+            <span>
+              {e.markt}
+              {e.stadt ? ` · ${e.stadt}` : ''}
+            </span>
+          </div>
+          <button type="button" class="besuch-aus" onClick={() => setE({ ...e, gesperrt: false, besuchId: undefined })}>
+            Anderer Stand
+          </button>
+        </div>
+      ) : (
       <div class="stamm">
         <input
           ref={standRef}
@@ -205,6 +238,7 @@ export function Erfassen() {
           </select>
         )}
       </div>
+      )}
 
       {notizOffen ? (
         <div class="notizzeile">

@@ -36,6 +36,11 @@ class BecherwerkDb extends Dexie {
       eintraege: 'id, sync, saison, markt, datum, erstelltAm',
       einstellungen: 'key',
     });
+    // Version 2: Index für gemeinsame Besuche und für die eigenen Becher (nur Index, keine Daten ändern sich).
+    this.version(2).stores({
+      eintraege: 'id, sync, saison, markt, datum, erstelltAm, besuchId, geraet',
+      einstellungen: 'key',
+    });
     // Beim allerersten Öffnen: Bestandsdaten importieren, damit die App nicht leer startet.
     this.on('populate', (tx) => {
       const eintraege = importiereCsv(bestand2025).map((e) => ({ ...e, sync: 'bestand' as const }));

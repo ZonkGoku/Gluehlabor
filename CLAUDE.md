@@ -18,6 +18,8 @@ Gamification und Teilen-auf-Social. Bewertungen von David & Philip laufen weiter
   Rangliste (Gewichte + Saison-Schalter), Verkostung, Vergleich (Wiederholungstäter, „Wo wart ihr
   noch nie?"), Spickzettel, Statistik. Die App bildet alle Tabs ab.
 
+**Ablaufplan für den Start (Mo 23.11.2026): `ABLAUFPLAN.md`.** `npm run launch-check` zeigt, was noch fehlt.
+
 ## Stack
 
 - **Vite 6 + Preact 10 + TypeScript**, Hash-Router (`#/erfassen`, `#/einstellungen`, …)
@@ -28,9 +30,21 @@ Gamification und Teilen-auf-Social. Bewertungen von David & Philip laufen weiter
   Endpunkte: `POST /api/geraete`, `GET|PUT /api/ich` (Name), `POST /api/pruefstelle` (Code),
   `POST|GET /api/becher` (GET öffentlich, Sync über aufsteigende `seq`), `POST /api/admin/{verstecken,sperren,import}`.
   Ausgeblendete Becher kommen als Platzhalter `{id, versteckt:true}`, damit Geräte sie löschen.
+- **Gemeinsam bewerten per QR-Code** (`src/lib/besuch.ts`, `ui/Teilen.tsx`, `ui/Mitbewerten.tsx`): Jeder Becher
+  bekommt eine Besuchs-Nr. (`besuchId`). Der QR-Code trägt nur Stand, Markt, Stadt, Sorte und diese Nr. als Link
+  `…/#/mitbewerten?b=…&s=…&m=…&c=…&t=…` (reines ASCII, ca. 120 Zeichen, funktioniert ohne Netz). Wer scannt, sieht den
+  Stand, wird freiwillig nach dem Namen gefragt und bewertet selbst; Stand und Markt sind dann gesperrt
+  (`Entwurf.gesperrt`, „Anderer Stand" löst es). Alles aus dem Link wird wie eine Einreichung geprüft (`leseBesuch`)
+  und nie als HTML eingesetzt. Die Teilen-Seite fragt alle 10 s nach, damit „Mit dabei" schnell aktuell ist.
+  QR immer schwarz auf weiß, auch im dunklen Theme (`ui/Qr.tsx`, Bibliothek `qrcode-generator`).
+- **Melden / Moderation**: `POST /api/melden` (Grund + Text, 20 je Gerät und Tag), Admin: `GET /api/admin/meldungen`,
+  `verstecken`, `meldung-verwerfen`, `sperren`, `loeschen` (Löschen auf Anfrage: Name oder alles). Kommandozeile:
+  `npm run moderation -- liste` (siehe Kopf von `worker/scripts/moderation.ts`).
+- **Datenschutz im Server**: Adressen werden nie im Klartext gespeichert, nur gehasht mit Salz (`IP_SALT`) und Tag,
+  nur Schreibzugriffe werden gezählt, ein täglicher Lauf löscht abgelaufene Zähler. Die öffentliche Liste wird am
+  Rand 5 s zwischengespeichert, vom Browser nie (`cache: 'no-store'` in `api.ts`).
 - **Sync** (`src/daten/sync.ts`): anmelden → Name senden → offene Becher senden → neue holen. Ein Becher
-  bleibt lokal `offen`, bis der Server ihn angenommen hat. `API_URL` (`src/daten/config.ts`, Build-Variable
-  `VITE_API_URL`) leer = kein Server, die App arbeitet nur lokal und sagt das („nur lokal").
+  bleibt lokal `offen`, bis der Server ihn angenommen hat. `API_URL` (aus `data/server.json`, überschreibbar mit der Build-Variable `VITE_API_URL`) leer = kein Server, die App arbeitet nur lokal und sagt das („nur lokal").
 - **Regeln für Fremde** stehen in `src/lib/community.ts` und gelten in App UND Server (derselbe Code):
   Name 1–24 Zeichen, keine Links, reservierte Namen (David, Philip, Prüfstelle, Admin …) nur für die
   Prüfstelle; Becher werden streng geprüft und bereinigt, Name/Kennung/Siegel setzt nur der Server.
@@ -48,8 +62,8 @@ Gamification und Teilen-auf-Social. Bewertungen von David & Philip laufen weiter
   als Prüfstellen-Becher. App gegen den lokalen Server: `VITE_API_URL=http://localhost:8787 npm run dev`.
 - **Server veröffentlichen** (braucht Cloudflare-Konto): `wrangler d1 create becherwerk`, `database_id` in
   `worker/wrangler.toml` eintragen, `wrangler d1 migrations apply becherwerk --remote`,
-  `wrangler secret put ADMIN_TOKEN` und `PRUEFSTELLE_CODE`, `wrangler deploy --config worker/wrangler.toml`,
-  danach `API_URL` in `src/daten/config.ts` auf die Worker-Adresse setzen und `worker:seed` ausführen.
+  `wrangler secret put ADMIN_TOKEN`, `PRUEFSTELLE_CODE` und `IP_SALT`, `wrangler deploy --config worker/wrangler.toml`,
+  danach die Worker-Adresse in `data/server.json` eintragen, `worker:seed` ausführen und `npm run launch-check` laufen lassen.
 - **Deploy**: `.github/workflows/deploy.yml` veröffentlicht bei jedem Push auf `main` den Stand von `main`. Solange `main` nicht Standard-Branch ist, läuft der Deploy über einen workflow_dispatch auf dem Standard-Branch (Pages-Umgebung erlaubt nur den Standard-Branch). Die Seite liegt
   unter https://zonkgoku.github.io/Becherwerk/ . Pages → Source = „GitHub Actions" (ist gesetzt).
 - `base: './'` (relativ) plus Hash-Router: kein Repo-Name im Build, keine weiße Seite
@@ -62,6 +76,8 @@ data/                    Daten, nicht Code
   gluehwein-2025.csv     Bestandsdaten: beim ersten Start lokal importiert UND per worker:seed als Prüfstelle auf den Server
   anker.json             Ankerdefinitionen je Kriterium (werden sich ändern)
   staedte.json           Koordinaten je Stadt für die Deutschlandkarte (fehlt eine Stadt, steht sie nur in der Liste)
+  betreiber.json         Name, Anschrift, E-Mail für Impressum und Datenschutz (Pflicht vor dem Start)
+  server.json            Adresse des Community-Servers (leer = nur lokal)
   maerkte.json           gepflegte Marktlisten je Stadt + „Sonstiger" (weitere Städte einfach ergänzen)
   regeln.json            Regeln des Spickzettels
 worker/                  Community-Server: src/app.ts (alle Endpunkte), migrations/, test/, scripts/seed.ts
@@ -72,6 +88,10 @@ src/lib/                 REINE Funktionen ohne UI/DOM, alle getestet
   auswertung.ts          Filter, Rangliste mit Wertung, Urteilsverteilung, Jahresvergleich, Markt-Checkliste
   statistik.ts           Kennzahlen, Korrelationen, Pegel, Befunde als Sätze
   community.ts           Namen- und Einreichungsprüfung (App + Server), Anzeigename
+  besuch.ts              QR-Link bauen und lesen (gemeinsamer Besuch)
+  preisindex.ts          Glühwein-Preisindex je Stadt (Median, ab 5 Meldungen)
+  betreiber.ts           Prüfung der Betreiberangaben
+  installhinweis.ts      „Zum Home-Bildschirm"-Hinweis für iPhone im Browser
   orte.ts                Märkte ↔ Städte, freie Eingabe „Markt, Stadt"
   startseite.ts          Standard-Saison, Saison-Tag, Abend, Saisonverlauf, neueste Becher, Kennzahlen
   karte.ts               Projektion und Umriss der Deutschlandkarte, Kartenpunkte
@@ -81,10 +101,16 @@ src/ui/                  Preact-Komponenten. KEINE Rechenlogik hier (auch keine 
   Geruest.tsx            Tab-Leiste (Telefon) / Seitenleiste (Rechner)
   Uebersicht (= Startseite), Rangliste, Detail, Vergleich, Statistik, Spickzettel, Einstellungen, Erfassen
   Deutschlandkarte.tsx, Saisonverlauf.tsx  Bausteine der Startseite
+  Profil.tsx             Name, Verbindung zum Server, Prüfstellen-Code (Community-Einstellungen)
+  Teilen.tsx, Mitbewerten.tsx, Qr.tsx      QR-Code zeigen / Einladung annehmen
+  Rechtliches.tsx        Impressum und Datenschutz (Text = Entwurf, nicht rechtlich geprüft)
+  Einstellungen.tsx      Gewichtung und Darstellung. Auf ausdrücklichen Wunsch auf dem alten Stand belassen: das
+                         GitHub-Token-Formular dort ist überholt (der Sync läuft über den Server) und wird nicht mehr gebraucht
   daten.ts               Live-Hooks (Einträge, Gewichte, Saison-Auswahl)
 src/styles.css           Tokens beider Themes + Erfassungsscreen
 src/app.css              Gerüst und Auswertungsansichten
 public/                  icon.svg (PWA-Zeichen), logo.svg (Siegel mit „David & Philip"), PNG-Icons
+scripts/launch-check.ts  Startcheck (npm run launch-check)
 scripts/icons.mjs        rastert icon.svg zu den PNG-Icons (nutzt Playwright aus der Umgebung)
 ```
 
@@ -148,12 +174,11 @@ Achtung bei Klassennamen: `styles.css` und `app.css` teilen sich den Namensraum
 
 ## Stand der Arbeit
 
-Gebaut und getestet: Scoring, alle Ansichten, Startseite, Deutschland-weite Orte, Community-Server mit
-anonymer Kennung, Sync, freiwilligem Namen, Prüfstellen-Siegel und Moderation (248 Tests, dazu ein
-Zwei-Geräte-Test im Browser gegen den lokalen Server).
-**Offen:** Der Server ist noch nicht bei Cloudflare veröffentlicht (braucht Konto und API-Token), deshalb ist
-`API_URL` leer und die App arbeitet bis dahin nur lokal.
-Schritt 2: QR-Code und „Mitbewerten" (Besuch teilen, Stammdaten stecken im Link, funktioniert ohne Netz).
-Schritt 3: Community-Ansichten (Stand-Seiten, Community- vs. Prüfstellen-Rangliste, Statistik nur für
-die Prüfstelle), Melden-Knopf, Fotos (R2), Turnstile gegen Bots, Datenschutzerklärung und Impressum.
-Gewichte gelten weiter pro Gerät.
+Gebaut und getestet (317 Tests, dazu Browser-Tests mit zwei Geräten gegen den lokalen Server, QR-Code mit
+echtem Leser dekodiert): Scoring, alle Ansichten, Startseite mit Preisindex, Community-Server mit anonymer
+Kennung, Sync, freiwilligem Namen, Prüfstellen-Siegel, Melden, Moderation, Löschen auf Anfrage, QR-Mitbewerten,
+Impressum und Datenschutz (Entwurf), iPhone-Hinweis.
+**Offen bis zum Start:** Server bei Cloudflare veröffentlichen (braucht Konto, Token, Account-ID), Betreiberangaben
+eintragen, Test auf echten Handys, Datenschutz prüfen lassen. Reihenfolge und Termine: `ABLAUFPLAN.md`.
+Danach: Stand-Seiten mit Verteilung, Prüfstelle und Community getrennt, Fotos (R2), Bot-Schutz (Turnstile),
+Gewichte zwischen Geräten.

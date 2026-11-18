@@ -13,6 +13,18 @@ export interface Entwurf {
   preis?: number;
   notiz: string;
   noten: Noten;
+  /** Stadt, wenn sie feststeht (z. B. aus einem QR-Code). */
+  stadt?: string;
+  /** Gemeinsamer Besuch an dieser Bude (QR-Code). Wird beim ersten Teilen oder Scannen vergeben. */
+  besuchId?: string;
+  /** Stand und Markt stammen aus einem gescannten Besuch und sind nicht änderbar. */
+  gesperrt?: boolean;
+}
+
+/** Hat der Entwurf Inhalt, der beim Überschreiben verloren ginge? */
+export function entwurfHatInhalt(e: Entwurf | null): boolean {
+  if (!e) return false;
+  return Boolean(e.stand.trim()) || Object.values(e.noten).some((n) => n !== null) || Boolean(e.notiz.trim());
 }
 
 const KEY = 'becherwerk.entwurf';

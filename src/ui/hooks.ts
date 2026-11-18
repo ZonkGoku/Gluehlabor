@@ -11,14 +11,16 @@ export function useLive<T>(abfrage: () => Promise<T>, deps: unknown[], start: T)
   return wert;
 }
 
-/** Hash-Route, z. B. "erfassen" für #/erfassen. */
+/**
+ * Hash-Route, z. B. "erfassen" für #/erfassen. Rendert bei jeder Änderung des ganzen Hashs neu, auch wenn nur
+ * die Angaben nach dem "?" wechseln (zweiter QR-Code, anderer Becher), damit Seiten, die sie lesen, nie veralten.
+ */
 export function useRoute(): string {
-  const lese = () => location.hash.replace(/^#\/?/, '').split('?')[0];
-  const [route, setRoute] = useState(lese);
+  const [hash, setHash] = useState(() => location.hash);
   useEffect(() => {
-    const h = () => setRoute(lese());
+    const h = () => setHash(location.hash);
     addEventListener('hashchange', h);
     return () => removeEventListener('hashchange', h);
   }, []);
-  return route;
+  return hash.replace(/^#\/?/, '').split('?')[0];
 }

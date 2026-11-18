@@ -110,8 +110,12 @@ export function Profil() {
             </p>
           )}
           <p style={{ fontSize: '12.5px' }}>
-            Geräte-Kennung: <span class="mono">{geraetId ? geraetId.slice(0, 8) : 'wird beim ersten Becher angelegt'}</span>. Sie ist
-            anonym und enthält keine persönlichen Daten.
+            Geräte-Kennung:{' '}
+            <span class="mono" style={{ wordBreak: 'break-all', userSelect: 'all' }}>
+              {geraetId ?? 'wird beim ersten Becher angelegt'}
+            </span>
+            . Sie ist zufällig und enthält keine persönlichen Daten. Mit ihr können wir auf Wunsch deinen Namen oder deine
+            Bewertungen löschen, siehe <a href="#/datenschutz">Datenschutz</a>.
           </p>
         </section>
 

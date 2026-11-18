@@ -44,6 +44,9 @@ export function Betreiber() {
       <span>
         Becherwerk ist die Prüfstelle für Glühwein auf Weihnachtsmärkten in ganz Deutschland. Gemacht und
         betrieben von David aus Bayern und Philip aus Hamburg, seit 2025.
+        <span class="rechtliches">
+          <a href="#/impressum">Impressum</a> · <a href="#/datenschutz">Datenschutz</a>
+        </span>
       </span>
     </footer>
   );

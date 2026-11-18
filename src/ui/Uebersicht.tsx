@@ -2,7 +2,8 @@
 import { useState } from 'preact/hooks';
 import { abendDatum } from '../lib/abend';
 import { filtere, ranglisteMitWertung, saisons } from '../lib/auswertung';
-import { zahl2 } from '../lib/format';
+import { euro, zahl2 } from '../lib/format';
+import { preisindex } from '../lib/preisindex';
 import { staedte, stadtVon } from '../lib/orte';
 import { befunde } from '../lib/statistik';
 import { abend, kennzahlen, neuesteBecher, saisonStatus, saisonVerlauf } from '../lib/startseite';
@@ -10,6 +11,7 @@ import { Betreiber, datumKurz, Notenbalken, SaisonSchalter, UrteilPill } from '.
 import { leseEinstellung, schreibeEinstellung, setzeName } from '../daten/db';
 import { synchronisiere } from '../daten/sync';
 import { anzeigeName, pruefeName } from '../lib/community';
+import { istIosImBrowser } from '../lib/installhinweis';
 import { useEintraege, useGeraetId, useGewichte, useMeineAnzahl, useName, useSaison } from './daten';
 import { useLive } from './hooks';
 import { Deutschlandkarte } from './Deutschlandkarte';
@@ -64,6 +66,27 @@ function NameKarte() {
   );
 }
 
+/** Nur iPhone und iPad im Browser: Safari löscht lokale Daten nach 7 Tagen Pause, installierte Apps nicht. */
+function InstallHinweis() {
+  const zu = useLive(() => leseEinstellung<boolean>('installHinweisZu', false), [], false);
+  const ios = istIosImBrowser(navigator.userAgent, navigator.maxTouchPoints, (navigator as { standalone?: boolean }).standalone);
+  if (zu || !ios) return null;
+  return (
+    <div class="name-karte">
+      <label>Tipp fürs iPhone: auf den Home-Bildschirm legen</label>
+      <p class="name-hinweis" style={{ marginTop: 0 }}>
+        Tippe unten auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm". Sonst kann Safari nach einer Woche ohne Nutzung
+        deinen Namen und nicht gesendete Bewertungen vergessen.
+      </p>
+      <div class="name-zeile">
+        <button type="button" class="pillknopf" onClick={() => void schreibeEinstellung('installHinweisZu', true)}>
+          Verstanden
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function Uebersicht() {
   const alle = useEintraege();
   const gewichte = useGewichte();
@@ -81,11 +104,16 @@ export function Uebersicht() {
   const spitze = zeilen.filter((z) => z.rang === 1);
   const k = kennzahlen(auswahl, MARKTLISTE, gewichte);
   const orte = staedte(MARKTLISTE, auswahl);
+  const preise = preisindex(auswahl, MARKTLISTE);
 
   // Abend-Modus: nur die eigenen Becher dieses Geräts zählen, nicht die der Community.
   const meine = alle.filter((e) => e.geraet === geraetId);
   const heuteAbend = abend(meine, heute, gewichte);
   const abendModus = heuteAbend.anzahl > 0;
+  const letzter = neuesteBecher(
+    meine.filter((e) => e.datum === heute && e.besuchId),
+    1,
+  )[0];
   const naechsteNr = heuteAbend.anzahl === 0 ? 1 : heuteAbend.naechsteNr;
 
   const status = saisonStatus(alle, typeof saison === 'number' ? saison : jahr, heute);
@@ -162,12 +190,19 @@ export function Uebersicht() {
           )}
 
           <div class="b-plus">
+            {meineAnzahl > 0 && <InstallHinweis />}
             {meineAnzahl > 0 && <NameKarte />}
             <a class="plus-balken" href="#/erfassen">
               <Symbol name="plus" groesse={22} />
               {heuteAbend.anzahl === 0 ? 'Becher erfassen' : 'Nächster Becher'}
               <span class="mono">Nr. {naechsteNr}</span>
             </a>
+            {letzter && (
+              <p class="plus-hinweis" style={{ color: 'var(--text-2)' }}>
+                Zusammen an einer Bude?{' '}
+                <a href={`#/teilen?e=${encodeURIComponent(letzter.id)}`}>QR-Code für {letzter.stand} zeigen</a>
+              </p>
+            )}
           </div>
 
           <div class="kennzahlen b-kpi">
@@ -212,6 +247,34 @@ export function Uebersicht() {
               Wo ihr wart <a href="#/vergleich">Märkte</a>
             </h2>
             <Deutschlandkarte staedte={orte} />
+          </section>
+
+          <section class="karte b-preis">
+            <h2>Glühwein-Preise</h2>
+            {preise.zeilen.length === 0 ? (
+              <p class="leer-hinweis">
+                {preise.meldungen === 0
+                  ? 'Noch keine Preise gemeldet. Trag bei der Erfassung den Preis ein, dann entsteht hier der Preisindex.'
+                  : `${preise.meldungen} von ${preise.schwelle} nötigen Preismeldungen. Eine Stadt erscheint hier ab ${preise.schwelle} Meldungen.`}
+              </p>
+            ) : (
+              <>
+                <ul class="preisliste">
+                  {preise.zeilen.slice(0, 6).map((p) => (
+                    <li title={`${p.stadt}: Median ${euro(p.median)}, Mittel ${euro(p.mittel)}, ${euro(p.min)} bis ${euro(p.max)}, ${p.n} Meldungen`}>
+                      <span class="name">{p.stadt}</span>
+                      <span class="spanne">
+                        {euro(p.min)} – {euro(p.max)} · {p.n}×
+                      </span>
+                      <span class="preis">{euro(p.median)}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p class="leer-hinweis" style={{ marginTop: '10px' }}>
+                  Median je Tasse, nach Meldungen der Bewertenden vor Ort. Alkoholfreies zählt nicht.
+                </p>
+              </>
+            )}
           </section>
 
           <section class="karte b-neu">

@@ -47,7 +47,8 @@ function gueltigesDatum(s: string): boolean {
   return Number.isFinite(t) && new Date(t).toISOString().slice(0, 10) === s;
 }
 
-function text(
+/** Prüft einen Textwert (säubern, Länge, keine Links). Gemeinsam für Einreichungen und Besuchs-Links. */
+export function pruefeText(
   wert: unknown,
   feld: string,
   max: number,
@@ -74,13 +75,13 @@ export function pruefeEinreichung(x: unknown, jetzt: number): EinreichungPruefun
   const e = x as Record<string, unknown>;
 
   if (typeof e.id !== 'string' || !/^[A-Za-z0-9_-]{8,64}$/.test(e.id)) return { ok: false, grund: 'Ungültige ID.' };
-  const stand = text(e.stand, 'Stand', GRENZEN.stand, true);
+  const stand = pruefeText(e.stand, 'Stand', GRENZEN.stand, true);
   if (!stand.ok) return stand;
-  const markt = text(e.markt, 'Markt', GRENZEN.markt, true);
+  const markt = pruefeText(e.markt, 'Markt', GRENZEN.markt, true);
   if (!markt.ok) return markt;
-  const stadt = text(e.stadt, 'Stadt', GRENZEN.stadt, false);
+  const stadt = pruefeText(e.stadt, 'Stadt', GRENZEN.stadt, false);
   if (!stadt.ok) return stadt;
-  const notiz = text(e.notiz, 'Notiz', GRENZEN.notiz, false);
+  const notiz = pruefeText(e.notiz, 'Notiz', GRENZEN.notiz, false);
   if (!notiz.ok) return notiz;
 
   const jahr = new Date(jetzt).getUTCFullYear();

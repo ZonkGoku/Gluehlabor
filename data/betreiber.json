@@ -1,0 +1,9 @@
+{
+  "_hinweis": "Angaben für Impressum und Datenschutzerklärung. Name, Straße, Ort und E-Mail sind Pflicht, bevor die Seite öffentlich beworben wird (npm run launch-check prüft das).",
+  "name": "",
+  "strasse": "",
+  "ort": "",
+  "email": "",
+  "telefon": "",
+  "datenbankStandort": ""
+}

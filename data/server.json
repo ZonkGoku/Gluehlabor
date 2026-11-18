@@ -1,0 +1,4 @@
+{
+  "_hinweis": "Adresse des Community-Servers (Cloudflare Worker). Leer = die App arbeitet nur lokal. Wird beim Veröffentlichen des Servers eingetragen.",
+  "apiUrl": ""
+}

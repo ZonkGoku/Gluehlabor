@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
+import { ApiFehler } from '../daten/api';
+import { API_URL } from '../daten/config';
+import { MELDEGRUENDE, meldeBecher } from '../daten/sync';
 import { ankerFuer } from '../lib/anker';
 import { anzeigeName } from '../lib/community';
 import { filtere, ranglisteMitWertung } from '../lib/auswertung';
@@ -8,7 +11,7 @@ import { stadtVon } from '../lib/orte';
 import { bewerte } from '../lib/scoring';
 import { kriteriumStatistik } from '../lib/statistik';
 import { datumKurz, UrteilPill } from './bausteine';
-import { useEintraege, useGewichte } from './daten';
+import { useEintraege, useGeraetId, useGewichte } from './daten';
 import { ANKER, MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
 
@@ -25,7 +28,12 @@ const SORTE: Record<string, string> = {
 export function Detail({ id }: { id: string }) {
   const alle = useEintraege();
   const gewichte = useGewichte();
+  const geraetId = useGeraetId();
   const [fotoUrl, setFotoUrl] = useState<string | null>(null);
+  const [meldenOffen, setMeldenOffen] = useState(false);
+  const [grund, setGrund] = useState('spam');
+  const [meldeText, setMeldeText] = useState('');
+  const [meldung, setMeldung] = useState('');
   const e = alle?.find((x) => x.id === id);
 
   useEffect(() => {
@@ -93,6 +101,63 @@ export function Detail({ id }: { id: string }) {
           </div>
           {e.notiz && <p style={{ margin: '14px 0 0', lineHeight: 1.5 }}>„{e.notiz}"</p>}
           {fotoUrl && <img class="foto" src={fotoUrl} alt={`Foto vom Stand ${e.stand}`} />}
+          {e.geraet === geraetId && e.besuchId && (
+            <p style={{ margin: '14px 0 0' }}>
+              <a class="pillknopf" href={`#/teilen?e=${encodeURIComponent(e.id)}`}>
+                QR zum Mitbewerten zeigen
+              </a>
+            </p>
+          )}
+          {API_URL && e.geraet !== geraetId && e.sync !== 'bestand' && !e.pruefstelle && (
+            <div style={{ marginTop: '14px' }}>
+              {!meldenOffen ? (
+                <button type="button" class="besuch-aus" style={{ padding: 0 }} onClick={() => setMeldenOffen(true)}>
+                  Diesen Eintrag melden
+                </button>
+              ) : (
+                <div class="melde-form">
+                  <label for="melde-grund">Was stimmt nicht?</label>
+                  <select id="melde-grund" class="auswahl" value={grund} onChange={(ev) => setGrund((ev.target as HTMLSelectElement).value)}>
+                    {MELDEGRUENDE.map((g) => (
+                      <option value={g.wert}>{g.label}</option>
+                    ))}
+                  </select>
+                  <input
+                    class="feld"
+                    style={{ height: '40px', fontSize: '15px' }}
+                    type="text"
+                    maxLength={300}
+                    placeholder="Kurze Erklärung (freiwillig)"
+                    aria-label="Erklärung zur Meldung"
+                    value={meldeText}
+                    onInput={(ev) => setMeldeText((ev.target as HTMLInputElement).value)}
+                  />
+                  <div class="knopfreihe" style={{ marginTop: 0 }}>
+                    <button
+                      type="button"
+                      class="pillknopf"
+                      onClick={async () => {
+                        setMeldung('Sende …');
+                        try {
+                          await meldeBecher(e.id, grund, meldeText);
+                          setMeldung('Danke. Wir sehen uns den Eintrag an.');
+                          setMeldenOffen(false);
+                        } catch (err) {
+                          setMeldung(err instanceof ApiFehler ? err.message : 'Kein Netz. Bitte später erneut versuchen.');
+                        }
+                      }}
+                    >
+                      Melden
+                    </button>
+                    <button type="button" class="pillknopf" onClick={() => setMeldenOffen(false)}>
+                      Abbrechen
+                    </button>
+                  </div>
+                </div>
+              )}
+              {meldung && <p class="meldung" style={{ margin: '8px 0 0' }}>{meldung}</p>}
+            </div>
+          )}
           {e.sync === 'offen' && (
             <p style={{ color: 'var(--warnung)', fontSize: '13px', margin: '14px 0 0' }}>
               Noch nur auf diesem Gerät. Wird synchronisiert, sobald Netz da ist.

@@ -1,0 +1,167 @@
+// Impressum und Datenschutzerklärung. Die Angaben zum Betreiber stehen in data/betreiber.json.
+// Hinweis für Pflege: Der Text der Datenschutzerklärung beschreibt, was die App und der Server
+// tatsächlich tun (siehe CLAUDE.md). Ändert sich dort etwas, muss er mitziehen. Er ist ein Entwurf und
+// nicht rechtlich geprüft.
+import betreiberJson from '../../data/betreiber.json';
+import { fehlendeAngaben, type Betreiber } from '../lib/betreiber';
+import { Betreiber as Fuss } from './bausteine';
+import { useGeraetId } from './daten';
+
+const B = betreiberJson as unknown as Betreiber;
+const fehlt = fehlendeAngaben(B);
+
+function Fehlt() {
+  if (fehlt.length === 0) return null;
+  return (
+    <div class="karte" style={{ borderColor: 'var(--warnung)', marginBottom: '14px' }}>
+      <b>Die Betreiberangaben sind noch nicht vollständig.</b>
+      <p style={{ margin: '6px 0 0' }}>Es fehlen: {fehlt.join(', ')}. Eintragen in data/betreiber.json.</p>
+    </div>
+  );
+}
+
+export function Impressum() {
+  return (
+    <>
+      <div class="seitenkopf">
+        <div>
+          <p class="eyebrow">Rechtliches</p>
+          <h1>Impressum</h1>
+        </div>
+      </div>
+      <Fehlt />
+      <section class="karte text-seite">
+        <h2>Angaben nach § 5 DDG</h2>
+        <p>
+          {B.name || '…'}
+          <br />
+          {B.strasse || '…'}
+          <br />
+          {B.ort || '…'}
+        </p>
+        <h2>Kontakt</h2>
+        <p>
+          E-Mail: {B.email || '…'}
+          {B.telefon ? (
+            <>
+              <br />
+              Telefon: {B.telefon}
+            </>
+          ) : null}
+        </p>
+        <h2>Inhalte von Nutzern</h2>
+        <p>
+          Bewertungen, Notizen und Namen stammen von den Nutzern. Wer einen Eintrag für unpassend hält, kann ihn in der
+          Detailansicht über „Diesen Eintrag melden" melden oder uns per E-Mail schreiben. Gemeldete Einträge prüfen wir und
+          blenden sie bei Verstößen aus.
+        </p>
+        <h2>Haftung für Links</h2>
+        <p>
+          Becherwerk ist ein privates Hobbyprojekt von {B.name || 'den Betreibern'} (David aus Bayern und Philip aus Hamburg)
+          ohne kommerzielle Absicht. Für Inhalte externer Seiten sind deren Betreiber verantwortlich.
+        </p>
+      </section>
+      <Fuss />
+    </>
+  );
+}
+
+export function Datenschutz() {
+  const geraet = useGeraetId();
+  return (
+    <>
+      <div class="seitenkopf">
+        <div>
+          <p class="eyebrow">Rechtliches</p>
+          <h1>Datenschutz</h1>
+          <p class="unterzeile">Kurz: kein Konto, keine Werbung, kein Tracking. Hier steht genau, was gespeichert wird.</p>
+        </div>
+      </div>
+      <Fehlt />
+      <section class="karte text-seite">
+        <h2>1. Wer verantwortlich ist</h2>
+        <p>
+          {B.name || '…'}, {B.strasse || '…'}, {B.ort || '…'}. E-Mail: {B.email || '…'}.
+        </p>
+
+        <h2>2. Auf deinem Gerät</h2>
+        <p>
+          Die App speichert in deinem Browser: deine Bewertungen, eine angefangene Bewertung, deine Einstellungen (Name,
+          Saison, Gewichtung, Darstellung) sowie eine zufällige Geräte-Kennung mit Schlüssel. Außerdem legt die installierbare
+          Web-App Dateien zwischen, damit sie ohne Netz funktioniert. Es gibt keine Cookies, keine Werbung und keine
+          Analyse- oder Tracking-Dienste. Du kannst alles jederzeit über die Browser-Einstellungen („Websitedaten löschen")
+          entfernen.
+        </p>
+
+        <h2>3. Auf dem Server (Community)</h2>
+        <p>
+          Wenn du Bewertungen abgibst, speichert unser Server: die zufällige Geräte-Kennung, einen Hash deines
+          Geräteschlüssels (nicht den Schlüssel selbst), deinen freiwilligen Namen sowie zu jeder Bewertung Stand, Markt,
+          Stadt, Datum, Sorte, Becher-Nr., Preis, Noten, Notiz, die Besuchs-Nr. und Zeitpunkte. Es gibt kein Konto, keine
+          E-Mail-Adresse und keine Telefonnummer.
+        </p>
+        <p>
+          <b>Öffentlich:</b> Bewertungen mit deinem Namen (oder „Anonym") und der Geräte-Kennung kann jeder abrufen, auch ohne
+          die App. Wer mehrere Bewertungen derselben Kennung sieht, erkennt, dass sie vom selben Gerät stammen. Schreib deshalb
+          keine persönlichen Daten in Namen oder Notizen.
+        </p>
+        <p>
+          Meldest du einen Eintrag, speichern wir deine Geräte-Kennung, den Grund und deinen optionalen Text, bis wir die
+          Meldung bearbeitet haben.
+        </p>
+
+        <h2>4. Rechtsgrundlagen</h2>
+        <p>
+          Bereitstellung der Bewertungsfunktion: Art. 6 Abs. 1 lit. b DSGVO. Dein Name: deine Einwilligung, Art. 6 Abs. 1
+          lit. a DSGVO, freiwillig und jederzeit widerruflich. Schutz vor Missbrauch und Sicherheit des Dienstes: berechtigtes
+          Interesse, Art. 6 Abs. 1 lit. f DSGVO.
+        </p>
+
+        <h2>5. Adressen und Missbrauchsschutz</h2>
+        <p>
+          Beim Aufruf sieht der Hosting-Anbieter technisch deine IP-Adresse. Wir selbst speichern keine IP-Adressen im
+          Klartext. Zum Schutz vor Missbrauch zählen wir Anfragen und neue Geräte je Adresse. Dafür speichern wir nur einen
+          Hashwert, der mit einem geheimen Salz und dem Tag gebildet wird und sich täglich ändert. Er wird innerhalb von zwei
+          Tagen gelöscht.
+        </p>
+
+        <h2>6. Anbieter, an die Daten gehen</h2>
+        <p>
+          Die Website wird über{' '}
+          <a href="https://docs.github.com/de/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">
+            GitHub Pages
+          </a>{' '}
+          ausgeliefert. Server und Datenbank laufen bei{' '}
+          <a href="https://www.cloudflare.com/de-de/privacypolicy/" target="_blank" rel="noopener">
+            Cloudflare
+          </a>
+          {B.datenbankStandort ? ` (Datenbank-Standort: ${B.datenbankStandort})` : ''}. Beide Anbieter haben ihren Sitz in den
+          USA. Welche Garantien für die Übermittlung gelten, steht in deren Datenschutzhinweisen.
+        </p>
+
+        <h2>7. Wie lange wir speichern</h2>
+        <p>
+          Bewertungen bleiben, bis du ihre Löschung verlangst. Der Name steht, bis du ihn entfernen lässt. Abgelaufene
+          Zähler für den Missbrauchsschutz löschen wir täglich.
+        </p>
+
+        <h2>8. Deine Rechte</h2>
+        <p>
+          Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und
+          Widerspruch sowie auf Widerruf einer Einwilligung. Du kannst dich bei einer Datenschutz-Aufsichtsbehörde beschweren.
+        </p>
+        <p>
+          <b>Löschen oder Namen entfernen:</b> Schreib an {B.email || '…'} und nenne deine Geräte-Kennung. Wir entfernen auf
+          Wunsch nur deinen Namen von allen deinen Bewertungen oder alle Bewertungen dieses Geräts. Deine Kennung:{' '}
+          <span class="mono" style={{ wordBreak: 'break-all', userSelect: 'all' }}>
+            {geraet ?? 'wird beim ersten Bewerten angelegt'}
+          </span>
+        </p>
+
+        <h2>9. Keine automatisierten Entscheidungen</h2>
+        <p>Es findet keine automatisierte Entscheidungsfindung oder Profilbildung statt.</p>
+      </section>
+      <Fuss />
+    </>
+  );
+}

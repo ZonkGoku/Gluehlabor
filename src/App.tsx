@@ -2,11 +2,14 @@ import { Detail } from './ui/Detail';
 import { Einstellungen } from './ui/Einstellungen';
 import { Erfassen } from './ui/Erfassen';
 import { Profil } from './ui/Profil';
+import { Datenschutz, Impressum } from './ui/Rechtliches';
 import { Geruest } from './ui/Geruest';
 import { useRoute } from './ui/hooks';
 import { Rangliste } from './ui/Rangliste';
 import { Spickzettel } from './ui/Spickzettel';
+import { Mitbewerten } from './ui/Mitbewerten';
 import { Statistik } from './ui/Statistik';
+import { Teilen } from './ui/Teilen';
 import { Uebersicht } from './ui/Uebersicht';
 import { Vergleich } from './ui/Vergleich';
 
@@ -14,6 +17,8 @@ import { Vergleich } from './ui/Vergleich';
 export function App() {
   const route = useRoute();
   if (route === 'erfassen') return <Erfassen />;
+  if (route === 'teilen') return <Teilen />;
+  if (route === 'mitbewerten') return <Mitbewerten />;
 
   let seite;
   if (route === 'rangliste') seite = <Rangliste />;
@@ -23,6 +28,8 @@ export function App() {
   else if (route === 'spickzettel') seite = <Spickzettel />;
   else if (route === 'einstellungen') seite = <Einstellungen />;
   else if (route === 'profil') seite = <Profil />;
+  else if (route === 'impressum') seite = <Impressum />;
+  else if (route === 'datenschutz') seite = <Datenschutz />;
   else seite = <Uebersicht />;
 
   return <Geruest route={route}>{seite}</Geruest>;

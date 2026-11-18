@@ -26,6 +26,8 @@ export async function api<T>(pfad: string, o: Optionen = {}): Promise<T> {
   const res = await fetch(API_URL + pfad, {
     method: o.methode ?? 'GET',
     headers: kopf,
+    // Nie aus dem Browser-Zwischenspeicher: Ein zweiter Abgleich soll wirklich nachfragen.
+    cache: 'no-store',
     body: o.body === undefined ? undefined : JSON.stringify(o.body),
   });
   const text = await res.text();
