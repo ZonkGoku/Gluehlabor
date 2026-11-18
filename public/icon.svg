@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#7B1E2B"/>
+  <!-- Förderband: umlaufender Gurt -->
+  <rect x="196" y="112" width="56" height="288" rx="28" fill="none" stroke="#D9A640" stroke-width="14"/>
+  <!-- Becher, nach oben fördernd -->
+  <g fill="#D9A640">
+    <path d="M266 330 h62 l-8 40 h-46 z"/>
+    <path d="M266 248 h62 l-8 40 h-46 z"/>
+    <path d="M266 166 h62 l-8 40 h-46 z"/>
+  </g>
+  <!-- Messstrich -->
+  <rect x="148" y="400" width="216" height="10" fill="#FBF7F6" opacity=".85"/>
+</svg>
