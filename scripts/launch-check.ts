@@ -16,12 +16,26 @@ const fehlt = fehlendeAngaben(lies('data/betreiber.json') as Partial<Betreiber>)
 pruefe(fehlt.length === 0, 'Impressum: Betreiberangaben vollständig', fehlt.length ? `fehlt: ${fehlt.join(', ')} (data/betreiber.json)` : undefined);
 
 // 2. Server eingetragen und erreichbar
-const apiUrl = ((process.env.VITE_API_URL ?? '') || lies('data/server.json').apiUrl || '').replace(/\/+$/, '');
+const roh = ((process.env.VITE_API_URL ?? '') || lies('data/server.json').apiUrl || '').trim();
+// "/" = Server und Seite liegen unter derselben Adresse (Hetzner)
+const apiUrl = roh === '/' ? SEITE : roh.replace(/\/+$/, '');
 pruefe(Boolean(apiUrl), 'Server-Adresse eingetragen', 'data/server.json: apiUrl setzen');
 if (apiUrl) {
   try {
     const s = await fetch(`${apiUrl}/api/status`);
     pruefe(s.ok, 'Server antwortet', `Status ${s.status}`);
+    pruefe(
+      s.headers.get('x-adresse-erkannt') === 'ja' || !apiUrl.startsWith(SEITE),
+      'Echte Besucheradresse kommt beim Server an (X-Real-IP)',
+      'Proxy-Konfiguration prüfen: proxy_set_header X-Real-IP $remote_addr; sonst teilen sich alle Besucher ein Limit',
+    );
+    if (SEITE.startsWith('https://')) {
+      const h = await fetch(SEITE.replace('https://', 'http://'), { redirect: 'manual' });
+      pruefe(h.status >= 301 && h.status <= 308 && (h.headers.get('location') ?? '').startsWith('https://'), 'http leitet auf https um', `Status ${h.status}`);
+      const k = await fetch(SEITE + '/');
+      pruefe(Boolean(k.headers.get('content-security-policy')), 'Sicherheitsköpfe (CSP) werden gesendet', 'läuft die Seite über den eigenen Server?');
+      pruefe(Boolean(k.headers.get('strict-transport-security')), 'HSTS aktiv', 'Proxy muss X-Forwarded-Proto: https setzen');
+    }
 
     const l = (await (await fetch(`${apiUrl}/api/becher?limit=500`)).json()) as { eintraege: { pruefstelle?: boolean }[] };
     const pruefstelle = l.eintraege.filter((e) => e.pruefstelle).length;

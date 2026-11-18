@@ -1,5 +1,5 @@
 {
-  "_hinweis": "apiUrl: Adresse des Community-Servers (Cloudflare Worker), leer = die App arbeitet nur lokal. seite: Adresse, unter der die App erreichbar ist (für npm run launch-check). Nach dem Wechsel auf die eigene Domain auf https://becherwerk.de/ setzen.",
+  "_hinweis": "apiUrl: Adresse des Community-Servers. \"/\" = derselbe Server wie die Seite (Hetzner, setzt der Docker-Build), leer = die App arbeitet nur lokal (so auch auf GitHub Pages). seite: Adresse, unter der die App erreichbar ist (für npm run launch-check).",
   "apiUrl": "",
-  "seite": "https://zonkgoku.github.io/Becherwerk/"
+  "seite": "https://gluehlabor.de/"
 }

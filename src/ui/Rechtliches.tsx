@@ -120,24 +120,19 @@ export function Datenschutz() {
 
         <h2>5. Adressen und Missbrauchsschutz</h2>
         <p>
-          Beim Aufruf sieht der Hosting-Anbieter technisch deine IP-Adresse. Wir selbst speichern keine IP-Adressen im
+          Beim Aufruf sieht der Server technisch deine IP-Adresse. Wir speichern keine IP-Adressen im
           Klartext. Zum Schutz vor Missbrauch zählen wir Anfragen und neue Geräte je Adresse. Dafür speichern wir nur einen
           Hashwert, der mit einem geheimen Salz und dem Tag gebildet wird und sich täglich ändert. Er wird innerhalb von zwei
           Tagen gelöscht.
         </p>
 
-        <h2>6. Anbieter, an die Daten gehen</h2>
+        <h2>6. Hosting</h2>
         <p>
-          Die Website wird über{' '}
-          <a href="https://docs.github.com/de/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">
-            GitHub Pages
-          </a>{' '}
-          ausgeliefert. Server und Datenbank laufen bei{' '}
-          <a href="https://www.cloudflare.com/de-de/privacypolicy/" target="_blank" rel="noopener">
-            Cloudflare
-          </a>
-          {B.datenbankStandort ? ` (Datenbank-Standort: ${B.datenbankStandort})` : ''}. Beide Anbieter haben ihren Sitz in den
-          USA. Welche Garantien für die Übermittlung gelten, steht in deren Datenschutzhinweisen.
+          Website, Server und Datenbank laufen auf einem eigenen Server bei der Hetzner Online GmbH, Industriestr. 25, 91710
+          Gunzenhausen (Deutschland){B.hostingStandort ? `, Standort: ${B.hostingStandort}` : ''}. Mit Hetzner besteht ein
+          Vertrag zur Auftragsverarbeitung. Es werden keine Dienste von Drittanbietern nachgeladen (keine Schriftarten-,
+          Analyse- oder Werbedienste). Beim Aufruf verarbeitet der Server deine IP-Adresse nur kurzfristig im Arbeitsspeicher
+          und schreibt sie nicht in Protokolldateien.
         </p>
 
         <h2>7. Wie lange wir speichern</h2>

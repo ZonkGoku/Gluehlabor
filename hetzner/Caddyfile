@@ -1,0 +1,15 @@
+# Caddy: holt Zertifikate selbst. Domain muss schon auf den Server zeigen.
+www.gluehlabor.de {
+	redir https://gluehlabor.de{uri} permanent
+}
+
+gluehlabor.de {
+	# Kein Zugriffsprotokoll (keine IP-Adressen). Caddy schreibt standardmäßig keins.
+	request_body {
+		max_size 100KB
+	}
+	reverse_proxy 127.0.0.1:8787 {
+		header_up X-Real-IP {remote_host}
+		header_up -X-Forwarded-For
+	}
+}

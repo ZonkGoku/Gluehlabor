@@ -1,0 +1,8 @@
+node_modules
+dist
+dist-server
+.git
+.env
+daten
+worker/.dev.vars
+worker/.wrangler

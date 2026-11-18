@@ -1,4 +1,4 @@
-# Becherwerk – Hinweise für spätere Sitzungen
+# Glühlabor (früher Becherwerk) – Hinweise für spätere Sitzungen
 
 Glühwein-Prüfstelle von David & Philip. Der vollständige Auftrag steht in `BRIEF.md`. Vor größeren Änderungen lesen.
 
@@ -49,7 +49,7 @@ Gamification und Teilen-auf-Social. Bewertungen von David & Philip laufen weiter
   Name 1–24 Zeichen, keine Links, reservierte Namen (David, Philip, Prüfstelle, Admin …) nur für die
   Prüfstelle; Becher werden streng geprüft und bereinigt, Name/Kennung/Siegel setzt nur der Server.
   Das Siegel „Prüfstelle" hängt am Code (Einstellungen → Prüfstelle), nie am Namen.
-  Limits: 100 Becher je Gerät und Tag, 30 neue Geräte je Adresse und Stunde, 120 Anfragen je Adresse und Minute.
+  Limits: 100 Becher je Gerät und Tag, 150 neue Geräte je Adresse und Stunde, 240 Schreibzugriffe je Adresse und Minute (viele Besucher teilen sich eine Mobilfunk-Adresse).
 - Der Name steht als Momentaufnahme an jeder Bewertung. Gibt sich ein Gerät zum ersten Mal einen Namen,
   bekommen seine bisher anonymen Becher ihn rückwirkend; schon benannte bleiben unverändert.
 - **PWA** über `vite-plugin-pwa` (generateSW, `registerType: 'prompt'`). `src/daten/update.ts` spielt
@@ -60,7 +60,8 @@ Gamification und Teilen-auf-Social. Bewertungen von David & Philip laufen weiter
 - **Server lokal**: `npm run worker:migrate` (einmal), `npm run worker:dev` (Port 8787, Geheimnisse
   in `worker/.dev.vars`, nicht im Repo), `npm run worker:seed` mit `API_URL` und `ADMIN_TOKEN` lädt die CSV
   als Prüfstellen-Becher. App gegen den lokalen Server: `VITE_API_URL=http://localhost:8787 npm run dev`.
-- **Server veröffentlichen** (braucht Cloudflare-Konto): `wrangler d1 create becherwerk`, `database_id` in
+- **Eigener Server (Hetzner, gewählter Weg)**: `server/` (Node 22, `node:sqlite`) liefert `dist/` und `/api/*` same-origin aus einem Prozess und nutzt dieselbe Logik wie `worker/src/app.ts`. Adresse aus `X-Real-IP` nur von privaten Verbindungen (`server/adresse.ts`), Sicherheitsköpfe und CSP in `server/static.ts`, tägliche Sicherung (14 behalten), Seed beim Start. Build `npm run build:alles` (`VITE_API_URL=/`), `Dockerfile`, `docker-compose.yml`, Anleitung und Proxy-Beispiele in `hetzner/`. Domain gluehlabor.de, Marke in `src/marke.ts`. GitHub Pages bleibt ohne Server (nur lokal). `worker/` (Cloudflare) ist die Alternative, nicht der Plan.
+- **Server bei Cloudflare veröffentlichen** (Alternative, braucht Konto): `wrangler d1 create becherwerk`, `database_id` in
   `worker/wrangler.toml` eintragen, `wrangler d1 migrations apply becherwerk --remote`,
   `wrangler secret put ADMIN_TOKEN`, `PRUEFSTELLE_CODE` und `IP_SALT`, `wrangler deploy --config worker/wrangler.toml`,
   danach die Worker-Adresse in `data/server.json` eintragen, `worker:seed` ausführen und `npm run launch-check` laufen lassen.
@@ -178,7 +179,7 @@ Gebaut und getestet (317 Tests, dazu Browser-Tests mit zwei Geräten gegen den l
 echtem Leser dekodiert): Scoring, alle Ansichten, Startseite mit Preisindex, Community-Server mit anonymer
 Kennung, Sync, freiwilligem Namen, Prüfstellen-Siegel, Melden, Moderation, Löschen auf Anfrage, QR-Mitbewerten,
 Impressum und Datenschutz (Entwurf), iPhone-Hinweis.
-**Offen bis zum Start:** Server bei Cloudflare veröffentlichen (braucht Konto, Token, Account-ID), Betreiberangaben
+**Offen bis zum Start:** Server auf Hetzner einrichten (DNS, Proxy, `hetzner/README.md`), Betreiberangaben
 eintragen, Test auf echten Handys, Datenschutz prüfen lassen. Reihenfolge und Termine: `ABLAUFPLAN.md`.
 Danach: Stand-Seiten mit Verteilung, Prüfstelle und Community getrennt, Fotos (R2), Bot-Schutz (Turnstile),
 Gewichte zwischen Geräten.

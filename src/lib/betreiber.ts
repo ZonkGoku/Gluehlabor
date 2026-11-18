@@ -6,7 +6,7 @@ export interface Betreiber {
   ort: string;
   email: string;
   telefon?: string;
-  datenbankStandort?: string;
+  hostingStandort?: string;
 }
 
 const PFLICHT: [keyof Betreiber, string][] = [

@@ -106,7 +106,7 @@ describe('Gerät anmelden', () => {
   ])('lehnt ab: %s', async (_n, body) => expect((await ruf('POST', '/api/geraete', { body })).status).toBe(400));
 
   it('begrenzt neue Geräte je Adresse und Stunde, andere Adressen bleiben frei', async () => {
-    for (let i = 0; i < 30; i++) await geraet({ ip: '9.9.9.9' });
+    for (let i = 0; i < 150; i++) await geraet({ ip: '9.9.9.9' });
     const r = await ruf('POST', '/api/geraete', { ip: '9.9.9.9', body: { id: crypto.randomUUID(), schluessel: hex(32) } });
     expect(r.status).toBe(429);
     await geraet({ ip: '8.8.8.8' });
@@ -254,7 +254,7 @@ describe('Becher einreichen', () => {
   });
 
   it('Schreib-Limit je Adresse und Minute: 429, in der nächsten Minute wieder frei', async () => {
-    for (let i = 0; i < 60; i++) expect((await ruf('POST', '/api/melden', { ip: '7.7.7.7', body: {} })).status).toBe(401);
+    for (let i = 0; i < 240; i++) expect((await ruf('POST', '/api/melden', { ip: '7.7.7.7', body: {} })).status).toBe(401);
     expect((await ruf('POST', '/api/melden', { ip: '7.7.7.7', body: {} })).status).toBe(429);
     expect((await ruf('POST', '/api/melden', { ip: '6.6.6.6', body: {} })).status).toBe(401);
     expect((await ruf('POST', '/api/melden', { ip: '7.7.7.7', jetzt: JETZT + 61_000, body: {} })).status).toBe(401);

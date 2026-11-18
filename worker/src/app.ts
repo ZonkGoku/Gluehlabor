@@ -25,10 +25,10 @@ export interface Env {
 }
 
 const LIMITS = {
-  geraeteJeIpUndStunde: 30,
+  geraeteJeIpUndStunde: 150,
   becherJeGeraetUndTag: 100,
   becherJeGeraetUndTagPruefstelle: 1000,
-  schreibzugriffeJeIpUndMinute: 60,
+  schreibzugriffeJeIpUndMinute: 240,
   meldungenJeGeraetUndTag: 20,
   maxBodyBytes: 64_000,
   maxEintraegeJeAnfrage: 20,

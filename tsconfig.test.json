@@ -10,6 +10,7 @@
     "src/**/*.test.ts",
     "worker/test",
     "worker/scripts",
+    "server",
     "vite.config.ts",
     "vitest.config.ts",
     "scripts"

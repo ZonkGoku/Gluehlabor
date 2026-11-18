@@ -1,0 +1,20 @@
+services:
+  gluehlabor:
+    build: .
+    container_name: gluehlabor
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "127.0.0.1:8787:8787"   # nur lokal erreichbar, der Reverse-Proxy leitet weiter
+    volumes:
+      - ./daten:/data            # Datenbank und Sicherungen
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 384m
+    logging:
+      driver: json-file
+      options: { max-size: "5m", max-file: "3" }
