@@ -1,14 +1,18 @@
-// Gewichtung und gemeinsamer Datenbestand (Sync). Kein Token, kein Konto. Es gibt nur das Nacht-Theme.
+// Gewichtung, gemeinsamer Datenbestand (Sync) und Darstellung. Kein Token, kein Konto.
 import { HAT_SERVER } from '../daten/config';
 import { db } from '../daten/db';
 import { synchronisiere } from '../daten/sync';
+import { setzeMenue, setzeTheme, useMenue, useTheme, type Menue, type Theme } from '../daten/darstellung';
 import { Betreiber } from './bausteine';
+import { Chips } from './nacht/Chips';
 import { useGewichte } from './daten';
 import { GewichteEditor } from './GewichteEditor';
 import { useLive } from './hooks';
 
 export function Einstellungen() {
   const gewichte = useGewichte();
+  const theme = useTheme();
+  const menue = useMenue();
   const offen = useLive(() => db.eintraege.where('sync').equals('offen').count(), [], 0);
 
   return (
@@ -44,6 +48,33 @@ export function Einstellungen() {
           </div>
         </section>
 
+
+        <section class="nm karte seite" style={{ padding: '18px' }}>
+          <h2 style={{ margin: 0 }}>Darstellung</h2>
+          <p class="mt-2 text-sm text-dunst">Gilt nur auf diesem Gerät.</p>
+          <div class="mt-3 space-y-4">
+            <div>
+              <div class="etikett mb-2">Farbschema</div>
+              <Chips<Theme>
+                optionen={['auto', 'hell', 'dunkel'] as const}
+                wert={theme}
+                onWahl={setzeTheme}
+                beschriftung="Farbschema"
+                label={(t) => (t === 'auto' ? 'Wie System' : t === 'hell' ? 'Hell' : 'Dunkel')}
+              />
+            </div>
+            <div class="hidden min-[900px]:block">
+              <div class="etikett mb-2">Menü am Rechner</div>
+              <Chips<Menue>
+                optionen={['seitenleiste', 'schwebend'] as const}
+                wert={menue}
+                onWahl={setzeMenue}
+                beschriftung="Menü am Rechner"
+                label={(m) => (m === 'seitenleiste' ? 'Seitenleiste' : 'Schwebende Leiste')}
+              />
+            </div>
+          </div>
+        </section>
       </div>
       <Betreiber />
     </>

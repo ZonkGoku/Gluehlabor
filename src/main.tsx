@@ -10,11 +10,11 @@ import './nacht.css';
 
 import { render } from 'preact';
 import { App } from './App';
+import { starteDarstellung } from './daten/darstellung';
 import { starteSync } from './daten/sync';
 import { starteUpdates } from './daten/update';
 
-// Es gibt nur noch das Nacht-Theme (src/nacht.css).
-document.documentElement.setAttribute('data-theme', 'dunkel');
+starteDarstellung();
 render(<App />, document.getElementById('app')!);
 starteSync();
 starteUpdates();

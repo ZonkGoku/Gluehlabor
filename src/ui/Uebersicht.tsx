@@ -140,14 +140,14 @@ function ErfassenKnopf({ nr, erster, klasse }: { nr: number; erster: boolean; kl
       class={`animate-puls flex items-center gap-4 rounded-3xl p-4 text-[#1a1020] no-underline ${klasse ?? ''}`}
       style={{ background: 'linear-gradient(135deg,#ffe29a 0%,#ff8a3d 55%,#f0344f 115%)' }}
     >
-      <span class="grid size-12 shrink-0 place-items-center rounded-2xl bg-[#1a1020]/85 text-gold-300">
+      <span class="grid size-12 shrink-0 place-items-center rounded-2xl bg-[#1a1020]/85 text-[#ffd98a]">
         <Symbol name="flamme" groesse={26} />
       </span>
       <span class="flex-1 leading-none">
         <span class="block font-display text-[30px] uppercase tracking-wide">{erster ? 'Becher erfassen' : 'Nächster Becher'}</span>
         <span class="mt-1 block text-sm font-medium opacity-75">Bewerten, teilen, in die Rangliste</span>
       </span>
-      <span class="rounded-full bg-[#1a1020]/85 px-3 py-1.5 font-mono text-sm text-gold-300">Nr. {nr}</span>
+      <span class="rounded-full bg-[#1a1020]/85 px-3 py-1.5 font-mono text-sm text-[#ffd98a]">Nr. {nr}</span>
     </a>
   );
 }
@@ -268,7 +268,7 @@ export function Uebersicht() {
                   <li>
                     <a
                       href={`#/becher/${encodeURIComponent(e.id)}`}
-                      class="flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.04] px-3.5 py-3 text-eis no-underline transition hover:border-white/20 hover:bg-white/[0.08]"
+                      class="flex items-center gap-3 rounded-2xl border border-rand bg-flaeche px-3.5 py-3 text-eis no-underline transition hover:border-[var(--nm-rand-stark)] hover:bg-flaeche-hover"
                     >
                       <span class="min-w-0 flex-1">
                         <span class="block truncate font-semibold">{e.stand}</span>
@@ -304,7 +304,7 @@ export function Uebersicht() {
                 <ul class="space-y-2">
                   {preise.zeilen.slice(0, 6).map((p) => (
                     <li
-                      class="flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.04] px-3.5 py-2.5"
+                      class="flex items-center gap-3 rounded-2xl border border-rand bg-flaeche px-3.5 py-2.5"
                       title={`${p.stadt}: Median ${euro(p.median)}, Mittel ${euro(p.mittel)}, ${euro(p.min)} bis ${euro(p.max)}, ${p.n} Meldungen`}
                     >
                       <span class="flex-1 font-semibold">{p.stadt}</span>

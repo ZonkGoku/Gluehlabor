@@ -76,12 +76,12 @@ export function TicketRahmen({ rang, klein, kinder, stummel, klasse = '' }: Rahm
         />
         {erster && (
           <div aria-hidden="true" class="pointer-events-none absolute inset-0 overflow-hidden">
-            <span class="animate-schimmer absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/[0.13] to-transparent" />
+            <span class="animate-schimmer absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/[0.18] to-transparent" />
           </div>
         )}
         <div class="relative z-10">{kinder}</div>
         {/* Abrisslinie */}
-        <div class="relative z-10 border-t-2 border-dashed border-white/15" />
+        <div class="relative z-10 border-t-2 border-dashed border-[var(--nm-rand-stark)]" />
         <div class="relative z-10 flex h-[74px] items-center gap-3 px-5">{stummel}</div>
       </div>
     </div>
@@ -95,12 +95,12 @@ function Messer({ etikett, wert }: { etikett: string; wert: number | null }) {
         <span class="etikett">{etikett}</span>
         <span class="font-mono text-xs text-eis">{zahl2(wert)}</span>
       </div>
-      <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
+      <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-spur">
         <div
           class="h-full rounded-full"
           style={{
             width: `${(wert ?? 0) * 10}%`,
-            background: 'linear-gradient(90deg,#ffc857,#ff8a3d 60%,#f0344f)',
+            background: 'linear-gradient(90deg,var(--nm-licht-1),var(--color-glut-500) 60%,var(--color-wein-500))',
             boxShadow: '0 0 12px rgb(255 138 61 / 0.7)',
           }}
         />
@@ -151,7 +151,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse }: 
                 Prüfstelle
               </span>
             ) : (
-              <span class="rounded-md border border-white/15 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-dunst">Community</span>
+              <span class="rounded-md border border-[var(--nm-rand-stark)] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-dunst">Community</span>
             )}
           </div>
           <h2 class={`mt-3 font-display uppercase leading-[0.98] tracking-wide text-eis ${klein ? 'text-[27px]' : 'text-[36px]'}`}>

@@ -1,8 +1,9 @@
-/* Glühlabor „Night Market": Design-System.
+/* Glühlabor „Night Market": Design-System mit Hell und Dunkel.
  *
  * Tailwind v4 OHNE Preflight: Es werden nur Theme-Variablen und Utilities geladen, damit die Ansichten, die
- * noch nicht umgebaut sind (Detail, Vergleich, Statistik, Erfassen …), nicht umgestylt werden. Die alten Stile
- * (styles.css, app.css) hängen an Tokens; die werden unten auf Nachtfarben umgestellt, damit alles zusammenpasst.
+ * noch nicht umgebaut sind, nicht umgestylt werden. Alle Farben, die sich je nach Theme ändern, hängen an
+ * --nm-* Variablen mit light-dark(): ein Wert für Hell, einer für Dunkel. Welcher gilt, bestimmt `color-scheme`
+ * (Auto = System, data-theme="hell" oder "dunkel" erzwingt). So gibt es keine doppelten Blöcke und kein Aufblitzen.
  * Dieses Blatt wird nach styles.css und app.css geladen.
  */
 @import 'tailwindcss/theme.css';
@@ -13,26 +14,24 @@
   --font-sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 
-  /* Mitternacht */
-  --color-nacht-950: #050816;
-  --color-nacht-900: #070b1a;
-  --color-nacht-800: #0c1233;
-  --color-nacht-700: #131b45;
-  /* Glühwein, Glut, Gold: die Lichterkette */
+  /* Themeabhängig (siehe unten) */
+  --color-eis: var(--nm-text);
+  --color-dunst: var(--nm-text-2);
+  --color-gold-300: var(--nm-akzent-text);
+  --color-gold-400: var(--nm-akzent);
+  --color-flaeche: var(--nm-flaeche);
+  --color-flaeche-hover: var(--nm-flaeche-hover);
+  --color-rand: var(--nm-rand);
+  --color-spur: var(--nm-spur);
+
+  /* Immer gleich: die Lichterkette */
   --color-wein-400: #ff5a74;
   --color-wein-500: #f0344f;
   --color-wein-600: #c81e3d;
   --color-glut-400: #ffa05c;
   --color-glut-500: #ff8a3d;
-  --color-gold-300: #ffe29a;
-  --color-gold-400: #ffc857;
-  --color-gold-500: #f2ae2e;
-  /* Text */
-  --color-eis: #f4f1ff;
-  --color-dunst: #a3accb;
 
   --shadow-glut: 0 0 0 1px rgb(255 138 61 / 0.35), 0 22px 70px -20px rgb(255 138 61 / 0.55);
-  --shadow-weich: 0 18px 50px -26px rgb(0 0 0 / 0.9);
 
   --animate-funkeln: funkeln 4.2s ease-in-out infinite;
   --animate-schimmer: schimmer 7.5s ease-in-out infinite;
@@ -69,29 +68,117 @@
   }
 }
 
+/* ───────── Farben: Hell | Dunkel ───────── */
+
+html:root:root {
+  color-scheme: light dark;
+
+  /* Neue Bausteine */
+  --nm-text: light-dark(#1e1633, #f4f1ff);
+  --nm-text-2: light-dark(#625a7d, #a3accb);
+  --nm-akzent: light-dark(#d98300, #ffc857);
+  --nm-akzent-text: light-dark(#9a5200, #ffd98a);
+  --nm-flaeche: light-dark(rgb(30 22 51 / 0.045), rgb(255 255 255 / 0.045));
+  --nm-flaeche-hover: light-dark(rgb(30 22 51 / 0.085), rgb(255 255 255 / 0.085));
+  --nm-rand: light-dark(rgb(30 22 51 / 0.11), rgb(255 255 255 / 0.09));
+  --nm-rand-stark: light-dark(rgb(30 22 51 / 0.24), rgb(255 255 255 / 0.2));
+  --nm-spur: light-dark(rgb(30 22 51 / 0.1), rgb(255 255 255 / 0.1));
+  --nm-glas-a: light-dark(rgb(255 255 255 / 0.8), rgb(255 255 255 / 0.075));
+  --nm-glas-b: light-dark(rgb(255 255 255 / 0.5), rgb(255 255 255 / 0.03));
+  --nm-glas-stark-a: light-dark(rgb(255 255 255 / 0.94), rgb(24 32 76 / 0.82));
+  --nm-glas-stark-b: light-dark(rgb(255 248 244 / 0.88), rgb(10 15 40 / 0.78));
+  --nm-glas-rand: light-dark(rgb(30 22 51 / 0.09), rgb(255 255 255 / 0.09));
+  --nm-glas-rand-stark: light-dark(rgb(30 22 51 / 0.13), rgb(255 255 255 / 0.12));
+  --nm-glas-licht: light-dark(rgb(255 255 255 / 0.95), rgb(255 255 255 / 0.08));
+  --nm-schatten: light-dark(rgb(90 40 80 / 0.3), rgb(0 0 0 / 0.9));
+  --nm-licht-1: light-dark(#d98300, #ffe29a);
+  --nm-licht-2: light-dark(#e8591e, #ffa05c);
+  --nm-licht-3: light-dark(#c81e3d, #f0344f);
+  --nm-auf-licht: #1a1020;
+
+  /* Alte Ansichten: dieselben Tokens wie in styles.css, jetzt mit Hell und Dunkel aus einer Hand */
+  --bg: light-dark(#fbf6f2, #070b1a);
+  --flaeche: light-dark(#ffffff, #0e1534);
+  --text: var(--nm-text);
+  --text-2: var(--nm-text-2);
+  --linie: light-dark(rgb(30 22 51 / 0.12), rgb(255 255 255 / 0.1));
+  --linie-stark: light-dark(rgb(30 22 51 / 0.24), rgb(255 255 255 / 0.2));
+  --skala-leer: light-dark(rgb(30 22 51 / 0.08), rgb(255 255 255 / 0.08));
+  --skala-voll: light-dark(#d81e3d, #f0344f);
+  --auf-voll: #fff7f0;
+  --auf-voll-2: rgb(255 247 240 / 0.68);
+  --strich: light-dark(rgb(30 22 51 / 0.12), rgb(255 255 255 / 0.09));
+  --strich-voll: rgb(255 255 255 / 0.24);
+  --zahl: light-dark(#b45309, #ffc857);
+  --markierung: light-dark(#d98300, #ffc857);
+  --knopf: light-dark(#c81e3d, #ffc857);
+  --auf-knopf: light-dark(#ffffff, #1a1020);
+  --warnung: light-dark(#9a5200, #ffb35c);
+  --karte: light-dark(rgb(255 255 255 / 0.72), rgb(255 255 255 / 0.05));
+  --karte-2: light-dark(rgb(30 22 51 / 0.05), rgb(255 255 255 / 0.085));
+  --schatten: 0 18px 44px -24px var(--nm-schatten);
+  --balken: light-dark(#e8591e, #ff7a45);
+  --balken-leer: light-dark(rgb(30 22 51 / 0.09), rgb(255 255 255 / 0.09));
+  --akzent-weich: light-dark(rgb(200 30 61 / 0.1), rgb(240 52 79 / 0.16));
+  --gold-weich: light-dark(rgb(217 131 0 / 0.12), rgb(255 200 87 / 0.13));
+  --gold-text: light-dark(#8a4b00, #ffd98a);
+  --u1-bg: light-dark(#2f7a45, #3ecf8e);
+  --u1-fg: light-dark(#ffffff, #04170f);
+  --u2-bg: light-dark(#dcefd9, rgb(62 207 142 / 0.18));
+  --u2-fg: light-dark(#22562f, #8ff0c3);
+  --u3-bg: light-dark(#fbf0cc, rgb(255 200 87 / 0.18));
+  --u3-fg: light-dark(#6e5410, #ffe29a);
+  --u4-bg: light-dark(#fbe0cc, rgb(255 138 61 / 0.2));
+  --u4-fg: light-dark(#87430f, #ffb98a);
+  --u5-bg: light-dark(#c8423f, #f0344f);
+  --u5-fg: #ffffff;
+  --gut: light-dark(#2f7a45, #6ee7b0);
+  --leiste: light-dark(rgb(251 246 242 / 0.82), rgb(7 11 26 / 0.72));
+}
+html:root:root[data-theme='hell'] {
+  color-scheme: light;
+}
+html:root:root[data-theme='dunkel'] {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Nachthimmel bzw. Morgenhimmel hinter allem */
+.nm-himmel {
+  background:
+    radial-gradient(900px 520px at 85% -8%, light-dark(rgb(255 170 130 / 0.32), rgb(240 52 79 / 0.2)), transparent 62%),
+    radial-gradient(780px 560px at -8% 108%, light-dark(rgb(255 200 120 / 0.34), rgb(255 138 61 / 0.17)), transparent 60%),
+    radial-gradient(700px 500px at 50% 40%, light-dark(rgb(190 170 255 / 0.2), rgb(40 56 140 / 0.22)), transparent 70%),
+    linear-gradient(180deg, light-dark(#fff8f2, #060919) 0%, light-dark(#fbeff0, #0a1030) 55%, light-dark(#f4eefa, #0b0d24) 100%);
+}
+
 /* ───────── Bausteine ───────── */
 
-/* Milchglas über dem dunklen Grund */
+/* Milchglas */
 @utility glas {
-  background: linear-gradient(160deg, rgb(255 255 255 / 0.075), rgb(255 255 255 / 0.03));
+  background: linear-gradient(160deg, var(--nm-glas-a), var(--nm-glas-b));
   backdrop-filter: blur(18px) saturate(150%);
-  border: 1px solid rgb(255 255 255 / 0.09);
+  border: 1px solid var(--nm-glas-rand);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.08),
-    var(--shadow-weich);
+    inset 0 1px 0 var(--nm-glas-licht),
+    0 18px 50px -26px var(--nm-schatten);
 }
 @utility glas-stark {
-  background: linear-gradient(160deg, rgb(24 32 76 / 0.82), rgb(10 15 40 / 0.78));
+  background: linear-gradient(160deg, var(--nm-glas-stark-a), var(--nm-glas-stark-b));
   backdrop-filter: blur(26px) saturate(170%);
-  border: 1px solid rgb(255 255 255 / 0.12);
+  border: 1px solid var(--nm-glas-rand-stark);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.12),
-    0 24px 60px -20px rgb(0 0 0 / 0.95);
+    inset 0 1px 0 var(--nm-glas-licht),
+    0 24px 60px -20px var(--nm-schatten);
 }
 
-/* Zahl im Lichtverlauf, mit Leuchten dahinter */
+/* Zahl im Lichtverlauf */
 @utility licht-text {
-  background-image: linear-gradient(180deg, var(--color-gold-300) 0%, var(--color-glut-400) 48%, var(--color-wein-500) 100%);
+  background-image: linear-gradient(180deg, var(--nm-licht-1) 0%, var(--nm-licht-2) 48%, var(--nm-licht-3) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -107,7 +194,7 @@
     inset: 0;
     border-radius: inherit;
     padding: 1.5px;
-    background: var(--rahmen, linear-gradient(135deg, var(--color-gold-300), var(--color-glut-500) 50%, var(--color-wein-500)));
+    background: var(--rahmen, linear-gradient(135deg, var(--nm-licht-1), var(--color-glut-500) 50%, var(--color-wein-500)));
     -webkit-mask:
       linear-gradient(#000 0 0) content-box,
       linear-gradient(#000 0 0);
@@ -125,82 +212,13 @@
   font-size: 0.6875rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--color-dunst);
+  color: var(--nm-text-2);
 }
 
 @utility ohne-balken {
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
-  }
-}
-
-/* ───────── Tokens der alten Ansichten auf Nachtfarben ─────────
- * Höhere Spezifität als die Theme-Blöcke in styles.css, damit es immer Nacht ist (es gibt nur noch dieses Theme). */
-html:root:root,
-html:root:root[data-theme] {
-  color-scheme: dark;
-  --bg: #070b1a;
-  --flaeche: #0e1534;
-  --text: #f4f1ff;
-  --text-2: #a3accb;
-  --linie: rgb(255 255 255 / 0.1);
-  --linie-stark: rgb(255 255 255 / 0.2);
-  --skala-leer: rgb(255 255 255 / 0.08);
-  --skala-voll: #f0344f;
-  --auf-voll: #fff7f0;
-  --auf-voll-2: rgb(255 247 240 / 0.65);
-  --strich: rgb(255 255 255 / 0.09);
-  --strich-voll: rgb(255 255 255 / 0.22);
-  --zahl: #ffc857;
-  --markierung: #ffc857;
-  --knopf: #ffc857;
-  --auf-knopf: #1a1020;
-  --warnung: #ffb35c;
-  --karte: rgb(255 255 255 / 0.05);
-  --karte-2: rgb(255 255 255 / 0.085);
-  --schatten: 0 18px 50px -26px rgb(0 0 0 / 0.9);
-  --balken: #ff7a45;
-  --balken-leer: rgb(255 255 255 / 0.09);
-  --akzent-weich: rgb(240 52 79 / 0.16);
-  --gold-weich: rgb(255 200 87 / 0.13);
-  --gold-text: #ffd98a;
-  --u1-bg: #3ecf8e;
-  --u1-fg: #04170f;
-  --u2-bg: rgb(62 207 142 / 0.18);
-  --u2-fg: #8ff0c3;
-  --u3-bg: rgb(255 200 87 / 0.18);
-  --u3-fg: #ffe29a;
-  --u4-bg: rgb(255 138 61 / 0.2);
-  --u4-fg: #ffb98a;
-  --u5-bg: #f0344f;
-  --u5-fg: #ffffff;
-  --gut: #6ee7b0;
-  --leiste: rgb(7 11 26 / 0.72);
-}
-
-body {
-  background: var(--bg);
-  color: var(--text);
-}
-
-/* Alte Karten bekommen dasselbe Milchglas, damit nicht umgebaute Ansichten nicht herausfallen */
-.karte {
-  background: linear-gradient(160deg, rgb(255 255 255 / 0.07), rgb(255 255 255 / 0.03));
-  backdrop-filter: blur(16px) saturate(150%);
-  border: 1px solid rgb(255 255 255 / 0.09);
-  border-radius: 22px;
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.07),
-    var(--shadow-weich);
-}
-
-/* Bewegung nur, wenn gewünscht */
-@media (prefers-reduced-motion: reduce) {
-  .animate-funkeln,
-  .animate-schimmer,
-  .animate-puls {
-    animation: none !important;
   }
 }
 
@@ -215,8 +233,27 @@ body {
     radial-gradient(circle 11px at 100% calc(100% - var(--stummel)), #0000 97%, #000) right / 51% 100% no-repeat;
 }
 
-/* Mini-Reset nur für die neuen Bausteine (Klasse .nm). Spezifität null, damit jede Utility gewinnt.
- * Ein globaler Preflight würde die noch nicht umgebauten Ansichten verändern. */
+/* Alte Karten bekommen dasselbe Milchglas, damit nicht umgebaute Ansichten nicht herausfallen */
+.karte {
+  background: linear-gradient(160deg, var(--nm-glas-a), var(--nm-glas-b));
+  backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid var(--nm-glas-rand);
+  border-radius: 22px;
+  box-shadow:
+    inset 0 1px 0 var(--nm-glas-licht),
+    0 18px 50px -26px var(--nm-schatten);
+}
+
+/* Bewegung nur, wenn gewünscht */
+@media (prefers-reduced-motion: reduce) {
+  .animate-funkeln,
+  .animate-schimmer,
+  .animate-puls {
+    animation: none !important;
+  }
+}
+
+/* Mini-Reset nur für die neuen Bausteine (Klasse .nm). Spezifität null, damit jede Utility gewinnt. */
 :where(.nm) :where(h1, h2, h3, p, ol, ul, figure) {
   margin: 0;
 }
