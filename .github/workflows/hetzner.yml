@@ -76,4 +76,6 @@ jobs:
       - name: Startcheck (nur zur Information)
         if: env.FTP_SERVER != ''
         continue-on-error: true
+        env:
+          VITE_API_URL: /
         run: npm run launch-check
