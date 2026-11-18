@@ -39,7 +39,7 @@ p{margin-top:20px;font-size:27px;line-height:1.35;color:#c9cfe6;max-width:560px}
 .note{font-family:Anton;font-size:178px;line-height:1;margin-top:10px;background:linear-gradient(180deg,#ffe29a,#ffa05c 52%,#f0344f);-webkit-background-clip:text;color:transparent;filter:drop-shadow(0 0 30px rgba(255,138,61,.55))}
 .bal{height:12px;border-radius:6px;background:rgba(255,255,255,.12);margin-top:12px;overflow:hidden}
 .bal i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#ffc857,#ff8a3d 60%,#f0344f)}
-.siegel{position:absolute;left:72px;top:38px;width:150px;height:150px;border-radius:50%;box-shadow:0 0 0 3px rgba(255,138,61,.85),0 0 60px -4px rgba(240,52,79,.75)}
+.siegel{position:absolute;left:72px;top:38px;width:150px;height:150px;border-radius:50%;box-shadow:0 0 0 3px rgba(255,138,61,.85)}
 </style>
 <svg class="kabel" viewBox="0 0 1200 90" preserveAspectRatio="none"><path d="M0 18 Q 150 70 300 28 T 600 36 T 900 28 T 1200 24" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="2"/></svg>
 ${[[60, 40, 12, '#ffc857'], [210, 62, 9, '#ff8a3d'], [380, 32, 13, '#f0344f'], [560, 54, 9, '#ffe29a'], [740, 38, 12, '#ff8a3d'], [900, 56, 9, '#ffc857'], [1060, 30, 13, '#f0344f'], [1160, 52, 9, '#ffe29a']]

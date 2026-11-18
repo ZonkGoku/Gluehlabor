@@ -22,7 +22,7 @@ export function Seitenleiste({ route, zeigeSync }: { route: string; zeigeSync: b
   return (
     <aside aria-label="Menü" class="nm glas-stark fixed bottom-3.5 left-3.5 top-3.5 z-40 flex w-[248px] flex-col rounded-[28px] p-4">
       <a href="#/" class="flex flex-col items-center gap-2 pb-4 pt-1 text-eis" aria-label={`${MARKE.name}, zur Übersicht`}>
-        <img src="./logo.png" alt="" class="size-[104px] rounded-full drop-shadow-[0_0_22px_rgb(240_52_79/0.45)]" />
+        <img src="./logo.png" alt="" class="size-[104px] rounded-full" />
         <span class="text-center leading-none">
           <span class="block font-display text-[26px] uppercase tracking-wider">{MARKE.name}</span>
           <span class="etikett mt-1.5 block !text-[9.5px]">{MARKE.claim}</span>
