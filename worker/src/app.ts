@@ -353,9 +353,10 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
     const g = await anmelden(request, db);
     const b = await lesen(request);
     if (!(await begrenze(db, `code:${g.id}`, STUNDE, 10, jetzt))) throw new HttpFehler(429, 'Zu viele Versuche.');
-    if (!env.PRUEFSTELLE_CODE || typeof b.code !== 'string' || !gleich(b.code, env.PRUEFSTELLE_CODE)) {
-      throw new HttpFehler(403, 'Falscher Code.');
-    }
+    // Leerzeichen und Zeilenumbrüche am Rand zählen nicht (beim Einfügen ins Secret oder in die App rutschen sie leicht mit).
+    const soll = (env.PRUEFSTELLE_CODE ?? '').trim();
+    if (!soll) throw new HttpFehler(503, 'Auf dem Server ist kein Prüfstellen-Code eingerichtet (Secret PRUEFSTELLE_CODE fehlt).');
+    if (typeof b.code !== 'string' || !gleich(b.code.trim(), soll)) throw new HttpFehler(403, 'Falscher Code.');
     await db.prepare('UPDATE geraete SET pruefstelle = 1 WHERE id = ?').bind(g.id).run();
     return json({ ok: true, pruefstelle: true }, 200);
   }

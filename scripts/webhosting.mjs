@@ -22,9 +22,9 @@ if (e.ADMIN_TOKEN && e.PRUEFSTELLE_CODE && e.IP_SALT) {
     ? { typ: 'mysql', host: e.DB_HOST || 'localhost', name: e.DB_NAME, benutzer: e.DB_USER ?? '', passwort: e.DB_PASSWORD ?? '' }
     : { typ: 'sqlite' };
   const cfg = {
-    admin_token: e.ADMIN_TOKEN,
-    pruefstelle_code: e.PRUEFSTELLE_CODE,
-    ip_salz: e.IP_SALT,
+    admin_token: e.ADMIN_TOKEN.trim(),
+    pruefstelle_code: e.PRUEFSTELLE_CODE.trim(),
+    ip_salz: e.IP_SALT.trim(),
     erlaubte_ursprunge: ['https://gluehlabor.de', 'https://www.gluehlabor.de'],
     db,
   };

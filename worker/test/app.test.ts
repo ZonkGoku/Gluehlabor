@@ -327,8 +327,8 @@ describe('Prüfstelle', () => {
   it('ohne konfigurierten Code ist niemand Prüfstelle', async () => {
     env.PRUEFSTELLE_CODE = undefined;
     const g = await geraet();
-    expect((await ruf('POST', '/api/pruefstelle', { auth: g.auth, body: { code: 'undefined' } })).status).toBe(403);
-    expect((await ruf('POST', '/api/pruefstelle', { auth: g.auth, body: { code: '' } })).status).toBe(403);
+    expect((await ruf('POST', '/api/pruefstelle', { auth: g.auth, body: { code: 'undefined' } })).status).toBe(503);
+    expect((await ruf('POST', '/api/pruefstelle', { auth: g.auth, body: { code: '' } })).status).toBe(503);
   });
   it('richtiger Code: Siegel für neue Becher, Name David erlaubt', async () => {
     const g = await geraet();
@@ -657,6 +657,25 @@ describe('Eine Bewertung je Gerät, Stand und Abend', () => {
     await sende(g, [am('Chrom', { id: 'erste-1234567' })]);
     await ruf('POST', '/api/admin/verstecken', { auth: ADMIN, body: { id: 'erste-1234567', versteckt: true } });
     expect((await sende(g, [am('Chrom')])).json.ergebnisse[0].status).toBe('ok');
+  });
+});
+
+describe('Prüfstellen-Code', () => {
+  it('Leerzeichen und Zeilenumbruch am Rand zählen nicht, auf beiden Seiten', async () => {
+    const g = await geraet();
+    expect((await ruf('POST', '/api/pruefstelle', { auth: g.auth, body: { code: `  ${CODE}\n` } })).status).toBe(200);
+    env = neuerEnv({ ADMIN_TOKEN: ADMIN, PRUEFSTELLE_CODE: `${CODE}\n`, ERLAUBTE_URSPRUENGE: SITE });
+    const h = await geraet();
+    expect((await ruf('POST', '/api/pruefstelle', { auth: h.auth, body: { code: CODE } })).status).toBe(200);
+  });
+  it('falscher Code: 403; ohne eingerichteten Code: 503 mit klarer Meldung', async () => {
+    const g = await geraet();
+    expect((await ruf('POST', '/api/pruefstelle', { auth: g.auth, body: { code: 'falsch' } })).status).toBe(403);
+    env = neuerEnv({ ADMIN_TOKEN: ADMIN, ERLAUBTE_URSPRUENGE: SITE });
+    const h = await geraet();
+    const r = await ruf('POST', '/api/pruefstelle', { auth: h.auth, body: { code: CODE } });
+    expect(r.status).toBe(503);
+    expect(r.json.fehler).toMatch(/PRUEFSTELLE_CODE/);
   });
 });
 

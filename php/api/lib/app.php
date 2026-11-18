@@ -382,8 +382,12 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
         if (!begrenze($db, 'code:' . $g['id'], STUNDE_MS, 10, $jetzt)) {
             throw new HttpFehler(429, 'Zu viele Versuche.');
         }
-        $code = (string) ($env['pruefstelle_code'] ?? '');
-        if ($code === '' || !is_string($b['code'] ?? null) || !gleich($b['code'], $code)) {
+        // Leerzeichen und Zeilenumbrüche am Rand zählen nicht (beim Einfügen ins Secret oder in die App rutschen sie leicht mit).
+        $code = trim((string) ($env['pruefstelle_code'] ?? ''));
+        if ($code === '') {
+            throw new HttpFehler(503, 'Auf dem Server ist kein Prüfstellen-Code eingerichtet (Secret PRUEFSTELLE_CODE fehlt).');
+        }
+        if (!is_string($b['code'] ?? null) || !gleich(trim($b['code']), $code)) {
             throw new HttpFehler(403, 'Falscher Code.');
         }
         $db->lauf('UPDATE geraete SET pruefstelle = 1 WHERE id = ?', [$g['id']]);
