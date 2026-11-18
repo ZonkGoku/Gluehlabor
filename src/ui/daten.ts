@@ -1,7 +1,7 @@
 // Gemeinsame Datenquellen der Ansichten. Alles live: Änderungen an Einträgen
 // oder Gewichten rendern sofort jede Ansicht neu.
 import { useEffect, useState } from 'preact/hooks';
-import { db, leseEinstellung, leseGewichte, type LokalerEintrag } from '../daten/db';
+import { db, leseEinstellung, leseGewichte, type Geraet, type LokalerEintrag } from '../daten/db';
 import { DEFAULT_GEWICHTE, type Eintrag, type Gewichte } from '../lib/modell';
 import { standardSaison } from '../lib/startseite';
 import { useLive } from './hooks';
@@ -14,16 +14,26 @@ export function useGewichte(): Gewichte {
   return useLive(leseGewichte, [], { ...DEFAULT_GEWICHTE });
 }
 
-/** Ist auf diesem Gerät ein Schreib-Token hinterlegt? */
-export function useHatToken(): boolean {
-  return Boolean(useLive(() => leseEinstellung<string>('token', ''), [], ''));
+/** Anonyme Kennung dieses Geräts; null, solange noch nie etwas erfasst wurde. */
+export function useGeraetId(): string | null {
+  return useLive(async () => (await leseEinstellung<Geraet | null>('geraet', null))?.id ?? null, [], null);
 }
 
-/** Zeigt dieses Gerät Eintrags-Details (Abend-Modus, Sync-Status)? (Token hinterlegt oder schon lokal erfasst.) */
-export function useDarfErfassen(): boolean {
-  const token = useLive(() => leseEinstellung<string>('token', ''), [], '');
-  const offen = useLive(() => db.eintraege.where('sync').equals('offen').count(), [], 0);
-  return Boolean(token) || offen > 0;
+/** Der freiwillige Anzeigename dieses Geräts ('' = anonym). */
+export function useName(): string {
+  return useLive(() => leseEinstellung<string>('name', ''), [], '');
+}
+
+/** Wie viele Becher stammen von diesem Gerät? */
+export function useMeineAnzahl(): number {
+  return useLive(
+    async () => {
+      const g = await leseEinstellung<Geraet | null>('geraet', null);
+      return g ? db.eintraege.filter((e) => e.geraet === g.id).count() : 0;
+    },
+    [],
+    0,
+  );
 }
 
 // Saison-Auswahl: pro Betrachter gemerkt, über alle Ansichten geteilt.

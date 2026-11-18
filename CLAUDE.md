@@ -4,6 +4,13 @@ Glühwein-Prüfstelle von David & Philip. Der vollständige Auftrag steht in `BR
 
 ## Produkt
 
+**Ausrichtung seit 18.11.2026: Community-Produkt.** Viele Leute sollen bewerten können, ohne
+Registrierung. Ein Bewertender legt an der Bude einen Eintrag an und teilt ihn als QR-Code, die anderen
+scannen und bewerten selbst (Schritt 2, noch offen). Dafür gelten die Ausschlüsse aus `BRIEF.md`
+(„Keine Nutzerkonten für Fremde", „keine Social-Features") nicht mehr; frei bleiben Push,
+Gamification und Teilen-auf-Social. Bewertungen von David & Philip laufen weiter als **„Prüfstelle"**
+(Siegel, getrennt von der Community-Wertung).
+
 - Betrieben von **David (lebt in Bayern) und Philip (aus Hamburg)**. Bewertet wird auf
   Weihnachtsmärkten **in ganz Deutschland**, nicht nur in Hamburg. Texte, Logo und Datenmodell
   müssen das tragen (keine „Hamburger Weihnachtsmärkte").
@@ -15,16 +22,34 @@ Glühwein-Prüfstelle von David & Philip. Der vollständige Auftrag steht in `BR
 
 - **Vite 6 + Preact 10 + TypeScript**, Hash-Router (`#/erfassen`, `#/einstellungen`, …)
 - **IndexedDB über Dexie**: lokaler Speicher ist die Wahrheit (`src/daten/db.ts`)
-- **Sync ohne Backend**: offene Einträge werden per GitHub-Contents-API als
-  `data/eintraege/<id>.json` direkt auf `main` geschrieben (Fotos nach `data/fotos/`).
-  Schreiben braucht einen fine-grained Token (nur dieses Repo, Contents: read/write),
-  der pro Gerät in den Einstellungen liegt. Lesen ist öffentlich: Der Build erzeugt
-  `daten/eintraege.json` aus `data/eintraege/` (Vite-Plugin in `vite.config.ts`).
+- **Community-Server** (`worker/`): Cloudflare Worker + D1 (SQLite), kein Konto, keine E-Mail.
+  Jedes Gerät erzeugt selbst eine anonyme Kennung und einen Schlüssel (`holeGeraet`), der Server
+  speichert nur den Hash. Lokaler Speicher bleibt die Wahrheit, der Server ist der gemeinsame Bestand.
+  Endpunkte: `POST /api/geraete`, `GET|PUT /api/ich` (Name), `POST /api/pruefstelle` (Code),
+  `POST|GET /api/becher` (GET öffentlich, Sync über aufsteigende `seq`), `POST /api/admin/{verstecken,sperren,import}`.
+  Ausgeblendete Becher kommen als Platzhalter `{id, versteckt:true}`, damit Geräte sie löschen.
+- **Sync** (`src/daten/sync.ts`): anmelden → Name senden → offene Becher senden → neue holen. Ein Becher
+  bleibt lokal `offen`, bis der Server ihn angenommen hat. `API_URL` (`src/daten/config.ts`, Build-Variable
+  `VITE_API_URL`) leer = kein Server, die App arbeitet nur lokal und sagt das („nur lokal").
+- **Regeln für Fremde** stehen in `src/lib/community.ts` und gelten in App UND Server (derselbe Code):
+  Name 1–24 Zeichen, keine Links, reservierte Namen (David, Philip, Prüfstelle, Admin …) nur für die
+  Prüfstelle; Becher werden streng geprüft und bereinigt, Name/Kennung/Siegel setzt nur der Server.
+  Das Siegel „Prüfstelle" hängt am Code (Einstellungen → Prüfstelle), nie am Namen.
+  Limits: 100 Becher je Gerät und Tag, 30 neue Geräte je Adresse und Stunde, 120 Anfragen je Adresse und Minute.
+- Der Name steht als Momentaufnahme an jeder Bewertung. Gibt sich ein Gerät zum ersten Mal einen Namen,
+  bekommen seine bisher anonymen Becher ihn rückwirkend; schon benannte bleiben unverändert.
 - **PWA** über `vite-plugin-pwa` (generateSW, `registerType: 'prompt'`). `src/daten/update.ts` spielt
   neue Versionen sofort ein, nur nicht auf `#/erfassen` (dort wartet das Update, bis man die
   Erfassung verlässt). Startadresse der installierten App ist die Startseite (`start_url: './#/'`),
   nicht die Erfassung. Entwurf und lokale Becher überstehen jedes Neuladen.
 - **Vitest** für alle reinen Funktionen. `npm test`, `npm run typecheck`, `npm run build`.
+- **Server lokal**: `npm run worker:migrate` (einmal), `npm run worker:dev` (Port 8787, Geheimnisse
+  in `worker/.dev.vars`, nicht im Repo), `npm run worker:seed` mit `API_URL` und `ADMIN_TOKEN` lädt die CSV
+  als Prüfstellen-Becher. App gegen den lokalen Server: `VITE_API_URL=http://localhost:8787 npm run dev`.
+- **Server veröffentlichen** (braucht Cloudflare-Konto): `wrangler d1 create becherwerk`, `database_id` in
+  `worker/wrangler.toml` eintragen, `wrangler d1 migrations apply becherwerk --remote`,
+  `wrangler secret put ADMIN_TOKEN` und `PRUEFSTELLE_CODE`, `wrangler deploy --config worker/wrangler.toml`,
+  danach `API_URL` in `src/daten/config.ts` auf die Worker-Adresse setzen und `worker:seed` ausführen.
 - **Deploy**: `.github/workflows/deploy.yml` veröffentlicht bei jedem Push auf `main` den Stand von `main`. Solange `main` nicht Standard-Branch ist, läuft der Deploy über einen workflow_dispatch auf dem Standard-Branch (Pages-Umgebung erlaubt nur den Standard-Branch). Die Seite liegt
   unter https://zonkgoku.github.io/Becherwerk/ . Pages → Source = „GitHub Actions" (ist gesetzt).
 - `base: './'` (relativ) plus Hash-Router: kein Repo-Name im Build, keine weiße Seite
@@ -34,24 +59,24 @@ Glühwein-Prüfstelle von David & Philip. Der vollständige Auftrag steht in `BR
 
 ```
 data/                    Daten, nicht Code
-  gluehwein-2025.csv     Bestandsdaten, beim ersten Start importiert (nie in den Quelltext kopieren)
+  gluehwein-2025.csv     Bestandsdaten: beim ersten Start lokal importiert UND per worker:seed als Prüfstelle auf den Server
   anker.json             Ankerdefinitionen je Kriterium (werden sich ändern)
   staedte.json           Koordinaten je Stadt für die Deutschlandkarte (fehlt eine Stadt, steht sie nur in der Liste)
   maerkte.json           gepflegte Marktlisten je Stadt + „Sonstiger" (weitere Städte einfach ergänzen)
   regeln.json            Regeln des Spickzettels
-  eintraege/<id>.json    synchronisierte Becher (schreibt die App)
-  fotos/<id>.jpg         Fotos (schreibt die App)
+worker/                  Community-Server: src/app.ts (alle Endpunkte), migrations/, test/, scripts/seed.ts
 src/lib/                 REINE Funktionen ohne UI/DOM, alle getestet
   modell.ts              Typen, Kriterien, Default-Gewichte
   scoring.ts             Wertung, Urteil, Rangliste  ← Kern
   csvImport.ts           CSV → Einträge
   auswertung.ts          Filter, Rangliste mit Wertung, Urteilsverteilung, Jahresvergleich, Markt-Checkliste
   statistik.ts           Kennzahlen, Korrelationen, Pegel, Befunde als Sätze
+  community.ts           Namen- und Einreichungsprüfung (App + Server), Anzeigename
   orte.ts                Märkte ↔ Städte, freie Eingabe „Markt, Stadt"
   startseite.ts          Standard-Saison, Saison-Tag, Abend, Saisonverlauf, neueste Becher, Kennzahlen
   karte.ts               Projektion und Umriss der Deutschlandkarte, Kartenpunkte
   anker.ts, abend.ts, format.ts, veroeffentlichung.ts
-src/daten/               Speicher und Netz: db.ts, sync.ts, entwurf.ts, foto.ts, config.ts
+src/daten/               Speicher und Netz: db.ts (inkl. Gerätekennung), api.ts, sync.ts, update.ts, entwurf.ts, foto.ts, config.ts
 src/ui/                  Preact-Komponenten. KEINE Rechenlogik hier (auch keine Schwellenwerte).
   Geruest.tsx            Tab-Leiste (Telefon) / Seitenleiste (Rechner)
   Uebersicht (= Startseite), Rangliste, Detail, Vergleich, Statistik, Spickzettel, Einstellungen, Erfassen
@@ -86,7 +111,10 @@ scripts/icons.mjs        rastert icon.svg zu den PNG-Icons (nutzt Playwright aus
 - Ein Eintrag = ein getrunkener Becher. Einträge sind unveränderlich; ein zweiter Besuch ist ein neuer Eintrag.
 - Importierte IDs sind deterministisch: `import-<saison>-<zeile>-<stand-slug>`; neue IDs sind UUID v4.
 - `datum` ist das Abenddatum: bis 5 Uhr zählt der Vortag (`abendDatum`).
-- Lokaler Sync-Status: `offen` (noch nicht im Repo), `fertig`, `bestand` (aus CSV).
+- Lokaler Sync-Status: `offen` (noch nicht beim Server), `fertig`, `bestand` (aus CSV), `abgelehnt` (Server hat ihn nicht angenommen, Grund in `syncFehler`).
+- Zusatzfelder eines Eintrags: `geraet` (anonyme Kennung), `name`, `pruefstelle` (nur Server), `besuchId` (QR-Besuch, Schritt 2).
+- „Heute Abend" und die Becher-Nr. zählen nur die eigenen Becher dieses Geräts (`geraet === eigene Kennung`), nicht die der Community.
+- Fotos bleiben vorerst nur lokal (`fotoBlob`); der Server nimmt noch keine an (Schritt 3, R2).
 - `stadt` (optional) wird nur gespeichert, wenn sie nicht aus der gepflegten Liste folgt.
   Die Stadt eines Eintrags immer über `stadtVon(MARKTLISTE, e)` holen. Freie Eingabe im
   Erfassungsscreen: „Markt, Stadt" (`zerlegeFreienMarkt`).
@@ -94,19 +122,18 @@ scripts/icons.mjs        rastert icon.svg zu den PNG-Icons (nutzt Playwright aus
   Korrelation mit Geschmack über 0,6 = misst nichts Eigenes, Streuung unter 1 = kaum Streuung.
   Markt-Checkliste: 0 Becher noch nie da, unter 3 kaum erkundet, ab 3 abgedeckt.
 - Erfassen kann jedes Gerät, der Knopf ist überall sichtbar (Startseite, Tab-Leiste, Seitenleiste).
-  Ohne Token bleibt der Becher lokal (Status "nur lokal · kein Token") und wird hochgeladen,
-  sobald ein Token hinterlegt ist. In die geteilten Daten schreibt nur ein Gerät mit Token.
+  Kein Konto, kein Token. Ohne Netz oder ohne Server bleibt der Becher lokal und geht später hoch.
 
 ## Startseite (`#/`, Datei `src/ui/Uebersicht.tsx`)
 
-Reihenfolge: Bühne (Spitzenreiter, oder auf Geräten mit Token nach dem ersten Becher des Abends
+Reihenfolge: Bühne (Spitzenreiter, oder nach dem ersten eigenen Becher des Abends
 „Heute Abend"), Plus-Balken „Nächster Becher Nr. N" (immer, auch am Rechner), vier Kennzahlen,
 Rangliste Top 5, Deutschlandkarte, neueste Becher, Saisonverlauf, wichtigster Befund.
 - Ohne eigene Wahl zeigt jede Ansicht die Standard-Saison: laufendes Jahr, sobald es dort Becher
   gibt, sonst die letzte (`standardSaison`). Die Saison beginnt mit dem ersten Becher des Jahres
   („Tag 1"). Gewählte Saison wird pro Gerät gemerkt.
-- Der Abend-Modus („Heute Abend") erscheint nur auf Geräten mit Token oder lokal offenen Bechern.
-  Ohne Token weist ein Hinweis unter dem Plus-Balken auf die Einstellungen hin.
+- Der Abend-Modus („Heute Abend") erscheint, sobald dieses Gerät heute einen Becher erfasst hat.
+  Nach dem ersten eigenen Becher fragt eine Karte freiwillig nach dem Namen.
 - Die 14 Becher aus 2025 haben kein Datum; der Saisonverlauf sagt das, statt zu raten.
 
 ## Gestaltung
@@ -121,8 +148,12 @@ Achtung bei Klassennamen: `styles.css` und `app.css` teilen sich den Namensraum
 
 ## Stand der Arbeit
 
-1–5 erledigt: Stack, Scoring + Tests, Erfassungsscreen (offline, PWA, Sync), alle Ansichten
-des alten Sheets, Deutschland-weite Orte, Startseite mit Abend-Modus, Karte und Saisonverlauf. Noch nicht gegen das echte Repo getestet: der
-Upload per Token (erst möglich, wenn ein Token auf einem Gerät hinterlegt ist).
-Mögliche nächste Schritte: Gewichte zwischen beiden Geräten synchronisieren (derzeit pro Gerät),
-weitere gepflegte Marktlisten (z. B. für Davids Region in Bayern).
+Gebaut und getestet: Scoring, alle Ansichten, Startseite, Deutschland-weite Orte, Community-Server mit
+anonymer Kennung, Sync, freiwilligem Namen, Prüfstellen-Siegel und Moderation (248 Tests, dazu ein
+Zwei-Geräte-Test im Browser gegen den lokalen Server).
+**Offen:** Der Server ist noch nicht bei Cloudflare veröffentlicht (braucht Konto und API-Token), deshalb ist
+`API_URL` leer und die App arbeitet bis dahin nur lokal.
+Schritt 2: QR-Code und „Mitbewerten" (Besuch teilen, Stammdaten stecken im Link, funktioniert ohne Netz).
+Schritt 3: Community-Ansichten (Stand-Seiten, Community- vs. Prüfstellen-Rangliste, Statistik nur für
+die Prüfstelle), Melden-Knopf, Fotos (R2), Turnstile gegen Bots, Datenschutzerklärung und Impressum.
+Gewichte gelten weiter pro Gerät.

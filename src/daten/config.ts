@@ -1,9 +1,6 @@
-// Wohin synchronisiert wird. Schreiben erfolgt per GitHub-Contents-API direkt
-// auf main; jeder Eintrag ist eine eigene Datei, daher keine Konflikte.
-export const REPO = { owner: 'ZonkGoku', name: 'Becherwerk', branch: 'main' } as const;
-export const PFAD_EINTRAEGE = 'data/eintraege';
-export const PFAD_FOTOS = 'data/fotos';
-
-/** Vom Build erzeugter, öffentlicher Datenbestand (relativ zur App). */
-export const URL_DATENBESTAND = './daten/eintraege.json';
-export const URL_FOTOS = './daten/';
+// Adresse des Community-Servers (Cloudflare Worker, siehe worker/).
+// Leer = es gibt keinen Server; die App arbeitet dann nur lokal.
+// Für Entwicklung: VITE_API_URL=http://localhost:8787 npm run dev
+export const API_URL: string = (
+  ((import.meta.env.VITE_API_URL as string | undefined) ?? '') || ''
+).replace(/\/+$/, '');

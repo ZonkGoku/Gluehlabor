@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
-import { URL_FOTOS } from '../daten/config';
 import { ankerFuer } from '../lib/anker';
+import { anzeigeName } from '../lib/community';
 import { filtere, ranglisteMitWertung } from '../lib/auswertung';
 import { euro, zahl2 } from '../lib/format';
 import { KRITERIEN } from '../lib/modell';
@@ -35,7 +35,7 @@ export function Detail({ id }: { id: string }) {
       setFotoUrl(u);
       return () => URL.revokeObjectURL(u);
     }
-    setFotoUrl(e.foto ? URL_FOTOS + e.foto : null);
+    setFotoUrl(null);
   }, [e?.id, e?.foto, e?.fotoBlob]);
 
   if (!alle) return null;
@@ -53,6 +53,7 @@ export function Detail({ id }: { id: string }) {
   const meta = [
     e.markt,
     stadtVon(MARKTLISTE, e),
+    `von ${anzeigeName(e)}`,
     `Saison ${e.saison}`,
     datumKurz(e.datum),
     e.sorte && SORTE[e.sorte],
@@ -85,6 +86,7 @@ export function Detail({ id }: { id: string }) {
         <section class="karte">
           <h2>Protokoll</h2>
           <div class="metaliste">
+            {e.pruefstelle && <span class="chip-klein gold">Prüfstelle</span>}
             {meta.map((m) => (
               <span class="chip-klein">{m}</span>
             ))}

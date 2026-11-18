@@ -2,6 +2,14 @@
 
 Dies ist der ursprüngliche Auftrag, unverändert abgelegt.
 
+> **Stand 18.11.2026: Die Ausrichtung hat sich geändert.** Aus dem Projekt für zwei Nutzer wird ein
+> Community-Produkt: viele Leute bewerten, ohne Registrierung, mit freiwilligem Namen, Becher werden per
+> QR-Code geteilt. Damit sind folgende Teile dieses Auftrags überholt: „NICHT BAUEN" (Konten für Fremde,
+> Social-Features), „TECHNIK" (Sync über GitHub, Schreiben nur mit Token) und der Stack-Vorschlag am
+> Ende. Maßgeblich ist jetzt `CLAUDE.md`. Alles andere (Scoring, Gestaltung, Statistik, Ankerdefinitionen)
+> gilt unverändert.
+
+
 ════════════════════════════════════════════════════════════════════
 
 ## VORGEHEN — bitte genau in dieser Reihenfolge

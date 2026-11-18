@@ -1,18 +1,16 @@
-// Hintergrund-Synchronisation.
+// Hintergrund-Synchronisation mit dem Community-Server.
 //
-// Hochladen: Jeder offene Eintrag wird als eigene Datei data/eintraege/<id>.json
-// per GitHub-Contents-API auf main geschrieben (Fotos vorher nach data/fotos/).
-// Holen: Der beim Deploy erzeugte Datenbestand ./daten/eintraege.json wird
-// gelesen; Einträge des anderen Geräts landen lokal als „fertig".
-//
-// Läuft beim Start, nach jedem Speichern, wenn das Netz zurückkommt, wenn die
-// App wieder sichtbar wird, und alle 30 s, solange etwas offen ist.
+// Reihenfolge: Gerät anmelden, Namen senden, offene Becher senden, neue Becher holen.
+// Läuft beim Start, nach jedem Speichern, wenn das Netz zurückkommt, wenn die App
+// wieder sichtbar wird, und alle 30 s, solange etwas offen ist. Ein Becher geht nie
+// verloren: bis der Server ihn angenommen hat, bleibt er lokal "offen".
 
-import { eintragAlsJson, istEintrag } from '../lib/veroeffentlichung';
-import { PFAD_EINTRAEGE, PFAD_FOTOS, REPO, URL_DATENBESTAND } from './config';
-import { db, leseEinstellung, type LokalerEintrag } from './db';
+import { eintragFuerServer, istEintrag } from '../lib/veroeffentlichung';
+import { api, ApiFehler } from './api';
+import { API_URL } from './config';
+import { db, holeGeraet, leseEinstellung, schreibeEinstellung, type LokalerEintrag } from './db';
 
-export type SyncZustand = 'bereit' | 'laeuft' | 'offline' | 'kein-token' | 'token-ungueltig' | 'fehler';
+export type SyncZustand = 'bereit' | 'laeuft' | 'offline' | 'kein-server' | 'fehler' | 'gesperrt';
 
 export interface SyncInfo {
   zustand: SyncZustand;
@@ -20,7 +18,7 @@ export interface SyncInfo {
   zuletzt?: number;
 }
 
-let info: SyncInfo = { zustand: 'bereit' };
+let info: SyncInfo = { zustand: API_URL ? 'bereit' : 'kein-server' };
 const hoerer = new Set<(i: SyncInfo) => void>();
 
 function setze(neu: SyncInfo) {
@@ -34,85 +32,100 @@ export function abonniereSync(h: (i: SyncInfo) => void): () => void {
   return () => hoerer.delete(h);
 }
 
-class HttpFehler extends Error {
-  constructor(
-    public status: number,
-    text: string,
-  ) {
-    super(`GitHub ${status}: ${text}`);
+interface Antwortzeile {
+  id: string;
+  status: 'ok' | 'bereits' | 'abgelehnt' | 'zu-viele';
+  grund?: string;
+}
+
+async function anmelden(geraet: Awaited<ReturnType<typeof holeGeraet>>): Promise<void> {
+  if (await leseEinstellung('registriert', false)) return;
+  try {
+    await api('/api/geraete', { methode: 'POST', body: { id: geraet.id, schluessel: geraet.schluessel } });
+  } catch (err) {
+    // 409: Die Kennung ist schon beim Server, z. B. weil die Antwort damals verloren ging. Dann prüfen, ob der Schlüssel passt.
+    if (!(err instanceof ApiFehler) || err.status !== 409) throw err;
+    await api('/api/ich', { geraet });
   }
+  await schreibeEinstellung('registriert', true);
 }
 
-function utf8ZuBase64(s: string): string {
-  const bytes = new TextEncoder().encode(s);
-  let bin = '';
-  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-  return btoa(bin);
-}
-
-async function blobZuBase64(b: Blob): Promise<string> {
-  const bytes = new Uint8Array(await b.arrayBuffer());
-  let bin = '';
-  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-  return btoa(bin);
-}
-
-/** Legt eine Datei an. Existiert sie schon (frühere, unbestätigte Übertragung), gilt das als Erfolg. */
-async function legeDateiAn(token: string, pfad: string, base64: string, message: string): Promise<void> {
-  const url = `https://api.github.com/repos/${REPO.owner}/${REPO.name}/contents/${pfad}`;
-  const res = await fetch(url, {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28',
-    },
-    body: JSON.stringify({ message, content: base64, branch: REPO.branch }),
-  });
-  if (res.ok) return;
-  // 422 ohne sha = Datei existiert bereits. Einträge sind unveränderlich, also fertig.
-  if (res.status === 422) {
-    const text = await res.text();
-    if (/sha/i.test(text)) return;
-    throw new HttpFehler(422, text);
-  }
-  throw new HttpFehler(res.status, await res.text().catch(() => ''));
-}
-
-async function ladeHoch(token: string, e: LokalerEintrag): Promise<void> {
-  let eintrag = e;
-  if (e.fotoBlob && !e.foto) {
-    const pfad = `${PFAD_FOTOS}/${e.id}.jpg`;
-    await legeDateiAn(token, pfad, await blobZuBase64(e.fotoBlob), `Foto: ${e.stand}`);
-    eintrag = { ...e, foto: `fotos/${e.id}.jpg` };
-    await db.eintraege.update(e.id, { foto: eintrag.foto });
-  }
-  await legeDateiAn(
-    token,
-    `${PFAD_EINTRAEGE}/${e.id}.json`,
-    utf8ZuBase64(eintragAlsJson(eintrag)),
-    `Becher: ${e.stand} (${e.markt}, ${e.saison})`,
-  );
-  await db.eintraege.update(e.id, { sync: 'fertig', syncFehler: undefined, fotoBlob: undefined });
-}
-
-/** Holt den veröffentlichten Datenbestand und ergänzt lokal, was fehlt. */
-export async function holeDatenbestand(): Promise<number> {
-  const res = await fetch(URL_DATENBESTAND, { cache: 'no-cache' });
-  if (!res.ok) return 0;
-  const daten: unknown = await res.json();
-  if (!Array.isArray(daten)) return 0;
-  const gueltig = daten.filter(istEintrag);
-  return db.transaction('rw', db.eintraege, async () => {
-    let neu = 0;
-    for (const e of gueltig) {
-      const lokal = await db.eintraege.get(e.id);
-      if (lokal?.sync === 'offen') continue; // lokale Fassung gewinnt, bis sie hochgeladen ist
-      if (!lokal) neu++;
-      await db.eintraege.put({ ...e, sync: 'fertig' });
+async function sendeName(geraet: Awaited<ReturnType<typeof holeGeraet>>): Promise<void> {
+  const ich = await api<{ name: string | null; pruefstelle: boolean }>('/api/ich', { geraet });
+  await schreibeEinstellung('pruefstelle', ich.pruefstelle);
+  if (await leseEinstellung('nameGesendet', true)) return;
+  const name = await leseEinstellung<string>('name', '');
+  try {
+    await api('/api/ich', { methode: 'PUT', geraet, body: { name } });
+  } catch (err) {
+    // Der Server lehnt den Namen ab (z. B. reserviert): lokal zurücknehmen, damit nichts hängen bleibt.
+    if (err instanceof ApiFehler && err.status === 422) {
+      await schreibeEinstellung('name', '');
+      await schreibeEinstellung('nameFehler', err.message);
+      await schreibeEinstellung('nameGesendet', true);
+      return;
     }
-    return neu;
-  });
+    throw err;
+  }
+  await schreibeEinstellung('nameGesendet', true);
+}
+
+async function sendeBecher(geraet: Awaited<ReturnType<typeof holeGeraet>>): Promise<void> {
+  const offen = await db.eintraege.where('sync').equals('offen').sortBy('erstelltAm');
+  for (let i = 0; i < offen.length; i += 10) {
+    const paket = offen.slice(i, i + 10);
+    let antwort: { ergebnisse: Antwortzeile[] };
+    try {
+      antwort = await api('/api/becher', { methode: 'POST', geraet, body: { eintraege: paket.map(eintragFuerServer) } });
+    } catch (err) {
+      // Server kennt das Gerät nicht mehr (z. B. zurückgesetzt): beim nächsten Lauf neu anmelden.
+      if (err instanceof ApiFehler && err.status === 401) await schreibeEinstellung('registriert', false);
+      throw err;
+    }
+    for (const r of antwort.ergebnisse) {
+      if (r.status === 'ok' || r.status === 'bereits') await db.eintraege.update(r.id, { sync: 'fertig', syncFehler: undefined });
+      else if (r.status === 'abgelehnt') await db.eintraege.update(r.id, { sync: 'abgelehnt', syncFehler: r.grund });
+      // 'zu-viele': bleibt offen und wird später erneut versucht
+    }
+    if (antwort.ergebnisse.some((r) => r.status === 'zu-viele')) {
+      throw new ApiFehler(429, 'Tageslimit erreicht. Der Rest folgt morgen.');
+    }
+  }
+}
+
+interface Seite {
+  eintraege: unknown[];
+  naechste: number;
+  mehr: boolean;
+}
+
+/** Holt alle neuen oder geänderten Becher. Ausgeblendete Becher werden lokal entfernt. */
+export async function holeBecher(): Promise<number> {
+  let cursor = await leseEinstellung<number>('cursor', 0);
+  let neu = 0;
+  for (let runde = 0; runde < 50; runde++) {
+    const seite = await api<Seite>(`/api/becher?nach=${cursor}&limit=200`);
+    await db.transaction('rw', db.eintraege, async () => {
+      for (const roh of seite.eintraege) {
+        const r = roh as { id?: string; versteckt?: boolean };
+        if (r.versteckt && typeof r.id === 'string') {
+          const lokal = await db.eintraege.get(r.id);
+          if (lokal && lokal.sync !== 'offen') await db.eintraege.delete(r.id);
+          continue;
+        }
+        if (!istEintrag(roh)) continue;
+        const lokal = await db.eintraege.get(roh.id);
+        if (lokal?.sync === 'offen') continue; // lokale Fassung gewinnt, bis sie gesendet ist
+        if (!lokal) neu++;
+        // Foto bleibt erhalten: es liegt nur lokal.
+        await db.eintraege.put({ ...(lokal ?? {}), ...roh, sync: 'fertig', syncFehler: undefined });
+      }
+    });
+    cursor = seite.naechste;
+    await schreibeEinstellung('cursor', cursor);
+    if (!seite.mehr) break;
+  }
+  return neu;
 }
 
 let laufend: Promise<void> | null = null;
@@ -123,37 +136,24 @@ export function synchronisiere(): Promise<void> {
 }
 
 async function lauf(): Promise<void> {
+  if (!API_URL) return setze({ zustand: 'kein-server' });
   if (!navigator.onLine) return setze({ ...info, zustand: 'offline' });
   setze({ ...info, zustand: 'laeuft' });
-
   try {
-    await holeDatenbestand();
-  } catch {
-    // Datenbestand nicht erreichbar: Hochladen trotzdem versuchen.
-  }
-
-  const offen = await db.eintraege.where('sync').equals('offen').sortBy('erstelltAm');
-  if (offen.length === 0) return setze({ zustand: 'bereit', zuletzt: Date.now() });
-
-  const token = await leseEinstellung<string>('token', '');
-  if (!token) return setze({ zustand: 'kein-token' });
-
-  for (const e of offen) {
-    try {
-      await ladeHoch(token, e);
-    } catch (err) {
-      if (err instanceof HttpFehler && (err.status === 401 || err.status === 403 || err.status === 404)) {
-        return setze({ zustand: 'token-ungueltig', meldung: err.message });
-      }
-      if (!(err instanceof HttpFehler)) {
-        // Netzfehler: Funkloch. Später erneut.
-        return setze({ zustand: 'offline' });
-      }
-      await db.eintraege.update(e.id, { syncFehler: err.message });
+    const geraet = await holeGeraet();
+    await anmelden(geraet);
+    await sendeName(geraet);
+    await sendeBecher(geraet);
+    await holeBecher();
+    setze({ zustand: 'bereit', zuletzt: Date.now() });
+  } catch (err) {
+    if (err instanceof ApiFehler) {
+      if (err.status === 403) return setze({ zustand: 'gesperrt', meldung: err.message });
       return setze({ zustand: 'fehler', meldung: err.message });
     }
+    // Netzfehler: Funkloch. Später erneut.
+    setze({ zustand: 'offline' });
   }
-  setze({ zustand: 'bereit', zuletzt: Date.now() });
 }
 
 let gestartet = false;
@@ -164,12 +164,16 @@ export function starteSync(): void {
   gestartet = true;
   const anstossen = () => void synchronisiere();
   window.addEventListener('online', anstossen);
-  window.addEventListener('offline', () => setze({ ...info, zustand: 'offline' }));
+  window.addEventListener('offline', () => setze({ ...info, zustand: API_URL ? 'offline' : 'kein-server' }));
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') anstossen();
   });
   setInterval(async () => {
-    if ((await db.eintraege.where('sync').equals('offen').count()) > 0) anstossen();
+    const offen = await db.eintraege.where('sync').equals('offen').count();
+    const nameOffen = !(await leseEinstellung('nameGesendet', true));
+    if (offen > 0 || nameOffen) anstossen();
   }, 30_000);
   anstossen();
 }
+
+export type { LokalerEintrag };

@@ -1,6 +1,6 @@
 // App-Gerüst: Kopf + Tab-Leiste am Telefon, Seitenleiste am Rechner.
 import type { ComponentChildren } from 'preact';
-import { useDarfErfassen } from './daten';
+import { useMeineAnzahl } from './daten';
 import { Symbol } from './Symbol';
 import { SyncAnzeige } from './SyncAnzeige';
 
@@ -13,7 +13,7 @@ const NAV = [
 ];
 
 export function Geruest({ route, children }: { route: string; children: ComponentChildren }) {
-  const darf = useDarfErfassen();
+  const darf = useMeineAnzahl() > 0; // zeigt den Sync-Status erst, wenn von diesem Gerät etwas erfasst wurde
   const aktiv = (r: string) => (route === r || (r === 'rangliste' && route.startsWith('becher/')) ? 'page' : undefined);
   return (
     <div class="app">

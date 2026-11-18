@@ -1,4 +1,5 @@
 // Startseite. Alle Zahlen kommen aus src/lib; hier wird nur angeordnet.
+import { useState } from 'preact/hooks';
 import { abendDatum } from '../lib/abend';
 import { filtere, ranglisteMitWertung, saisons } from '../lib/auswertung';
 import { zahl2 } from '../lib/format';
@@ -6,17 +7,68 @@ import { staedte, stadtVon } from '../lib/orte';
 import { befunde } from '../lib/statistik';
 import { abend, kennzahlen, neuesteBecher, saisonStatus, saisonVerlauf } from '../lib/startseite';
 import { Betreiber, datumKurz, Notenbalken, SaisonSchalter, UrteilPill } from './bausteine';
-import { useDarfErfassen, useEintraege, useGewichte, useHatToken, useSaison } from './daten';
+import { leseEinstellung, schreibeEinstellung, setzeName } from '../daten/db';
+import { synchronisiere } from '../daten/sync';
+import { anzeigeName, pruefeName } from '../lib/community';
+import { useEintraege, useGeraetId, useGewichte, useMeineAnzahl, useName, useSaison } from './daten';
+import { useLive } from './hooks';
 import { Deutschlandkarte } from './Deutschlandkarte';
 import { Saisonverlauf } from './Saisonverlauf';
 import { LABELS, MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
 
+/** Einmalige, freiwillige Frage nach dem Namen, sobald von diesem Gerät etwas erfasst wurde. */
+function NameKarte() {
+  const name = useName();
+  const abgelehnt = useLive(() => leseEinstellung<boolean>('nameAbgelehnt', false), [], false);
+  const [wert, setWert] = useState('');
+  const [fehler, setFehler] = useState('');
+  if (name || abgelehnt) return null;
+  const speichern = async () => {
+    const p = pruefeName(wert);
+    if (!p.ok) return setFehler(p.grund);
+    if (p.name === null) return schreibeEinstellung('nameAbgelehnt', true);
+    await setzeName(p.name);
+    void synchronisiere();
+  };
+  return (
+    <div class="name-karte">
+      <label for="name-start">Wie sollen wir dich nennen? Freiwillig.</label>
+      <div class="name-zeile">
+        <input
+          id="name-start"
+          class="feld"
+          type="text"
+          maxLength={24}
+          autocomplete="nickname"
+          placeholder="Name oder Spitzname"
+          value={wert}
+          onInput={(e) => {
+            setWert((e.target as HTMLInputElement).value);
+            setFehler('');
+          }}
+          onKeyDown={(e) => e.key === 'Enter' && void speichern()}
+        />
+        <button type="button" class="pillknopf" onClick={() => void speichern()}>
+          Speichern
+        </button>
+        <button type="button" class="pillknopf" onClick={() => void schreibeEinstellung('nameAbgelehnt', true)}>
+          Anonym bleiben
+        </button>
+      </div>
+      <p class="name-hinweis">
+        Der Name steht öffentlich neben deinen Bewertungen, auch bei denen, die du schon abgegeben hast. Besser kein voller echter Name.
+        {fehler && <span class="name-fehler"> {fehler}</span>}
+      </p>
+    </div>
+  );
+}
+
 export function Uebersicht() {
   const alle = useEintraege();
   const gewichte = useGewichte();
-  const darf = useDarfErfassen();
-  const hatToken = useHatToken();
+  const geraetId = useGeraetId();
+  const meineAnzahl = useMeineAnzahl();
   const [saison, setSaison] = useSaison(alle);
   if (!alle) return null;
 
@@ -30,9 +82,10 @@ export function Uebersicht() {
   const k = kennzahlen(auswahl, MARKTLISTE, gewichte);
   const orte = staedte(MARKTLISTE, auswahl);
 
-  // Abend-Modus: nur auf Geräten, die eintragen dürfen, und nur wenn heute schon ein Becher steht.
-  const heuteAbend = abend(alle, heute, gewichte);
-  const abendModus = darf && heuteAbend.anzahl > 0;
+  // Abend-Modus: nur die eigenen Becher dieses Geräts zählen, nicht die der Community.
+  const meine = alle.filter((e) => e.geraet === geraetId);
+  const heuteAbend = abend(meine, heute, gewichte);
+  const abendModus = heuteAbend.anzahl > 0;
   const naechsteNr = heuteAbend.anzahl === 0 ? 1 : heuteAbend.naechsteNr;
 
   const status = saisonStatus(alle, typeof saison === 'number' ? saison : jahr, heute);
@@ -109,17 +162,12 @@ export function Uebersicht() {
           )}
 
           <div class="b-plus">
+            {meineAnzahl > 0 && <NameKarte />}
             <a class="plus-balken" href="#/erfassen">
               <Symbol name="plus" groesse={22} />
               {heuteAbend.anzahl === 0 ? 'Becher erfassen' : 'Nächster Becher'}
               <span class="mono">Nr. {naechsteNr}</span>
             </a>
-            {!hatToken && (
-              <p class="plus-hinweis">
-                Noch kein Token hinterlegt: Neue Becher bleiben vorerst nur auf diesem Gerät.{' '}
-                <a href="#/einstellungen">Token eintragen</a>
-              </p>
-            )}
           </div>
 
           <div class="kennzahlen b-kpi">
@@ -179,6 +227,7 @@ export function Uebersicht() {
                         <small>
                           {datumKurz(e.datum) ?? `Saison ${e.saison}`}
                           {e.becherNr !== undefined ? ` · Nr. ${e.becherNr}` : ''}
+                          {e.name || e.pruefstelle ? ` · ${e.pruefstelle ? 'Prüfstelle' : anzeigeName(e)}` : ''}
                           {e.sync === 'offen' ? ' · nur auf diesem Gerät' : ''}
                         </small>
                       </span>
