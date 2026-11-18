@@ -14,8 +14,8 @@ Glühwein-Prüfstelle von David & Philip. Der vollständige Auftrag steht in `BR
 - **PWA** über `vite-plugin-pwa` (generateSW, `registerType: 'prompt'`: Updates
   warten, bis die App geschlossen ist, damit keine Erfassung durch Neuladen verloren geht).
 - **Vitest** für alle reinen Funktionen. `npm test`, `npm run typecheck`, `npm run build`.
-- **Deploy**: `.github/workflows/deploy.yml` baut bei Push auf `main` und veröffentlicht
-  auf GitHub Pages. In den Repo-Einstellungen muss Pages → Source = „GitHub Actions" stehen.
+- **Deploy**: `.github/workflows/deploy.yml` veröffentlicht bei jedem Push auf `main` den Stand von `main`. Solange `main` nicht Standard-Branch ist, läuft der Deploy über einen workflow_dispatch auf dem Standard-Branch (Pages-Umgebung erlaubt nur den Standard-Branch). Die Seite liegt
+  unter https://zonkgoku.github.io/Becherwerk/ . Pages → Source = „GitHub Actions" (ist gesetzt).
 - `base: './'` (relativ) plus Hash-Router: kein Repo-Name im Build, keine weiße Seite
   durch falsche Unterpfade.
 
