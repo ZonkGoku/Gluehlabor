@@ -33,7 +33,7 @@ export function SyncAnzeige() {
   }
 
   return (
-    <a class="sync" href="#/einstellungen" data-zustand={art} title={info.meldung ?? ''}>
+    <a class="sync" href="#/profil" data-zustand={art} title={info.meldung ?? ''}>
       {text}
     </a>
   );

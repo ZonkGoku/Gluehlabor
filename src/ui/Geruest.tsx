@@ -29,6 +29,10 @@ export function Geruest({ route, children }: { route: string; children: Componen
             {n.label}
           </a>
         ))}
+        <a class="navpunkt" href="#/profil" aria-current={aktiv('profil')}>
+          <Symbol name="profil" groesse={20} />
+          Profil
+        </a>
         <a class="navpunkt" href="#/einstellungen" aria-current={aktiv('einstellungen')}>
           <Symbol name="einstellungen" groesse={20} />
           Einstellungen

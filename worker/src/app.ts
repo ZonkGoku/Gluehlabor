@@ -8,7 +8,7 @@
 // - Das Prüfstellen-Siegel gibt es nur über einen Code, den David und Philip kennen.
 // - Ausgeblendete Becher werden als Platzhalter ausgeliefert, damit Geräte sie entfernen.
 
-import { pruefeEinreichung, pruefeName } from '../../src/lib/community';
+import { pruefeEinreichung, pruefeName, saeubere } from '../../src/lib/community';
 import type { D1Like } from './db';
 
 export interface Env {
@@ -19,17 +19,21 @@ export interface Env {
   PRUEFSTELLE_CODE?: string;
   /** Kommagetrennte Ursprünge, die schreiben dürfen. */
   ERLAUBTE_URSPRUENGE?: string;
+  /** Geheimes Salz, mit dem Adressen vor dem Zählen gehasht werden. Ohne Wert dient ADMIN_TOKEN als Salz. */
+  IP_SALT?: string;
 }
 
 const LIMITS = {
   geraeteJeIpUndStunde: 30,
   becherJeGeraetUndTag: 100,
   becherJeGeraetUndTagPruefstelle: 1000,
-  anfragenJeIpUndMinute: 120,
+  schreibzugriffeJeIpUndMinute: 60,
+  meldungenJeGeraetUndTag: 20,
   maxBodyBytes: 64_000,
   maxEintraegeJeAnfrage: 20,
   maxImport: 100,
 };
+const MELDEGRUENDE = ['unpassend', 'spam', 'falsch', 'persoenlich', 'sonstiges'];
 const MIN = 60_000;
 const STUNDE = 60 * MIN;
 const TAG = 24 * STUNDE;
@@ -58,6 +62,22 @@ async function sha256Hex(s: string): Promise<string> {
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+/**
+ * Schlüssel für Zähler je Adresse. Die Adresse selbst wird nie gespeichert: gehasht mit einem
+ * geheimen Salz und dem Tag, damit sich Zähler nicht über Tage hinweg verknüpfen lassen.
+ */
+export async function adressSchluessel(env: Env, art: string, ip: string, jetzt: number): Promise<string> {
+  const salz = env.IP_SALT ?? env.ADMIN_TOKEN ?? '';
+  const h = await sha256Hex(`${salz}|${Math.floor(jetzt / TAG)}|${ip}`);
+  return `${art}:${h.slice(0, 24)}`;
+}
+
+/** Löscht abgelaufene Zähler. Läuft täglich per Zeitplan, siehe index.ts. */
+export async function raeumeAuf(db: D1Like, jetzt: number): Promise<number> {
+  const r = await db.prepare('DELETE FROM limits WHERE ablauf < ?').bind(jetzt - TAG).run();
+  return r.meta.changes;
+}
+
 /** Vergleich ohne Zeitunterschiede. */
 function gleich(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
@@ -83,12 +103,13 @@ async function begrenze(db: D1Like, schluessel: string, fensterMs: number, max: 
   const fenster = Math.floor(jetzt / fensterMs);
   await db
     .prepare(
-      `INSERT INTO limits (schluessel, fenster, anzahl) VALUES (?, ?, 1)
+      `INSERT INTO limits (schluessel, fenster, anzahl, ablauf) VALUES (?, ?, 1, ?)
        ON CONFLICT(schluessel) DO UPDATE SET
          anzahl = CASE WHEN fenster = excluded.fenster THEN anzahl + 1 ELSE 1 END,
-         fenster = excluded.fenster`,
+         fenster = excluded.fenster,
+         ablauf = excluded.ablauf`,
     )
-    .bind(schluessel, fenster)
+    .bind(schluessel, fenster, (fenster + 1) * fensterMs)
     .run();
   const z = await db.prepare('SELECT anzahl FROM limits WHERE schluessel = ?').bind(schluessel).first<{ anzahl: number }>();
   return (z?.anzahl ?? 0) <= max;
@@ -242,7 +263,8 @@ export async function handle(request: Request, env: Env, jetzt: number = Date.no
     }
 
     const ip = request.headers.get('CF-Connecting-IP') ?? 'unbekannt';
-    if (!(await begrenze(env.DB, `anfrage:${ip}`, MIN, LIMITS.anfragenJeIpUndMinute, jetzt))) {
+    // Nur Schreibzugriffe werden gezählt. Lesen kostet keine Datenbank-Schreibzeile; dort schützt der Zwischenspeicher am Rand.
+    if (methode !== 'GET' && !(await begrenze(env.DB, await adressSchluessel(env, 'schreiben', ip, jetzt), MIN, LIMITS.schreibzugriffeJeIpUndMinute, jetzt))) {
       throw new HttpFehler(429, 'Zu viele Anfragen. Bitte kurz warten.');
     }
 
@@ -263,7 +285,7 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
 
   // ── Gerät anmelden ──
   if (pfad === '/api/geraete' && methode === 'POST') {
-    if (!(await begrenze(db, `geraete:${ip}`, STUNDE, LIMITS.geraeteJeIpUndStunde, jetzt))) {
+    if (!(await begrenze(db, await adressSchluessel(env, 'geraete', ip, jetzt), STUNDE, LIMITS.geraeteJeIpUndStunde, jetzt))) {
       throw new HttpFehler(429, 'Zu viele neue Geräte von dieser Adresse. Bitte später erneut versuchen.');
     }
     const b = await lesen(request);
@@ -373,10 +395,53 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
     );
   }
 
+  // ── Melden (Meldeverfahren) ──
+  if (pfad === '/api/melden' && methode === 'POST') {
+    const g = await anmelden(request, db);
+    const b = await lesen(request);
+    if (typeof b.id !== 'string' || typeof b.grund !== 'string' || !MELDEGRUENDE.includes(b.grund)) {
+      throw new HttpFehler(400, 'Becher und Grund nötig.');
+    }
+    if (b.text !== undefined && b.text !== null && typeof b.text !== 'string') throw new HttpFehler(400, 'Der Text muss Text sein.');
+    const text = typeof b.text === 'string' ? [...saeubere(b.text)].slice(0, 300).join('') || null : null;
+    if (!(await begrenze(db, `melden:${g.id}`, TAG, LIMITS.meldungenJeGeraetUndTag, jetzt))) {
+      throw new HttpFehler(429, 'Heute schon viele Meldungen. Bitte morgen wieder.');
+    }
+    const z = await db.prepare('SELECT id FROM becher WHERE id = ? AND versteckt = 0').bind(b.id).first();
+    if (!z) throw new HttpFehler(404, 'Becher nicht gefunden.');
+    await db
+      .prepare('INSERT OR IGNORE INTO meldungen (becher_id, geraet_id, grund, text, erstellt_am) VALUES (?, ?, ?, ?, ?)')
+      .bind(b.id, g.id, b.grund, text, jetzt)
+      .run();
+    return json({ ok: true }, 200);
+  }
+
   // ── Moderation ──
   if (pfad.startsWith('/api/admin/')) {
     if (!istAdmin(request, env)) throw new HttpFehler(401, 'Nur für die Prüfstelle.');
+
+    if (pfad === '/api/admin/meldungen' && methode === 'GET') {
+      const { results } = await db
+        .prepare(
+          `SELECT m.becher_id AS id, COUNT(*) AS anzahl, MAX(m.erstellt_am) AS zuletzt, GROUP_CONCAT(m.grund) AS gruende,
+                  b.stand, b.markt, b.name, b.notiz, b.versteckt, b.geraet_id
+             FROM meldungen m LEFT JOIN becher b ON b.id = m.becher_id
+            WHERE m.bearbeitet = 0
+            GROUP BY m.becher_id
+            ORDER BY anzahl DESC, zuletzt DESC
+            LIMIT 100`,
+        )
+        .all();
+      return json({ meldungen: results }, 200);
+    }
+
     const b = await lesen(request);
+
+    if (pfad === '/api/admin/meldung-verwerfen' && methode === 'POST') {
+      if (typeof b.id !== 'string') throw new HttpFehler(400, 'id nötig.');
+      const r = await db.prepare('UPDATE meldungen SET bearbeitet = 1 WHERE becher_id = ?').bind(b.id).run();
+      return json({ ok: true, betroffen: r.meta.changes }, 200);
+    }
 
     if (pfad === '/api/admin/verstecken' && methode === 'POST') {
       if (typeof b.id !== 'string' || typeof b.versteckt !== 'boolean') throw new HttpFehler(400, 'id und versteckt nötig.');
@@ -385,6 +450,7 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
         .bind(b.versteckt ? 1 : 0, b.id)
         .run();
       if (r.meta.changes === 0) throw new HttpFehler(404, 'Becher nicht gefunden.');
+      if (b.versteckt) await db.prepare('UPDATE meldungen SET bearbeitet = 1 WHERE becher_id = ?').bind(b.id).run();
       return json({ ok: true }, 200);
     }
 

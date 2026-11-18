@@ -6,6 +6,7 @@ const PFADE: Record<string, string> = {
   statistik: 'M4 20h16M7 16v-5M12 16V6M17 16v-8',
   spickzettel: 'M6 3h9l3 3v15H6zM9 9h6M9 13h6M9 17h4',
   einstellungen: 'M4 7h10M18 7h2M4 17h4M12 17h8M16 5v4M10 15v4',
+  profil: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20c0-4 3.6-6 8-6s8 2 8 6',
   plus: 'M12 5v14M5 12h14',
   zurueck: 'M15 6l-6 6 6 6',
   schliessen: 'M6 6l12 12M18 6L6 18',

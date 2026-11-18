@@ -4,3 +4,6 @@
 export const API_URL: string = (
   ((import.meta.env.VITE_API_URL as string | undefined) ?? '') || ''
 ).replace(/\/+$/, '');
+
+/** Altlast: wird nur noch vom alten GitHub-Token-Formular in ui/Einstellungen.tsx gebraucht. Der Sync läuft über den Community-Server. */
+export const REPO = { owner: 'ZonkGoku', name: 'Becherwerk', branch: 'main' } as const;

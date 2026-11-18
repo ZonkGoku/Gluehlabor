@@ -1,6 +1,7 @@
 import { Detail } from './ui/Detail';
 import { Einstellungen } from './ui/Einstellungen';
 import { Erfassen } from './ui/Erfassen';
+import { Profil } from './ui/Profil';
 import { Geruest } from './ui/Geruest';
 import { useRoute } from './ui/hooks';
 import { Rangliste } from './ui/Rangliste';
@@ -21,6 +22,7 @@ export function App() {
   else if (route === 'statistik') seite = <Statistik />;
   else if (route === 'spickzettel') seite = <Spickzettel />;
   else if (route === 'einstellungen') seite = <Einstellungen />;
+  else if (route === 'profil') seite = <Profil />;
   else seite = <Uebersicht />;
 
   return <Geruest route={route}>{seite}</Geruest>;

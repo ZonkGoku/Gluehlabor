@@ -253,10 +253,48 @@ describe('Becher einreichen', () => {
     expect(am_naechsten_tag.json.ergebnisse[0].status).toBe('ok');
   });
 
-  it('Anfragenlimit je Adresse und Minute: 429, in der nächsten Minute wieder frei', async () => {
-    for (let i = 0; i < 120; i++) expect((await ruf('GET', '/api/status', { ip: '7.7.7.7' })).status).toBe(200);
-    expect((await ruf('GET', '/api/status', { ip: '7.7.7.7' })).status).toBe(429);
-    expect((await ruf('GET', '/api/status', { ip: '7.7.7.7', jetzt: JETZT + 61_000 })).status).toBe(200);
+  it('Schreib-Limit je Adresse und Minute: 429, in der nächsten Minute wieder frei', async () => {
+    for (let i = 0; i < 60; i++) expect((await ruf('POST', '/api/melden', { ip: '7.7.7.7', body: {} })).status).toBe(401);
+    expect((await ruf('POST', '/api/melden', { ip: '7.7.7.7', body: {} })).status).toBe(429);
+    expect((await ruf('POST', '/api/melden', { ip: '6.6.6.6', body: {} })).status).toBe(401);
+    expect((await ruf('POST', '/api/melden', { ip: '7.7.7.7', jetzt: JETZT + 61_000, body: {} })).status).toBe(401);
+  });
+
+  it('Lesen zählt nicht und schreibt nichts in die Datenbank (schont das Schreib-Kontingent)', async () => {
+    for (let i = 0; i < 200; i++) expect((await ruf('GET', '/api/status', { ip: '7.7.7.7' })).status).toBe(200);
+    for (let i = 0; i < 20; i++) await liste('', { ip: '7.7.7.7' });
+    const n = await env.DB.prepare('SELECT COUNT(*) AS n FROM limits').first<{ n: number }>();
+    expect(n?.n).toBe(0);
+  });
+
+  it('Adressen werden nie im Klartext gespeichert', async () => {
+    await geraet({ ip: '203.0.113.77' });
+    await ruf('POST', '/api/melden', { ip: '203.0.113.77', body: {} });
+    const { results } = await env.DB.prepare('SELECT schluessel FROM limits').all<{ schluessel: string }>();
+    expect(results.length).toBeGreaterThan(0);
+    for (const z of results) {
+      expect(z.schluessel).not.toContain('203.0.113.77');
+      expect(z.schluessel).not.toMatch(/\d+\.\d+\.\d+\.\d+/);
+    }
+  });
+
+  it('derselbe Zähler hängt nicht über Tage zusammen (Tagessalz)', async () => {
+    const { adressSchluessel } = await import('../src/app');
+    const heute = await adressSchluessel(env, 'schreiben', '1.2.3.4', JETZT);
+    const morgen = await adressSchluessel(env, 'schreiben', '1.2.3.4', JETZT + 25 * 3_600_000);
+    expect(heute).not.toBe(morgen);
+    expect(await adressSchluessel(env, 'schreiben', '1.2.3.4', JETZT)).toBe(heute);
+    env.IP_SALT = 'anderes-salz';
+    expect(await adressSchluessel(env, 'schreiben', '1.2.3.4', JETZT)).not.toBe(heute);
+  });
+
+  it('Aufräumen löscht abgelaufene Zähler und lässt frische stehen', async () => {
+    const { raeumeAuf } = await import('../src/app');
+    await ruf('POST', '/api/melden', { ip: '1.1.1.1', body: {}, jetzt: JETZT - 3 * 86_400_000 });
+    await ruf('POST', '/api/melden', { ip: '2.2.2.2', body: {} });
+    expect((await env.DB.prepare('SELECT COUNT(*) AS n FROM limits').first<{ n: number }>())?.n).toBe(2);
+    expect(await raeumeAuf(env.DB, JETZT)).toBe(1);
+    expect((await env.DB.prepare('SELECT COUNT(*) AS n FROM limits').first<{ n: number }>())?.n).toBe(1);
   });
 });
 
@@ -414,5 +452,85 @@ describe('Browser-Ursprünge', () => {
     const g = await geraet();
     const r = await ruf('GET', '/api/ich', { auth: g.auth, origin: SITE });
     expect(r.kopf.get('Access-Control-Allow-Origin')).toBe(SITE);
+  });
+});
+
+describe('Melden', () => {
+  const melde = (g: { auth: string }, id: string, grund = 'spam', extra: Record<string, unknown> = {}) =>
+    ruf('POST', '/api/melden', { auth: g.auth, body: { id, grund, ...extra } });
+  const offen = async () => (await ruf('GET', '/api/admin/meldungen', { auth: ADMIN })).json.meldungen as any[];
+
+  it('ohne Anmeldung: 401', async () => {
+    expect((await ruf('POST', '/api/melden', { body: { id: 'x', grund: 'spam' } })).status).toBe(401);
+  });
+
+  it('meldet einen Becher; Meldungen mehrerer Geräte werden gezählt, doppelte desselben Geräts nicht', async () => {
+    const autor = await geraet();
+    const a = await geraet();
+    const b = await geraet();
+    await sende(autor, [becher({ id: 'boese-1234567', stand: 'Fragwürdig' })]);
+    expect((await melde(a, 'boese-1234567', 'spam')).status).toBe(200);
+    expect((await melde(a, 'boese-1234567', 'spam')).status).toBe(200); // idempotent
+    expect((await melde(b, 'boese-1234567', 'unpassend', { text: 'beleidigend' })).status).toBe(200);
+    const m = await offen();
+    expect(m).toHaveLength(1);
+    expect(m[0]).toMatchObject({ id: 'boese-1234567', anzahl: 2, stand: 'Fragwürdig', geraet_id: autor.id });
+    expect(m[0].gruende.split(',').sort()).toEqual(['spam', 'unpassend']);
+  });
+
+  it.each([
+    ['unbekannter Grund', { grund: 'langweilig' }],
+    ['kein Grund', { grund: undefined }],
+    ['Text kein Text', { text: 42 }],
+  ])('lehnt ab: %s', async (_n, patch) => {
+    const g = await geraet();
+    await sende(g, [becher({ id: 'ziel-12345678' })]);
+    expect((await melde(g, 'ziel-12345678', 'spam', patch)).status).toBe(400);
+  });
+
+  it('unbekannte oder schon ausgeblendete Becher: 404', async () => {
+    const g = await geraet();
+    expect((await melde(g, 'gibts-nicht-12')).status).toBe(404);
+    await sende(g, [becher({ id: 'weg-12345678x' })]);
+    await ruf('POST', '/api/admin/verstecken', { auth: ADMIN, body: { id: 'weg-12345678x', versteckt: true } });
+    expect((await melde(g, 'weg-12345678x')).status).toBe(404);
+  });
+
+  it('Text wird gesäubert und auf 300 Zeichen gekürzt', async () => {
+    const g = await geraet();
+    await sende(g, [becher({ id: 'text-1234567x' })]);
+    await melde(g, 'text-1234567x', 'sonstiges', { text: ' a\u0000b ' + 'x'.repeat(400) });
+    const z = await env.DB.prepare('SELECT text FROM meldungen').first<{ text: string }>();
+    expect(z?.text?.startsWith('ab ')).toBe(true);
+    expect([...(z?.text ?? '')].length).toBe(300);
+  });
+
+  it('Tageslimit: höchstens 20 Meldungen je Gerät', async () => {
+    const g = await geraet();
+    const autor = await geraet();
+    await sende(autor, Array.from({ length: 20 }, (_, i) => becher({ id: `viele-${i}-123456` })));
+    await sende(autor, [becher({ id: 'viele-20-123456' })]);
+    for (let i = 0; i < 20; i++) expect((await melde(g, `viele-${i}-123456`)).status).toBe(200);
+    expect((await melde(g, 'viele-20-123456')).status).toBe(429);
+  });
+
+  it('Moderationsliste nur mit Admin-Token', async () => {
+    expect((await ruf('GET', '/api/admin/meldungen')).status).toBe(401);
+    expect((await ruf('GET', '/api/admin/meldungen', { auth: 'falsch' })).status).toBe(401);
+  });
+
+  it('Ausblenden erledigt die Meldungen; Verwerfen auch, ohne den Becher auszublenden', async () => {
+    const autor = await geraet();
+    const a = await geraet();
+    await sende(autor, [becher({ id: 'eins-1234567x' }), becher({ id: 'zwei-1234567x' })]);
+    await melde(a, 'eins-1234567x');
+    await melde(a, 'zwei-1234567x');
+    expect(await offen()).toHaveLength(2);
+    await ruf('POST', '/api/admin/verstecken', { auth: ADMIN, body: { id: 'eins-1234567x', versteckt: true } });
+    expect((await offen()).map((m) => m.id)).toEqual(['zwei-1234567x']);
+    await ruf('POST', '/api/admin/meldung-verwerfen', { auth: ADMIN, body: { id: 'zwei-1234567x' } });
+    expect(await offen()).toHaveLength(0);
+    const e = (await liste()).json.eintraege;
+    expect(e.find((x: any) => x.id === 'zwei-1234567x').stand).toBe('Glühweinkönig'); // noch sichtbar
   });
 });
