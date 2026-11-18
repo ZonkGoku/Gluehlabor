@@ -5,7 +5,7 @@ import { importiereCsv, parseCsv } from './csvImport';
 import { DEFAULT_GEWICHTE } from './modell';
 import { bewerte, rangliste, runde2 } from './scoring';
 
-const csv = readFileSync(resolve(__dirname, '../../data/gluehwein-2025.csv'), 'utf8');
+const csv = readFileSync(resolve(process.cwd(), 'data/gluehwein-2025.csv'), 'utf8');
 
 describe('parseCsv', () => {
   it('versteht Anführungszeichen, Kommas im Feld und CRLF', () => {
