@@ -105,7 +105,7 @@ export function Rangliste() {
       ) : (
         <div ref={wurzel}>
           {/* Sammelkarten: am Telefon zum Wischen, am Rechner nebeneinander */}
-          <ol class="ohne-balken -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-6 pt-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0">
+          <ol class="ohne-balken -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-6 pt-2 md:mx-0 md:grid md:grid-cols-3 md:items-stretch md:overflow-visible md:px-0">
             {podest.map((z) => (
               <li data-ein class="w-[86%] shrink-0 snap-center md:w-auto">
                 <StandTopKarte stand={z} quelle={quelle} klein={podest.length > 1} />

@@ -173,8 +173,9 @@ html:root:root[data-theme='dunkel'] {
   color-scheme: dark;
 }
 
+/* Der Hintergrund liegt auf <html>; der Body muss durchsichtig bleiben, sonst deckt er den Himmel (Schnee, Sterne, Budenlicht) zu. */
 body {
-  background: var(--bg);
+  background: transparent;
   color: var(--text);
 }
 

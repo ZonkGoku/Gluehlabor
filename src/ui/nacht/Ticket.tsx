@@ -33,7 +33,7 @@ function Strichcode({ id }: { id: string }) {
   }
   let x = 0;
   return (
-    <svg viewBox="0 0 120 26" class="h-6 w-[70px] shrink-0 text-eis/80" aria-hidden="true" preserveAspectRatio="none">
+    <svg viewBox="0 0 120 26" class="hidden h-6 w-[70px] shrink-0 text-eis/80 @[300px]:block" aria-hidden="true" preserveAspectRatio="none">
       {balken.map((b, i) => {
         const r = <rect x={x} y="0" width={b * 0.9} height="26" fill="currentColor" opacity={i % 5 === 0 ? 1 : 0.75} />;
         x += b * 0.9 + 1.2;
@@ -60,10 +60,10 @@ export function TicketRahmen({ rang, klein, kinder, stummel, klasse = '' }: Rahm
   return (
     <div
       ref={ref}
-      class={`nm group rounded-[28px] shadow-[0_0_46px_-24px_var(--glow)] transition-shadow duration-300 hover:shadow-[0_0_84px_-14px_var(--glow)] will-change-transform ${klasse}`}
+      class={`nm group @container h-full rounded-[28px] shadow-[0_0_46px_-24px_var(--glow)] transition-shadow duration-300 hover:shadow-[0_0_84px_-14px_var(--glow)] will-change-transform ${klasse}`}
       style={{ '--glow': s.glow }}
     >
-      <div class="ticket-kerbe rahmen-licht glas relative overflow-hidden rounded-[28px]" style={{ '--rahmen': s.rahmen }}>
+      <div class="ticket-kerbe rahmen-licht glas relative flex h-full flex-col overflow-hidden rounded-[28px]" style={{ '--rahmen': s.rahmen }}>
         {/* Lichtfleck folgt der Maus */}
         <div
           aria-hidden="true"
@@ -75,10 +75,17 @@ export function TicketRahmen({ rang, klein, kinder, stummel, klasse = '' }: Rahm
             <span class="animate-schimmer absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/[0.18] to-transparent" />
           </div>
         )}
-        <div class="relative z-10">{kinder}</div>
+        {/* Schnee auf der Karte: eine weiche Haube am oberen Rand */}
+        <svg aria-hidden="true" viewBox="0 0 400 22" preserveAspectRatio="none" class="pointer-events-none absolute inset-x-0 top-0 z-20 h-[14px] w-full">
+          <path
+            d="M0 0H400V7C384 14 372 6 356 11C340 17 326 8 308 12C292 16 280 7 262 11C246 15 232 6 214 11C198 16 186 8 168 12C152 16 138 7 120 11C104 15 92 8 76 12C60 16 46 8 30 12C16 15 8 10 0 13Z"
+            style={{ fill: 'light-dark(#e9eefc, #f4f7ff)', filter: 'drop-shadow(0 1px 1px rgb(120 140 200 / 0.35))' }}
+          />
+        </svg>
+        <div class="relative z-10 flex-1">{kinder}</div>
         {/* Abrisslinie */}
         <div class="relative z-10 border-t-2 border-dashed border-[var(--nm-rand-stark)]" />
-        <div class="relative z-10 flex h-[74px] items-center gap-3 px-5">{stummel}</div>
+        <div class="relative z-10 flex min-h-[74px] items-center gap-3 px-5 py-3">{stummel}</div>
       </div>
     </div>
   );
@@ -127,7 +134,7 @@ interface TopKarteProps {
 
 /** Kopfteil der Karte: Link zur Detailseite oder einfacher Block. */
 function Inhalt({ href, children }: { href?: string; children: ComponentChildren }) {
-  const klasse = 'block p-5 pb-4 text-eis no-underline';
+  const klasse = 'block h-full p-5 pb-4 text-eis no-underline';
   return href ? (
     <a href={href} class={klasse}>
       {children}
@@ -165,7 +172,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
               <span class="etikett">Platz</span>
             </div>
             {stempel !== undefined ? (
-              <span class="rounded-md border border-[var(--nm-rand-stark)] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-dunst">{stempel}</span>
+              <span class="whitespace-nowrap rounded-md border border-[var(--nm-rand-stark)] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-dunst">{stempel}</span>
             ) : pruef ? (
               <span class="-rotate-3 rounded-md border border-gold-400/70 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-gold-300">
                 Prüfstelle
@@ -174,18 +181,18 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
               <span class="rounded-md border border-[var(--nm-rand-stark)] px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-dunst">Community</span>
             )}
           </div>
-          <h2 class={`mt-3 font-display uppercase leading-[0.98] tracking-wide text-eis ${klein ? 'text-[27px]' : 'text-[36px]'}`}>
+          <h2 class={`mt-3 line-clamp-2 font-display uppercase leading-[0.98] tracking-wide text-eis ${klein ? 'min-h-[1.96em] text-[27px]' : 'text-[36px]'}`}>
             {titel ?? e.stand}
           </h2>
-          <p class="mt-1 text-sm text-dunst">{hinweis ? `${hinweis} · ${ort}` : ort}</p>
-          <div class="mt-3 flex items-end gap-4">
+          <p class={`mt-1 text-sm text-dunst ${klein ? 'truncate' : ''}`} title={hinweis ? `${hinweis} · ${ort}` : ort}>{hinweis ? `${hinweis} · ${ort}` : ort}</p>
+          <div class="mt-3 flex flex-wrap items-end gap-x-4 gap-y-2">
             <div
               class={`font-display leading-[0.9] licht-text drop-shadow-[0_0_26px_rgb(255_138_61/0.55)] ${klein ? 'text-[72px]' : 'text-[112px]'}`}
               aria-label={`Gesamtnote ${zahl2(w.gesamt)}`}
             >
               {zahl}
             </div>
-            <div class="min-w-0 flex-1 space-y-2 pb-1.5">
+            <div class="min-w-[8.5rem] flex-1 basis-[8.5rem] space-y-2 pb-1.5">
               <Messer etikett="Glühwein" wert={w.gluehwein} />
               <Messer etikett="Drumherum" wert={w.drumherum} />
             </div>
@@ -199,7 +206,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
         <>
           <Strichcode id={e.id} />
           <div class="min-w-0 flex-1 leading-tight">
-            <div class="etikett whitespace-nowrap !text-[9.5px] !tracking-[0.12em]">
+            <div class="etikett truncate whitespace-nowrap !text-[9.5px] !tracking-[0.12em]">
               {e.saison} · #{kurzId(e.id)}
             </div>
             <div class="truncate text-xs text-dunst">{von ?? (pruef ? 'von David & Philip' : `bewertet von ${anzeigeName(e)}`)}</div>
@@ -207,7 +214,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
           <button
             type="button"
             onClick={teilen}
-            class="glas flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold text-gold-300 transition hover:text-gold-400"
+            class="glas flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-2 text-xs font-semibold text-gold-300 transition hover:text-gold-400"
           >
             <Symbol name="teilen" groesse={15} />
             {meldung || 'Teilen'}

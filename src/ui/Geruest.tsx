@@ -24,7 +24,7 @@ export function Geruest({ route, children }: { route: string; children: Componen
         <Seitenleiste route={route} zeigeSync={darf} />
       ) : (
         <>
-          <header class="nm sticky top-0 z-30 flex items-center gap-3 px-4 pb-2" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 12px)' }}>
+          <header class="nm sticky top-0 z-30 flex items-center gap-3 px-4 pb-2" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 26px)' }}>
             <a href="#/" class="flex items-center gap-2.5 text-eis" aria-label={`${MARKE.name}, zur Übersicht`}>
               <LogoMarke groesse={42} strich={4} />
               <Wortmarke taglineKlasse="hidden min-[470px]:block" />

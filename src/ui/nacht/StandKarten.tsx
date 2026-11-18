@@ -16,7 +16,7 @@ export function seitenText(s: Stand): string {
   return t.join(' · ');
 }
 
-const stempel = (s: Stand) => (s.vorlaeufig ? `${anzahlText(s.wert.anzahl)} · vorläufig` : anzahlText(s.wert.anzahl));
+const stempel = (s: Stand) => anzahlText(s.wert.anzahl);
 
 export function StandTopKarte({ stand, klein, quelle = 'alle', hinweis, klasse, titel, ort, ohneLink }: { stand: Stand; ohneLink?: boolean; klein?: boolean; quelle?: Quelle; hinweis?: string; klasse?: string; titel?: string; ort?: string }) {
   const zeile = standAlsZeile(stand);
@@ -25,7 +25,7 @@ export function StandTopKarte({ stand, klein, quelle = 'alle', hinweis, klasse, 
       zeile={zeile}
       ort={ort ?? ortText(MARKTLISTE, zeile.eintrag)}
       titel={titel}
-      hinweis={hinweis}
+      hinweis={[hinweis, stand.vorlaeufig ? 'vorläufig' : null].filter(Boolean).join(' · ') || undefined}
       klein={klein}
       klasse={klasse}
       href={standHref(stand)}
