@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { istPruefstelle } from './community';
 import { DEFAULT_GEWICHTE, leereNoten, type Eintrag } from './modell';
-import { anzahlText, baueStaende, gruppenwert, schonBewertet, standId } from './staende';
+import { anzahlText, baueStaende, gruppenwert, kriterienMittel, schonBewertet, standId } from './staende';
 
 const LISTE = { sonstiger: 'Sonstiger', staedte: [{ stadt: 'Hamburg', maerkte: ['Rathausmarkt'] }] };
 let n = 0;
@@ -67,6 +67,16 @@ describe('Stände', () => {
   it('anzahlText', () => {
     expect(anzahlText(1)).toBe('1 Bewertung');
     expect(anzahlText(4)).toBe('4 Bewertungen');
+  });
+});
+
+describe('kriterienMittel', () => {
+  it('Mittel je Kriterium in Reihenfolge, fehlende Noten zählen nicht, nie bewertet = null', () => {
+    const m = kriterienMittel([b('A', 8), b('A', 6)]);
+    expect(m[0]).toBe(7); // Geschmack
+    expect(m[1]).toBe(7); // Geruch
+    expect(m[3]).toBeNull(); // Personal nie bewertet
+    expect(kriterienMittel([])).toEqual([null, null, null, null, null, null, null]);
   });
 });
 

@@ -11,6 +11,7 @@ import { ortText, ortTeile } from '../lib/orte';
 import { bewerte } from '../lib/scoring';
 import { kriteriumStatistik } from '../lib/statistik';
 import { datumKurz } from './bausteine';
+import { Netzdiagramm } from './Netzdiagramm';
 import { TopKarte } from './nacht/Ticket';
 import { useEintraege, useGeraetId, useGewichte } from './daten';
 import { ANKER, MARKTLISTE } from './stammdaten';
@@ -156,6 +157,18 @@ export function Detail({ id }: { id: string }) {
           )}
         </section>
       </div>
+
+      <section class="karte" style={{ marginTop: '14px' }}>
+        <h2>{t('Netzdiagramm')}</h2>
+        <Netzdiagramm
+          titel={t('Netzdiagramm der sieben Noten')}
+          achsen={KRITERIEN.map((k) => kriteriumLabel(ANKER[k].label))}
+          reihen={[
+            { name: t('Diese Bewertung'), werte: KRITERIEN.map((k) => e.noten[k]), farbe: '#ff8a3d', flaeche: true },
+            { name: t('Ø aller Becher'), werte: KRITERIEN.map((k) => kriteriumStatistik(alle, k).mittel), farbe: '#a3accb', gestrichelt: true },
+          ]}
+        />
+      </section>
 
       <section class="karte" style={{ marginTop: '14px' }}>
         <h2>{t('Profil der sieben Noten')}</h2>

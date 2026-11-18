@@ -601,4 +601,8 @@ export const EN: Record<string, string> = {
   "wird automatisch aus Preis und Glühwein-Noten berechnet": "calculated automatically from price and mulled wine scores",
   "Preis immer ohne Pfand eintragen. Preis-Leistung rechnet die App selbst aus Preis und Glühwein-Noten.": "Always enter the price without deposit. The app calculates value for money itself from price and mulled wine scores.",
   "0,5 Punkte je Euro über oder unter dem üblichen Preis ({ref}{stadt}).": "0.5 points per euro above or below the usual price ({ref}{stadt}).",
+  "QR-Code: öffnet {stand}": "QR code: opens {stand}",
+  "Netzdiagramm": "Radar chart",
+  "Netzdiagramm der sieben Noten": "Radar chart of the seven scores",
+  "Diese Bewertung": "This rating",
 };

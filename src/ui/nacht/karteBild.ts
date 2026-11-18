@@ -3,6 +3,7 @@
 import type { Zeile } from '../../lib/auswertung';
 import { anzeigeName, istPruefstelle } from '../../lib/community';
 import { zahl2 } from '../../lib/format';
+import { qrModule } from './qr';
 import { kurzId } from './Ticket';
 import { t as uebersetze } from '../../i18n';
 
@@ -22,9 +23,11 @@ export interface KartenDaten {
   stempel?: string;
   /** Prüfsiegel zeichnen. */
   geprueft?: boolean;
+  /** Adresse, die der QR-Code auf der Karte öffnet. */
+  link: string;
 }
 
-export function kartenDaten(z: Zeile, ort: string, titel?: string, stand?: { stempel: string; von?: string; geprueft?: boolean }): KartenDaten {
+export function kartenDaten(z: Zeile, ort: string, link: string, titel?: string, stand?: { stempel: string; von?: string; geprueft?: boolean }): KartenDaten {
   const pruef = stand ? false : istPruefstelle(z.eintrag);
   return {
     rang: z.rang,
@@ -39,6 +42,7 @@ export function kartenDaten(z: Zeile, ort: string, titel?: string, stand?: { ste
     id: z.eintrag.id,
     von: stand ? (stand.von ?? stand.stempel) : pruef ? 'David & Philip' : anzeigeName(z.eintrag),
     stempel: stand?.stempel,
+    link,
     geprueft: stand?.geprueft === true || (!stand && pruef),
   };
 }
@@ -335,16 +339,19 @@ export async function erzeugeKartenBild(d: KartenDaten): Promise<Blob> {
   k.lineTo(kb - 40, py);
   k.stroke();
   k.setLineDash([]);
-  // Strichcode
-  let h = 2166136261;
-  let bx = pad;
-  k.fillStyle = 'rgba(244,241,255,.85)';
-  for (let i = 0; i < 38; i++) {
-    h = Math.imul(h ^ (d.id.charCodeAt(i % d.id.length) + i), 16777619);
-    const w = 3 + ((h >>> 0) % 3) * 2.4;
-    k.fillRect(bx, py + 60, w, 86);
-    bx += w + 4.4;
-  }
+  // QR-Code zur Karte: schwarz auf weiß mit Ruhezone, damit er sich vom Bildschirm scannen lässt
+  const modul = qrModule(d.link);
+  const kachel = 160;
+  const qy = py + (stummel - kachel) / 2;
+  k.fillStyle = '#ffffff';
+  rund(k, pad, qy, kachel, kachel, 16);
+  k.fill();
+  const zelle = Math.floor((kachel - 16) / modul.length * 10) / 10;
+  const qx0 = pad + (kachel - zelle * modul.length) / 2;
+  const qy0 = qy + (kachel - zelle * modul.length) / 2;
+  k.fillStyle = '#000000';
+  modul.forEach((zeile, r) => zeile.forEach((dunkel, cI) => dunkel && k.fillRect(qx0 + cI * zelle, qy0 + r * zelle, Math.ceil(zelle), Math.ceil(zelle))));
+  const bx = pad + kachel;
   k.textAlign = 'left';
   k.fillStyle = '#a3accb';
   k.font = '26px "IBM Plex Mono"';

@@ -1,7 +1,7 @@
 // Ticket-Karte: so sieht eine Bewertung aus, wenn man sie als Screenshot in die Story legt.
-// Verlaufsrahmen nach Platz (Gold, Silber, Kupfer), Kerben an der Abrisslinie, Strichcode-Stummel, Schimmer auf Platz 1.
+// Verlaufsrahmen nach Platz (Gold, Silber, Kupfer), Kerben an der Abrisslinie, QR-Code-Stummel, Schimmer auf Platz 1.
 import type { ComponentChildren } from 'preact';
-import { useState } from 'preact/hooks';
+import { useMemo, useState } from 'preact/hooks';
 import type { Zeile } from '../../lib/auswertung';
 import { anzeigeName, istPruefstelle } from '../../lib/community';
 import { zahl2 } from '../../lib/format';
@@ -11,6 +11,7 @@ import { PruefSiegel } from './PruefSiegel';
 import { Symbol } from '../Symbol';
 import { useNeigung, useZaehler } from './bewegung';
 import { kartenDaten, teileKartenBild } from './karteBild';
+import { qrModule } from './qr';
 import { kurzId } from './kennung';
 import { t } from '../../i18n';
 
@@ -26,22 +27,19 @@ export const stufe = (rang: number | null) => (rang === 1 || rang === 2 || rang 
 
 export { kurzId } from './kennung';
 
-/** Strichcode, der nur aus der ID entsteht. Dekor, kein echter Code. */
-function Strichcode({ id }: { id: string }) {
-  let h = 2166136261;
-  const balken: number[] = [];
-  for (let i = 0; i < 34; i++) {
-    h = Math.imul(h ^ (id.charCodeAt(i % id.length) + i), 16777619);
-    balken.push(1 + ((h >>> 0) % 3));
-  }
-  let x = 0;
+/**
+ * Echter QR-Code zur Karte: öffnet den Stand bzw. die Bewertung. Immer schwarz auf weiß mit schmaler Ruhezone,
+ * damit er sich auch vom Bildschirm scannen lässt (auf der Story-Karte groß, hier klein als Abriss-Stummel).
+ */
+function QrStummel({ link, titel }: { link: string; titel: string }) {
+  const module = useMemo(() => qrModule(link), [link]);
+  const n = module.length;
+  const rand = 1;
+  let pfad = '';
+  module.forEach((zeile, r) => zeile.forEach((dunkel, c) => dunkel && (pfad += `M${c} ${r}h1v1h-1z`)));
   return (
-    <svg viewBox="0 0 120 26" class="hidden h-6 w-[70px] shrink-0 text-eis/80 @[300px]:block" aria-hidden="true" preserveAspectRatio="none">
-      {balken.map((b, i) => {
-        const r = <rect x={x} y="0" width={b * 0.9} height="26" fill="currentColor" opacity={i % 5 === 0 ? 1 : 0.75} />;
-        x += b * 0.9 + 1.2;
-        return r;
-      })}
+    <svg viewBox={`${-rand} ${-rand} ${n + 2 * rand} ${n + 2 * rand}`} class="size-[58px] shrink-0 rounded-md bg-white" shape-rendering="crispEdges" role="img" aria-label={titel}>
+      <path d={pfad} fill="#000" />
     </svg>
   );
 }
@@ -158,12 +156,12 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
   const zeigeSiegel = siegel || (stempel === undefined && pruef);
   const zahl = useZaehler(w.gesamt);
   const [meldung, setMeldung] = useState('');
+  const link = `${location.origin}${location.pathname}${teilenLink ?? `#/becher/${encodeURIComponent(e.id)}`}`;
   const teilen = async (ev: Event) => {
     ev.preventDefault();
     ev.stopPropagation();
     setMeldung(t('Erzeuge …'));
-    const link = `${location.origin}${location.pathname}${teilenLink ?? `#/becher/${encodeURIComponent(e.id)}`}`;
-    const r = await teileKartenBild(kartenDaten(zeile, ort, titel, stempel === undefined ? undefined : { stempel, von, geprueft: zeigeSiegel }), link);
+    const r = await teileKartenBild(kartenDaten(zeile, ort, link, titel, stempel === undefined ? undefined : { stempel, von, geprueft: zeigeSiegel }), link);
     setMeldung(r === 'gespeichert' ? t('Bild gespeichert') : '');
     if (r === 'gespeichert') setTimeout(() => setMeldung(''), 2600);
   };
@@ -216,7 +214,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
       }
       stummel={
         <>
-          <Strichcode id={e.id} />
+          <QrStummel link={link} titel={t('QR-Code: öffnet {stand}', { stand: titel ?? e.stand })} />
           <div class="min-w-0 flex-1 leading-tight">
             <div class="etikett truncate whitespace-nowrap !text-[9.5px] !tracking-[0.12em]">
               {e.saison} · #{kurzId(e.id)}

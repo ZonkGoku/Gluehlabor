@@ -6,22 +6,23 @@ import { entwurfHatInhalt, leseEntwurf, schreibeEntwurf } from '../daten/entwurf
 import { leseEinstellung, type LokalerEintrag } from '../daten/db';
 import { anzeigeName, istPruefstelle } from '../lib/community';
 import { zahl2, euro } from '../lib/format';
-import { leereNoten } from '../lib/modell';
+import { KRITERIEN, leereNoten } from '../lib/modell';
 import { abendDatum } from '../lib/abend';
 import { ortText } from '../lib/orte';
 import { bewerte, urteil } from '../lib/scoring';
-import { baueStaende, MIN_BEWERTUNGEN, schonBewertet, type Stand } from '../lib/staende';
+import { baueStaende, kriterienMittel, MIN_BEWERTUNGEN, schonBewertet, type Stand } from '../lib/staende';
 import { datumKurz, UrteilPill } from './bausteine';
 import { useEintraege, useGeraetId, useGewichte } from './daten';
 import { useAktuell, useLive } from './hooks';
 import { Kachel } from './nacht/Kachel';
 import { StandTopKarte } from './nacht/StandKarten';
 import { DealMarke } from './nacht/DealMarke';
+import { Netzdiagramm, type Reihe } from './Netzdiagramm';
 import { SiegelEtikett } from './nacht/PruefSiegel';
-import { MARKTLISTE } from './stammdaten';
+import { ANKER, MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
 import { URTEILE } from '../lib/auswertung';
-import { t, tn } from '../i18n';
+import { kriteriumLabel, t, tn } from '../i18n';
 
 const FELD = 'glas w-full rounded-2xl px-3.5 py-2.5 text-sm text-eis outline-none focus-visible:ring-2 focus-visible:ring-gold-400/70';
 const KNOPF = 'glas rounded-full px-4 py-2.5 text-sm font-semibold text-eis transition hover:text-gold-300 disabled:opacity-50';
@@ -140,6 +141,18 @@ export function StandSeite({ id }: { id: string }) {
           </Kachel>
         </div>
       </div>
+
+      <Kachel titel={t('Netzdiagramm')} klasse="mt-4" innen="p-4">
+        {(() => {
+          const pruef = s.bewertungen.filter((x) => istPruefstelle(x));
+          const comm = s.bewertungen.filter((x) => !istPruefstelle(x));
+          const reihen = [
+            pruef.length && { name: t('Prüfstelle'), werte: kriterienMittel(pruef), farbe: '#ffc857', flaeche: true },
+            comm.length && { name: t('Community'), werte: kriterienMittel(comm), farbe: '#f0344f', flaeche: true },
+          ].filter(Boolean) as Reihe[];
+          return <Netzdiagramm titel={t('Netzdiagramm der sieben Noten')} achsen={KRITERIEN.map((k) => kriteriumLabel(ANKER[k].label))} reihen={reihen} />;
+        })()}
+      </Kachel>
 
       <h2 class="etikett mt-6 !text-[11px]">{t('Alle Bewertungen')} · {s.bewertungen.length}</h2>
       <ul class="mt-2 grid gap-2 md:grid-cols-2">

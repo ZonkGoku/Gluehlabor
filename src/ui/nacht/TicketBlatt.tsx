@@ -25,7 +25,7 @@ export function TicketBlatt({ id, onNaechster }: { id: string; onNaechster: () =
 
   const teilen = async () => {
     setMeldung(t('Erzeuge Bild …'));
-    const r = await teileKartenBild(kartenDaten(zeile, ort), link);
+    const r = await teileKartenBild(kartenDaten(zeile, ort, link), link);
     setMeldung(r === 'gespeichert' ? t('Bild gespeichert, jetzt in die Story legen.') : '');
   };
 

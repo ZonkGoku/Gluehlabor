@@ -5,7 +5,7 @@
 // zum Mittel aller Bewertungen hingezogen (je weniger Bewertungen, desto stärker). Angezeigt wird immer der echte Durchschnitt.
 
 import { abendVon, istPruefstelle, standIdent } from './community';
-import type { Eintrag, Gewichte } from './modell';
+import { KRITERIEN, type Eintrag, type Gewichte } from './modell';
 import { stadtVon, type MarktListe } from './orte';
 import { medianVon, TOP_DEAL, vergleichspreise } from './preisleistung';
 import { bewerte, rangliste, runde2, urteil, type Urteil, type Wertung } from './scoring';
@@ -155,6 +155,11 @@ export function standAlsZeile(s: Stand): Zeile {
     eintrag: { ...ref, stand: s.stand, markt: s.markt, stadt: s.stadt ?? ref.stadt },
     wertung: { gesamt: s.wert.gesamt, gluehwein: s.wert.gluehwein, drumherum: s.wert.drumherum, urteil: s.urteil },
   };
+}
+
+/** Mittel je Kriterium (in der Reihenfolge von KRITERIEN) über mehrere Bewertungen; null, wenn nie bewertet. */
+export function kriterienMittel(bewertungen: readonly Eintrag[]): (number | null)[] {
+  return KRITERIEN.map((k) => mittel(bewertungen.map((e) => e.noten[k]).filter((x): x is number => x !== null)));
 }
 
 export function anzahlText(n: number): string {
