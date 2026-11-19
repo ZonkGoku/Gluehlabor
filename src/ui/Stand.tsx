@@ -56,6 +56,8 @@ export function StandSeite({ id }: { id: string }) {
   const heute = abendDatum(jetzt);
   const schon = schonBewertet(alle, geraetId, { stand: s.stand, markt: s.markt, stadt: s.stadt, datum: heute, erstelltAm: jetzt.getTime() });
 
+  const frueher = s.bewertungen.some((e) => e.geraet === geraetId);
+
   const bewerten = () => {
     const angefangen = leseEntwurf();
     if (entwurfHatInhalt(angefangen) && !(angefangen?.stand === s.stand && angefangen?.gesperrt)) {
@@ -123,7 +125,7 @@ export function StandSeite({ id }: { id: string }) {
             class="animate-puls flex items-center justify-center gap-2 rounded-full px-6 py-3.5 font-semibold text-[#1a1020] disabled:animate-none disabled:opacity-60"
             style={{ background: 'linear-gradient(135deg,#ffe29a,#ff8a3d)' }}
           >
-            <Symbol name="plus" groesse={18} /> {schon ? t('Heute Abend schon bewertet') : t('Diesen Stand bewerten')}
+            <Symbol name="plus" groesse={18} /> {schon ? t('Heute Abend schon bewertet') : frueher ? t('Nochmal bewerten') : t('Diesen Stand bewerten')}
           </button>
           {mein && (
             <a class="text-center text-sm font-medium text-gold-300 no-underline hover:text-gold-400" href={`#/teilen?e=${encodeURIComponent(mein.id)}`}>

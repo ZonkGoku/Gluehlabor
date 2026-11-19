@@ -180,18 +180,17 @@ select {
 /* ───────── Erfassung ───────── */
 
 .erf {
-  height: 100vh;
-  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
   max-width: 560px;
   margin: 0 auto;
   width: 100%;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto auto auto auto minmax(0, 1fr) auto auto;
+  grid-auto-rows: auto;
+  align-content: start;
   gap: var(--gap);
   padding: calc(env(safe-area-inset-top) + 6px) var(--rand) calc(env(safe-area-inset-bottom) + 10px);
-  overflow: hidden;
-  overscroll-behavior: none;
 }
 
 .kopf {

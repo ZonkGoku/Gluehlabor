@@ -12,6 +12,7 @@ import {
   sucheOrte,
   type MarktAuswahl,
 } from '../../lib/ortssuche';
+import { istOrtsname } from '../../lib/community';
 import { MARKTLISTE } from '../stammdaten';
 import { Symbol } from '../Symbol';
 import { t, tn } from '../../i18n';
@@ -189,7 +190,11 @@ export function OrtBlatt({ start, bestand, onWahl, onZu }: Props) {
       // Nur anbieten, wenn kein Treffer so beginnt: Wer „traunst" tippt, will Traunstein und keine eigene Stadt
       const beginnt = treffer.some((o) => o.key.startsWith(schluessel(qk)));
       if (!beginnt && schluessel(qk).length >= 2)
+        if (istOrtsname(qk.replace(/\s+/g, ' '))) {
         liste.push({ id: 'neu', symbol: 'haken', titel: t('„{q}" verwenden', { q: qk }), unter: t('Stadt, die in der Liste fehlt'), hervor: true, wahl: () => waehleStadt(qk.replace(/\s+/g, ' ')) });
+      } else {
+        liste.push({ id: 'neu-falsch', symbol: 'schliessen', titel: t('Bitte nur den Ortsnamen eingeben'), unter: t('Ohne Ziffern, Doppelpunkte oder ganze Sätze'), hervor: false, wahl: () => undefined });
+      }
       eintraege.push({ liste });
     }
   } else {

@@ -25,3 +25,27 @@ export function merkeOrt(stadt: string, markt?: string): void {
     /* privater Modus: dann gilt es nur bis zum Neuladen nicht */
   }
 }
+
+const KEY_PREIS = 'gluehlabor.letzterpreis';
+
+/** Zuletzt eingetragener Preis je Stadt auf diesem Gerät (für die Schnellwahl). */
+export function leseLetzterPreis(stadt?: string): number | undefined {
+  if (!stadt) return undefined;
+  try {
+    const x = JSON.parse(localStorage.getItem(KEY_PREIS) ?? '{}');
+    const p = x?.[stadt];
+    return typeof p === 'number' && p > 0 ? p : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function merkePreis(stadt: string | undefined, preis: number): void {
+  if (!stadt) return;
+  try {
+    const x = JSON.parse(localStorage.getItem(KEY_PREIS) ?? '{}');
+    localStorage.setItem(KEY_PREIS, JSON.stringify({ ...(x && typeof x === 'object' ? x : {}), [stadt]: preis }));
+  } catch {
+    /* privater Modus */
+  }
+}

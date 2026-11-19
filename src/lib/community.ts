@@ -13,6 +13,13 @@ export const RESERVIERTE_NAMEN = ['david', 'philip', 'prüfstelle', 'pruefstelle
 const STEUERZEICHEN = /[\u0000-\u001f\u007f-\u009f​-‏‪-‮⁦-⁩]/g;
 const LINK = /(https?:|www\.|@|:\/\/)/i;
 
+/**
+ * Ein Ortsname: beginnt mit einem Buchstaben, danach Buchstaben, Leerzeichen und . ' ’ ( ) / -. Keine Ziffern, Doppelpunkte oder Links.
+ * Verhindert, dass ein eingefügter Satz („Hamburg Bewerte mit mir: Superbude") als Stadt landet. Identisch in PHP (regeln.php).
+ */
+export const STADT_MUSTER = /^[\p{L}][\p{L} .'’()/-]*$/u;
+export const istOrtsname = (s: string): boolean => [...s].length <= GRENZEN.stadt && STADT_MUSTER.test(s);
+
 /** Text säubern: Unicode normalisieren, Steuerzeichen raus, Leerraum glätten. */
 export function saeubere(s: string): string {
   return s.normalize('NFC').replace(STEUERZEICHEN, '').replace(/\s+/g, ' ').trim();
@@ -82,6 +89,7 @@ export function pruefeEinreichung(x: unknown, jetzt: number): EinreichungPruefun
   if (!markt.ok) return markt;
   const stadt = pruefeText(e.stadt, 'Stadt', GRENZEN.stadt, false);
   if (!stadt.ok) return stadt;
+  if (stadt.wert && !STADT_MUSTER.test(stadt.wert)) return { ok: false, grund: 'Ungültige Stadt.' };
   const notiz = pruefeText(e.notiz, 'Notiz', GRENZEN.notiz, false);
   if (!notiz.ok) return notiz;
 

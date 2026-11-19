@@ -51,7 +51,7 @@ export function TicketBlatt({ id, onNaechster }: { id: string; onNaechster: () =
           </button>
           {meldung && <p class="text-center text-sm text-gold-300" aria-live="polite">{meldung}</p>}
           <button type="button" onClick={onNaechster} class="glas rounded-2xl py-3.5 text-base font-semibold text-eis">
-            {t('Nächster Becher')}
+            {t('Nächsten Glühwein bewerten')}
           </button>
           <a href="#/rangliste" class="py-2 text-center text-sm font-medium text-dunst">
             {t('Zur Rangliste')}

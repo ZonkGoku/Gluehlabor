@@ -58,7 +58,7 @@ export function Seitenleiste({ route, zeigeSync }: { route: string; zeigeSync: b
         style={{ background: 'linear-gradient(135deg,#ffe29a,#ff8a3d 55%,#f0344f)' }}
       >
         <Symbol name="becher" groesse={22} />
-        {t('Becher erfassen')}
+        {t('Bewerten')}
       </a>
 
       <div class="mt-3 flex items-center gap-2 border-t border-rand pt-3">

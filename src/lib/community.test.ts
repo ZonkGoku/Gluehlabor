@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { abendVon, anzeigeName, GRENZEN, standIdent, pruefeEinreichung, pruefeName, saeubere } from './community';
+import { abendVon, anzeigeName, GRENZEN, istOrtsname, standIdent, pruefeEinreichung, pruefeName, saeubere } from './community';
 import { leereNoten } from './modell';
 
 const JETZT = Date.parse('2026-12-05T20:00:00Z');
@@ -147,6 +147,15 @@ describe('istPruefstelle', () => {
     const { istPruefstelle } = await import('./community');
     expect(istPruefstelle({})).toBe(false);
     expect(istPruefstelle({ pruefstelle: false, sync: 'fertig' })).toBe(false);
+  });
+});
+
+describe('Ortsname', () => {
+  it.each(['Hamburg', 'Frankfurt (Oder)', 'St. Pölten', 'Garmisch-Partenkirchen', 'Rothenburg ob der Tauber', "L'Aquila"])('erlaubt %s', (s) => expect(istOrtsname(s)).toBe(true));
+  it.each(['Hamburg Bewerte mit mir: Superbude', 'https://x.de', 'Berlin 2', '3Stern', '', '😀', 'a'.repeat(61)])('lehnt %s ab', (s) => expect(istOrtsname(s)).toBe(false));
+  it('Einreichung mit Satz als Stadt wird abgelehnt', () => {
+    const e = { id: 'abcdefgh-1234', stand: 'A', markt: 'M', stadt: 'Hamburg Bewerte mit mir: Superbude', saison: 2026, noten: { ...leereNoten(), geschmack: 5 }, erstelltAm: JETZT - 5000 };
+    expect(pruefeEinreichung(e, JETZT)).toEqual({ ok: false, grund: 'Ungültige Stadt.' });
   });
 });
 

@@ -435,7 +435,7 @@ body {
   gap: 6px;
   padding: 8px 10px 6px;
   border-radius: var(--radius);
-  border: 1.5px solid var(--nm-akzent-text);
+  border: 2px solid var(--nm-akzent-text);
   background: var(--flaeche);
   box-shadow: 0 0 0 3px rgb(255 200 87 / 0.12), 0 0 22px -6px rgb(255 138 61 / 0.5);
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -490,7 +490,7 @@ body {
   display: flex;
   align-items: center;
   gap: 4px;
-  height: 46px;
+  height: 52px;
   padding: 0 10px;
   border-radius: var(--radius);
   border: 1px solid var(--linie-stark);
@@ -520,12 +520,17 @@ body {
   gap: 5px;
 }
 .erf .preis-schnell button {
-  border: 1px solid var(--linie);
+  min-height: 48px;
+  border: 2px solid var(--rand-kontrast);
   border-radius: var(--radius);
   background: transparent;
   color: var(--text-2);
   font: 13px var(--mono);
   cursor: pointer;
+}
+.erf .preis-schnell button.letzter {
+  border-color: var(--nm-akzent-text);
+  color: var(--nm-akzent-text);
 }
 .erf .preis-schnell button.an {
   border-color: var(--nm-akzent-text);
@@ -542,23 +547,185 @@ body {
   color: var(--warnung);
 }
 
+/* Rahmen von Eingaben: mindestens 3:1 gegen den Grund (draußen, bei Sonne und Kälte müssen Knöpfe als Fläche erkennbar sein) */
+.erf {
+  --rand-kontrast: light-dark(rgb(30 22 51 / 0.55), rgb(255 255 255 / 0.5));
+}
+
+/* Noten: pro Kriterium eine Karte, darin fünf große Knöpfe */
+.erf .noten {
+  display: grid;
+  gap: 10px;
+}
+.erf .noten-kopf {
+  margin: 4px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+.erf .noten-kopf span {
+  margin-left: 6px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-2);
+}
+.erf .nz {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 16px;
+  border: 1.5px solid var(--rand-kontrast);
+  background: var(--flaeche);
+}
+.erf .nz[data-gesetzt='true'] {
+  border-color: var(--nm-akzent-text);
+}
+.erf .nz-kopf {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+}
+.erf .nz-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+}
+.erf .nz-auto {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--rand-kontrast);
+  font: 12px var(--mono);
+  color: var(--text-2);
+}
+.erf .nz-wert,
+.erf .nz-stepper output {
+  min-width: 2ch;
+  text-align: center;
+  font: 600 22px var(--font-display, var(--sans));
+  color: var(--nm-akzent-text);
+}
+.erf .nz-stepper {
+  display: inline-flex;
+  align-items: center;
+}
+.erf .nz-stepper button,
+.erf .nz-hilfe {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: 600 22px var(--mono);
+  cursor: pointer;
+}
+.erf .nz-stepper button:disabled {
+  opacity: 0.3;
+}
+.erf .nz-hilfe {
+  margin-right: -8px;
+  font-size: 18px;
+  color: var(--text-2);
+}
+.erf .nz-hilfe[aria-expanded='true'] {
+  color: var(--nm-akzent-text);
+}
+.erf .nz-stufen {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+.erf .nz-stufen button {
+  min-height: 56px;
+  border-radius: 14px;
+  border: 2px solid var(--rand-kontrast);
+  background: transparent;
+  color: var(--text);
+  font: 700 22px var(--font-display, var(--sans));
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.08s, background 0.12s;
+}
+.erf .nz-stufen button:active {
+  transform: scale(0.94);
+}
+.erf .nz-stufen button[data-an='true'] {
+  border-color: transparent;
+  background: linear-gradient(135deg, #ffe29a, #ff8a3d);
+  color: #1a1020;
+}
+.erf .nz-segmente {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+  height: 14px;
+}
+.erf .nz-segmente span {
+  border-radius: 4px;
+  background: var(--nm-spur);
+}
+.erf .nz-segmente span[data-voll='true'] {
+  background: linear-gradient(135deg, #ffe29a, #ff8a3d);
+}
+.erf .nz-hilfe-text {
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--text-2);
+}
+.erf .nz-hilfe-text p {
+  margin: 4px 0 0;
+  display: flex;
+  gap: 8px;
+}
+.erf .nz-hilfe-text b {
+  flex: none;
+  width: 2ch;
+  text-align: right;
+  color: var(--nm-akzent-text);
+}
+
+/* Schon bewertete Stände der Stadt: große Tippflächen */
+.erf .hier-staende p {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.erf .hier-staende div {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.erf .hier-staende button {
+  flex: none;
+  min-height: 48px;
+  max-width: 70vw;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 2px solid var(--rand-kontrast);
+  background: transparent;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
 /* Stadtfeld unter Stand und Markt, wenn der Markt „Sonstiger" ist */
 .erf .stadtzeile {
   margin-top: 8px;
 }
 
-/* Erfassung auf kurzen Fenstern (kleine Laptops, Handys im Querformat, iPhone SE): Statt zu überlappen scrollt die Seite,
- * Messwert und Speichern bleiben unten sichtbar. Auf hohen Handys bleibt es bei „eine Ansicht, kein Scrollen". */
-@media (max-height: 780px) {
+/* Erfassung: Die Seite scrollt, Messwert und Speichern bleiben unten fest sichtbar. */
+@media screen {
   .erf {
-    height: auto;
-    min-height: 100dvh;
     overflow: visible;
-    grid-template-rows: auto auto auto auto auto auto auto;
-  }
-  .erf .skalen {
-    grid-template-rows: repeat(7, 50px);
-    align-content: start;
   }
   .erf .fuss {
     position: sticky;

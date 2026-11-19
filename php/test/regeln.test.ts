@@ -30,7 +30,7 @@ const TEXTE: [unknown, number, boolean][] = [
 ];
 const EINREICHUNGEN: unknown[] = [
   gut(), gut({ id: 'kurz' }), gut({ id: 'a b c d e f' }), gut({ stand: '' }), gut({ stand: 'x'.repeat(81) }), gut({ markt: undefined }),
-  gut({ stadt: 'a'.repeat(61) }), gut({ stadt: null }), gut({ notiz: 'n'.repeat(501) }), gut({ notiz: 'www.x.de' }),
+  gut({ stadt: 'a'.repeat(61) }), gut({ stadt: null }), gut({ stadt: 'Hamburg Bewerte mit mir: Superbude' }), gut({ stadt: 'Frankfurt (Oder)' }), gut({ stadt: 'St. Pölten' }), gut({ stadt: 'Berlin 2' }), gut({ stadt: '3Stern' }), gut({ stadt: 'Garmisch-Partenkirchen' }), gut({ stadt: 'Bad/Neustadt' }), gut({ notiz: 'n'.repeat(501) }), gut({ notiz: 'www.x.de' }),
   gut({ saison: 2024 }), gut({ saison: 2027 }), gut({ saison: 2028 }), gut({ saison: 2026.5 }), gut({ saison: 2026.0 }), gut({ saison: '2026' }),
   gut({ erstelltAm: JETZT - 121 * 86_400_000 }), gut({ erstelltAm: JETZT + 2 * 86_400_000 }), gut({ erstelltAm: 'x' }), gut({ erstelltAm: JETZT - 1000.6 }),
   gut({ datum: '2026-02-30' }), gut({ datum: '2026-13-01' }), gut({ datum: '5.12.2026' }), gut({ datum: '2026-12-08' }), gut({ datum: '2026-12-10' }), gut({ datum: null }), gut({ datum: 5 }),

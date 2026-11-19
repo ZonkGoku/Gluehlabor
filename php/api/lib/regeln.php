@@ -7,6 +7,7 @@ const GRENZEN = ['stand' => 80, 'markt' => 80, 'stadt' => 60, 'notiz' => 500, 'n
 const RESERVIERTE_NAMEN = ['david', 'philip', 'prüfstelle', 'pruefstelle', 'admin', 'becherwerk', 'gluehlabor', 'glühlabor', 'moderator'];
 const KRITERIEN = ['geschmack', 'geruch', 'temperatur', 'personal', 'atmosphaere', 'preisLeistung', 'becher'];
 const SORTEN = ['rot', 'weiss', 'kirsch', 'winzer', 'feuerzangen', 'alkoholfrei', 'sonstiges'];
+const STADT_MUSTER = "/^[\\p{L}][\\p{L} .'’()\\/-]*$/u";
 const TAG_MS = 86_400_000;
 
 function istZahl(mixed $x): bool
@@ -133,6 +134,9 @@ function pruefeEinreichung(mixed $e, int $jetzt): array
     $stadt = pruefeText($e['stadt'] ?? null, 'Stadt', GRENZEN['stadt'], false);
     if (!$stadt['ok']) {
         return $stadt;
+    }
+    if ($stadt['wert'] !== null && preg_match(STADT_MUSTER, $stadt['wert']) !== 1) {
+        return ['ok' => false, 'grund' => 'Ungültige Stadt.'];
     }
     $notiz = pruefeText($e['notiz'] ?? null, 'Notiz', GRENZEN['notiz'], false);
     if (!$notiz['ok']) {

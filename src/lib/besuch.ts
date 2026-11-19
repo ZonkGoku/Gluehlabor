@@ -2,7 +2,7 @@
 // Stadt, Sorte) und eine kurze Besuchs-Nr., keine Bewertung. Der Link funktioniert ohne Netz.
 // Reine Funktionen.
 
-import { GRENZEN, pruefeText } from './community';
+import { GRENZEN, pruefeText, STADT_MUSTER } from './community';
 import { SORTEN, type Sorte } from './modell';
 
 export interface Besuch {
@@ -46,7 +46,7 @@ export function leseBesuch(query: string): BesuchPruefung {
   const markt = pruefeText(q.get('m'), 'Markt', GRENZEN.markt, true);
   if (!markt.ok) return { ok: false, grund: 'Der Link ist ungültig.' };
   const stadt = pruefeText(q.get('c'), 'Stadt', GRENZEN.stadt, false);
-  if (!stadt.ok) return { ok: false, grund: 'Der Link ist ungültig.' };
+  if (!stadt.ok || (stadt.wert && !STADT_MUSTER.test(stadt.wert))) return { ok: false, grund: 'Der Link ist ungültig.' };
   const sorte = q.get('t');
   if (sorte && !(SORTEN as readonly string[]).includes(sorte)) return { ok: false, grund: 'Der Link ist ungültig.' };
   const besuch: Besuch = { id, stand: stand.wert!, markt: markt.wert! };

@@ -141,10 +141,10 @@ function ErfassenKnopf({ nr, erster, klasse }: { nr: number; erster: boolean; kl
         <Symbol name="flamme" groesse={26} />
       </span>
       <span class="flex-1 leading-none">
-        <span class="block font-display text-[30px] uppercase tracking-wide">{erster ? t('Becher erfassen') : t('Nächster Becher')}</span>
+        <span class="block font-display text-[30px] uppercase tracking-wide">{erster ? t('Bewerten') : t('Nächsten Glühwein bewerten')}</span>
         <span class="mt-1 block text-sm font-medium opacity-75">{t('Bewerten, teilen, in die Rangliste')}</span>
       </span>
-      <span class="rounded-full bg-[#1a1020]/85 px-3 py-1.5 font-mono text-sm text-[#ffd98a]">{t('Nr.')} {nr}</span>
+      {!erster && <span class="rounded-full bg-[#1a1020]/85 px-3 py-1.5 font-mono text-sm text-[#ffd98a]">{t('{n}. heute', { n: nr })}</span>}
     </a>
   );
 }
@@ -283,7 +283,7 @@ export function Uebersicht() {
             class="animate-puls mt-5 inline-flex items-center gap-2 rounded-full px-6 py-3 font-semibold text-[#1a1020] no-underline"
             style={{ background: 'linear-gradient(135deg,#ffe29a,#ff8a3d)' }}
           >
-            <Symbol name="plus" groesse={18} /> {t('Ersten Becher erfassen')}
+            <Symbol name="plus" groesse={18} /> {t('Jetzt bewerten')}
           </a>
         </div>
       ) : (
@@ -301,9 +301,9 @@ export function Uebersicht() {
             ) : (
               <StandTopKarte
                 stand={spitze[0]}
-                titel={spitze.map((s) => s.stand).join(' & ')}
-                hinweis={[stadt !== 'alle' ? t('Platz 1 in {stadt}', { stadt }) : null, spitze.length > 1 ? t('Teilen sich Platz 1') : null].filter(Boolean).join(' · ') || undefined}
-                ort={[...new Set(spitze.map((s) => ortText(MARKTLISTE, standAlsZeile(s).eintrag)))].join(', ')}
+                titel={spitze[0].stand}
+                hinweis={[stadt !== 'alle' ? t('Platz 1 in {stadt}', { stadt }) : null, spitze.length > 1 ? t('Gleichauf mit {n} weiteren', { n: spitze.length - 1 }) : null].filter(Boolean).join(' · ') || undefined}
+                ort={ortText(MARKTLISTE, standAlsZeile(spitze[0]).eintrag)}
               />
             )}
           </div>
@@ -325,7 +325,7 @@ export function Uebersicht() {
 
           <Kachel titel={`${t('Rangliste')} ${saison === 'alle' ? '' : saison}`} link={{ href: '#/rangliste', text: t('Alle {n}', { n: staendeStadt.length }) }} klasse="col-span-2" innen="p-3">
             <ol class="space-y-2">
-              {staendeStadt.slice(0, 5).map((s) => (
+              {staendeStadt.slice(spitze.length > 0 ? 1 : 0, 6).map((s) => (
                 <li>
                   <StandZeile stand={s} />
                 </li>

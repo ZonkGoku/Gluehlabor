@@ -69,11 +69,12 @@ export function Navigation({ route }: { route: string }) {
             <a
               key="plus"
               href="#/erfassen"
-              aria-label={t('Becher erfassen')}
-              class="animate-puls relative z-10 mx-auto -mt-7 grid size-[60px] place-items-center rounded-[22px] text-[#1a1020] no-underline"
+              aria-label={t('Bewerten')}
+              class="animate-puls relative z-10 mx-auto -mt-7 flex h-[64px] w-[76px] flex-col items-center justify-center gap-0.5 rounded-[22px] text-[#1a1020] no-underline"
               style={{ background: 'linear-gradient(145deg, #ffe29a, #ff8a3d 55%, #f0344f)' }}
             >
-              <Symbol name="plus" groesse={30} />
+              <Symbol name="plus" groesse={26} />
+              <span class="text-[12px] font-bold leading-none">{t('Bewerten')}</span>
             </a>
           ) : (
             <a
