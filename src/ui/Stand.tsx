@@ -18,7 +18,7 @@ import { Kachel } from './nacht/Kachel';
 import { StandTopKarte } from './nacht/StandKarten';
 import { DealMarke } from './nacht/DealMarke';
 import { HilfePunkt } from './nacht/HilfePunkt';
-import { Netzdiagramm, type Reihe } from './Netzdiagramm';
+import { Netzdiagramm, NotenBalken, type Reihe } from './Netzdiagramm';
 import { SiegelEtikett } from './nacht/PruefSiegel';
 import { ANKER, MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
@@ -149,7 +149,7 @@ export function StandSeite({ id }: { id: string }) {
         </div>
       </div>
 
-      <Kachel titel={t('Netzdiagramm')} klasse="mt-4" innen="p-4">
+      <Kachel titel={t('Noten im Vergleich')} klasse="mt-4" innen="p-4">
         {(() => {
           const pruef = s.bewertungen.filter((x) => istPruefstelle(x));
           const comm = s.bewertungen.filter((x) => !istPruefstelle(x));
@@ -157,7 +157,16 @@ export function StandSeite({ id }: { id: string }) {
             pruef.length && { name: t('Prüfstelle'), werte: kriterienMittel(pruef), farbe: '#ffc857', flaeche: true },
             comm.length && { name: t('Community'), werte: kriterienMittel(comm), farbe: '#f0344f', flaeche: true },
           ].filter(Boolean) as Reihe[];
-          return <Netzdiagramm titel={t('Netzdiagramm der sieben Noten')} achsen={KRITERIEN.map((k) => kriteriumLabel(ANKER[k].label))} reihen={reihen} />;
+          const achsen = KRITERIEN.map((k) => kriteriumLabel(ANKER[k].label));
+          return (
+            <>
+              <NotenBalken achsen={achsen} reihen={reihen} />
+              <details class="mt-4">
+                <summary class="min-h-[44px] cursor-pointer py-2.5 text-sm text-gold-300">{t('Netzdiagramm anzeigen')}</summary>
+                <Netzdiagramm titel={t('Netzdiagramm der sieben Noten')} achsen={achsen} reihen={reihen} />
+              </details>
+            </>
+          );
         })()}
       </Kachel>
 

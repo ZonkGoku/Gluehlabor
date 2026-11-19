@@ -100,3 +100,57 @@ export function Netzdiagramm({ achsen, reihen, titel }: { achsen: string[]; reih
     </figure>
   );
 }
+
+/**
+ * Die Noten als sortierte Balken, mit Zahl: für Fremde schneller zu lesen als das Netz.
+ * Je Kriterium ein Balken pro Reihe (z. B. Prüfstelle gegen Community). Sortiert nach der ersten Reihe, Beste oben.
+ */
+export function NotenBalken({ achsen, reihen }: { achsen: string[]; reihen: Reihe[] }) {
+  const zeilen = achsen
+    .map((name, i) => ({ name, werte: reihen.map((r) => r.werte[i] ?? null) }))
+    .sort((a, b) => {
+      const x = a.werte.find((w) => w !== null) ?? -1;
+      const y = b.werte.find((w) => w !== null) ?? -1;
+      return y - x;
+    });
+  return (
+    <div>
+      <ul class="m-0 grid list-none gap-3 p-0">
+        {zeilen.map((z) => (
+          <li>
+            <div class="flex items-baseline justify-between gap-3 text-sm">
+              <span class="text-eis">{z.name}</span>
+              <span class="font-mono text-xs text-dunst">
+                {z.werte.map((w, i) => (
+                  <span key={i} class="ml-3" style={{ color: reihen.length > 1 ? reihen[i].farbe : undefined }}>
+                    {w === null ? '–' : w.toFixed(w % 1 === 0 ? 0 : 1)}
+                  </span>
+                ))}
+              </span>
+            </div>
+            {z.werte.map((w, i) => (
+              <div
+                key={i}
+                class="mt-1 h-2 overflow-hidden rounded-full bg-spur"
+                role="img"
+                aria-label={`${z.name}, ${reihen[i].name}: ${w ?? t('nicht bewertet')}`}
+              >
+                <div class="h-full rounded-full" style={{ width: `${(w ?? 0) * 10}%`, background: reihen[i].farbe }} />
+              </div>
+            ))}
+          </li>
+        ))}
+      </ul>
+      {reihen.length > 1 && (
+        <p class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-dunst">
+          {reihen.map((r) => (
+            <span class="inline-flex items-center gap-1.5">
+              <span class="inline-block size-2.5 rounded-full" style={{ background: r.farbe }} />
+              {r.name}
+            </span>
+          ))}
+        </p>
+      )}
+    </div>
+  );
+}

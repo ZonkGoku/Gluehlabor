@@ -138,8 +138,8 @@ interface TopKarteProps {
 }
 
 /** Kopfteil der Karte: Link zur Detailseite oder einfacher Block. */
-function Inhalt({ href, children }: { href?: string; children: ComponentChildren }) {
-  const klasse = 'block h-full p-5 pb-4 text-eis no-underline';
+function Inhalt({ href, klein, children }: { href?: string; klein?: boolean; children: ComponentChildren }) {
+  const klasse = `block h-full text-eis no-underline ${klein ? 'p-4 pb-3' : 'p-5 pb-4'}`;
   return href ? (
     <a href={href} class={klasse}>
       {children}
@@ -171,7 +171,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
       klein={klein}
       klasse={klasse}
       kinder={
-        <Inhalt href={ohneLink ? undefined : (href ?? `#/becher/${encodeURIComponent(e.id)}`)}>
+        <Inhalt klein={klein} href={ohneLink ? undefined : (href ?? `#/becher/${encodeURIComponent(e.id)}`)}>
           <div class="flex items-start justify-between gap-3">
             <div class="flex items-baseline gap-2">
               <span class={`font-display leading-none licht-text ${klein ? 'text-[40px]' : 'text-[52px]'}`}>{String(rang ?? '–').padStart(2, '0')}</span>
@@ -190,13 +190,13 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
             )}
             </div>
           </div>
-          <h2 class={`mt-3 line-clamp-2 font-display uppercase leading-[0.98] tracking-wide text-eis ${klein ? 'min-h-[1.96em] text-[27px]' : 'text-[36px]'}`}>
+          <h2 class={`${klein ? 'mt-2' : 'mt-3'} line-clamp-2 font-display uppercase leading-[0.98] tracking-wide text-eis ${klein ? 'min-h-[1.96em] text-[27px]' : 'text-[36px]'}`}>
             {titel ?? e.stand}
           </h2>
           <p class={`mt-1 text-sm text-dunst ${klein ? 'truncate' : ''}`} title={hinweis ? `${hinweis} · ${ort}` : ort}>{hinweis ? `${hinweis} · ${ort}` : ort}</p>
-          <div class="mt-3 flex flex-wrap items-end gap-x-4 gap-y-2">
+          <div class={`flex flex-wrap items-end gap-x-4 gap-y-2 ${klein ? 'mt-2' : 'mt-3'}`}>
             <div
-              class={`font-display leading-[0.9] licht-text drop-shadow-[0_0_26px_rgb(255_138_61/0.55)] ${klein ? 'text-[72px]' : 'text-[112px]'}`}
+              class={`font-display leading-[0.9] licht-text drop-shadow-[0_0_26px_rgb(255_138_61/0.55)] ${klein ? 'text-[60px]' : 'text-[112px]'}`}
               aria-label={t('Gesamtnote {n}', { n: zahl2(w.gesamt) })}
             >
               {zahl}
@@ -206,7 +206,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
               <Messer etikett={t('Drumherum')} wert={w.drumherum} />
             </div>
           </div>
-          <div class="mt-3 flex flex-wrap items-center gap-2">
+          <div class={`flex flex-wrap items-center gap-2 ${klein ? 'mt-2' : 'mt-3'}`}>
             <UrteilPill urteil={w.urteil} />
             {deal && <DealMarke gross />}
           </div>

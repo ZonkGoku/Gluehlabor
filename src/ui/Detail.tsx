@@ -159,18 +159,6 @@ export function Detail({ id }: { id: string }) {
       </div>
 
       <section class="karte" style={{ marginTop: '14px' }}>
-        <h2>{t('Netzdiagramm')}</h2>
-        <Netzdiagramm
-          titel={t('Netzdiagramm der sieben Noten')}
-          achsen={KRITERIEN.map((k) => kriteriumLabel(ANKER[k].label))}
-          reihen={[
-            { name: t('Diese Bewertung'), werte: KRITERIEN.map((k) => e.noten[k]), farbe: '#ff8a3d', flaeche: true },
-            { name: t('Ø aller Becher'), werte: KRITERIEN.map((k) => kriteriumStatistik(alle, k).mittel), farbe: '#a3accb', gestrichelt: true },
-          ]}
-        />
-      </section>
-
-      <section class="karte" style={{ marginTop: '14px' }}>
         <h2>{t('Profil der sieben Noten')}</h2>
         <div class="profil">
           {KRITERIEN.map((k) => {
@@ -206,6 +194,21 @@ export function Detail({ id }: { id: string }) {
           </span>
         </div>
       </section>
+
+      <section class="karte" style={{ marginTop: '14px' }}>
+        <details>
+          <summary style={{ cursor: 'pointer', minHeight: '44px', padding: '10px 0', fontWeight: 600 }}>{t('Netzdiagramm anzeigen')}</summary>
+        <Netzdiagramm
+          titel={t('Netzdiagramm der sieben Noten')}
+          achsen={KRITERIEN.map((k) => kriteriumLabel(ANKER[k].label))}
+          reihen={[
+            { name: t('Diese Bewertung'), werte: KRITERIEN.map((k) => e.noten[k]), farbe: '#ff8a3d', flaeche: true },
+            { name: t('Ø aller Becher'), werte: KRITERIEN.map((k) => kriteriumStatistik(alle, k).mittel), farbe: '#a3accb', gestrichelt: true },
+          ]}
+        />
+        </details>
+      </section>
+
     </>
   );
 }

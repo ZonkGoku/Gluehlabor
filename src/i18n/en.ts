@@ -659,4 +659,6 @@ export const EN: Record<string, string> = {
   "Gleichauf mit {n} weiteren": "Tied with {n} more",
   "Nochmal bewerten": "Rate again",
   "Mehr Filter": "More filters",
+  "Noten im Vergleich": "Scores compared",
+  "Netzdiagramm anzeigen": "Show radar chart",
 };
