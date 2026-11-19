@@ -11,11 +11,13 @@ import './nacht.css';
 import { render } from 'preact';
 import { App } from './App';
 import { starteDarstellung } from './daten/darstellung';
+import { starteInstallation } from './daten/installieren';
 import { starteSync } from './daten/sync';
 import { starteUpdates } from './daten/update';
 import { startSprache } from './i18n';
 
 starteDarstellung();
+starteInstallation();
 startSprache();
 render(<App />, document.getElementById('app')!);
 starteSync();

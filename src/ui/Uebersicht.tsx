@@ -7,12 +7,11 @@ import { preisindex } from '../lib/preisindex';
 import { ortText, staedte } from '../lib/orte';
 import { abend, kennzahlen, neuesteBecher, saisonStatus, saisonVerlauf } from '../lib/startseite';
 import { Betreiber, datumKurz, UrteilPill } from './bausteine';
-import { leseEinstellung, schreibeEinstellung, setzeName } from '../daten/db';
+import { setzeName } from '../daten/db';
 import { synchronisiere } from '../daten/sync';
 import { anzeigeName, istPruefstelle, pruefeName } from '../lib/community';
-import { istIosImBrowser } from '../lib/installhinweis';
+import { InstallKarte } from './InstallKarte';
 import { useEintraege, useGeraetId, useGewichte, useMeineAnzahl, useName, useSaison } from './daten';
-import { useLive } from './hooks';
 import { Deutschlandkarte } from './Deutschlandkarte';
 import { leseZuletzt } from '../daten/zuletzt';
 import { useEinblenden, useNeigung } from './nacht/bewegung';
@@ -65,26 +64,6 @@ function NameKarte() {
         {t('Der Name steht öffentlich neben deinen Bewertungen, auch bei denen, die du schon abgegeben hast. Besser kein voller echter Name.')}
         {fehler && <span class="name-fehler"> {t(fehler)}</span>}
       </p>
-    </div>
-  );
-}
-
-/** Nur iPhone und iPad im Browser: Safari löscht lokale Daten nach 7 Tagen Pause, installierte Apps nicht. */
-function InstallHinweis() {
-  const zu = useLive(() => leseEinstellung<boolean>('installHinweisZu', false), [], false);
-  const ios = istIosImBrowser(navigator.userAgent, navigator.maxTouchPoints, (navigator as { standalone?: boolean }).standalone);
-  if (zu || !ios) return null;
-  return (
-    <div class="name-karte">
-      <label>{t('Tipp fürs iPhone: auf den Home-Bildschirm legen')}</label>
-      <p class="name-hinweis" style={{ marginTop: 0 }}>
-        {t('Tippe unten auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm". Sonst kann Safari nach einer Woche ohne Nutzung deinen Namen und nicht gesendete Bewertungen vergessen.')}
-      </p>
-      <div class="name-zeile">
-        <button type="button" class="pillknopf" onClick={() => void schreibeEinstellung('installHinweisZu', true)}>
-          {t('Verstanden')}
-        </button>
-      </div>
     </div>
   );
 }
@@ -257,6 +236,9 @@ export function Uebersicht() {
           <h1 class="mt-2 font-display text-[40px] uppercase leading-[1] tracking-wide text-eis sm:text-5xl">{t('Wer glüht am besten?')}</h1>
         </div>
       )}
+      <div class="mb-4 empty:hidden">
+        <InstallKarte />
+      </div>
 
       <div class="mb-4 mt-5 flex flex-wrap items-center gap-2.5">
         <label class="relative">
@@ -288,7 +270,11 @@ export function Uebersicht() {
         </div>
       ) : (
         <div ref={raster} class="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {(meineAnzahl > 0 && <div data-ein class="col-span-2 md:col-span-4"><InstallHinweis /><NameKarte /></div>) || null}
+          {meineAnzahl > 0 && (
+            <div data-ein class="col-span-2 md:col-span-4">
+              <NameKarte />
+            </div>
+          )}
 
           <div data-ein class="col-span-2 md:row-span-3">
             {abendModus ? (

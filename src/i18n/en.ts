@@ -661,4 +661,10 @@ export const EN: Record<string, string> = {
   "Mehr Filter": "More filters",
   "Noten im Vergleich": "Scores compared",
   "Netzdiagramm anzeigen": "Show radar chart",
+  "Glühlabor aufs Handy legen": "Put Glühlabor on your phone",
+  "Ein Symbol auf dem Startbildschirm, wie bei einer App. Funktioniert auch ohne Netz.": "An icon on your home screen, just like an app. Also works offline.",
+  "Tippe unten auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm\". So bekommst du ein App-Symbol, und Safari vergisst nach einer Woche ohne Nutzung deine Daten nicht.": "Tap the Share icon at the bottom, then “Add to Home Screen”. You get an app icon, and Safari won't forget your data after a week without use.",
+  "Öffne das Browser-Menü (drei Punkte) und wähle „App installieren\" oder „Zum Startbildschirm hinzufügen\".": "Open the browser menu (three dots) and choose “Install app” or “Add to Home screen”.",
+  "Installieren": "Install",
+  "Nicht jetzt": "Not now",
 };

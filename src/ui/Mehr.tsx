@@ -3,6 +3,7 @@ import { leseEinstellung } from '../daten/db';
 import { t } from '../i18n';
 import { Betreiber } from './bausteine';
 import { useLive } from './hooks';
+import { InstallKarte } from './InstallKarte';
 import { Symbol } from './Symbol';
 
 interface Punkt {
@@ -26,6 +27,9 @@ export function Mehr() {
       <div class="mb-5 mt-2">
         <p class="etikett !text-gold-300">{t('Weitere Ansichten')}</p>
         <h1 class="mt-2 font-display text-[44px] uppercase leading-[1] tracking-wide text-eis sm:text-5xl">{t('Mehr')}</h1>
+      </div>
+      <div class="mb-4 empty:hidden">
+        <InstallKarte />
       </div>
       <ul class="grid gap-3 md:grid-cols-2">
         {punkte.map((p) => (
