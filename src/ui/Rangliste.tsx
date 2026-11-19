@@ -24,7 +24,9 @@ export function Rangliste() {
   const alle = useEintraege();
   const gewichte = useGewichte();
   const [saison, setSaison] = useSaison(alle);
+  const [stadt, setStadt] = useState<string>('alle');
   const [markt, setMarkt] = useState<string>('alle');
+  const [mehrOffen, setMehrOffen] = useState(false);
   const [quelle, setQuelle] = useState<Quelle>('alle');
   const [ansicht, setAnsicht] = useState<'gesamt' | 'deals'>(() => (location.hash.includes('deals') ? 'deals' : 'gesamt'));
   const [gewichteOffen, setGewichteOffen] = useState(false);
@@ -35,13 +37,19 @@ export function Rangliste() {
   // Märkte nach Stadt gruppiert; „stadt:<Name>" filtert eine ganze Stadt.
   const gruppen = new Map<string, Set<string>>();
   for (const e of alle) {
-    const s = stadtVon(MARKTLISTE, e) ?? 'Ohne Stadt';
-    gruppen.set(s, (gruppen.get(s) ?? new Set()).add(e.markt));
+    const st = stadtVon(MARKTLISTE, e) ?? 'Ohne Stadt';
+    gruppen.set(st, (gruppen.get(st) ?? new Set()).add(e.markt));
   }
-  const stadtGruppen = [...gruppen.entries()].sort(([a], [b]) =>
+  const staedteListe = [...gruppen.entries()].sort(([a], [b]) =>
     a === 'Ohne Stadt' ? 1 : b === 'Ohne Stadt' ? -1 : a.localeCompare(b, 'de'),
   );
-  const filter = markt.startsWith('stadt:') ? { saison, markt: 'alle', stadt: markt.slice(6) } : { saison, markt };
+  const marktListe = [...(gruppen.get(stadt) ?? [])].filter((m) => m !== 'Sonstiger').sort((a, b) => a.localeCompare(b, 'de'));
+  const waehleStadt = (neu: string) => {
+    setStadt(neu);
+    setMarkt('alle');
+  };
+  const aktiveExtras = (quelle !== 'alle' ? 1 : 0) + (stadt !== 'alle' && markt !== 'alle' ? 1 : 0);
+  const filter = stadt === 'alle' ? { saison, markt: 'alle' } : markt === 'alle' ? { saison, markt: 'alle', stadt } : { saison, markt };
   const gewaehlt = filtere(alle, filter, MARKTLISTE);
   const zeilen = baueStaende(gewaehlt, MARKTLISTE, gewichte, quelle);
   const bewertungen = zeilen.reduce((n, s) => n + s.wert.anzahl, 0);
@@ -57,6 +65,17 @@ export function Rangliste() {
         </p>
         <h1 class="mt-2 font-display text-[44px] uppercase leading-[1] tracking-wide text-eis sm:text-5xl">{t('Rangliste')}</h1>
         <div class="mt-4 flex flex-wrap items-center gap-2.5">
+          <span class="relative">
+            <select class={FELD} aria-label={t('Stadt')} value={stadt} onChange={(e) => waehleStadt((e.target as HTMLSelectElement).value)}>
+              <option value="alle">{t('Ganz Deutschland')}</option>
+              {staedteListe.map(([st]) => (
+                <option value={st}>{st === 'Ohne Stadt' ? t('Ohne Stadt') : st}</option>
+              ))}
+            </select>
+            <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rotate-90 text-dunst">
+              <Symbol name="pfeil" groesse={14} />
+            </span>
+          </span>
           <Chips optionen={['alle', ...jahre] as const} wert={saison} onWahl={setSaison} beschriftung={t('Saison')} label={(o) => (o === 'alle' ? t('Alle') : String(o))} />
           <Chips
             optionen={['gesamt', 'deals'] as const}
@@ -65,40 +84,48 @@ export function Rangliste() {
             beschriftung={t('Ansicht')}
             label={(o) => (o === 'gesamt' ? t('Gesamt') : t('Top Deals'))}
           />
-          <Chips
-            optionen={['alle', 'pruefstelle', 'community'] as const}
-            wert={quelle}
-            onWahl={setQuelle}
-            beschriftung={t('Wertung von')}
-            label={(o) => (o === 'alle' ? t('Alle') : o === 'pruefstelle' ? t('Prüfstelle') : t('Community'))}
-          />
-          <span class="relative">
-            <select class={FELD} aria-label={t('Markt')} value={markt} onChange={(e) => setMarkt((e.target as HTMLSelectElement).value)}>
-              <option value="alle">{t('Ganz Deutschland')}</option>
-              {stadtGruppen.map(([stadt, ms]) => (
-                <optgroup label={stadt === 'Ohne Stadt' ? t('Ohne Stadt') : stadt}>
-                  {stadt !== 'Ohne Stadt' && <option value={`stadt:${stadt}`}>{t('Ganz {stadt}', { stadt })}</option>}
-                  {[...ms]
-                    .sort((a, b) => a.localeCompare(b, 'de'))
-                    .map((m) => (
-                      <option value={m}>{m}</option>
-                    ))}
-                </optgroup>
-              ))}
-            </select>
-            <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rotate-90 text-dunst">
-              <Symbol name="pfeil" groesse={14} />
-            </span>
-          </span>
           <button
             type="button"
-            aria-expanded={gewichteOffen}
-            onClick={() => setGewichteOffen(!gewichteOffen)}
-            class={`glas min-h-[44px] rounded-full px-4 py-2.5 text-sm transition ${gewichteOffen ? 'text-gold-300' : 'text-eis hover:text-gold-300'}`}
+            aria-expanded={mehrOffen}
+            onClick={() => setMehrOffen(!mehrOffen)}
+            class={`glas min-h-[44px] rounded-full px-4 py-2.5 text-sm transition ${mehrOffen ? 'text-gold-300' : 'text-eis hover:text-gold-300'}`}
           >
-            {t('Gewichtung')} <span class="ml-1 font-mono text-xs text-dunst">{KRITERIEN.map((k) => gewichte[k]).join('·')}</span>
+            {t('Mehr Filter')}
+            {aktiveExtras > 0 && <span class="ml-1.5 rounded-full bg-gold-400 px-1.5 font-mono text-xs text-[#1a1020]">{aktiveExtras}</span>}
           </button>
         </div>
+        {mehrOffen && (
+          <div class="glas mt-3 grid gap-3 rounded-3xl p-4">
+            <Chips
+              optionen={['alle', 'pruefstelle', 'community'] as const}
+              wert={quelle}
+              onWahl={setQuelle}
+              beschriftung={t('Wertung von')}
+              label={(o) => (o === 'alle' ? t('Alle') : o === 'pruefstelle' ? t('Prüfstelle') : t('Community'))}
+            />
+            {stadt !== 'alle' && marktListe.length > 0 && (
+              <span class="relative inline-block">
+                <select class={FELD} aria-label={t('Markt')} value={markt} onChange={(e) => setMarkt((e.target as HTMLSelectElement).value)}>
+                  <option value="alle">{t('Ganz {stadt}', { stadt })}</option>
+                  {marktListe.map((m) => (
+                    <option value={m}>{m}</option>
+                  ))}
+                </select>
+                <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rotate-90 text-dunst">
+                  <Symbol name="pfeil" groesse={14} />
+                </span>
+              </span>
+            )}
+            <button
+              type="button"
+              aria-expanded={gewichteOffen}
+              onClick={() => setGewichteOffen(!gewichteOffen)}
+              class={`glas min-h-[44px] justify-self-start rounded-full px-4 py-2.5 text-sm transition ${gewichteOffen ? 'text-gold-300' : 'text-eis hover:text-gold-300'}`}
+            >
+              {t('Gewichtung')} <span class="ml-1 font-mono text-xs text-dunst">{KRITERIEN.map((k) => gewichte[k]).join('·')}</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {gewichteOffen && (

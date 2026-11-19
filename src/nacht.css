@@ -113,6 +113,7 @@ html:root:root {
   --nm-flaeche-hover: light-dark(rgb(30 22 51 / 0.085), rgb(255 255 255 / 0.085));
   --nm-rand: light-dark(rgb(30 22 51 / 0.11), rgb(255 255 255 / 0.09));
   --nm-rand-stark: light-dark(rgb(30 22 51 / 0.24), rgb(255 255 255 / 0.2));
+  --nm-bedienung: light-dark(rgb(30 22 51 / 0.5), rgb(255 255 255 / 0.42));
   --nm-spur: light-dark(rgb(30 22 51 / 0.1), rgb(255 255 255 / 0.1));
   --nm-glas-a: light-dark(rgb(255 255 255 / 0.8), rgb(255 255 255 / 0.075));
   --nm-glas-b: light-dark(rgb(255 255 255 / 0.5), rgb(255 255 255 / 0.03));
@@ -828,4 +829,11 @@ body {
 .erf .ort-pfeil {
   flex: none;
   color: var(--text-2);
+}
+
+/* Bedienelemente (Auswahlfelder, Umschalter, Knöpfe aus Milchglas): Rahmen mit mindestens 3:1 Kontrast */
+select.glas,
+button.glas,
+.nm.glas[role='group'] {
+  border-color: var(--nm-bedienung);
 }

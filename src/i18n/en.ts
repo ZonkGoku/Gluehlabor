@@ -658,4 +658,5 @@ export const EN: Record<string, string> = {
   "Nächsten Glühwein bewerten": "Rate the next one",
   "Gleichauf mit {n} weiteren": "Tied with {n} more",
   "Nochmal bewerten": "Rate again",
+  "Mehr Filter": "More filters",
 };
