@@ -18,6 +18,7 @@ import { Kachel } from './nacht/Kachel';
 import { StandTopKarte } from './nacht/StandKarten';
 import { DealMarke } from './nacht/DealMarke';
 import { HilfePunkt } from './nacht/HilfePunkt';
+import { FotoStreifen } from './FotoStreifen';
 import { Netzdiagramm, NotenBalken, type Reihe } from './Netzdiagramm';
 import { SiegelEtikett } from './nacht/PruefSiegel';
 import { ANKER, MARKTLISTE } from './stammdaten';
@@ -148,6 +149,8 @@ export function StandSeite({ id }: { id: string }) {
           </Kachel>
         </div>
       </div>
+
+      <FotoStreifen eintraege={s.bewertungen} />
 
       <Kachel titel={t('Noten im Vergleich')} klasse="mt-4" innen="p-4">
         {(() => {

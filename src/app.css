@@ -1720,3 +1720,13 @@ a.karte.spitze {
 .fokus .karte:not(.leer) {
   text-align: left;
 }
+
+/* Foto groß am Kopf der Detailansicht */
+.foto-hero {
+  display: block;
+  width: 100%;
+  max-height: 360px;
+  margin: 0 0 14px;
+  border-radius: 24px;
+  object-fit: cover;
+}

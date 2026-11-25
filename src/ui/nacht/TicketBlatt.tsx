@@ -1,5 +1,5 @@
 // „Dein Ticket": erscheint direkt nach dem Speichern eines Bechers. Der Moment, in dem man teilen will.
-import { useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'preact/hooks';
 import { filtere, ranglisteMitWertung } from '../../lib/auswertung';
 import { ortText, stadtVon } from '../../lib/orte';
 import { useEintraege, useGewichte } from '../daten';
@@ -16,6 +16,8 @@ export function TicketBlatt({ id, onNaechster }: { id: string; onNaechster: () =
   const gewichte = useGewichte();
   const [meldung, setMeldung] = useState('');
   const e = alle?.find((x) => x.id === id);
+  const fotoUrl = useMemo(() => (e?.fotoBlob ? URL.createObjectURL(e.fotoBlob) : null), [e?.fotoBlob]);
+  useEffect(() => () => void (fotoUrl && URL.revokeObjectURL(fotoUrl)), [fotoUrl]);
   if (!alle || !e) return null;
 
   const zeilen = ranglisteMitWertung(filtere(alle, { saison: e.saison, markt: 'alle' }), gewichte);
@@ -46,6 +48,7 @@ export function TicketBlatt({ id, onNaechster }: { id: string; onNaechster: () =
           </section>
         )}
 
+        {fotoUrl && <img src={fotoUrl} alt={t('Dein Foto')} class="mb-4 max-h-64 w-full rounded-3xl border border-rand object-cover" />}
         <TopKarte zeile={zeile} ort={ort} hinweis={zeile.rang ? t('Platz {r} von {n}', { r: zeile.rang, n: zeilen.length }) : undefined} ohneLink />
 
         <div class="mt-6 grid gap-3">

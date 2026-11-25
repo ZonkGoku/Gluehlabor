@@ -7,6 +7,7 @@ import { MELDEGRUENDE } from '../daten/sync';
 import { useEintraege, useGeraetId } from './daten';
 import { anzeigeName, istPruefstelle } from '../lib/community';
 import { findeDubletten, type Dublette } from '../lib/dubletten';
+import { AdminStaende } from './AdminStaende';
 import { baueStaende } from '../lib/staende';
 import { zahl2 } from '../lib/format';
 import { bewerte } from '../lib/scoring';
@@ -67,6 +68,8 @@ export function Moderation() {
   const gewichte = useGewichte();
   const [suche, setSuche] = useState('');
   const [gewaehlt, setGewaehlt] = useState<Set<string>>(new Set());
+  const [ansicht, setAnsicht] = useState<'staende' | 'doppelte' | 'meldungen' | 'bewertungen' | 'mehr'>('staende');
+  const dubletten = alle ? findeDubletten(baueStaende(alle, MARKTLISTE, gewichte)) : [];
 
   const lade = async () => {
     try {
@@ -111,7 +114,7 @@ export function Moderation() {
         <p class="etikett !text-gold-300">{t('Prüfstelle')}</p>
         <h1 class="mt-2 font-display text-[40px] uppercase leading-[1] tracking-wide text-eis sm:text-5xl">{t('Moderation')}</h1>
         <p class="mt-2 text-sm text-dunst">
-          {t('Meldungen abarbeiten, Bewertungen ausblenden, Geräte sperren. Stände benennst du auf ihrer eigenen Seite um oder führst sie zusammen.')}
+          {t('Stände aufräumen, Meldungen bearbeiten.')}
         </p>
       </div>
       {meldung && (
@@ -120,6 +123,32 @@ export function Moderation() {
         </p>
       )}
 
+      <div class="mb-4 flex flex-wrap gap-2" role="tablist" aria-label={t('Bereich')}>
+        {([
+          ['staende', t('Stände'), null],
+          ['doppelte', t('Doppelte'), dubletten.length],
+          ['meldungen', t('Meldungen'), liste?.length ?? null],
+          ['bewertungen', t('Bewertungen'), alle?.length ?? null],
+          ['mehr', t('Mehr'), null],
+        ] as const).map(([id, label, n]) => (
+          <button
+            type="button"
+            role="tab"
+            aria-selected={ansicht === id}
+            onClick={() => setAnsicht(id)}
+            class={`min-h-[44px] rounded-full px-4 text-sm font-semibold transition ${ansicht === id ? 'text-[#1a1020]' : 'glas text-eis'}`}
+            style={ansicht === id ? { background: 'linear-gradient(135deg,#ffe29a,#ff8a3d)' } : undefined}
+          >
+            {label}
+            {n ? <span class="ml-1.5 rounded-full bg-black/25 px-1.5 font-mono text-xs">{n}</span> : null}
+          </button>
+        ))}
+      </div>
+
+      {ansicht === 'staende' && alle && <AdminStaende alle={alle} gewichte={gewichte} tu={tu} />}
+
+      {ansicht === 'meldungen' && (
+        <>
       <h2 class="etikett !text-[11px]">{t('Offene Meldungen')} {liste ? `· ${liste.length}` : ''}</h2>
       {liste?.length === 0 && <p class="mt-2 text-dunst">{t('Keine offenen Meldungen.')}</p>}
       <ul class="mt-2 grid gap-2 md:grid-cols-2">
@@ -159,8 +188,12 @@ export function Moderation() {
         ))}
       </ul>
 
+        </>
+      )}
+
+      {ansicht === 'doppelte' && (
+        <>
       {(() => {
-        const dubletten = alle ? findeDubletten(baueStaende(alle, MARKTLISTE, gewichte)) : [];
         const namen = (st: Dublette['von']) => [...new Set(st.bewertungen.map((e) => (istPruefstelle(e) ? t('Prüfstelle') : anzeigeName(e))))].join(', ');
         const fuehrZusammen = (von: Dublette['von'], nach: Dublette['von']) =>
           confirm(t('„{a}" ({n} Bewertungen) in „{b}" zusammenführen? Wer bewertet hat, bleibt an jeder Bewertung erhalten.', { a: von.stand, n: von.bewertungen.length, b: nach.stand })) &&
@@ -190,6 +223,11 @@ export function Moderation() {
         );
       })()}
 
+        </>
+      )}
+
+      {ansicht === 'bewertungen' && (
+        <>
       <section class="glas mt-6 rounded-3xl p-4">
         <h2 class="etikett !text-[11px]">{t('Alle Bewertungen')}{alle ? ` · ${alle.length}` : ''}</h2>
         <p class="mt-1 text-xs text-dunst">{t('Testeinträge oder Unfug? Auswählen und endgültig löschen. Das lässt sich nicht rückgängig machen.')}</p>
@@ -245,6 +283,11 @@ export function Moderation() {
         })()}
       </section>
 
+        </>
+      )}
+
+      {ansicht === 'mehr' && (
+        <>
       <section class="glas mt-6 rounded-3xl p-4">
         <h2 class="etikett !text-[11px]">{t('Löschen auf Anfrage')}</h2>
         <p class="mt-1 text-xs text-dunst">{t('Geräte-Kennung steht im Profil der Person. „Name" entfernt nur den Namen, „Alles" macht alle Bewertungen des Geräts unkenntlich.')}</p>
@@ -277,6 +320,8 @@ export function Moderation() {
           {t('Anderen Geräten entziehen')}
         </button>
       </section>
+        </>
+      )}
     </div>
   );
 }

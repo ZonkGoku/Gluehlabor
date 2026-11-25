@@ -76,6 +76,7 @@ export function Detail({ id }: { id: string }) {
       <a class="zurueck" href="#/rangliste">
         <Symbol name="zurueck" groesse={18} /> {t('Rangliste')}
       </a>
+      {fotoUrl && <img class="foto-hero" src={fotoUrl} alt={t('Foto vom Stand {stand}', { stand: e.stand })} />}
       <div class="detail-kopf">
         <TopKarte
           zeile={{ rang: rang ?? null, eintrag: e, wertung: w }}
@@ -92,7 +93,6 @@ export function Detail({ id }: { id: string }) {
             ))}
           </div>
           {e.notiz && <p style={{ margin: '14px 0 0', lineHeight: 1.5 }}>„{e.notiz}"</p>}
-          {fotoUrl && <img class="foto" src={fotoUrl} alt={t('Foto vom Stand {stand}', { stand: e.stand })} />}
           {e.geraet === geraetId && e.besuchId && (
             <p style={{ margin: '14px 0 0' }}>
               <a class="pillknopf" href={`#/teilen?e=${encodeURIComponent(e.id)}`}>
