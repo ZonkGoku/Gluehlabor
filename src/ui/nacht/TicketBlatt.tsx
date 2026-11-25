@@ -40,7 +40,7 @@ export function TicketBlatt({ id, onNaechster }: { id: string; onNaechster: () =
 
         {e.besuchId && (
           <section class="glas mb-6 rounded-3xl p-5" aria-label={t('Andere mitbewerten lassen')}>
-            <h2 class="text-center font-display text-2xl uppercase tracking-wide text-eis">{t('Seid ihr zu mehreren? Alle bewerten selbst.')}</h2>
+            <h2 class="text-center font-display text-2xl uppercase tracking-wide text-eis">{t('Alle scannen, alle bewerten')}</h2>
             <p class="mb-4 mt-1 text-center text-sm text-gold-300">{e.stand}</p>
             <TeilenBlock besuch={{ id: e.besuchId, stand: e.stand, markt: e.markt, stadt: stadtVon(MARKTLISTE, e) ?? undefined, sorte: e.sorte }} />
           </section>

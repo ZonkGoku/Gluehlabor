@@ -55,7 +55,7 @@ export function Vergleich() {
           <h2>{t('Wiederholungstäter')}</h2>
           {mehrfach.length === 0 && (
             <p style={{ margin: '0 0 12px', color: 'var(--text-2)', fontSize: '14px' }}>
-              {t('Noch kein Stand in zwei Saisons. Sobald ihr einen Stand aus {jahr} wieder besucht, steht hier, ob er besser geworden ist.', { jahr: jahre[0] })}
+              {t('Noch kein Stand in zwei Saisons.', { jahr: jahre[0] })}
             </p>
           )}
           <div style={{ overflowX: 'auto' }}>

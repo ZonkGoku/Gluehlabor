@@ -8,6 +8,7 @@ const PFADE: Record<string, string> = {
   einstellungen: 'M4 7h10M18 7h2M4 17h4M12 17h8M16 5v4M10 15v4',
   profil: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20c0-4 3.6-6 8-6s8 2 8 6',
   plus: 'M12 5v14M5 12h14',
+  kamera: 'M4 8h3l2-3h6l2 3h3v11H4zM12 10a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z',
   zurueck: 'M15 6l-6 6 6 6',
   schliessen: 'M6 6l12 12M18 6L6 18',
   pfeil: 'M9 6l6 6-6 6',

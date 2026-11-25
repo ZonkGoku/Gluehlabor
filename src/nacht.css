@@ -911,3 +911,157 @@ button.glas,
   color: #000;
   font: 700 14px var(--mono);
 }
+
+/* Erfassung, Schritt 1 „Wo?": Stadt, Stand, Markt freiwillig */
+.erf .wo {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+.erf .wo-titel {
+  margin: 4px 0 0;
+  font: 400 34px/1 var(--font-display, var(--sans));
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.erf .wo-frage {
+  margin-top: 6px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+}
+.erf .wo-feld {
+  min-height: 56px;
+  font-size: 18px;
+  border: 2px solid var(--rand-kontrast);
+}
+.erf .wo-hinweis {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-2);
+}
+.erf .wo-liste {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.erf .wo-liste button {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 8px 14px;
+  border-radius: 16px;
+  border: 2px solid var(--rand-kontrast);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.erf .wo-name {
+  grid-column: 1;
+  font-size: 18px;
+  font-weight: 700;
+}
+.erf .wo-ort {
+  grid-column: 1;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.erf .wo-zahl {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  font: 600 14px var(--mono);
+  color: var(--text-2);
+}
+.erf .wo-maerkte div {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 6px 0 4px;
+  scrollbar-width: none;
+}
+.erf .wo-maerkte button {
+  flex: none;
+  min-height: 48px;
+  max-width: 80vw;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 2px solid var(--rand-kontrast);
+  background: transparent;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.erf .wo-maerkte button.an {
+  border-color: transparent;
+  background: linear-gradient(135deg, #ffe29a, #ff8a3d);
+  color: #1a1020;
+}
+.erf .wo-weiter {
+  min-height: 56px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ffe29a, #ff8a3d);
+  color: #1a1020;
+  font: 700 17px var(--sans);
+  cursor: pointer;
+}
+.erf .wo-weiter:disabled {
+  background: transparent;
+  border: 2px dashed var(--rand-kontrast);
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+/* Foto und „Mehr Angaben" in Schritt 2 */
+.erf .foto-knopf {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 8px 14px;
+  border-radius: 16px;
+  border: 2px dashed var(--rand-kontrast);
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.erf .foto-knopf.gesetzt {
+  border-style: solid;
+  border-color: var(--nm-akzent-text);
+}
+.erf .foto-knopf img {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+.erf .foto-knopf input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.erf .mehr-angaben summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 15px;
+  color: var(--text-2);
+}
+.erf .mehr-angaben[open] {
+  display: grid;
+  gap: 8px;
+}

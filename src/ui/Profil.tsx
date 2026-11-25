@@ -71,7 +71,7 @@ export function Profil() {
         <section class="karte seite" style={{ padding: '18px' }}>
           <h2 style={{ margin: 0 }}>{t('Dein Name · nötig zum Bewerten')}</h2>
           <p style={{ margin: '8px 0 0' }}>
-            {t('Er steht öffentlich neben deinen Bewertungen. Wenn du dir zum ersten Mal einen Namen gibst, gilt er auch für Becher, die du schon abgegeben hast. Ohne Namen kannst du nicht bewerten. Ein Spitzname reicht, besser kein voller echter Name. Ein Konto brauchst du nicht.')}
+            {t('Öffentlich sichtbar neben deinen Bewertungen.')}
           </p>
           <label for="name">{t('Name oder Spitzname')}</label>
           <input
@@ -114,7 +114,7 @@ export function Profil() {
             <span class="mono" style={{ wordBreak: 'break-all', userSelect: 'all' }}>
               {geraetId ?? t('wird beim ersten Becher angelegt')}
             </span>
-            . {t('Sie ist zufällig und enthält keine persönlichen Daten. Mit ihr können wir auf Wunsch deinen Namen oder deine Bewertungen löschen, siehe')} <a href="#/datenschutz">{t('Datenschutz')}</a>.
+            . {t('Zufällig, ohne persönliche Daten.')} <a href="#/datenschutz">{t('Datenschutz')}</a>.
           </p>
         </section>
 
@@ -122,7 +122,7 @@ export function Profil() {
           <h2 style={{ margin: 0 }}>{t('Prüfstelle · nur David & Philip')}</h2>
           {pruefstelle ? (
             <>
-              <p style={{ margin: '8px 0 0' }}>{t('Dieses Gerät ist als Prüfstelle freigeschaltet. Eure Bewertungen tragen das Siegel „Prüfstelle" und zählen in der Wertung der Prüfstelle.')}</p>
+              <p style={{ margin: '8px 0 0' }}>{t('Dieses Gerät ist Prüfstelle.')}</p>
               <div class="knopfreihe">
                 <a class="knopf" href="#/moderation" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
                   {t('Moderation öffnen')}
@@ -132,7 +132,7 @@ export function Profil() {
           ) : (
             <>
               <p style={{ margin: '8px 0 0' }}>
-                {t('Mit dem Prüfstellen-Code tragen eure Bewertungen das Siegel „Prüfstelle". Alle anderen erscheinen als Community.')}
+                {t('Mit Code tragen eure Bewertungen das Siegel „Prüfstelle“.')}
               </p>
               <label for="code">{t('Prüfstellen-Code')}</label>
               <input

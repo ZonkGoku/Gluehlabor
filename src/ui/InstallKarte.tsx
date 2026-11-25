@@ -1,4 +1,4 @@
-// „Auf den Home-Bildschirm legen": Android/Chrome mit echtem Installationsknopf, iPhone mit Anleitung.
+// „Als App installieren": ein Antippen. Android/Chrome öffnet direkt den Installationsdialog, iPhone zeigt den einen Schritt.
 import { useEffect, useState } from 'preact/hooks';
 import { leseEinstellung, schreibeEinstellung } from '../daten/db';
 import { beobachteInstallation, installiere, istInstalliert, kannInstallieren } from '../daten/installieren';
@@ -18,40 +18,39 @@ export function InstallKarte() {
   const direkt = kannInstallieren();
   if (!ios && !android && !direkt) return null;
 
+  const symbol = (
+    <span class="grid size-12 shrink-0 place-items-center rounded-2xl text-[#1a1020]" style={{ background: 'linear-gradient(135deg,#ffe29a,#ff8a3d)' }}>
+      <Symbol name={direkt ? 'plus' : 'teilen'} groesse={24} />
+    </span>
+  );
+  const text = (
+    <span class="min-w-0 flex-1 text-left">
+      <b class="block text-base text-eis">{t('Als App installieren')}</b>
+      <span class="block text-sm text-dunst">{direkt ? t('Symbol auf dem Startbildschirm') : ios ? t('Teilen-Symbol antippen, dann „Zum Home-Bildschirm“') : t('Browser-Menü, dann „App installieren“')}</span>
+    </span>
+  );
+
   return (
-    <div class="glas flex items-start gap-3 rounded-3xl p-4">
-      <span class="grid size-11 shrink-0 place-items-center rounded-2xl bg-[#1a1020]/85 text-[#ffd98a]">
-        <Symbol name="plus" groesse={22} />
-      </span>
-      <div class="min-w-0 flex-1">
-        <p class="text-base font-semibold text-eis">{t('Glühlabor aufs Handy legen')}</p>
-        <p class="mt-1 text-sm text-dunst">
-          {direkt
-            ? t('Ein Symbol auf dem Startbildschirm, wie bei einer App. Funktioniert auch ohne Netz.')
-            : ios
-              ? t('Tippe unten auf das Teilen-Symbol und dann auf „Zum Home-Bildschirm". So bekommst du ein App-Symbol, und Safari vergisst nach einer Woche ohne Nutzung deine Daten nicht.')
-              : t('Öffne das Browser-Menü (drei Punkte) und wähle „App installieren" oder „Zum Startbildschirm hinzufügen".')}
-        </p>
-        <div class="mt-3 flex flex-wrap gap-2">
-          {direkt && (
-            <button
-              type="button"
-              onClick={() => void installiere()}
-              class="min-h-[44px] rounded-full px-5 font-semibold text-[#1a1020]"
-              style={{ background: 'linear-gradient(135deg,#ffe29a,#ff8a3d)' }}
-            >
-              {t('Installieren')}
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => void schreibeEinstellung('installHinweisZu', true)}
-            class="glas min-h-[44px] rounded-full px-5 text-sm text-eis"
-          >
-            {t('Nicht jetzt')}
-          </button>
+    <div class="glas flex items-center gap-1 rounded-2xl p-2 pr-1">
+      {direkt ? (
+        <button type="button" onClick={() => void installiere()} class="flex min-h-[56px] flex-1 items-center gap-3 rounded-xl bg-transparent text-left" aria-label={t('Als App installieren')}>
+          {symbol}
+          {text}
+        </button>
+      ) : (
+        <div class="flex min-h-[56px] flex-1 items-center gap-3">
+          {symbol}
+          {text}
         </div>
-      </div>
+      )}
+      <button
+        type="button"
+        onClick={() => void schreibeEinstellung('installHinweisZu', true)}
+        class="grid size-11 shrink-0 place-items-center rounded-full text-dunst hover:text-eis"
+        aria-label={t('Schließen')}
+      >
+        <Symbol name="schliessen" groesse={18} />
+      </button>
     </div>
   );
 }

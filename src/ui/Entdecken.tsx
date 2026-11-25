@@ -73,8 +73,8 @@ export function Entdecken() {
           {preise.zeilen.length === 0 ? (
             <p class="text-sm text-dunst">
               {preise.meldungen === 0
-                ? t('Noch keine Preise gemeldet. Trag bei der Erfassung den Preis ein, dann entsteht hier der Preisindex.')
-                : t('{n} von {schwelle} nötigen Preismeldungen. Eine Stadt erscheint hier ab {schwelle} Meldungen.', { n: preise.meldungen, schwelle: preise.schwelle })}
+                ? t('Noch keine Preise gemeldet.')
+                : t('{n} von {schwelle} Preismeldungen.', { n: preise.meldungen, schwelle: preise.schwelle })}
             </p>
           ) : (
             <>
@@ -92,7 +92,7 @@ export function Entdecken() {
                   </li>
                 ))}
               </ul>
-              <p class="mt-3 text-xs text-dunst">{t('Median je Tasse, nach Meldungen der Bewertenden vor Ort. Alkoholfreies zählt nicht.')}</p>
+              <p class="mt-3 text-xs text-dunst">{t('Median je Tasse.')}</p>
             </>
           )}
         </Kachel>

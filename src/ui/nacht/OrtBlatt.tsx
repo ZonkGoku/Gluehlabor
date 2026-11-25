@@ -25,6 +25,8 @@ interface Props {
   /** Stadt und Markt („Sonstiger", wenn kein Markt gewählt wurde). */
   onWahl: (stadt: string, markt: string) => void;
   onZu: () => void;
+  /** Nur die Stadt fragen: Der Markt ist freiwillig und wird später gewählt. */
+  ohneMarkt?: boolean;
 }
 
 interface Eintrag {
@@ -88,7 +90,7 @@ function Abschnitt({ titel, kinder }: { titel: string; kinder: ComponentChildren
   );
 }
 
-export function OrtBlatt({ start, bestand, onWahl, onZu }: Props) {
+export function OrtBlatt({ start, bestand, onWahl, onZu, ohneMarkt = false }: Props) {
   const orte = useOrte();
   const [stadt, setStadt] = useState<string | null>(start.stadt?.trim() || null);
   const [q, setQ] = useState('');
@@ -118,7 +120,7 @@ export function OrtBlatt({ start, bestand, onWahl, onZu }: Props) {
 
   /** Stadt gewählt: gibt es Märkte zur Auswahl, geht es weiter, sonst ist die Wahl fertig. */
   const waehleStadt = (s: string) => {
-    if (maerkteIn(bestand, MARKTLISTE, s).length === 0) return onWahl(s, MARKTLISTE.sonstiger);
+    if (ohneMarkt || maerkteIn(bestand, MARKTLISTE, s).length === 0) return onWahl(s, MARKTLISTE.sonstiger);
     setStadt(s);
     setQ('');
   };
@@ -167,7 +169,7 @@ export function OrtBlatt({ start, bestand, onWahl, onZu }: Props) {
             symbol: 'uhr',
             titel: z.stadt,
             unter: z.markt,
-            wahl: () => onWahl(z.stadt, z.markt ?? MARKTLISTE.sonstiger),
+            wahl: () => onWahl(z.stadt, ohneMarkt ? MARKTLISTE.sonstiger : (z.markt ?? MARKTLISTE.sonstiger)),
           })),
         });
       const beliebt = beliebteStaedte(bestand, MARKTLISTE, 6).filter((b) => !zuletzt.some((z) => z.stadt === b.stadt && !z.markt));

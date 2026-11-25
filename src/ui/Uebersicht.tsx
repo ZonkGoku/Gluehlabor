@@ -36,7 +36,7 @@ function NameKarte() {
   };
   return (
     <div class="name-karte">
-      <label for="name-start">{t('Wie sollen wir dich nennen? Ohne Namen kann niemand deine Bewertungen sehen.')}</label>
+      <label for="name-start">{t('Dein Name?')}</label>
       <div class="name-zeile">
         <input
           id="name-start"
@@ -57,7 +57,7 @@ function NameKarte() {
         </button>
       </div>
       <p class="name-hinweis">
-        {t('Der Name steht öffentlich neben deinen Bewertungen, auch bei denen, die du schon abgegeben hast. Besser kein voller echter Name.')}
+        {t('Öffentlich sichtbar. Ein Spitzname reicht.')}
         {fehler && <span class="name-fehler"> {t(fehler)}</span>}
       </p>
     </div>
@@ -74,7 +74,7 @@ function Willkommen() {
   return (
     <section data-ein class="glas rahmen-licht mb-5 mt-2 rounded-3xl p-5">
       <h1 class="font-display text-[38px] uppercase leading-[1] tracking-wide text-eis sm:text-5xl">{t('Wo gibt’s den besten Glühwein?')}</h1>
-      <p class="mt-3 text-base text-eis/90">{t('Bewerte deinen Glühwein in 30 Sekunden. Aus allen Bewertungen entsteht die Rangliste. Ohne Konto.')}</p>
+      <p class="mt-3 text-base text-eis/90">{t('Glühwein bewerten. 30 Sekunden, ohne Konto.')}</p>
       <a
         href="#/erfassen"
         class="animate-puls mt-5 flex min-h-[56px] items-center justify-center gap-2 rounded-full px-6 text-lg font-semibold text-[#1a1020] no-underline"
@@ -82,7 +82,7 @@ function Willkommen() {
       >
         <Symbol name="plus" groesse={20} /> {t('Jetzt bewerten')}
       </a>
-      <p class="mt-3 text-xs text-dunst">{t('Glühwein nur ab 18 Jahren. Trink verantwortungsvoll.')}</p>
+      <p class="mt-3 text-xs text-dunst">{t('Nur ab 18. Trink verantwortungsvoll.')}</p>
     </section>
   );
 }

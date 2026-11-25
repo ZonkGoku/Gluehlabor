@@ -144,7 +144,7 @@ export function Rangliste() {
         ansicht === 'deals' ? (
           <div ref={wurzel}>
             <p class="mb-3 text-sm text-dunst">
-              {t('Top Deals: das beste Verhältnis aus Glühwein und Preis. Preis-Leistung = Glühwein-Note, 0,5 Punkte weniger je Euro über dem üblichen Preis der Stadt.')}
+              {t('Top Deals: guter Glühwein für wenig Geld.')}
             </p>
             {deals.length === 0 ? (
               <p class="glas rounded-3xl p-6 text-center text-dunst">{t('Noch keine Preis-Leistung für diese Auswahl.')}</p>
@@ -186,7 +186,7 @@ export function Rangliste() {
           <Symbol name="pfeil" groesse={12} />
         </span>
         <span class="mr-1 inline-block align-middle"><PruefSiegel groesse={16} /></span>
-        {t('Das Siegel trägt jeder Stand, den die Prüfstelle (David & Philip) selbst getestet hat.')} {t('Ein Stand zählt den Durchschnitt aller Bewertungen. Wenige Bewertungen zählen für die Reihenfolge weniger („wenige Bewertungen"), angezeigt wird immer der echte Durchschnitt. Glühwein = Geschmack, Geruch, Temperatur · Drumherum = Personal, Atmosphäre, Preis/Leistung, Tasse.')}
+        {t('Siegel: von David & Philip getestet.')} {t('Durchschnitt aller Bewertungen je Stand.')}
       </p>
       <Betreiber />
     </div>

@@ -17,6 +17,7 @@ import { besuchIdAusBytes } from '../lib/besuch';
 import { istOrtsname } from '../lib/community';
 import { ortTeile, stadtVon, zerlegeFreienMarkt } from '../lib/orte';
 import { baueStaende } from '../lib/staende';
+import { maerkteIn } from '../lib/ortssuche';
 import { kanonischerStand, schlageStaendeVor, type Vorschlag } from '../lib/standvorschlag';
 import { ANKER, MARKTLISTE } from './stammdaten';
 import { euro, probeNr, zahl2 } from '../lib/format';
@@ -102,6 +103,11 @@ export function Erfassen() {
   const [nameOffen, setNameOffen] = useState(false);
   const [menueOffen, setMenueOffen] = useState(false);
   const [qrOffen, setQrOffen] = useState(false);
+  // Zwei Schritte: erst „Wo?" (Stadt, Stand, Markt freiwillig), dann „Bewerten" (Preis und Noten).
+  const [schritt, setSchritt] = useState<'wo' | 'bewerten'>(() => {
+    const d = leseEntwurf();
+    return d && (d.gesperrt || (d.stand.trim() && d.stadt)) ? 'bewerten' : 'wo';
+  });
   const [warnung, setWarnung] = useState<string | null>(null);
   const [preisText, setPreisText] = useState(() => {
     const p = leseEntwurf()?.preis;
@@ -112,12 +118,10 @@ export function Erfassen() {
   const [becherNrAngefasst, setBecherNrAngefasst] = useState(() => leseEntwurf()?.becherNr !== undefined);
   const [foto, setFoto] = useState<Blob | null>(null);
   const [hilfeOffen, setHilfeOffen] = useState<Kriterium | null>(null);
-  const [notizOffen, setNotizOffen] = useState(false);
   const [fehlt, setFehlt] = useState(false);
   const [gespeichert, setGespeichert] = useState<string | null>(null);
   const [fertigId, setFertigId] = useState<string | null>(null);
   const standRef = useRef<HTMLInputElement>(null);
-  const [standFokus, setStandFokus] = useState(false);
   // Alle Becher dieses Geräts, auch die schon synchronisierten der Community: daraus kommen die Vorschläge.
   const bestand = useLive(() => db.eintraege.toArray(), [], []);
 
@@ -143,12 +147,13 @@ export function Erfassen() {
   // Schon bewertete Stände dieser Stadt als große Tippflächen, solange noch kein Stand eingetragen ist
   const staendeHier = useMemo(
     () =>
-      e.stadt && !e.stand.trim()
+      e.stadt
         ? baueStaende(bestand.filter((b) => stadtVon(MARKTLISTE, b) === e.stadt), MARKTLISTE, gewichte)
             .sort((a, b) => b.wert.anzahl - a.wert.anzahl || a.stand.localeCompare(b.stand, 'de'))
-            .slice(0, 6)
+            .slice(0, 8)
+            .map((x) => ({ stand: x.stand, markt: x.markt, stadt: x.stadt, anzahl: x.wert.anzahl }))
         : [],
-    [bestand, e.stadt, e.stand, gewichte],
+    [bestand, e.stadt, gewichte],
   );
   // Vorschläge nur aus echten Ständen, nie der eigenen halb getippten Eingabe: der Entwurf zählt erst nach dem Speichern.
   const vorschlaege = useMemo(() => {
@@ -178,7 +183,6 @@ export function Erfassen() {
   /** Vorschlag übernehmen: Stand, Markt und Stadt aus dem vorhandenen Becher. */
   const uebernimm = (v: Vorschlag) => {
     setE((x) => ({ ...x, stand: v.stand, markt: v.markt, stadt: v.stadt ?? stadtVon(MARKTLISTE, { markt: v.markt }) ?? undefined, marktFrei: false }));
-    setStandFokus(false);
   };
 
   const waehleOrt = (stadt: string, markt: string) => {
@@ -247,9 +251,9 @@ export function Erfassen() {
     setPreisFehlt(false);
     setBecherNrAngefasst(false);
     setFoto(null);
-    setNotizOffen(false);
     setFehlt(false);
     setHilfeOffen(null);
+    setSchritt('wo');
     setGespeichert(t('Probe {n} gesichert', { n: probeNr(anzahl + 1) }));
     setFertigId(eintrag.id);
     navigator.vibrate?.([20, 40, 20]);
@@ -272,6 +276,32 @@ export function Erfassen() {
     setQrOffen(true);
   };
 
+  // Stände zur Auswahl: ohne Eingabe die schon bewerteten der Stadt, mit Eingabe die passenden
+  const woListe: Vorschlag[] = e.stand.trim().length >= 2 ? vorschlaege : staendeHier;
+  const marktAuswahl = useMemo(() => (e.stadt ? maerkteIn(bestand, MARKTLISTE, e.stadt).slice(0, 12) : []), [bestand, e.stadt]);
+  const fotoUrl = useMemo(() => (foto ? URL.createObjectURL(foto) : null), [foto]);
+  useEffect(() => () => void (fotoUrl && URL.revokeObjectURL(fotoUrl)), [fotoUrl]);
+  const waehleStand = (v: Vorschlag) => {
+    uebernimm(v);
+    setSchritt('bewerten');
+  };
+  const weiterMitStand = () => {
+    if (!e.stand.trim()) {
+      setFehlt(true);
+      standRef.current?.focus();
+      return;
+    }
+    setSchritt('bewerten');
+  };
+  const standAendern = () => {
+    if (e.gesperrt) setE({ ...e, gesperrt: false, besuchId: undefined });
+    setSchritt('wo');
+  };
+  // Ohne Stadt geht es nicht weiter: gleich fragen
+  useEffect(() => {
+    if (schritt === 'wo' && !e.stadt) setOrtOffen(true);
+  }, []);
+
   const knopfText = warnung ?? gespeichert ?? (bewertet === 0 ? t('Noch keine Note') : t('Speichern'));
 
   return (
@@ -289,98 +319,108 @@ export function Erfassen() {
         </button>
       </header>
 
-      {e.gesperrt ? (
-        <div class="besuch-zeile">
-          <div class="besuch-text">
-            <b>{e.stand}</b>
-            <span>
-              {e.markt}
-              {e.stadt ? ` · ${e.stadt}` : ''}
+      {schritt === 'wo' ? (
+        <section class="wo" aria-label={t('Wo bewertest du?')}>
+          <h1 class="wo-titel">{t('Wo bewertest du?')}</h1>
+          <button type="button" class={`ort-knopf${e.stadt ? '' : ' leer-ort'}`} onClick={() => setOrtOffen(true)} aria-label={t('Stadt wählen')}>
+            <span class="ort-symbol">
+              <Symbol name="pin" groesse={20} />
             </span>
-          </div>
-          <button type="button" class="besuch-aus" onClick={() => setE({ ...e, gesperrt: false, besuchId: undefined })}>
-            {t('Anderer Stand')}
+            <span class="ort-text">
+              {e.stadt ? (
+                <>
+                  <b>{e.stadt}</b>
+                  <small>{t('Stadt ändern')}</small>
+                </>
+              ) : (
+                <>
+                  <b>{t('In welcher Stadt bist du?')}</b>
+                  <small>{t('Stadt suchen')}</small>
+                </>
+              )}
+            </span>
+            <span class="ort-pfeil">
+              <Symbol name="pfeil" groesse={18} />
+            </span>
           </button>
-        </div>
+
+          {e.stadt && (
+            <>
+              <label class="wo-frage" for="wo-stand">
+                {t('An welchem Stand?')}
+              </label>
+              <input
+                id="wo-stand"
+                ref={standRef}
+                class="feld wo-feld"
+                type="text"
+                placeholder={t('Name des Stands')}
+                aria-invalid={fehlt && !e.stand.trim()}
+                autocomplete="off"
+                autocapitalize="words"
+                enterkeyhint="go"
+                value={e.stand}
+                onInput={(ev) => setE({ ...e, stand: (ev.target as HTMLInputElement).value })}
+                onKeyDown={(ev) => ev.key === 'Enter' && weiterMitStand()}
+              />
+              {woListe.length > 0 && (
+                <>
+                  <p class="wo-hinweis">{e.stand.trim().length >= 2 ? t('Meinst du:') : t('Schon bewertet:')}</p>
+                  <ul class="wo-liste">
+                    {woListe.map((v) => (
+                      <li>
+                        <button type="button" onClick={() => waehleStand(v)}>
+                          <span class="wo-name">{v.stand}</span>
+                          <span class="wo-ort">{ortTeile(MARKTLISTE, v).join(' · ') || v.markt}</span>
+                          <span class="wo-zahl">{v.anzahl}×</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              {e.stand.trim().length >= 2 && marktAuswahl.length > 0 && (
+                <div class="wo-maerkte">
+                  <p class="wo-hinweis">{t('Markt (freiwillig)')}</p>
+                  <div>
+                    {marktAuswahl.map((m) => (
+                      <button
+                        type="button"
+                        aria-pressed={e.markt === m.markt}
+                        class={e.markt === m.markt ? 'an' : ''}
+                        onClick={() => setE({ ...e, markt: e.markt === m.markt ? MARKTLISTE.sonstiger : m.markt })}
+                      >
+                        {m.markt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <button type="button" class="wo-weiter" disabled={e.stand.trim().length < 2} onClick={weiterMitStand}>
+                {e.stand.trim().length >= 2 ? t('Weiter mit „{stand}"', { stand: e.stand.trim() }) : t('Stand wählen')}
+              </button>
+            </>
+          )}
+        </section>
       ) : (
-      <div class="stamm" style={{ position: 'relative' }}>
-        {standFokus && vorschlaege.length > 0 && (
-          <ul class="vorschlaege" role="listbox" aria-label={t('Meintest du einen dieser Stände?')}>
-            {vorschlaege.map((v) => (
-              <li role="option">
-                <button type="button" onPointerDown={(ev) => { ev.preventDefault(); uebernimm(v); }}>
-                  <span class="vs-name">{v.stand}</span>
-                  <span class="vs-ort">{ortTeile(MARKTLISTE, v).join(' · ') || v.markt}</span>
-                  <span class="vs-zahl">{v.anzahl}×</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        <input
-          ref={standRef}
-          class="feld"
-          type="text"
-          placeholder={t('Stand')}
-          aria-label={t('Stand')}
-          aria-invalid={fehlt && !e.stand.trim()}
-          autocomplete="off"
-          autocapitalize="words"
-          enterkeyhint="done"
-          value={e.stand}
-          onInput={(ev) => setE({ ...e, stand: (ev.target as HTMLInputElement).value })}
-          onFocus={() => setStandFokus(true)}
-          onBlur={() => setTimeout(() => setStandFokus(false), 120)}
-          onKeyDown={(ev) => ev.key === 'Enter' && (ev.target as HTMLInputElement).blur()}
-        />
-        <button type="button" class={`ort-knopf${e.stadt ? '' : ' leer-ort'}`} onClick={() => setOrtOffen(true)} aria-label={t('Ort wählen: Stadt und Markt')}>
-          <span class="ort-symbol">
-            <Symbol name="pin" groesse={20} />
-          </span>
-          <span class="ort-text">
-            {e.stadt ? (
-              <>
-                <b>{e.stadt}</b>
-                <small>{e.markt !== MARKTLISTE.sonstiger ? e.markt : t('Markt wählen (optional)')}</small>
-              </>
-            ) : (
-              <>
-                <b>{t('Wo bist du?')}</b>
-                <small>{t('Stadt suchen oder Standort nutzen')}</small>
-              </>
-            )}
-          </span>
-          <span class="ort-pfeil">
-            <Symbol name="pfeil" groesse={18} />
-          </span>
+      <>
+      <div class="besuch-zeile">
+        <div class="besuch-text">
+          <b>{e.stand}</b>
+          <span>{[e.markt !== MARKTLISTE.sonstiger ? e.markt : null, e.stadt].filter(Boolean).join(' · ')}</span>
+        </div>
+        <button type="button" class="besuch-aus" onClick={standAendern}>
+          {e.gesperrt ? t('Anderer Stand') : t('Ändern')}
         </button>
       </div>
-      )}
 
-      <button
-        type="button"
-        class="qr-zeile"
-        onClick={oeffneQr}
-      >
+      <button type="button" class="qr-zeile" onClick={oeffneQr}>
         <span class="qr-zeile-text">
           <b>{t('Seid ihr zu mehreren?')}</b>
-          <small>{t('Stand und Stadt eintragen, dann QR-Code zeigen: Alle bewerten mit.')}</small>
+          <small>{t('QR-Code zeigen')}</small>
         </span>
         <span class="qr-zeile-code" aria-hidden="true">QR</span>
       </button>
-
-      {!e.gesperrt && staendeHier.length > 0 && (
-        <div class="hier-staende">
-          <p>{t('Schon bewertet in {stadt}:', { stadt: e.stadt ?? '' })}</p>
-          <div>
-            {staendeHier.map((x) => (
-              <button type="button" onClick={() => uebernimm({ stand: x.stand, markt: x.markt, stadt: x.stadt, anzahl: x.wert.anzahl })}>
-                {x.stand}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       <section class={`preis-block${e.preis === undefined ? ' leer' : ' gesetzt'}${preisFehlt && e.preis === undefined ? ' fehlt' : ''}`} aria-label={t('Preis')}>
         <div class="preis-kopf">
@@ -443,29 +483,19 @@ export function Erfassen() {
           {preisFehlt && e.preis === undefined
             ? t('Bitte den Preis eintragen.')
             : letzterPreis && e.preis === undefined
-              ? t('Zuletzt in {stadt}: {preis}. Ohne Pfand.', { stadt: e.stadt ?? '', preis: euro(letzterPreis) })
-              : t('Ohne Pfand. Daraus berechnet die App Preis-Leistung.')}
+              ? t('Zuletzt in {stadt}: {preis}', { stadt: e.stadt ?? '', preis: euro(letzterPreis) })
+              : t('Ohne Pfand.')}
         </p>
       </section>
 
-      {notizOffen ? (
-        <div class="notizzeile">
-          <input
-            class="feld"
-            type="text"
-            placeholder={t('Notiz')}
-            aria-label={t('Notiz')}
-            autoFocus
-            enterkeyhint="done"
-            value={e.notiz}
-            onInput={(ev) => setE({ ...e, notiz: (ev.target as HTMLInputElement).value })}
-            onKeyDown={(ev) => ev.key === 'Enter' && setNotizOffen(false)}
-          />
-          <button type="button" onClick={() => setNotizOffen(false)}>
-            {t('OK')}
-          </button>
-        </div>
-      ) : (
+      <label class={`foto-knopf${foto ? ' gesetzt' : ''}`}>
+        {fotoUrl ? <img src={fotoUrl} alt={t('Dein Foto')} /> : <Symbol name="kamera" groesse={26} />}
+        <span>{foto ? t('Foto ändern') : t('Foto hinzufügen')}</span>
+        <input type="file" accept="image/*" aria-label={t('Foto')} onChange={waehleFoto} />
+      </label>
+
+      <details class="mehr-angaben" open={Boolean(e.sorte || e.notiz.trim())}>
+        <summary>{t('Mehr Angaben')}</summary>
         <div class="meta">
           <select
             class={e.sorte ? 'chip gesetzt' : 'chip'}
@@ -474,8 +504,8 @@ export function Erfassen() {
             onChange={(ev) => setE({ ...e, sorte: ((ev.target as HTMLSelectElement).value || undefined) as Sorte })}
           >
             <option value="">{t('Sorte')}</option>
-            {SORTEN.map((s) => (
-              <option value={s}>{t(SORTE_LABEL[s])}</option>
+            {SORTEN.map((x) => (
+              <option value={x}>{t(SORTE_LABEL[x])}</option>
             ))}
           </select>
           <select
@@ -493,19 +523,13 @@ export function Erfassen() {
               <option value={n}>{t('{n}. heute', { n })}</option>
             ))}
           </select>
-          <button type="button" class={e.notiz.trim() ? 'chip gesetzt' : 'chip'} onClick={() => setNotizOffen(true)}>
-            {e.notiz.trim() ? `${t('Notiz')} ✓` : t('Notiz')}
-          </button>
-          <label class={foto ? 'chip gesetzt' : 'chip'}>
-            {foto ? `${t('Foto')} ✓` : t('Foto')}
-            <input type="file" accept="image/*" capture="environment" aria-label={t('Foto')} onChange={waehleFoto} />
-          </label>
         </div>
-      )}
+        <input class="feld" type="text" placeholder={t('Notiz')} aria-label={t('Notiz')} enterkeyhint="done" value={e.notiz} onInput={(ev) => setE({ ...e, notiz: (ev.target as HTMLInputElement).value })} />
+      </details>
 
       <section class="noten" aria-label={t('Noten')}>
         <p class="noten-kopf">
-          {t('Noten')} <span>{t('alle freiwillig, mindestens eine')}</span>
+          {t('Noten')} <span>{t('mindestens eine')}</span>
         </p>
         {KRITERIEN.map((k) => (
           <NotenZeile
@@ -549,9 +573,12 @@ export function Erfassen() {
           {fehlt && !e.stand.trim() ? t('Stand fehlt') : preisFehlt && e.preis === undefined ? t('Preis fehlt') : knopfText}
         </button>
       </footer>
+      </>
+      )}
     </main>
     {ortOffen && (
       <OrtBlatt
+        ohneMarkt
         start={{ stadt: e.stadt, markt: e.markt }}
         bestand={bestand}
         onWahl={waehleOrt}

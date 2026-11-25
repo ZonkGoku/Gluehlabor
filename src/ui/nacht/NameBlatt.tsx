@@ -36,7 +36,7 @@ export function NameBlatt({ onFertig, onZu }: Props) {
       >
         <h2 class="font-display text-[28px] uppercase leading-none tracking-wide">{t('Wie heißt du?')}</h2>
         <p class="mt-2 text-sm text-dunst">
-          {t('Dein Name steht öffentlich neben deinen Bewertungen. Ein Spitzname reicht, besser kein voller echter Name. Einmal eingeben, dann gilt er auf diesem Gerät.')}
+          {t('Öffentlich sichtbar. Ein Spitzname reicht.')}
         </p>
         <input
           ref={feld}

@@ -20,7 +20,7 @@ export function Saisonverlauf({ verlauf, saison }: { verlauf: Verlauf; saison: n
     return (
       <p class="leer-hinweis">
         {ohneDatum > 0
-          ? t('Die {n} Becher aus {saison} haben kein Datum. Ab jetzt trägt die Erfassung jedes Datum automatisch ein, und der Verlauf zeigt jeden Abend.', { n: ohneDatum, saison })
+          ? t('Die {n} Becher aus {saison} haben kein Datum.', { n: ohneDatum, saison })
           : t('Noch kein Becher in dieser Saison.')}
       </p>
     );

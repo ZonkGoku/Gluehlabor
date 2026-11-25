@@ -75,7 +75,7 @@ export function Mitbewerten() {
         {b.stadt ? ` · ${b.stadt}` : ''}
       </p>
       <p class="fokus-hinweis">
-        {t('Bewerte diesen Glühwein selbst, zusammen mit den anderen am Stand. Sieben Noten, dauert etwa eine halbe Minute. Dafür brauchst du kein Konto.')}
+        {t('Bewerte selbst, in 30 Sekunden.')}
       </p>
 
       {mitDabei.length > 0 && (
@@ -86,7 +86,7 @@ export function Mitbewerten() {
 
       {frageNachName && (
         <div class="name-karte">
-          <label for="name-scan">{t('Wie heißt du? Der Name ist nötig, um zu bewerten.')}</label>
+          <label for="name-scan">{t('Dein Name')}</label>
           <input
             id="name-scan"
             class="feld"
@@ -101,7 +101,7 @@ export function Mitbewerten() {
             }}
           />
           <p class="name-hinweis">
-            {t('Der Name steht öffentlich neben deinen Bewertungen. Ein Spitzname reicht, besser kein voller echter Name.')}
+            {t('Öffentlich sichtbar. Ein Spitzname reicht.')}
             {fehler && <span class="name-fehler"> {fehler}</span>}
           </p>
         </div>

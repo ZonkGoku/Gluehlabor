@@ -47,7 +47,7 @@ export function TeilenBlock({ besuch }: { besuch: Besuch }) {
         <Qr text={link} titel={t('QR-Code zum Mitbewerten bei {stand}', { stand: besuch.stand })} />
       </div>
       <p class="max-w-xs text-sm text-dunst">
-        {t('Die anderen scannen den Code mit der Handykamera und bewerten selbst. Kein Konto, keine App nötig.')}
+        {t('Mit der Handykamera scannen, fertig.')}
       </p>
       <button
         type="button"

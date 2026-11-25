@@ -34,7 +34,7 @@ export function Einstellungen() {
           <h2 style={{ margin: 0 }}>{t('Gemeinsamer Datenbestand')}</h2>
           <p style={{ margin: '8px 0 0' }}>
             {HAT_SERVER
-              ? t('Jeder darf bewerten, ohne Konto und ohne Anmeldung. Jeder Becher landet automatisch im gemeinsamen Bestand und ist auf allen Geräten zu sehen. Ohne Netz wird lokal weiter erfasst, nichts geht verloren.')
+              ? t('Jeder darf bewerten, ohne Konto.')
               : t('Diese Version arbeitet nur lokal: Becher bleiben auf diesem Gerät. Den gemeinsamen Bestand gibt es unter gluehlabor.de.')}
           </p>
           <div class="knopfreihe">

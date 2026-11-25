@@ -83,7 +83,7 @@ export function StandSeite({ id }: { id: string }) {
       {s.pruefstelle.anzahl > 0 && (
         <div class="mt-3 flex flex-wrap items-center gap-2">
           <SiegelEtikett text={t('Von David & Philip getestet: {n}', { n: s.pruefstelle.gesamt === null ? '–' : zahl2(s.pruefstelle.gesamt) })} />
-          <HilfePunkt text={t('Das goldene Siegel bekommt ein Stand, den David und Philip selbst getestet haben. Es sagt nichts über die Note, nur dass die Prüfstelle dort war.')} />
+          <HilfePunkt text={t('Von David & Philip getestet.')} />
         </div>
       )}
       <div class="mt-3 grid gap-4 md:grid-cols-2">
@@ -106,7 +106,7 @@ export function StandSeite({ id }: { id: string }) {
               <div>
                 <p class="etikett">
                   {t('Preis-Leistung')}{' '}
-                  <HilfePunkt text={t('Berechnet aus Glühwein-Note und Preis: 0,5 Punkte weniger je Euro über dem üblichen Preis der Stadt. Ab 8 Punkten heißt ein Stand „Top Deal".')} />
+                  <HilfePunkt text={t('Glühwein-Note, minus 0,5 je Euro über dem üblichen Preis.')} />
                 </p>
                 <p class="mt-2 font-display text-[44px] leading-none text-gold-300">{zahl2(s.deal.punkte)}</p>
                 <p class="mt-1 text-xs text-dunst">
@@ -132,7 +132,7 @@ export function StandSeite({ id }: { id: string }) {
               {t('QR-Code zum Mitbewerten zeigen')}
             </a>
           )}
-          {s.vorlaeufig && <p class="text-center text-xs text-dunst">{t('Noch wenige Bewertungen: Ab {n} Bewertungen zählt der Stand voll für die Reihenfolge.', { n: MIN_BEWERTUNGEN })}</p>}
+          {s.vorlaeufig && <p class="text-center text-xs text-dunst">{t('Noch wenige Bewertungen (ab {n} zählt der Stand voll).', { n: MIN_BEWERTUNGEN })}</p>}
           <Kachel titel={t('Verteilung der Urteile')} innen="p-4">
             <ul class="space-y-1.5">
               {URTEILE.map((u) => (

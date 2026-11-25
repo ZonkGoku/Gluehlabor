@@ -152,7 +152,7 @@ export function Detail({ id }: { id: string }) {
           )}
           {e.sync === 'offen' && (
             <p style={{ color: 'var(--warnung)', fontSize: '13px', margin: '14px 0 0' }}>
-              {t('Noch nur auf diesem Gerät. Wird synchronisiert, sobald Netz da ist.')}
+              {t('Noch nicht gesendet.')}
             </p>
           )}
         </section>
