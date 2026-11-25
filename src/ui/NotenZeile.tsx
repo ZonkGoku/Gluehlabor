@@ -56,7 +56,7 @@ export function NotenZeile({ name, wert, onWert, auto = false, offen, onHilfe, a
         <div class="nz-stufen" role="radiogroup" aria-label={name}>
           {STUFEN.map((n) => (
             <button type="button" role="radio" aria-label={t('{n} Sterne', { n: n / 2 })} aria-checked={wert === n} data-an={wert === n} onClick={() => setze(wert === n ? null : n)}>
-              <Stern fuellung={wert === null ? 0 : (wert - (n - 2)) / 2} groesse={38} />
+              <Stern fuellung={wert === null ? 0 : (wert - (n - 2)) / 2} groesse={32} />
             </button>
           ))}
         </div>

@@ -312,6 +312,10 @@ export function Erfassen() {
           <Symbol name="pfeil" groesse={18} />
           {t('Zurück')}
         </a>
+        <span class="kopf-schritt" aria-hidden="true">
+          <i data-an="true" />
+          <i data-an={schritt === 'bewerten'} />
+        </span>
         <button type="button" class="kopf-menue" onClick={() => setMenueOffen(true)} aria-haspopup="dialog">
           {t('Menü')}
         </button>

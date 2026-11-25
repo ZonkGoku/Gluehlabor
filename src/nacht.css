@@ -1137,3 +1137,100 @@ button.glas,
     display: none;
   }
 }
+
+/* ── Erfassung: ruhigere Gestaltung (Schritt 2) ─────────────────────────────────────────────── */
+.erf .kopf-schritt {
+  display: inline-flex;
+  gap: 6px;
+}
+.erf .kopf-schritt i {
+  width: 28px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--nm-spur, var(--linie-stark));
+}
+.erf .kopf-schritt i[data-an='true'] {
+  background: linear-gradient(90deg, #ffe29a, #ff8a3d);
+}
+/* Stand, QR, Foto: leise Flächen statt vier Rahmen. Nur der Preis (Pflicht) behält Farbe. */
+.erf .besuch-zeile {
+  border: 1px solid var(--linie-stark);
+  background: var(--flaeche);
+}
+.erf .qr-zeile,
+.erf .foto-knopf {
+  border: 1px solid var(--linie-stark);
+  border-style: solid;
+  background: var(--flaeche);
+  min-height: 52px;
+}
+.erf .foto-knopf.gesetzt {
+  border-color: var(--nm-akzent-text);
+}
+/* Sterne: eine Karte, je Kriterium eine Zeile (Name links, Sterne rechts), keine Rahmen um jeden Stern */
+.erf .noten {
+  padding: 4px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--linie-stark);
+  background: var(--flaeche);
+}
+.erf .noten-kopf {
+  padding: 10px 0 2px;
+}
+.erf .nz {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0 8px;
+  padding: 4px 0;
+  border: 0;
+  border-bottom: 1px solid var(--linie);
+  border-radius: 0;
+  background: transparent;
+}
+.erf .nz:last-of-type {
+  border-bottom: 0;
+}
+.erf .nz[data-gesetzt='true'] {
+  border-color: var(--linie);
+}
+.erf .nz-kopf {
+  min-height: 48px;
+}
+.erf .nz-name {
+  font-size: 16px;
+}
+.erf .nz-stufen {
+  gap: 0;
+  grid-template-columns: repeat(5, 40px);
+  justify-self: end;
+}
+.erf .nz-stufen button {
+  min-height: 48px;
+  border: 0;
+  border-radius: 10px;
+}
+.erf .nz-segmente {
+  justify-self: end;
+}
+.erf .nz-hilfe-text {
+  grid-column: 1 / -1;
+  padding-bottom: 8px;
+}
+/* Kein −/+ mehr in der Zeile (Platz): die Sterne sind die Eingabe */
+.erf .nz-stepper,
+.erf .nz-wert {
+  display: none;
+}
+.erf .nz-stufen {
+  grid-template-columns: repeat(5, 38px);
+}
+@media (max-width: 380px) {
+  .erf .nz-stufen {
+    grid-template-columns: repeat(5, 34px);
+  }
+}
+.erf .mehr-angaben summary {
+  color: var(--text);
+  font-weight: 500;
+  padding: 0 4px;
+}
