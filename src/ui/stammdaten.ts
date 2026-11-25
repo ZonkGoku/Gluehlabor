@@ -7,6 +7,10 @@ import { alleMaerkte, type MarktListe } from '../lib/orte';
 import { KRITERIEN, type Kriterium } from '../lib/modell';
 
 export const ANKER = ankerJson as unknown as AnkerDaten;
+import osmJson from '../../data/maerkte-osm.json';
+
+/** Zusätzliche Märkte je Stadt aus OpenStreetMap (leer, bis der Workflow „Märkte aktualisieren" gelaufen ist). */
+export const MARKT_ZUSATZ = (osmJson as { staedte: Record<string, string[]> }).staedte;
 export const MARKTLISTE = maerkteJson as MarktListe;
 export const MAERKTE = alleMaerkte(MARKTLISTE);
 export const REGELN = regelnJson as string[];

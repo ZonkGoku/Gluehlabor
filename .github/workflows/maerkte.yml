@@ -1,0 +1,35 @@
+name: Märkte aktualisieren
+
+# Holt Weihnachtsmärkte aus OpenStreetMap und öffnet einen Pull Request mit data/maerkte-osm.json.
+# Manuell starten (Actions → Märkte aktualisieren → Run workflow), dann den Pull Request ansehen und mergen.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  maerkte:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/maerkte-osm.mjs
+      - name: Pull Request öffnen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet data/maerkte-osm.json; then echo "Keine Änderung"; exit 0; fi
+          git config user.name "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+          zweig="maerkte-osm-$(date +%Y%m%d-%H%M)"
+          git checkout -b "$zweig"
+          git add data/maerkte-osm.json
+          git commit -m "Märkte aus OpenStreetMap aktualisiert"
+          git push origin "$zweig"
+          gh pr create --base main --head "$zweig" --title "Märkte aus OpenStreetMap aktualisiert" --body "Automatisch erzeugt von scripts/maerkte-osm.mjs. Stichproben ansehen (data/maerkte-osm.json), dann mergen."

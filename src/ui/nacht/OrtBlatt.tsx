@@ -13,7 +13,7 @@ import {
   type MarktAuswahl,
 } from '../../lib/ortssuche';
 import { istOrtsname } from '../../lib/community';
-import { MARKTLISTE } from '../stammdaten';
+import { MARKTLISTE, MARKT_ZUSATZ } from '../stammdaten';
 import { Symbol } from '../Symbol';
 import { t, tn } from '../../i18n';
 
@@ -116,11 +116,11 @@ export function OrtBlatt({ start, bestand, onWahl, onZu, ohneMarkt = false }: Pr
   }, [onZu]);
 
   const becherJeStadt = useMemo(() => new Map(beliebteStaedte(bestand, MARKTLISTE, 999).map((b) => [schluessel(b.stadt), b.becher])), [bestand]);
-  const markt = useMemo(() => (stadt ? maerkteIn(bestand, MARKTLISTE, stadt) : []), [stadt, bestand]);
+  const markt = useMemo(() => (stadt ? maerkteIn(bestand, MARKTLISTE, stadt, MARKT_ZUSATZ) : []), [stadt, bestand]);
 
   /** Stadt gewählt: gibt es Märkte zur Auswahl, geht es weiter, sonst ist die Wahl fertig. */
   const waehleStadt = (s: string) => {
-    if (ohneMarkt || maerkteIn(bestand, MARKTLISTE, s).length === 0) return onWahl(s, MARKTLISTE.sonstiger);
+    if (ohneMarkt || maerkteIn(bestand, MARKTLISTE, s, MARKT_ZUSATZ).length === 0) return onWahl(s, MARKTLISTE.sonstiger);
     setStadt(s);
     setQ('');
   };

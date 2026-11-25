@@ -1115,3 +1115,18 @@ button.glas,
   justify-content: space-between;
   min-height: 52px;
 }
+
+/* Schmale Telefone: Preisfeld oben, Schnellwahl darunter (sonst stoßen die Ziffern an den Rand) */
+@media (max-width: 460px) {
+  .erf .preis-zeile {
+    flex-direction: column;
+  }
+  .erf .preis-eingabe {
+    flex: none;
+    width: 100%;
+  }
+  .erf .preis-schnell button {
+    font-size: 14px;
+    padding: 0;
+  }
+}

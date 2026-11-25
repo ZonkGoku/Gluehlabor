@@ -111,6 +111,12 @@ describe('beliebteStaedte und maerkteIn', () => {
     expect(m.some((x) => x.markt === 'Sonstiger')).toBe(false);
     expect(m.find((x) => x.markt === 'Fleetinsel')).toMatchObject({ gepflegt: true, becher: 0 });
   });
+  it('Zusatzliste (OpenStreetMap): kommt hinter die gepflegten, ohne Doppelte', () => {
+    const m = maerkteIn([], liste, 'Hamburg', { Hamburg: ['Fleetinsel', 'Weihnachtsmarkt Bergedorf'], Salzburg: ['Christkindlmarkt'] });
+    expect(m.filter((x) => x.markt === 'Fleetinsel')).toHaveLength(1);
+    expect(m[m.length - 1].markt).toBe('Weihnachtsmarkt Bergedorf');
+    expect(maerkteIn([], liste, 'salzburg', { Salzburg: ['Christkindlmarkt'] }).map((x) => x.markt)).toEqual(['Christkindlmarkt']);
+  });
   it('Stadt ohne gepflegte Märkte: nur die genutzten', () => {
     expect(maerkteIn(E, liste, 'Salzburg')).toEqual([]);
   });

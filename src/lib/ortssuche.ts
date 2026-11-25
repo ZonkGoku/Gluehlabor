@@ -123,9 +123,18 @@ export interface MarktAuswahl {
  * Märkte einer Stadt für die Auswahl: die gepflegten (in Listenreihenfolge) und alle, die dort schon bewertet wurden.
  * Gepflegte mit Bechern zuerst nach Zahl der Becher, „Sonstiger" fehlt (das ist „kein Markt").
  */
-export function maerkteIn(eintraege: readonly { markt: string; stadt?: string }[], liste: MarktListe, stadt: string): MarktAuswahl[] {
+export function maerkteIn(
+  eintraege: readonly { markt: string; stadt?: string }[],
+  liste: MarktListe,
+  stadt: string,
+  /** Zusätzliche Märkte je Stadt (data/maerkte-osm.json, aus OpenStreetMap); stehen hinter den von Hand gepflegten. */
+  zusatz: Readonly<Record<string, readonly string[]>> = {},
+): MarktAuswahl[] {
   const s = schluessel(stadt);
-  const gepflegt = liste.staedte.find((x) => schluessel(x.stadt) === s)?.maerkte ?? [];
+  const hand = liste.staedte.find((x) => schluessel(x.stadt) === s)?.maerkte ?? [];
+  const extra = Object.entries(zusatz).find(([k]) => schluessel(k) === s)?.[1] ?? [];
+  const bekannt = new Set(hand.map((m) => schluessel(m)));
+  const gepflegt = [...hand, ...extra.filter((m) => !bekannt.has(schluessel(m)))];
   const zaehler = new Map<string, number>();
   for (const e of eintraege) {
     if (e.markt === liste.sonstiger || !e.markt.trim()) continue;

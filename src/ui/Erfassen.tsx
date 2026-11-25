@@ -19,7 +19,7 @@ import { ortTeile, stadtVon, zerlegeFreienMarkt } from '../lib/orte';
 import { baueStaende } from '../lib/staende';
 import { maerkteIn } from '../lib/ortssuche';
 import { kanonischerStand, schlageStaendeVor, type Vorschlag } from '../lib/standvorschlag';
-import { ANKER, MARKTLISTE } from './stammdaten';
+import { ANKER, MARKTLISTE, MARKT_ZUSATZ } from './stammdaten';
 import { euro, probeNr, sterneText } from '../lib/format';
 import { DEFAULT_GEWICHTE, KRITERIEN, leereNoten, SORTEN, type Eintrag, type Kriterium, type Sorte } from '../lib/modell';
 import { bewerte } from '../lib/scoring';
@@ -278,7 +278,7 @@ export function Erfassen() {
 
   // Stände zur Auswahl: ohne Eingabe die schon bewerteten der Stadt, mit Eingabe die passenden
   const woListe: Vorschlag[] = e.stand.trim().length >= 2 ? vorschlaege : staendeHier;
-  const marktAuswahl = useMemo(() => (e.stadt ? maerkteIn(bestand, MARKTLISTE, e.stadt).slice(0, 12) : []), [bestand, e.stadt]);
+  const marktAuswahl = useMemo(() => (e.stadt ? maerkteIn(bestand, MARKTLISTE, e.stadt, MARKT_ZUSATZ).slice(0, 12) : []), [bestand, e.stadt]);
   const fotoUrl = useMemo(() => (foto ? URL.createObjectURL(foto) : null), [foto]);
   useEffect(() => () => void (fotoUrl && URL.revokeObjectURL(fotoUrl)), [fotoUrl]);
   const waehleStand = (v: Vorschlag) => {
