@@ -794,4 +794,10 @@ export const EN: Record<string, string> = {
   "Gilt nur auf diesem Gerät. Für alle anderen zählen die Standardwerte.": "Applies to this device only. Everyone else uses the defaults.",
   "{a} Becher, {b} Einzelnoten.": "{a} cups, {b} individual scores.",
   "Beste Note zuerst.": "Best score first.",
+  "Note von 1 bis 10": "Score from 1 to 10",
+  "von David & Philip getestet": "tested by David & Philip",
+  "gut und günstig": "good and cheap",
+  "Die Glühwein-Rangliste von Besuchern": "The mulled wine ranking by visitors",
+  "Alle bewerten ihren Glühwein, daraus entsteht die Rangliste. Ohne Konto.": "Everyone rates their mulled wine, together it makes the ranking. No account.",
+  "So geht es": "How it works",
 };

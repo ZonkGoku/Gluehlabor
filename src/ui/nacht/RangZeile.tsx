@@ -31,7 +31,10 @@ export function RangZeile({ zeile, ort, href, zusatz, siegel = false, deal = fal
         </span>
       </span>
       <span class="shrink-0 text-right">
-        <span class="block font-display text-[30px] leading-none text-gold-300">{zahl2(w.gesamt)}</span>
+        <span class="block font-display text-[30px] leading-none text-gold-300">
+          {zahl2(w.gesamt)}
+          <span class="ml-0.5 font-sans text-xs font-normal text-dunst">/10</span>
+        </span>
         {zusatz && <span class="mt-1 block text-xs text-dunst">{zusatz}</span>}
       </span>
     </a>

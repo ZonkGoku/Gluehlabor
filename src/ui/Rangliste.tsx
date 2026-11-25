@@ -8,6 +8,7 @@ import { useAktuell } from './hooks';
 import { useEintraege, useGewichte, useSaison } from './daten';
 import { useEinblenden } from './nacht/bewegung';
 import { Chips } from './nacht/Chips';
+import { DealMarke } from './nacht/DealMarke';
 import { PruefSiegel } from './nacht/PruefSiegel';
 import { DealZeile, StandZeile } from './nacht/StandKarten';
 import { MARKTLISTE } from './stammdaten';
@@ -60,7 +61,15 @@ export function Rangliste() {
           {tn(zeilen.length, '{n} Stand', '{n} Stände')} · {tn(bewertungen, '{n} Bewertung', '{n} Bewertungen')}
         </p>
         <h1 class="mt-2 font-display text-[44px] uppercase leading-[1] tracking-wide text-eis sm:text-5xl">{t('Rangliste')}</h1>
-        <p class="mt-2 text-sm text-dunst">{t('Beste Note zuerst.')}</p>
+        <p class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-dunst">
+          <span>{t('Note von 1 bis 10')}</span>
+          <span class="inline-flex items-center gap-1.5">
+            <PruefSiegel groesse={16} /> {t('von David & Philip getestet')}
+          </span>
+          <span class="inline-flex items-center gap-1.5">
+            <DealMarke /> {t('gut und günstig')}
+          </span>
+        </p>
         <div class="mt-4 flex flex-wrap items-center gap-2.5">
           <span class="relative">
             <select class={FELD} aria-label={t('Stadt')} value={stadt} onChange={(e) => waehleStadt((e.target as HTMLSelectElement).value)}>
@@ -154,13 +163,6 @@ export function Rangliste() {
         </div>
         )
       )}
-      <p class="mt-4 flex items-start gap-1.5 text-xs text-dunst">
-        <span class="mt-0.5 shrink-0">
-          <Symbol name="pfeil" groesse={12} />
-        </span>
-        <span class="mr-1 inline-block align-middle"><PruefSiegel groesse={16} /></span>
-        {t('Siegel: von David & Philip getestet.')} {t('Durchschnitt aller Bewertungen je Stand.')}
-      </p>
       <Betreiber />
     </div>
   );

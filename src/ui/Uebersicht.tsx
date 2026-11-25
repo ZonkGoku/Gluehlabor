@@ -71,10 +71,29 @@ const AUSWAHL =
 
 /** Erste Begegnung: sagt in einem Satz, was die App ist, und bietet genau einen Weg an. */
 function Willkommen() {
+  const schritte = [
+    { symbol: 'becher', text: 'Bewerten' },
+    { symbol: 'teilen', text: 'Teilen' },
+    { symbol: 'pokal', text: 'Rangliste' },
+  ] as const;
   return (
     <section data-ein class="glas rahmen-licht mb-5 mt-2 rounded-3xl p-5">
-      <h1 class="font-display text-[38px] uppercase leading-[1] tracking-wide text-eis sm:text-5xl">{t('Wo gibt’s den besten Glühwein?')}</h1>
-      <p class="mt-3 text-base text-eis/90">{t('Glühwein bewerten. 30 Sekunden, ohne Konto.')}</p>
+      <p class="etikett !text-gold-300">{t('Die Glühwein-Rangliste von Besuchern')}</p>
+      <h1 class="mt-2 font-display text-[38px] uppercase leading-[1] tracking-wide text-eis sm:text-5xl">{t('Wo gibt’s den besten Glühwein?')}</h1>
+      <p class="mt-3 text-base text-eis/90">{t('Alle bewerten ihren Glühwein, daraus entsteht die Rangliste. Ohne Konto.')}</p>
+      <ol class="mt-4 flex items-center justify-between gap-1" aria-label={t('So geht es')}>
+        {schritte.map((x, i) => (
+          <>
+            <li class="flex flex-1 flex-col items-center gap-1.5 text-center">
+              <span class="grid size-12 place-items-center rounded-full border border-gold-400/60 text-gold-300">
+                <Symbol name={x.symbol} groesse={24} />
+              </span>
+              <span class="text-sm font-semibold text-eis">{t(x.text)}</span>
+            </li>
+            {i < schritte.length - 1 && <span aria-hidden="true" class="pb-6 text-dunst">→</span>}
+          </>
+        ))}
+      </ol>
       <a
         href="#/erfassen"
         class="animate-puls mt-5 flex min-h-[56px] items-center justify-center gap-2 rounded-full px-6 text-lg font-semibold text-[#1a1020] no-underline"
