@@ -31,17 +31,17 @@ export function Geruest({ route, children, ohneNavigation = false }: { route: st
       ) : (
         <>
           <header
-            class="nm sticky top-0 z-30 flex items-center gap-3 border-b border-rand px-4 pb-3 backdrop-blur-xl"
+            class="nm sticky top-0 z-30 flex items-center gap-2 border-b min-[420px]:gap-3 border-rand px-4 pb-3 backdrop-blur-xl"
             style={{ paddingTop: 'calc(env(safe-area-inset-top) + 12px)', background: 'light-dark(rgb(251 246 242 / 0.88), rgb(7 11 26 / 0.86))' }}
           >
             <Lichterkette />
             <a href="#/" class="flex items-center gap-2.5 text-eis" aria-label={t('{name}, zur Übersicht', { name: MARKE.name })}>
               <LogoMarke groesse={42} strich={4} />
-              <Wortmarke taglineKlasse="hidden min-[470px]:block" />
+              <Wortmarke klasse="max-[339px]:hidden" taglineKlasse="hidden min-[470px]:block" />
             </a>
             <span class="flex-1" />
             {darf && <SyncAnzeige />}
-            {breit && <SpracheKnopf />}
+            <SpracheKnopf />
             {breit && <MenueKnopf />}
             <ThemeKnopf />
             <a class={ICONKNOPF} href="#/spickzettel" aria-label={t('Hilfe & Regeln')}>
