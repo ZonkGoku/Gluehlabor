@@ -1,20 +1,18 @@
 // Stände: Eine Bude (Name, Markt, Stadt) mit den Bewertungen vieler Leute. Reine Funktionen.
 //
 // Ein Eintrag (Becher) ist eine Bewertung einer Person. Die Rangliste zeigt Stände: der Durchschnitt aller
-// Bewertungen, mit Anzahl. Wenige Bewertungen schlagen nicht durch: Für die Reihenfolge wird der Durchschnitt
-// zum Mittel aller Bewertungen hingezogen (je weniger Bewertungen, desto stärker). Angezeigt wird immer der echte Durchschnitt.
+// Bewertungen, mit Anzahl. Die Reihenfolge ist genau die angezeigte Zahl (auf zwei Stellen), bei Gleichstand
+// steht der Stand mit mehr Bewertungen vorn. Stände mit wenigen Bewertungen sind nur gekennzeichnet („wenige Bewertungen").
 
 import { abendVon, istPruefstelle, standIdent } from './community';
 import { KRITERIEN, type Eintrag, type Gewichte } from './modell';
 import { stadtVon, type MarktListe } from './orte';
 import { medianVon, TOP_DEAL, vergleichspreise } from './preisleistung';
-import { bewerte, rangliste, runde2, urteil, type Urteil, type Wertung } from './scoring';
+import { bewerte, runde2, urteil, type Urteil, type Wertung } from './scoring';
 import type { Zeile } from './auswertung';
 
 /** Ab so vielen Bewertungen gilt ein Stand nicht mehr als „vorläufig". */
 export const MIN_BEWERTUNGEN = 3;
-/** Gewicht des Gesamtmittels bei der Reihenfolge, gemessen in „Bewertungen". */
-export const VORWERT_GEWICHT = 3;
 
 export type Quelle = 'alle' | 'pruefstelle' | 'community';
 
@@ -114,20 +112,14 @@ export function baueStaende<T extends Eintrag>(
     };
   });
   const mitWert = aufbau.filter((s) => s.wert.gesamt !== null);
-  // Mittel aller einzelnen Bewertungen der Quelle: der Wert, zu dem wenige Bewertungen hingezogen werden.
-  const alleNoten = mitWert.flatMap((s) => s.bewertungen.map((e) => bewerte(e.noten, gewichte).gesamt).filter((x): x is number => x !== null));
-  const vorwert = mittel(alleNoten) ?? 0;
-  // Preis-Leistung hat eine eigene Rangfolge, ebenfalls zum Mittel hingezogen.
-  const alleDeal = mitWert.flatMap((s) => s.plNoten);
-  const dealVorwert = mittel(alleDeal) ?? 0;
-  const dealWert = (plNoten: number[]) => {
-    const p = mittel(plNoten);
-    return p === null ? null : (plNoten.length * p + VORWERT_GEWICHT * dealVorwert) / (plNoten.length + VORWERT_GEWICHT);
-  };
-  const dealRang = new Map(rangliste(mitWert.filter((s) => s.plNoten.length > 0), (s) => dealWert(s.plNoten)).map((p) => [p.eintrag.id, p.rang]));
+  // Preis-Leistung hat eine eigene Rangfolge: das Mittel der Preis-Leistungs-Noten, ebenfalls ohne versteckte Gewichtung.
+  const dealWert = (plNoten: number[]) => mittel(plNoten);
+  const dealRang = new Map(
+    platziere(mitWert.filter((s) => s.plNoten.length > 0), (s) => dealWert(s.plNoten), (s) => s.plNoten.length).map((p) => [p.s.id, p.rang]),
+  );
   const staende: Stand<T>[] = aufbau.map((s) => {
     const n = s.wert.anzahl;
-    const rangWert = s.wert.gesamt === null ? null : (n * s.wert.gesamt + VORWERT_GEWICHT * vorwert) / (n + VORWERT_GEWICHT);
+    const rangWert = s.wert.gesamt;
     const { plNoten, preise, ...rest } = s;
     const punkte = mittel(plNoten);
     return {
@@ -140,11 +132,28 @@ export function baueStaende<T extends Eintrag>(
       rang: null,
     };
   });
-  const platziert = rangliste(
-    staende.filter((s) => s.wert.anzahl > 0),
-    (s) => s.rangWert,
+  return platziere(
+    staende.filter((x) => x.wert.anzahl > 0),
+    (x) => x.rangWert,
+    (x) => x.wert.anzahl,
+  ).map((p) => ({ ...p.s, rang: p.rang }));
+}
+
+/**
+ * Sortiert nach der angezeigten Zahl (auf zwei Stellen), bei Gleichstand nach Zahl der Bewertungen, dann nach Name.
+ * Gleicher Wert bei gleicher Zahl von Bewertungen teilt den Platz (1, 1, 3).
+ */
+function platziere<S extends { stand: string }>(items: readonly S[], wert: (s: S) => number | null, anzahl: (s: S) => number): { s: S; rang: number }[] {
+  const mit = items.filter((x) => wert(x) !== null);
+  const sortiert = [...mit].sort(
+    (a, b) => runde2(wert(b)!) - runde2(wert(a)!) || anzahl(b) - anzahl(a) || a.stand.localeCompare(b.stand, 'de'),
   );
-  return platziert.map((p) => ({ ...p.eintrag, rang: p.rang }));
+  let rang = 0;
+  return sortiert.map((x, i) => {
+    const vor = sortiert[i - 1];
+    if (!vor || runde2(wert(vor)!) !== runde2(wert(x)!) || anzahl(vor) !== anzahl(x)) rang = i + 1;
+    return { s: x, rang };
+  });
 }
 
 /** Ein Stand als Zeile der Rangliste, damit Karten und Zeilen der Ansichten ihn wie einen Eintrag darstellen können. */

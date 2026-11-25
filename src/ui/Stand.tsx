@@ -133,7 +133,7 @@ export function StandSeite({ id }: { id: string }) {
               {t('QR-Code zum Mitbewerten zeigen')}
             </a>
           )}
-          {s.vorlaeufig && <p class="text-center text-xs text-dunst">{t('Noch wenige Bewertungen (ab {n} zählt der Stand voll).', { n: MIN_BEWERTUNGEN })}</p>}
+          {s.vorlaeufig && <p class="text-center text-xs text-dunst">{t('Erst wenige Bewertungen: die Note kann sich noch ändern (ab {n} gilt sie als gesichert).', { n: MIN_BEWERTUNGEN })}</p>}
           <Kachel titel={t('Verteilung der Urteile')} innen="p-4">
             <ul class="space-y-1.5">
               {URTEILE.map((u) => (

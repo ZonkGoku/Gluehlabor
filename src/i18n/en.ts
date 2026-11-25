@@ -788,4 +788,6 @@ export const EN: Record<string, string> = {
   "Bestätigen": "Confirm",
   "Fertig.": "Done.",
   "Du bist in der App eines anderen Dienstes. Öffne diese Seite zuerst im Browser (Safari oder Chrome).": "You're inside another app. Open this page in your browser first (Safari or Chrome).",
+  "Erst wenige Bewertungen: die Note kann sich noch ändern (ab {n} gilt sie als gesichert).": "Only a few ratings so far: the score may still change (from {n} it counts as reliable).",
+  "Sortiert nach der Note, bei Gleichstand nach Zahl der Bewertungen.": "Sorted by score; ties by number of ratings.",
 };

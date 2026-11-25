@@ -64,6 +64,7 @@ export function Rangliste() {
           {tn(zeilen.length, '{n} Stand', '{n} Stände')} · {tn(bewertungen, '{n} Bewertung', '{n} Bewertungen')}
         </p>
         <h1 class="mt-2 font-display text-[44px] uppercase leading-[1] tracking-wide text-eis sm:text-5xl">{t('Rangliste')}</h1>
+        <p class="mt-2 text-sm text-dunst">{t('Sortiert nach der Note, bei Gleichstand nach Zahl der Bewertungen.')}</p>
         <div class="mt-4 flex flex-wrap items-center gap-2.5">
           <span class="relative">
             <select class={FELD} aria-label={t('Stadt')} value={stadt} onChange={(e) => waehleStadt((e.target as HTMLSelectElement).value)}>

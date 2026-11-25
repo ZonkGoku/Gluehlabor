@@ -25,13 +25,23 @@ describe('Stände', () => {
     expect(chrom.wert.anzahl).toBe(2);
     expect(chrom.wert.gesamt).toBe(7);
   });
-  it('wenige Bewertungen schlagen nicht durch: eine 10 steht hinter vielen guten Bewertungen', () => {
+  it('die Reihenfolge ist genau die angezeigte Zahl, wenige Bewertungen sind nur gekennzeichnet', () => {
     const viele = [9, 9, 9, 9, 9, 9, 9, 9].map((x) => b('Zuverlässig', x));
     const s = baueStaende([b('Einmal', 10), ...viele, b('Mittel', 5), b('Mittel', 5), b('Mittel', 5)], LISTE, DEFAULT_GEWICHTE);
-    expect(s.map((x) => x.stand)).toEqual(['Zuverlässig', 'Einmal', 'Mittel']);
-    expect(s[1].wert.gesamt).toBe(10); // angezeigt wird der echte Durchschnitt
-    expect(s[1].vorlaeufig).toBe(true);
-    expect(s[0].vorlaeufig).toBe(false);
+    expect(s.map((x) => x.stand)).toEqual(['Einmal', 'Zuverlässig', 'Mittel']);
+    expect(s.map((x) => x.wert.gesamt)).toEqual([10, 9, 5]);
+    expect(s[0].vorlaeufig).toBe(true);
+    expect(s[1].vorlaeufig).toBe(false);
+  });
+  it('höhere angezeigte Zahl steht nie unter einer niedrigeren', () => {
+    const s = baueStaende([b('A', 8), b('B', 7), b('B', 7), b('B', 7), b('C', 7), b('C', 8)], LISTE, DEFAULT_GEWICHTE);
+    const zahlen = s.map((x) => x.wert.gesamt!);
+    expect(zahlen).toEqual([...zahlen].sort((x, y) => y - x));
+  });
+  it('bei gleicher Zahl steht der Stand mit mehr Bewertungen vorn, Plätze fortlaufend', () => {
+    const s = baueStaende([b('Einer', 7), b('Drei', 7), b('Drei', 7), b('Drei', 7)], LISTE, DEFAULT_GEWICHTE);
+    expect(s.map((x) => x.stand)).toEqual(['Drei', 'Einer']);
+    expect(s.map((x) => x.rang)).toEqual([1, 2]);
   });
   it('Plätze 1, 1, 3 bei gleichem Wert', () => {
     const s = baueStaende([b('A', 8), b('B', 8), b('C', 4)], LISTE, DEFAULT_GEWICHTE);
