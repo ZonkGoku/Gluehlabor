@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks';
-import { zahl2 } from '../lib/format';
+import { sterneText } from '../lib/format';
 import type { Verlauf } from '../lib/startseite';
 import { datumKurz } from './bausteine';
 import { t, tn } from '../i18n';
@@ -51,7 +51,7 @@ export function Saisonverlauf({ verlauf, saison }: { verlauf: Verlauf; saison: n
       </div>
       <p class="verlauf-text" aria-live="polite">
         <b>{beschriftung(an.datum)}</b> · {tn(an.anzahl, '{n} Becher', '{n} Becher')}
-        {an.mittel !== null && <> · Ø {zahl2(an.mittel)}</>}
+        {an.mittel !== null && <> · Ø {sterneText(an.mittel)}</>}
       </p>
     </div>
   );

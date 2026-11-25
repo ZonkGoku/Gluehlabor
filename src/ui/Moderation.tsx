@@ -10,7 +10,7 @@ import { findeDubletten, type Dublette } from '../lib/dubletten';
 import { AdminStaende } from './AdminStaende';
 import { GewichteEditor } from './GewichteEditor';
 import { baueStaende } from '../lib/staende';
-import { zahl2 } from '../lib/format';
+import { sterneText } from '../lib/format';
 import { bewerte } from '../lib/scoring';
 import { useGewichte } from './daten';
 import { datumKurz } from './bausteine';
@@ -273,7 +273,7 @@ export function Moderation() {
                           {[ortText(MARKTLISTE, e), datumKurz(e.datum) ?? t('Saison {s}', { s: e.saison }), istPruefstelle(e) ? t('Prüfstelle') : anzeigeName(e)].filter(Boolean).join(' · ')}
                         </span>
                       </span>
-                      <span class="font-display text-xl text-gold-300">{zahl2(bewerte(e.noten, gewichte).gesamt)}</span>
+                      <span class="font-display text-xl text-gold-300">{sterneText(bewerte(e.noten, gewichte).gesamt)}</span>
                     </label>
                   </li>
                 ))}

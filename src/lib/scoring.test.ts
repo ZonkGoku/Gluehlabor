@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_GEWICHTE, KRITERIEN, type Noten } from './modell';
-import { bewerte, gewichteterSchnitt, rangliste, runde2, urteil } from './scoring';
+import { bewerte, gewichteterSchnitt, rangliste, runde2, sterne1, urteil } from './scoring';
 
 /** Noten in der Reihenfolge geschmack, geruch, temperatur, personal, atmosphaere, preisLeistung, becher. */
 function n(...werte: (number | null)[]): Noten {
@@ -98,17 +98,32 @@ describe('Eingabeprüfung', () => {
   });
 });
 
+describe('sterne1', () => {
+  it('halbiert und rundet auf eine Stelle', () => {
+    expect(sterne1(8)).toBe(4);
+    expect(sterne1(6.33)).toBe(3.2);
+    expect(sterne1(7.33)).toBe(3.7);
+    expect(sterne1(10)).toBe(5);
+    expect(sterne1(1)).toBe(0.5);
+  });
+});
+
 describe('urteil', () => {
   it.each([
     [10, 'Nachschenken'],
     [8, 'Nachschenken'],
-    [7.99, 'Richtig gut'],
-    [7.996, 'Nachschenken'], // angezeigt als 8.00
+    // Das Urteil richtet sich nach dem angezeigten Wert: Sterne auf eine Stelle (10-Punkte-Wert in 0,2er-Schritten)
+    [7.8, 'Richtig gut'], // 3.9 Sterne
+    [7.89, 'Richtig gut'], // 3.9 Sterne
+    [7.9, 'Nachschenken'], // angezeigt als 4.0 Sterne
+    [7.99, 'Nachschenken'], // 4.0 Sterne
     [6, 'Richtig gut'],
-    [5.99, 'Geht klar'],
+    [5.8, 'Geht klar'], // 2.9 Sterne
+    [5.9, 'Richtig gut'], // 3.0 Sterne
     [5, 'Geht klar'],
     [4, 'Einmal reicht'],
-    [3.99, 'Weggießen'],
+    [3.8, 'Weggießen'], // 1.9 Sterne
+    [3.9, 'Einmal reicht'], // 2.0 Sterne
     [1, 'Weggießen'],
   ] as const)('%s -> %s', (g, u) => {
     expect(urteil(g)).toBe(u);

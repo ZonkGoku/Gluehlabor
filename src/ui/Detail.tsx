@@ -5,7 +5,7 @@ import { MELDEGRUENDE, meldeBecher } from '../daten/sync';
 import { ankerFuer } from '../lib/anker';
 import { anzeigeName, istPruefstelle } from '../lib/community';
 import { filtere, ranglisteMitWertung } from '../lib/auswertung';
-import { euro, zahl2 } from '../lib/format';
+import { euro, halbSterne, sterneText } from '../lib/format';
 import { KRITERIEN } from '../lib/modell';
 import { ortText, ortTeile } from '../lib/orte';
 import { bewerte } from '../lib/scoring';
@@ -170,15 +170,15 @@ export function Detail({ id }: { id: string }) {
                 <span class="krit">
                   {kriteriumLabel(ANKER[k].label)}
                 </span>
-                <span class="wert">{n ?? '–'}</span>
-                <div class="spur" role="img" aria-label={t('{label}: {n} von 10, Durchschnitt {schnitt}', { label: kriteriumLabel(ANKER[k].label), n: n ?? t('nicht bewertet'), schnitt: zahl2(schnitt) })}>
+                <span class="wert">{halbSterne(n)}</span>
+                <div class="spur" role="img" aria-label={t('{label}: {n} von 5, Durchschnitt {schnitt}', { label: kriteriumLabel(ANKER[k].label), n: n === null ? t('nicht bewertet') : halbSterne(n), schnitt: sterneText(schnitt) })}>
                   <div class="fuell" style={{ width: `${(n ?? 0) * 10}%` }} />
                   {schnitt !== null && <div class="schnitt" style={{ left: `${schnitt * 10}%` }} />}
                 </div>
                 <span class="anker">
                   {n === null
                     ? t('Nicht bewertet. Zählt weder in Zähler noch Nenner.')
-                    : anker.map((a) => `${a.stufe}: ${a.text}`).join('  ·  ')}
+                    : anker.map((a) => `${halbSterne(a.stufe)}: ${a.text}`).join('  ·  ')}
                 </span>
               </div>
             );

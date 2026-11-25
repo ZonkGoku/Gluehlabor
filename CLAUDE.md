@@ -144,6 +144,10 @@ scripts/launch-check.ts  Startcheck (npm run launch-check)
 scripts/logo.mjs         erzeugt alle Logo- und Icon-Dateien aus assets/logo-original.jpeg (Playwright aus der Umgebung)
 ```
 
+## Anzeige in Sternen (seit 25.11.2026)
+
+**Eingabe und Anzeige sind Sterne von 0 bis 5**, gespeichert und gerechnet wird weiter 1 bis 10 (ein Stern = 2 Punkte). Die Eingabe sind fünf große Knöpfe 1 bis 5 (Wert 2, 4, 6, 8, 10), −/+ rückt um einen halben Stern. Angezeigt wird immer `sterneText(punkte)` bzw. `halbSterne(note)` aus `src/lib/format.ts` (eine Stelle, Punkt als Trenner) mit dem kleinen Stern (`ui/nacht/SterneWert.tsx`). `sterne1(punkte)` in `scoring.ts` = `round(punkte × 5) / 10`. **Rangliste, Plätze und Urteil richten sich nach diesem angezeigten Wert** (Urteil: `sterne1(gesamt) × 2` gegen 8/6/5/4, also 4.0 Sterne = „Nachschenken“, 3.0 = „Richtig gut“, 2.5 = „Geht klar“, 2.0 = „Einmal reicht“). Gleiche Sternzahl: mehr Bewertungen zuerst. Nicht umgestellt: Statistik-Seite (Selbstkontrolle der 1–10-Skala).
+
 ## Scoring-Regeln (verbindlich, siehe Tests in src/lib/scoring.test.ts)
 
 - Noten: Ganzzahl 1..10 oder `null`. **`null` fällt aus Zähler UND Nenner, zählt nie als 0.**
@@ -154,7 +158,7 @@ scripts/logo.mjs         erzeugt alle Logo- und Icon-Dateien aus assets/logo-ori
 - Default-Gewichte: geschmack 3, geruch 2, temperatur 2, preisLeistung 2, personal 1,
   atmosphaere 1, becher 1. Gewichte sind globaler Zustand (Einstellung `gewichte`), nie Teil des Eintrags.
 - Keine Note (oder alle Gewichte 0) → Wert `null`, nicht 0.
-- Urteil aus gesamt, verglichen auf **zwei Stellen gerundet** (Anzeige und Urteil stimmen immer überein):
+- Urteil aus gesamt, verglichen auf den **angezeigten Wert** (seit 25.11.2026 Sterne auf eine Stelle, siehe „Anzeige in Sternen“; vorher zwei Stellen). Anzeige und Urteil stimmen immer überein:
   ≥ 8 Nachschenken · ≥ 6 Richtig gut · ≥ 5 Geht klar · ≥ 4 Einmal reicht · sonst Weggießen
 - Rangliste absteigend, Wettkampfplätze 1, 1, 3. Gleichstand = gleicher Wert auf zwei Stellen.
   Einträge ohne Wert ans Ende, ohne Rang.

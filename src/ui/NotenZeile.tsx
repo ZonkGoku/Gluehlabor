@@ -1,7 +1,8 @@
-// Eine Note als fünf große Knöpfe (2, 4, 6, 8, 10) statt eines Schiebereglers: kein Wischen, kein Fehltipp am Rand, mit
-// dicken Daumen und Handschuhen bedienbar. Zweites Tippen nimmt die Note zurück. Wer genauer will, rückt mit − und + um einen Punkt.
+// Eine Note als fünf große Sterne-Knöpfe (1 bis 5, gespeichert als 2, 4, 6, 8, 10) statt eines Schiebereglers: kein Wischen, kein Fehltipp am Rand, mit
+// dicken Daumen und Handschuhen bedienbar. Zweites Tippen nimmt die Note zurück. Wer genauer will, rückt mit − und + um einen halben Stern.
 // Die Stufen passen zu den Beschreibungen der Noten (data/anker.json: 2, 4, 6, 8, 10).
 import { t } from '../i18n';
+import { halbSterne } from '../lib/format';
 import type { Note } from '../lib/modell';
 
 const STUFEN = [2, 4, 6, 8, 10] as const;
@@ -36,16 +37,16 @@ export function NotenZeile({ name, wert, onWert, auto = false, offen, onHilfe, a
         </span>
         {onWert && wert !== null && (
           <span class="nz-stepper" role="group" aria-label={t('{name} genauer einstellen', { name })}>
-            <button type="button" aria-label={t('einen Punkt weniger')} disabled={wert <= 1} onClick={() => setze(Math.max(1, wert - 1))}>
+            <button type="button" aria-label={t('einen halben Stern weniger')} disabled={wert <= 1} onClick={() => setze(Math.max(1, wert - 1))}>
               −
             </button>
-            <output aria-live="polite">{wert}</output>
-            <button type="button" aria-label={t('einen Punkt mehr')} disabled={wert >= 10} onClick={() => setze(Math.min(10, wert + 1))}>
+            <output aria-live="polite">{halbSterne(wert)}</output>
+            <button type="button" aria-label={t('einen halben Stern mehr')} disabled={wert >= 10} onClick={() => setze(Math.min(10, wert + 1))}>
               +
             </button>
           </span>
         )}
-        {!onWert && <output class="nz-wert">{wert ?? '–'}</output>}
+        {!onWert && <output class="nz-wert">{halbSterne(wert)}</output>}
         <button type="button" class="nz-hilfe" aria-expanded={offen} aria-label={t('Was bedeutet {name}?', { name })} onClick={onHilfe}>
           ?
         </button>
@@ -53,8 +54,8 @@ export function NotenZeile({ name, wert, onWert, auto = false, offen, onHilfe, a
       {onWert ? (
         <div class="nz-stufen" role="radiogroup" aria-label={name}>
           {STUFEN.map((n) => (
-            <button type="button" role="radio" aria-checked={wert === n} data-an={wert === n} onClick={() => setze(wert === n ? null : n)}>
-              {n}
+            <button type="button" role="radio" aria-label={t('{n} Sterne', { n: n / 2 })} aria-checked={wert === n} data-an={wert === n} onClick={() => setze(wert === n ? null : n)}>
+              {n / 2}
             </button>
           ))}
         </div>
@@ -70,7 +71,7 @@ export function NotenZeile({ name, wert, onWert, auto = false, offen, onHilfe, a
           {hilfeText ??
             anker?.map((a) => (
               <p>
-                <b>{a.stufe}</b> {a.text}
+                <b>{halbSterne(a.stufe)}</b> {a.text}
               </p>
             ))}
         </div>

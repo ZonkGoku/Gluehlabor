@@ -8,7 +8,7 @@ import { abendVon, istPruefstelle, standIdent } from './community';
 import { KRITERIEN, type Eintrag, type Gewichte } from './modell';
 import { stadtVon, type MarktListe } from './orte';
 import { medianVon, TOP_DEAL, vergleichspreise } from './preisleistung';
-import { bewerte, runde2, urteil, type Urteil, type Wertung } from './scoring';
+import { bewerte, runde2, sterne1, urteil, type Urteil, type Wertung } from './scoring';
 import type { Zeile } from './auswertung';
 
 /** Ab so vielen Bewertungen gilt ein Stand nicht mehr als „vorläufig". */
@@ -140,18 +140,18 @@ export function baueStaende<T extends Eintrag>(
 }
 
 /**
- * Sortiert nach der angezeigten Zahl (auf zwei Stellen), bei Gleichstand nach Zahl der Bewertungen, dann nach Name.
+ * Sortiert nach der angezeigten Zahl (Sterne auf eine Stelle), bei Gleichstand nach Zahl der Bewertungen, dann nach Name.
  * Gleicher Wert bei gleicher Zahl von Bewertungen teilt den Platz (1, 1, 3).
  */
 function platziere<S extends { stand: string }>(items: readonly S[], wert: (s: S) => number | null, anzahl: (s: S) => number): { s: S; rang: number }[] {
   const mit = items.filter((x) => wert(x) !== null);
   const sortiert = [...mit].sort(
-    (a, b) => runde2(wert(b)!) - runde2(wert(a)!) || anzahl(b) - anzahl(a) || a.stand.localeCompare(b.stand, 'de'),
+    (a, b) => sterne1(wert(b)!) - sterne1(wert(a)!) || anzahl(b) - anzahl(a) || a.stand.localeCompare(b.stand, 'de'),
   );
   let rang = 0;
   return sortiert.map((x, i) => {
     const vor = sortiert[i - 1];
-    if (!vor || runde2(wert(vor)!) !== runde2(wert(x)!) || anzahl(vor) !== anzahl(x)) rang = i + 1;
+    if (!vor || sterne1(wert(vor)!) !== sterne1(wert(x)!) || anzahl(vor) !== anzahl(x)) rang = i + 1;
     return { s: x, rang };
   });
 }

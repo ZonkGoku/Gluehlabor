@@ -62,7 +62,7 @@ export function Rangliste() {
         </p>
         <h1 class="mt-2 font-display text-[44px] uppercase leading-[1] tracking-wide text-eis sm:text-5xl">{t('Rangliste')}</h1>
         <p class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-dunst">
-          <span>{t('Note von 1 bis 10')}</span>
+          <span>{t('Bis zu 5 Sterne')}</span>
           <span class="inline-flex items-center gap-1.5">
             <PruefSiegel groesse={16} /> {t('von David & Philip getestet')}
           </span>

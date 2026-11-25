@@ -67,9 +67,15 @@ export function runde2(x: number): number {
  * Wert, damit Anzeige und Urteil nie auseinanderfallen (7.996 zeigt 8.00 und
  * ist dann auch „Nachschenken").
  */
+/** Die Anzeige: Sterne von 0 bis 5 auf eine Stelle (10-Punkte-Wert halbiert). 8.00 → 4.0, 6.33 → 3.2. */
+export function sterne1(punkte: number): number {
+  return Math.round(punkte * 5) / 10;
+}
+
 export function urteil(gesamt: number | null): Urteil | null {
   if (gesamt === null) return null;
-  const g = runde2(gesamt);
+  // Urteil nach dem angezeigten Wert (Sterne auf eine Stelle), damit Anzeige und Urteil nie auseinanderfallen
+  const g = sterne1(gesamt) * 2;
   if (g >= 8) return 'Nachschenken';
   if (g >= 6) return 'Richtig gut';
   if (g >= 5) return 'Geht klar';

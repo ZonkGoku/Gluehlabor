@@ -2,7 +2,7 @@
 // Gezeichnet wird direkt auf einer Canvas statt per Bildschirmfoto: gleiche Qualität auf jedem Gerät, keine zusätzliche Bibliothek.
 import type { Zeile } from '../../lib/auswertung';
 import { anzeigeName, istPruefstelle } from '../../lib/community';
-import { zahl2 } from '../../lib/format';
+import { sterneText } from '../../lib/format';
 import { qrModule } from './qr';
 import { kurzId } from './Ticket';
 import { t as uebersetze } from '../../i18n';
@@ -283,7 +283,7 @@ export async function erzeugeKartenBild(d: KartenDaten): Promise<Blob> {
   k.shadowBlur = 70;
   k.fillStyle = lichtFarbe(noteY - 330, noteY);
   k.font = '300px Anton';
-  k.fillText(zahl2(d.gesamt), pad - 8, noteY);
+  k.fillText(sterneText(d.gesamt), pad - 8, noteY);
   k.restore();
 
   // Urteil
@@ -310,7 +310,7 @@ export async function erzeugeKartenBild(d: KartenDaten): Promise<Blob> {
     k.textAlign = 'right';
     k.fillStyle = '#f4f1ff';
     k.font = '34px "IBM Plex Mono"';
-    k.fillText(zahl2(wert), bx + bw, by);
+    k.fillText(sterneText(wert), bx + bw, by);
     k.fillStyle = 'rgba(255,255,255,.12)';
     rund(k, bx, by + 18, bw, 16, 8);
     k.fill();
@@ -401,7 +401,7 @@ export async function teileKartenBild(d: KartenDaten, link: string): Promise<'ge
     const blob = await erzeugeKartenBild(d);
     const name = `gluehlabor-${d.stand.toLowerCase().replace(/[^a-z0-9äöüß]+/g, '-').replace(/^-|-$/g, '') || 'becher'}.png`;
     const datei = new File([blob], name, { type: 'image/png' });
-    const text = uebersetze('{stand}: {n} von 10 bei Glühlabor', { stand: d.stand, n: zahl2(d.gesamt) });
+    const text = uebersetze('{stand}: {n} von 5 Sternen bei Glühlabor', { stand: d.stand, n: sterneText(d.gesamt) });
     if (navigator.canShare?.({ files: [datei] })) {
       await navigator.share({ files: [datei], title: 'Glühlabor', text: `${text} ${link}` });
       return 'geteilt';

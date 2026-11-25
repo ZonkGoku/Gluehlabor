@@ -19,6 +19,7 @@ import { StandTopKarte } from './nacht/StandKarten';
 import { DealMarke } from './nacht/DealMarke';
 import { HilfePunkt } from './nacht/HilfePunkt';
 import { FotoStreifen } from './FotoStreifen';
+import { SterneWert } from './nacht/SterneWert';
 import { Netzdiagramm, NotenBalken, type Reihe } from './Netzdiagramm';
 import { SiegelEtikett } from './nacht/PruefSiegel';
 import { ANKER, MARKTLISTE } from './stammdaten';
@@ -93,12 +94,12 @@ export function StandSeite({ id }: { id: string }) {
           <div class="grid grid-cols-2 gap-3">
             <Kachel innen="p-4">
               <p class="etikett">{t('Prüfstelle · David & Philip')}</p>
-              <p class="mt-2 font-display text-[44px] leading-none text-gold-300">{zahl2(s.pruefstelle.gesamt)}</p>
+              <p class="mt-2 font-display text-[44px] leading-none text-gold-300"><SterneWert wert={s.pruefstelle.gesamt} /></p>
               <p class="mt-1 text-xs text-dunst">{s.pruefstelle.anzahl === 0 ? t('noch nicht bewertet') : tn(s.pruefstelle.anzahl, '{n} Bewertung', '{n} Bewertungen')}</p>
             </Kachel>
             <Kachel innen="p-4">
               <p class="etikett">{t('Community')}</p>
-              <p class="mt-2 font-display text-[44px] leading-none text-gold-300">{zahl2(s.community.gesamt)}</p>
+              <p class="mt-2 font-display text-[44px] leading-none text-gold-300"><SterneWert wert={s.community.gesamt} /></p>
               <p class="mt-1 text-xs text-dunst">{s.community.anzahl === 0 ? t('noch nicht bewertet') : tn(s.community.anzahl, '{n} Bewertung', '{n} Bewertungen')}</p>
             </Kachel>
           </div>
@@ -109,7 +110,7 @@ export function StandSeite({ id }: { id: string }) {
                   {t('Preis-Leistung')}{' '}
                   <HilfePunkt text={t('Glühwein-Note, minus 0,5 je Euro über dem üblichen Preis.')} />
                 </p>
-                <p class="mt-2 font-display text-[44px] leading-none text-gold-300">{zahl2(s.deal.punkte)}</p>
+                <p class="mt-2 font-display text-[44px] leading-none text-gold-300"><SterneWert wert={s.deal.punkte} /></p>
                 <p class="mt-1 text-xs text-dunst">
                   {s.preis.median === null
                     ? t('noch kein Preis gemeldet')
@@ -192,7 +193,7 @@ export function StandSeite({ id }: { id: string }) {
                   {e.notiz && <span class="mt-1 block text-sm text-eis/90">„{e.notiz}"</span>}
                 </span>
                 <span class="text-right">
-                  <span class="block font-display text-[28px] leading-none text-gold-300">{zahl2(w.gesamt)}</span>
+                  <span class="block font-display text-[28px] leading-none text-gold-300"><SterneWert wert={w.gesamt} /></span>
                   <UrteilPill urteil={w.urteil} />
                 </span>
               </a>

@@ -1,5 +1,5 @@
 import { marktCheckliste, saisons, wiederholungen, type Entwicklung } from '../lib/auswertung';
-import { zahl2 } from '../lib/format';
+import { sterneText } from '../lib/format';
 import { Betreiber } from './bausteine';
 import { useEintraege, useGewichte } from './daten';
 import { staedte } from '../lib/orte';
@@ -16,7 +16,7 @@ const ENTWICKLUNG: Record<Entwicklung, string> = {
 
 function differenz(d: number | null): string {
   if (d === null) return '–';
-  const z = zahl2(Math.abs(d));
+  const z = sterneText(Math.abs(d));
   return d > 0 ? `▲ +${z}` : d < 0 ? `▼ −${z}` : '= 0.00';
 }
 
@@ -78,7 +78,7 @@ export function Vergleich() {
                       <small>{x.markt}</small>
                     </td>
                     {jahre.map((j) => (
-                      <td class="num">{x.jeSaison[j] === undefined ? '–' : zahl2(x.jeSaison[j])}</td>
+                      <td class="num">{x.jeSaison[j] === undefined ? '–' : sterneText(x.jeSaison[j])}</td>
                     ))}
                     <td class="num">{differenz(x.differenz)}</td>
                     <td>

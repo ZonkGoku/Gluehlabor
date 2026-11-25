@@ -1,6 +1,6 @@
 // „Entdecken": alles, was die Startseite nicht tragen muss. Zahlen, Karte, Top Deals, Preise, Saisonverlauf.
 import { saisons, filtere } from '../lib/auswertung';
-import { euro, zahl2 } from '../lib/format';
+import { euro, sterneText } from '../lib/format';
 import { staedte } from '../lib/orte';
 import { preisindex } from '../lib/preisindex';
 import { baueStaende } from '../lib/staende';
@@ -49,7 +49,7 @@ export function Entdecken() {
         <Kennzahl wert={k.becher} label={t('Bewertungen')} />
         <Kennzahl wert={k.maerkte} label={t('Märkte')} />
         <Kennzahl wert={k.staedte} label={k.staedte === 1 ? t('Stadt') : t('Städte')} />
-        <Kennzahl wert={zahl2(k.mittel)} label={t('Ø Note')} />
+        <Kennzahl wert={sterneText(k.mittel)} label={t('Ø Sterne')} />
 
         <Kachel titel={t('Wo ihr wart')} link={{ href: '#/vergleich', text: t('Märkte') }} klasse="col-span-2">
           <Deutschlandkarte staedte={orte} />

@@ -4,7 +4,7 @@ import type { ComponentChildren } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import type { Zeile } from '../../lib/auswertung';
 import { anzeigeName, istPruefstelle } from '../../lib/community';
-import { zahl2 } from '../../lib/format';
+import { sterneText } from '../../lib/format';
 import { UrteilPill } from '../bausteine';
 import { DealMarke } from './DealMarke';
 import { PruefSiegel } from './PruefSiegel';
@@ -101,7 +101,7 @@ function Messer({ etikett, wert }: { etikett: string; wert: number | null }) {
     <div>
       <div class="flex items-baseline justify-between gap-2">
         <span class="etikett !text-[11px] !tracking-[0.1em]">{etikett}</span>
-        <span class="whitespace-nowrap font-mono text-xs text-eis">{zahl2(wert)}</span>
+        <span class="whitespace-nowrap font-mono text-xs text-eis">{sterneText(wert)}</span>
       </div>
       <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-spur">
         <div
@@ -203,7 +203,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
           <div class={`flex flex-wrap items-end gap-x-4 gap-y-2 ${klein ? 'mt-2' : 'mt-3'}`}>
             <div
               class={`font-display leading-[0.9] licht-text drop-shadow-[0_0_26px_rgb(255_138_61/0.55)] ${klein ? 'text-[60px]' : 'text-[112px]'}`}
-              aria-label={t('Gesamtnote {n}', { n: zahl2(w.gesamt) })}
+              aria-label={t('Gesamtnote {n}', { n: sterneText(w.gesamt) })}
             >
               {zahl}
             </div>

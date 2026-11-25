@@ -20,7 +20,7 @@ import { baueStaende } from '../lib/staende';
 import { maerkteIn } from '../lib/ortssuche';
 import { kanonischerStand, schlageStaendeVor, type Vorschlag } from '../lib/standvorschlag';
 import { ANKER, MARKTLISTE } from './stammdaten';
-import { euro, probeNr, zahl2 } from '../lib/format';
+import { euro, probeNr, sterneText } from '../lib/format';
 import { DEFAULT_GEWICHTE, KRITERIEN, leereNoten, SORTEN, type Eintrag, type Kriterium, type Sorte } from '../lib/modell';
 import { bewerte } from '../lib/scoring';
 import { berechnePreisLeistung, MENGEN, PREIS_MAX, PREIS_MIN, referenzPreis, vergleichbar } from '../lib/preisleistung';
@@ -302,7 +302,7 @@ export function Erfassen() {
     if (schritt === 'wo' && !e.stadt) setOrtOffen(true);
   }, []);
 
-  const knopfText = warnung ?? gespeichert ?? (bewertet === 0 ? t('Noch keine Note') : t('Speichern'));
+  const knopfText = warnung ?? gespeichert ?? (bewertet === 0 ? t('Noch keine Sterne') : t('Speichern'));
 
   return (
     <>
@@ -529,7 +529,7 @@ export function Erfassen() {
 
       <section class="noten" aria-label={t('Noten')}>
         <p class="noten-kopf">
-          {t('Noten')} <span>{t('mindestens eine')}</span>
+          {t('Sterne')} <span>{t('mindestens eine')}</span>
         </p>
         {KRITERIEN.map((k) => (
           <NotenZeile
@@ -558,11 +558,11 @@ export function Erfassen() {
       <footer class="fuss">
         <div class="messwert" aria-live="polite">
           <span class="kopfzeile">
-            <span class={wertung.gesamt === null ? 'gesamt leer' : 'gesamt'}>{zahl2(wertung.gesamt)}</span>
-            <span class="urteil">{wertung.urteil ? t(wertung.urteil) : t('{n} von 6 Noten', { n: bewertet })}</span>
+            <span class={wertung.gesamt === null ? 'gesamt leer' : 'gesamt'}>{sterneText(wertung.gesamt)}</span>
+            <span class="urteil">{wertung.urteil ? t(wertung.urteil) : t('{n} von 6 bewertet', { n: bewertet })}</span>
           </span>
-          <span class="unter">{t('Glühwein')}&nbsp;{zahl2(wertung.gluehwein)}</span>
-          <span class="unter">{t('Drumherum')}&nbsp;{zahl2(wertung.drumherum)}</span>
+          <span class="unter">{t('Glühwein')}&nbsp;{sterneText(wertung.gluehwein)}</span>
+          <span class="unter">{t('Drumherum')}&nbsp;{sterneText(wertung.drumherum)}</span>
         </div>
         <button
           type="button"

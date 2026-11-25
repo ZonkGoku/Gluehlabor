@@ -1,8 +1,8 @@
 // Zeile der Rangliste ab Platz 4 und in der Top 5 der Übersicht. Leicht gehalten: kein Glasfilter, damit lange Listen flüssig bleiben.
 import type { Zeile } from '../../lib/auswertung';
-import { zahl2 } from '../../lib/format';
 import { DealMarke } from './DealMarke';
 import { PruefSiegel } from './PruefSiegel';
+import { SterneWert } from './SterneWert';
 import { stufe } from './Ticket';
 
 export function RangZeile({ zeile, ort, href, zusatz, siegel = false, deal = false }: { zeile: Zeile; ort?: string; href?: string; zusatz?: string; siegel?: boolean; deal?: boolean }) {
@@ -32,8 +32,7 @@ export function RangZeile({ zeile, ort, href, zusatz, siegel = false, deal = fal
       </span>
       <span class="shrink-0 text-right">
         <span class="block font-display text-[30px] leading-none text-gold-300">
-          {zahl2(w.gesamt)}
-          <span class="ml-0.5 font-sans text-xs font-normal text-dunst">/10</span>
+          <SterneWert wert={w.gesamt} />
         </span>
         {zusatz && <span class="mt-1 block text-xs text-dunst">{zusatz}</span>}
       </span>

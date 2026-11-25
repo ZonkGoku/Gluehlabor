@@ -4,7 +4,7 @@ import { useState } from 'preact/hooks';
 import { aendereStand, entferne, verstecke } from '../daten/moderation';
 import type { LokalerEintrag } from '../daten/db';
 import { anzeigeName, istPruefstelle } from '../lib/community';
-import { zahl2 } from '../lib/format';
+import { sterneText } from '../lib/format';
 import { baueStaende, type Stand } from '../lib/staende';
 import type { Gewichte } from '../lib/modell';
 import { MARKTLISTE } from './stammdaten';
@@ -62,7 +62,7 @@ export function AdminStaende({ alle, gewichte, tu }: { alle: readonly LokalerEin
                   <span class="block truncate text-xs text-dunst">{raterNamen(s)}</span>
                 </span>
                 <span class="text-right">
-                  <span class="block font-display text-xl leading-none text-gold-300">{zahl2(s.wert.gesamt)}</span>
+                  <span class="block font-display text-xl leading-none text-gold-300">{sterneText(s.wert.gesamt)}</span>
                   <span class="block font-mono text-xs text-dunst">{tn(s.bewertungen.length, '{n} Bewertung', '{n} Bewertungen')}</span>
                 </span>
               </label>

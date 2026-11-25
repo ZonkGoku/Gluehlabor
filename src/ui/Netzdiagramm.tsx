@@ -1,5 +1,6 @@
 // Netzdiagramm (Radar) über die sieben Kriterien. Mehrere Reihen übereinander, z. B. diese Bewertung gegen den Durchschnitt.
 import { t } from '../i18n';
+import { halbSterne } from '../lib/format';
 import { alsPunktliste, achsenWinkel, netzPunkt, reihenPunkte } from '../lib/netz';
 
 export interface Reihe {
@@ -21,7 +22,7 @@ const RINGE = [2, 4, 6, 8, 10];
 export function Netzdiagramm({ achsen, reihen, titel }: { achsen: string[]; reihen: Reihe[]; titel: string }) {
   const n = achsen.length;
   const beschreibung = reihen
-    .map((r) => `${r.name}: ${achsen.map((a, i) => `${a} ${r.werte[i] ?? t('nicht bewertet')}`).join(', ')}`)
+    .map((r) => `${r.name}: ${achsen.map((a, i) => `${a} ${r.werte[i] === null || r.werte[i] === undefined ? t('nicht bewertet') : halbSterne(r.werte[i])}`).join(', ')}`)
     .join('. ');
   return (
     <figure class="m-0">
@@ -59,7 +60,7 @@ export function Netzdiagramm({ achsen, reihen, titel }: { achsen: string[]; reih
             const p = netzPunkt(0, n, ring, RADIUS, MITTE);
             return (
               <text x={p.x + 3} y={p.y - 2}>
-                {ring}
+                {ring / 2}
               </text>
             );
           })}
@@ -123,7 +124,7 @@ export function NotenBalken({ achsen, reihen }: { achsen: string[]; reihen: Reih
               <span class="font-mono text-xs text-dunst">
                 {z.werte.map((w, i) => (
                   <span key={i} class="ml-3" style={{ color: reihen.length > 1 ? reihen[i].farbe : undefined }}>
-                    {w === null ? '–' : w.toFixed(w % 1 === 0 ? 0 : 1)}
+                    {w === null ? '–' : (w / 2).toFixed(1)}
                   </span>
                 ))}
               </span>
@@ -133,7 +134,7 @@ export function NotenBalken({ achsen, reihen }: { achsen: string[]; reihen: Reih
                 key={i}
                 class="mt-1 h-2 overflow-hidden rounded-full bg-spur"
                 role="img"
-                aria-label={`${z.name}, ${reihen[i].name}: ${w ?? t('nicht bewertet')}`}
+                aria-label={`${z.name}, ${reihen[i].name}: ${w === null ? t('nicht bewertet') : (w / 2).toFixed(1)}`}
               >
                 <div class="h-full rounded-full" style={{ width: `${(w ?? 0) * 10}%`, background: reihen[i].farbe }} />
               </div>

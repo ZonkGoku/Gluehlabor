@@ -3,7 +3,6 @@
 import { useState } from 'preact/hooks';
 import { abendDatum } from '../lib/abend';
 import { filtere } from '../lib/auswertung';
-import { zahl2 } from '../lib/format';
 import { ortText, staedte } from '../lib/orte';
 import { abend, neuesteBecher } from '../lib/startseite';
 import { bewerte } from '../lib/scoring';
@@ -15,6 +14,7 @@ import { InstallKarte } from './InstallKarte';
 import { useEintraege, useGeraetId, useGewichte, useMeineAnzahl, useName, useSaison } from './daten';
 import { leseZuletzt } from '../daten/zuletzt';
 import { useEinblenden } from './nacht/bewegung';
+import { SterneWert } from './nacht/SterneWert';
 import { StandZeile } from './nacht/StandKarten';
 import { baueStaende } from '../lib/staende';
 import { MARKTLISTE } from './stammdaten';
@@ -113,7 +113,7 @@ function HeuteAbend({ a, besuchId }: { a: ReturnType<typeof abend>; besuchId?: s
       <p class="etikett !text-gold-300">{t('Heute Abend')}</p>
       <p class="mt-1 font-display text-[34px] uppercase leading-none tracking-wide text-eis">
         {a.anzahl === 1 ? t('1 Glühwein bewertet') : t('{n} Glühweine bewertet', { n: a.anzahl })}
-        {a.mittel !== null && <span class="ml-2 text-gold-300">Ø {zahl2(a.mittel)}</span>}
+        {a.mittel !== null && <span class="ml-2 text-gold-300">Ø <SterneWert wert={a.mittel} /></span>}
       </p>
       <a
         href="#/erfassen"
@@ -239,7 +239,7 @@ export function Uebersicht() {
                         {[ortText(MARKTLISTE, e), istPruefstelle(e) ? t('Prüfstelle') : anzeigeName(e)].filter(Boolean).join(' · ')}
                       </span>
                     </span>
-                    <span class="font-display text-[26px] leading-none text-gold-300">{zahl2(bewerte(e.noten, gewichte).gesamt)}</span>
+                    <span class="font-display text-[26px] leading-none text-gold-300"><SterneWert wert={bewerte(e.noten, gewichte).gesamt} /></span>
                   </a>
                 </li>
               ))}

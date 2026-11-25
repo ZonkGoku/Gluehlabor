@@ -1,6 +1,6 @@
 // Stände in den Karten und Zeilen der Ansichten: dieselben Bausteine wie bei einzelnen Bechern, nur mit Stand-Werten.
 import { t as tt, tn } from '../../i18n';
-import { euro, zahl2 } from '../../lib/format';
+import { euro, sterneText } from '../../lib/format';
 import { ortText } from '../../lib/orte';
 import { dealAlsZeile, standAlsZeile, type Quelle, type Stand } from '../../lib/staende';
 import { MARKTLISTE } from '../stammdaten';
@@ -12,8 +12,8 @@ export const standHref = (s: Stand) => `#/stand/${encodeURIComponent(s.id)}`;
 /** „Prüfstelle 6.33 · Community 7.10": beide Seiten, wo es sie gibt. */
 export function seitenText(s: Stand): string {
   const teile: string[] = [];
-  if (s.pruefstelle.gesamt !== null) teile.push(`${tt('Prüfstelle')} ${zahl2(s.pruefstelle.gesamt)}`);
-  if (s.community.gesamt !== null) teile.push(`${tt('Community')} ${zahl2(s.community.gesamt)}`);
+  if (s.pruefstelle.gesamt !== null) teile.push(`${tt('Prüfstelle')} ${sterneText(s.pruefstelle.gesamt)}`);
+  if (s.community.gesamt !== null) teile.push(`${tt('Community')} ${sterneText(s.community.gesamt)}`);
   return teile.join(' · ');
 }
 
