@@ -1234,3 +1234,70 @@ button.glas,
   font-weight: 500;
   padding: 0 4px;
 }
+
+/* ── Erfassung Schritt 1 „Wo?": ruhiger, kompakter ───────────────────────────────────────── */
+.erf .wo {
+  gap: 10px;
+}
+.erf .wo-titel {
+  font-size: 30px;
+}
+.erf .wo-frage {
+  margin-top: 10px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+.erf .wo-feld {
+  border: 1px solid var(--linie-stark);
+  background: var(--flaeche);
+  border-radius: 16px;
+}
+.erf .wo-feld:focus {
+  border-color: var(--nm-akzent-text);
+  outline: 0;
+}
+.erf .wo-ort-knopf,
+.erf .wo > button:first-child {
+  border-width: 1px;
+}
+.erf .wo-liste {
+  gap: 0;
+  border-radius: 18px;
+  border: 1px solid var(--linie-stark);
+  background: var(--flaeche);
+  overflow: hidden;
+}
+.erf .wo-liste li + li {
+  border-top: 1px solid var(--linie);
+}
+.erf .wo-liste button {
+  min-height: 60px;
+  border: 0;
+  border-radius: 0;
+  padding: 8px 16px;
+}
+.erf .wo-liste button:active {
+  background: var(--flaeche-hover, var(--linie));
+}
+.erf .wo-name {
+  font-size: 16px;
+  font-weight: 600;
+}
+.erf .wo-maerkte button {
+  min-height: 44px;
+  border: 1px solid var(--linie-stark);
+  background: var(--flaeche);
+  font-weight: 500;
+}
+.erf .wo-hinweis {
+  font-size: 13px;
+}
+.erf .ort-knopf {
+  border-width: 1px;
+  border-color: var(--linie-stark);
+  background: var(--flaeche);
+}
+.erf .ort-knopf.leer-ort {
+  border-color: var(--nm-akzent-text);
+}
