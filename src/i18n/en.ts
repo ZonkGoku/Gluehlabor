@@ -684,4 +684,11 @@ export const EN: Record<string, string> = {
   "Weiter bewerten": "Keep rating",
   "Seid ihr zu mehreren?": "More than one of you?",
   "QR-Code zeigen: Die anderen bewerten selbst mit.": "Show the QR code: the others rate for themselves.",
+  "QR-Code für die Gruppe": "QR code for the group",
+  "Alle scannen, alle bewerten": "Everyone scans, everyone rates",
+  "Weiter zur Bewertung": "Continue to my rating",
+  "Stand und Stadt eintragen, dann QR-Code zeigen: Alle bewerten mit.": "Enter stand and city, then show the QR code: everyone rates along.",
+  "Eigener Name": "Custom name",
+  "Alles unter diesem Namen": "All under this name",
+  "Alle {n} Bewertungen unter „{b}\" zusammenführen? Wer bewertet hat, bleibt an jeder Bewertung erhalten.": "Merge all {n} ratings under “{b}”? Each rating keeps the name of whoever gave it.",
 };

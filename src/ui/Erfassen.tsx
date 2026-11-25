@@ -28,6 +28,7 @@ import { useGeraetId } from './daten';
 import { useLive } from './hooks';
 import { MenueBlatt } from './nacht/MenueBlatt';
 import { NameBlatt } from './nacht/NameBlatt';
+import { QrBlatt } from './nacht/QrBlatt';
 import { NotenZeile } from './NotenZeile';
 import { SyncAnzeige } from './SyncAnzeige';
 import { TicketBlatt } from './nacht/TicketBlatt';
@@ -100,6 +101,7 @@ export function Erfassen() {
   const [ortOffen, setOrtOffen] = useState(false);
   const [nameOffen, setNameOffen] = useState(false);
   const [menueOffen, setMenueOffen] = useState(false);
+  const [qrOffen, setQrOffen] = useState(false);
   const [warnung, setWarnung] = useState<string | null>(null);
   const [preisText, setPreisText] = useState(() => {
     const p = leseEntwurf()?.preis;
@@ -255,11 +257,19 @@ export function Erfassen() {
     void synchronisiere();
   };
 
-  // Besuch teilen: Besuchs-Nr. vergeben, Entwurf sofort sichern, dann QR zeigen.
-  const zeigeQr = () => {
-    const besuchId = e.besuchId ?? besuchIdAusBytes(crypto.getRandomValues(new Uint8Array(8)));
-    schreibeEntwurf({ ...e, besuchId });
-    location.hash = '#/teilen';
+  // Besuch teilen: Besuchs-Nr. vergeben und den QR-Code als Blatt zeigen. Stand und Stadt gehören in den Link.
+  const oeffneQr = () => {
+    if (!e.stand.trim()) {
+      setFehlt(true);
+      standRef.current?.focus();
+      return;
+    }
+    if (!e.stadt?.trim()) {
+      setOrtOffen(true);
+      return;
+    }
+    if (!e.besuchId) setE((x) => ({ ...x, besuchId: besuchIdAusBytes(crypto.getRandomValues(new Uint8Array(8))) }));
+    setQrOffen(true);
   };
 
   const knopfText = warnung ?? gespeichert ?? (bewertet === 0 ? t('Noch keine Note') : t('Speichern'));
@@ -350,11 +360,11 @@ export function Erfassen() {
       <button
         type="button"
         class="qr-zeile"
-        onClick={() => (e.stand.trim() ? zeigeQr() : (setFehlt(true), standRef.current?.focus()))}
+        onClick={oeffneQr}
       >
         <span class="qr-zeile-text">
           <b>{t('Seid ihr zu mehreren?')}</b>
-          <small>{t('QR-Code zeigen: Die anderen bewerten selbst mit.')}</small>
+          <small>{t('Stand und Stadt eintragen, dann QR-Code zeigen: Alle bewerten mit.')}</small>
         </span>
         <span class="qr-zeile-code" aria-hidden="true">QR</span>
       </button>
@@ -556,6 +566,9 @@ export function Erfassen() {
           void speichern(true);
         }}
       />
+    )}
+    {qrOffen && e.besuchId && (
+      <QrBlatt besuch={{ id: e.besuchId, stand: e.stand.trim(), markt: e.markt.trim() || MARKTLISTE.sonstiger, stadt: e.stadt?.trim() || undefined, sorte: e.sorte }} onZu={() => setQrOffen(false)} />
     )}
     {menueOffen && <MenueBlatt onZu={() => setMenueOffen(false)} />}
     {fertigId && <TicketBlatt id={fertigId} onNaechster={() => setFertigId(null)} />}

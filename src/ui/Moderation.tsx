@@ -21,6 +21,42 @@ const KNOPF = 'glas rounded-full px-3.5 py-2 text-xs font-semibold text-eis tran
 const FELD = 'glas w-full rounded-2xl px-3.5 py-2.5 text-sm text-eis outline-none focus-visible:ring-2 focus-visible:ring-gold-400/70';
 const grundText = (g: string) => t(MELDEGRUENDE.find((m) => m.wert === g)?.label ?? g);
 
+
+/** Ein mögliches Doppelt: zu einem der beiden Namen zusammenführen oder unter einem eigenen Namen. */
+function DoppeltZeile({ d, namen, fuehrZusammen, mitName }: {
+  d: Dublette;
+  namen: (st: Dublette['von']) => string;
+  fuehrZusammen: (von: Dublette['von'], nach: Dublette['von']) => void;
+  mitName: (d: Dublette, name: string) => void;
+}) {
+  const [eigen, setEigen] = useState(d.nach.stand);
+  return (
+    <li class="rounded-2xl border border-rand bg-flaeche p-3.5">
+      <p class="text-sm text-eis">
+        <b>{d.von.stand}</b> <span class="text-dunst">({tn(d.von.bewertungen.length, '{n} Bewertung', '{n} Bewertungen')}: {namen(d.von)})</span>
+      </p>
+      <p class="text-sm text-eis">
+        <b>{d.nach.stand}</b> <span class="text-dunst">({tn(d.nach.bewertungen.length, '{n} Bewertung', '{n} Bewertungen')}: {namen(d.nach)})</span>
+      </p>
+      <p class="mt-1 text-xs text-dunst">{[d.nach.stadt, d.nach.markt].filter(Boolean).join(' · ')}</p>
+      <div class="mt-2 flex flex-wrap gap-2">
+        <button type="button" class={KNOPF} onClick={() => fuehrZusammen(d.von, d.nach)}>
+          {t('Alles zu „{b}"', { b: d.nach.stand })}
+        </button>
+        <button type="button" class={KNOPF} onClick={() => fuehrZusammen(d.nach, d.von)}>
+          {t('Alles zu „{b}"', { b: d.von.stand })}
+        </button>
+      </div>
+      <div class="mt-2 flex flex-wrap gap-2">
+        <input class={`${FELD} !w-auto min-w-[12rem] flex-1`} value={eigen} maxLength={80} aria-label={t('Eigener Name')} onInput={(e) => setEigen((e.target as HTMLInputElement).value)} />
+        <button type="button" class={KNOPF} disabled={eigen.trim().length < 2} onClick={() => mitName(d, eigen.trim())}>
+          {t('Alles unter diesem Namen')}
+        </button>
+      </div>
+    </li>
+  );
+}
+
 export function Moderation() {
   const pruefstelle = useLive(() => leseEinstellung<boolean>('pruefstelle', false), [], false);
   const eigeneId = useGeraetId();
@@ -136,23 +172,18 @@ export function Moderation() {
             {dubletten.length === 0 && <p class="mt-2 text-sm text-dunst">{t('Keine Doppelten gefunden.')}</p>}
             <ul class="mt-2 grid gap-2">
               {dubletten.map((d) => (
-                <li class="rounded-2xl border border-rand bg-flaeche p-3.5">
-                  <p class="text-sm text-eis">
-                    <b>{d.von.stand}</b> <span class="text-dunst">({tn(d.von.bewertungen.length, '{n} Bewertung', '{n} Bewertungen')}: {namen(d.von)})</span>
-                  </p>
-                  <p class="text-sm text-eis">
-                    <b>{d.nach.stand}</b> <span class="text-dunst">({tn(d.nach.bewertungen.length, '{n} Bewertung', '{n} Bewertungen')}: {namen(d.nach)})</span>
-                  </p>
-                  <p class="mt-1 text-xs text-dunst">{[d.nach.stadt, d.nach.markt].filter(Boolean).join(' · ')}</p>
-                  <div class="mt-2 flex flex-wrap gap-2">
-                    <button type="button" class={KNOPF} onClick={() => fuehrZusammen(d.von, d.nach)}>
-                      {t('Alles zu „{b}"', { b: d.nach.stand })}
-                    </button>
-                    <button type="button" class={KNOPF} onClick={() => fuehrZusammen(d.nach, d.von)}>
-                      {t('Alles zu „{b}"', { b: d.von.stand })}
-                    </button>
-                  </div>
-                </li>
+                <DoppeltZeile
+                  d={d}
+                  namen={namen}
+                  fuehrZusammen={fuehrZusammen}
+                  mitName={(dd, name) =>
+                    confirm(t('Alle {n} Bewertungen unter „{b}" zusammenführen? Wer bewertet hat, bleibt an jeder Bewertung erhalten.', { n: dd.von.bewertungen.length + dd.nach.bewertungen.length, b: name })) &&
+                    void tu(
+                      () => aendereStand([...dd.von.bewertungen, ...dd.nach.bewertungen].map((e) => e.id), name, dd.nach.markt, dd.nach.stadt ?? ''),
+                      'Zusammengeführt.',
+                    )
+                  }
+                />
               ))}
             </ul>
           </section>
