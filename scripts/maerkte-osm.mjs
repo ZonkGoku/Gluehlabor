@@ -8,31 +8,50 @@ import { readFileSync, writeFileSync } from 'node:fs';
 const orte = JSON.parse(readFileSync(new URL('../data/orte.json', import.meta.url), 'utf8')).orte; // [name, lat, lon, land, einw/100]
 const ENDPUNKTE = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
 const NAME = '(weihnacht|christkind|christkindl|advent|wintermarkt|winterzauber|nikolaus|lichtermarkt|glühwein|gluehwein|striezel|weihnachtsdorf|christmas)';
-const abfrage = `[out:json][timeout:180];
-(area["ISO3166-1"="DE"];area["ISO3166-1"="AT"];)->.a;
-(nwr["name"~"${NAME}",i]["amenity"~"marketplace|events_venue|festival_grounds"](area.a);
- nwr["name"~"${NAME}",i]["market"](area.a);
- nwr["name"~"${NAME}",i]["event"](area.a);
- nwr["name"~"${NAME}",i]["seasonal"="winter"](area.a);
- nwr["name"~"markt",i]["name"~"${NAME}",i]["tourism"](area.a););
-out center tags;`;
+// Mehrere kleine Abfragen statt einer großen (Overpass bricht große Namenssuchen über ganz Deutschland gern ab).
+// Jede Abfrage hat ein eigenes Zeitlimit; scheitert eine, laufen die anderen weiter.
+const FILTER = ['"amenity"="marketplace"', '"market"', '"event"', '"seasonal"="winter"', '"tourism"', '"leisure"', '"amenity"="events_venue"', '"amenity"="festival_grounds"'];
+const abfragen = ['DE', 'AT'].flatMap((land) =>
+  FILTER.map((f) => `[out:json][timeout:90];area["ISO3166-1"="${land}"]->.a;nwr[${f}]["name"~"${NAME}",i](area.a);out center tags;`),
+);
 
-async function hole() {
+async function einzeln(abfrage) {
   let fehler;
   for (const url of ENDPUNKTE) {
-    for (let v = 1; v <= 3; v++) {
-      try {
-        const r = await fetch(url, { method: 'POST', body: 'data=' + encodeURIComponent(abfrage), headers: { 'content-type': 'application/x-www-form-urlencoded', 'user-agent': 'gluehlabor-maerkte/1.0' } });
-        if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
-        return await r.json();
-      } catch (e) {
-        fehler = e;
-        console.error('Versuch fehlgeschlagen:', e.message);
-        await new Promise((res) => setTimeout(res, 5000 * v));
-      }
+    try {
+      const r = await fetch(url, {
+        method: 'POST',
+        body: 'data=' + encodeURIComponent(abfrage),
+        headers: { 'content-type': 'application/x-www-form-urlencoded', 'user-agent': 'gluehlabor-maerkte/1.0' },
+        signal: AbortSignal.timeout(120000),
+      });
+      const text = await r.text();
+      if (!r.ok) throw new Error(`${url}: HTTP ${r.status} ${text.slice(0, 120).replace(/\s+/g, ' ')}`);
+      return JSON.parse(text).elements ?? [];
+    } catch (e) {
+      fehler = e;
+      console.error('Fehlgeschlagen:', String(e.message ?? e).slice(0, 200));
     }
   }
   throw fehler;
+}
+
+async function hole() {
+  const elements = [];
+  let ok = 0;
+  for (const [i, q] of abfragen.entries()) {
+    try {
+      const el = await einzeln(q);
+      elements.push(...el);
+      ok++;
+      console.log(`Abfrage ${i + 1}/${abfragen.length}: ${el.length} Treffer`);
+    } catch {
+      console.error(`Abfrage ${i + 1}/${abfragen.length} übersprungen`);
+    }
+    await new Promise((res) => setTimeout(res, 2000));
+  }
+  if (ok === 0) throw new Error('Keine einzige Overpass-Abfrage hat geantwortet.');
+  return { elements };
 }
 
 const rad = (g) => (g * Math.PI) / 180;

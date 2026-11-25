@@ -862,4 +862,6 @@ export const EN: Record<string, string> = {
   "{name}: erreicht": "{name}: earned",
   "{name}: noch nicht erreicht": "{name}: not earned yet",
   "Technik und Prüfstelle": "Technical details and Prüfstelle",
+  "Stand suchen": "Search stalls",
+  "Nichts gefunden. Anderen Namen versuchen.": "Nothing found. Try another name.",
 };

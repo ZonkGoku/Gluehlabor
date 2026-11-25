@@ -1,5 +1,6 @@
 // Rangliste „Night Market": die ersten drei als Sammelkarten zum Wischen, danach die Liste.
 import { useState } from 'preact/hooks';
+import { schluessel } from '../lib/ortssuche';
 import { filtere, saisons } from '../lib/auswertung';
 import { baueStaende, type Quelle } from '../lib/staende';
 import { stadtVon } from '../lib/orte';
@@ -27,6 +28,7 @@ export function Rangliste() {
   const [stadt, setStadt] = useState<string>('alle');
   const [markt, setMarkt] = useState<string>('alle');
   const [mehrOffen, setMehrOffen] = useState(false);
+  const [suche, setSuche] = useState('');
   const [quelle, setQuelle] = useState<Quelle>('alle');
   const [ansicht, setAnsicht] = useState<'gesamt' | 'deals'>(() => (location.hash.includes('deals') ? 'deals' : 'gesamt'));
   const wurzel = useEinblenden<HTMLDivElement>();
@@ -50,7 +52,10 @@ export function Rangliste() {
   const aktiveExtras = (quelle !== 'alle' ? 1 : 0) + (stadt !== 'alle' && markt !== 'alle' ? 1 : 0);
   const filter = stadt === 'alle' ? { saison, markt: 'alle' } : markt === 'alle' ? { saison, markt: 'alle', stadt } : { saison, markt };
   const gewaehlt = filtere(alle, filter, MARKTLISTE);
-  const zeilen = baueStaende(gewaehlt, MARKTLISTE, gewichte, quelle);
+  const alleZeilen = baueStaende(gewaehlt, MARKTLISTE, gewichte, quelle);
+  const gesucht = schluessel(suche);
+  // Suche nur nach Namen, der Platz bleibt der der ganzen Liste
+  const zeilen = gesucht ? alleZeilen.filter((s) => schluessel(s.stand).includes(gesucht)) : alleZeilen;
   const bewertungen = zeilen.reduce((n, s) => n + s.wert.anzahl, 0);
   const deals = zeilen.filter((s) => s.deal.punkte !== null).sort((a, b) => (a.deal.rang ?? 1e9) - (b.deal.rang ?? 1e9));
 
@@ -70,6 +75,17 @@ export function Rangliste() {
             <DealMarke /> {t('gut und günstig')}
           </span>
         </p>
+        {alleZeilen.length >= 6 && (
+          <input
+            type="search"
+            class="glas mt-4 min-h-[48px] w-full rounded-full px-5 text-eis placeholder:text-dunst"
+            placeholder={t('Stand suchen')}
+            aria-label={t('Stand suchen')}
+            enterkeyhint="search"
+            value={suche}
+            onInput={(e) => setSuche((e.target as HTMLInputElement).value)}
+          />
+        )}
         <div class="mt-4 flex flex-wrap items-center gap-2.5">
           <span class="relative">
             <select class={FELD} aria-label={t('Stadt')} value={stadt} onChange={(e) => waehleStadt((e.target as HTMLSelectElement).value)}>
@@ -130,7 +146,7 @@ export function Rangliste() {
       {zeilen.length === 0 ? (
         <div class="glas rounded-3xl p-8 text-center">
           <p class="font-display text-3xl uppercase tracking-wide text-eis">{t('Keine Stände für diese Auswahl')}</p>
-          <p class="mt-2 text-dunst">{t('Andere Saison, anderen Markt oder eine andere Wertung wählen.')}</p>
+          <p class="mt-2 text-dunst">{suche ? t('Nichts gefunden. Anderen Namen versuchen.') : t('Andere Saison, anderen Markt oder eine andere Wertung wählen.')}</p>
         </div>
       ) : (
         ansicht === 'deals' ? (
