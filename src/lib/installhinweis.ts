@@ -11,3 +11,8 @@ export function istIosImBrowser(userAgent: string, maxTouchPoints: number, stand
   const ipadAlsMac = /Macintosh/.test(userAgent) && maxTouchPoints > 1;
   return (iphone || ipadAlsMac) && standalone !== true;
 }
+
+/** In der App eines anderen Dienstes geöffnet (Instagram, WhatsApp, Facebook …)? Dort lässt sich nichts auf den Home-Bildschirm legen. */
+export function istInAppBrowser(userAgent: string): boolean {
+  return /FBAN|FBAV|FB_IAB|Instagram|Line\/|MicroMessenger|TikTok|musical_ly|Snapchat|Twitter|LinkedInApp|Pinterest|GSA\//.test(userAgent);
+}

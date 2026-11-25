@@ -1,5 +1,5 @@
 // Landeseite des QR-Codes: zeigt den Stand, fragt freiwillig nach dem Namen und startet die Bewertung.
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { setzeName, db } from '../daten/db';
 import { entwurfHatInhalt, leseEntwurf, schreibeEntwurf, type Entwurf } from '../daten/entwurf';
 import { synchronisiere } from '../daten/sync';
@@ -18,25 +18,11 @@ export function Mitbewerten() {
   const [fehler, setFehler] = useState('');
   const [verwerfen, setVerwerfen] = useState(false);
 
-  if (!besuch.ok) {
-    return (
-      <main class="fokus">
-        <div class="karte leer">
-          <b>{t('Dieser Link funktioniert nicht.')}</b>
-          {t(besuch.grund)} {t('Bitte den QR-Code noch einmal scannen oder um einen neuen Link bitten.')}
-          <p style={{ margin: '14px 0 0' }}>
-            <a class="pillknopf" href="#/">
-              {t('Zur Startseite')}
-            </a>
-          </p>
-        </div>
-      </main>
-    );
-  }
-  const b = besuch.besuch;
+  const b = besuch.ok ? besuch.besuch : null;
   const frageNachName = !gespeicherterName;
 
   const starten = async () => {
+    if (!b) return;
     if (frageNachName) {
       // Ohne Namen keine Bewertung
       const p = pruefeName(name);
@@ -60,8 +46,31 @@ export function Mitbewerten() {
     location.hash = '#/erfassen';
   };
 
+  const angefangenVorab = leseEntwurf();
+  const konflikt = entwurfHatInhalt(angefangenVorab) && besuch.ok && angefangenVorab?.besuchId !== besuch.besuch.id;
+  // Wer schon einen Namen hat und nichts Angefangenes verlieren würde, landet ohne Umweg im Bewertungsblatt
+  useEffect(() => {
+    if (besuch.ok && gespeicherterName && !konflikt) void starten();
+  }, [gespeicherterName]);
+
+  if (!besuch.ok) {
+    return (
+      <main class="fokus">
+        <div class="karte leer">
+          <b>{t('Dieser Link funktioniert nicht.')}</b>
+          {t(besuch.grund)} {t('Bitte den QR-Code noch einmal scannen oder um einen neuen Link bitten.')}
+          <p style={{ margin: '14px 0 0' }}>
+            <a class="pillknopf" href="#/">
+              {t('Zur Startseite')}
+            </a>
+          </p>
+        </div>
+      </main>
+    );
+  }
+  const bb = besuch.besuch;
   const angefangen = leseEntwurf();
-  const bestehtInhalt = entwurfHatInhalt(angefangen) && angefangen?.besuchId !== b.id;
+  const bestehtInhalt = entwurfHatInhalt(angefangen) && angefangen?.besuchId !== bb.id;
 
   return (
     <main class="fokus">
@@ -69,10 +78,10 @@ export function Mitbewerten() {
         <span aria-hidden="true">‹</span> {t('Zur Startseite')}
       </a>
       <p class="eyebrow">{t('Du wurdest eingeladen')}</p>
-      <h1 class="fokus-titel">{b.stand}</h1>
+      <h1 class="fokus-titel">{bb.stand}</h1>
       <p class="fokus-unter">
-        {b.markt}
-        {b.stadt ? ` · ${b.stadt}` : ''}
+        {bb.markt}
+        {bb.stadt ? ` · ${bb.stadt}` : ''}
       </p>
       <p class="fokus-hinweis">
         {t('Bewerte selbst, in 30 Sekunden.')}
