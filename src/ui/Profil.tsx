@@ -6,6 +6,7 @@ import { db, holeGeraet, leseEinstellung, schreibeEinstellung, setzeName } from 
 import { abonniereSync, synchronisiere, type SyncInfo } from '../daten/sync';
 import { GRENZEN, pruefeName } from '../lib/community';
 import { Betreiber } from './bausteine';
+import { Pass } from './Pass';
 import { useGeraetId, useName } from './daten';
 import { useLive } from './hooks';
 import { t, tn } from '../i18n';
@@ -66,6 +67,9 @@ export function Profil() {
           <p class="eyebrow">{t('Anonym, ohne Konto')}</p>
           <h1>{t('Profil')}</h1>
         </div>
+      </div>
+      <div class="nm" style={{ marginBottom: '20px' }}>
+        <Pass />
       </div>
       <div class="raster">
         <section class="karte seite" style={{ padding: '18px' }}>

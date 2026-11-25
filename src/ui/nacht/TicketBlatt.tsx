@@ -1,5 +1,6 @@
 // „Dein Ticket": erscheint direkt nach dem Speichern eines Bechers. Der Moment, in dem man teilen will.
 import { useEffect, useMemo, useState } from 'preact/hooks';
+import { neueAbzeichen } from '../../lib/abzeichen';
 import { filtere, ranglisteMitWertung } from '../../lib/auswertung';
 import { ortText, stadtVon } from '../../lib/orte';
 import { useEintraege, useGewichte } from '../daten';
@@ -24,6 +25,7 @@ export function TicketBlatt({ id, onNaechster }: { id: string; onNaechster: () =
   const zeile = zeilen.find((z) => z.eintrag.id === id);
   if (!zeile) return null;
   const ort = ortText(MARKTLISTE, e);
+  const neu = neueAbzeichen(alle.filter((x) => x.geraet === e.geraet && x.sync !== 'bestand'), alle, MARKTLISTE, id, gewichte);
   const link = `${location.origin}${location.pathname}#/becher/${encodeURIComponent(id)}`;
 
   const teilen = async () => {
@@ -39,6 +41,19 @@ export function TicketBlatt({ id, onNaechster }: { id: string; onNaechster: () =
         <p class="etikett mt-4 !text-gold-300">{t('Gespeichert')}</p>
         <h1 class="mt-2 font-display text-[40px] uppercase leading-none tracking-wide">{t('Danke für deine Bewertung')}</h1>
         <p class="mb-4 mt-2 min-h-5 text-xs text-dunst">{e.sync === 'offen' ? t('Wird gesendet, sobald Netz da ist.') : ''}</p>
+
+        {neu.length > 0 && (
+          <a href="#/profil" class="glas rahmen-licht mb-4 flex items-center gap-3 rounded-3xl p-4 text-eis no-underline" aria-live="polite">
+            <span class="grid size-12 shrink-0 place-items-center rounded-full text-[#1a1020]" style={{ background: 'linear-gradient(135deg,#ffe29a,#ff8a3d)' }}>
+              <Symbol name={neu[0].symbol} groesse={24} />
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="etikett !text-gold-300">{t('Neues Abzeichen')}</span>
+              <b class="block text-lg leading-tight">{neu.map((x) => t(x.name)).join(', ')}</b>
+            </span>
+            <span aria-hidden="true" class="text-xl text-gold-300">→</span>
+          </a>
+        )}
 
         {e.besuchId && (
           <section class="glas mb-6 rounded-3xl p-5" aria-label={t('Andere mitbewerten lassen')}>
