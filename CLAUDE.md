@@ -160,7 +160,7 @@ scripts/logo.mjs         erzeugt alle Logo- und Icon-Dateien aus assets/logo-ori
   Einträge ohne Wert ans Ende, ohne Rang.
 - Anzeige mit Punkt als Dezimaltrenner (`6.33`), wie im Auftrag. Preise mit Komma (`4,50 €`).
 - Abnahme: Nach Import von 2025 teilen sich Chrom (Salzburg) und Ikea Altona Platz 1 (6.33),
-  Rathaus Schloss Platz 3 (6.25), letzter ist Max (Traunstein) (3.67, Weggießen).
+  Elbschlösschen (Hamburg, Rathausmarkt; in der Ur-CSV „Rathaus Schloss“, am 25.11.2026 umbenannt) Platz 3 (6.25), letzter ist Max (Traunstein) (3.67, Weggießen).
   „Salz Chrom", „Trauen Max" und „Otten Schleenwurm" hießen in der Ur-CSV so, weil „Salz" (Salzburg), „Trauen" (Traunstein) und „Otten" (Ottensen) den Ort meinten (Salzburg: diverse Märkte, daher Markt „Sonstiger"); die CSV hat jetzt
   die Spalten `id` (hält die alten IDs stabil) und `stadt`. Der Server korrigiert Bestandsbecher über `POST /api/admin/import`
   (gleiche ID, anderer Inhalt → Update mit neuer Sync-Nummer, Antwort `aktualisiert`); der Deploy-Workflow spielt die CSV bei jedem Lauf ein.

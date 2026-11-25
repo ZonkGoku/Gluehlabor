@@ -1,6 +1,6 @@
 id,stand,markt,stadt,saison,geschmack,geruch,temperatur,personal,atmosphaere,preis_leistung,becher
 import-2025-001-salz-chrom,Chrom,Sonstiger,Salzburg,2025,6,6,8,7,5,5,8
-import-2025-002-rathaus-schloss,Rathaus Schloss,Rathausmarkt,,2025,6,5,8,4,8,6,7
+import-2025-002-rathaus-schloss,Elbschlösschen,Rathausmarkt,Hamburg,2025,6,5,8,4,8,6,7
 import-2025-003-ikea-altona,Ikea Altona,Ikea Altona,,2025,6,7,9,5,6,6,3
 import-2025-004-otten-schleenwurm,Schleenwurm,Ottensen,,2025,7,6,5,6,7,7,4
 import-2025-005-winterwald,Winterwald,Jungfernstieg,,2025,6,6,8,6,7,4,5

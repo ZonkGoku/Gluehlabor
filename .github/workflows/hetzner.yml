@@ -73,6 +73,12 @@ jobs:
         env:
           API_URL: https://gluehlabor.de
         run: npm run worker:seed
+      - name: Stände zusammenführen (data/korrekturen.json, mehrfach gefahrlos)
+        if: env.FTP_SERVER != '' && env.ADMIN_TOKEN != ''
+        continue-on-error: true
+        env:
+          API_URL: https://gluehlabor.de
+        run: npm run worker:korrekturen
       - name: Startcheck (nur zur Information)
         if: env.FTP_SERVER != ''
         continue-on-error: true

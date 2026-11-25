@@ -13,6 +13,7 @@
     "worker:dev": "wrangler dev --local --port 8787 --config worker/wrangler.toml",
     "worker:migrate": "wrangler d1 migrations apply gluehlabor --local --config worker/wrangler.toml",
     "worker:seed": "tsx worker/scripts/seed.ts",
+    "worker:korrekturen": "tsx worker/scripts/korrekturen.ts",
     "launch-check": "tsx scripts/launch-check.ts",
     "moderation": "tsx worker/scripts/moderation.ts",
     "build:server": "esbuild server/index.ts --bundle --platform=node --format=esm --target=node22 --packages=external --outfile=dist-server/index.mjs",

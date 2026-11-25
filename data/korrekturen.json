@@ -1,0 +1,10 @@
+{
+  "_hinweis": "Zusammenführungen von Ständen, die beim Deploy mit dem Admin-Schlüssel angewendet werden (worker/scripts/korrekturen.ts). Mehrfach gefahrlos: Was schon zusammengeführt ist, wird nicht noch einmal angefasst. 'von' sind Schreibweisen (Groß/Klein, Satzzeichen und Umlaute egal) in der genannten Stadt; die Namen der Bewertenden bleiben an jeder Bewertung.",
+  "zusammenfuehren": [
+    {
+      "von": ["Elbschlossen", "Elbschlösdchen", "Rathaus Schloss"],
+      "stadt": "Hamburg",
+      "nach": { "stand": "Elbschlösschen", "markt": "Rathausmarkt", "stadt": "Hamburg" }
+    }
+  ]
+}

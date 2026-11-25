@@ -26,7 +26,7 @@ describe('importiereCsv', () => {
     const [e] = importiereCsv('stand,markt,stadt,saison,geschmack\nKönig,Christkindlesmarkt,Nürnberg,2026,8');
     expect(e.stadt).toBe('Nürnberg');
     expect(importiereCsv(csv)[0].stadt).toBe('Salzburg');
-    expect(importiereCsv(csv).find((e) => e.stand === 'Rathaus Schloss')?.stadt).toBeUndefined();
+    expect(importiereCsv(csv).find((e) => e.stand === 'Elbschlösschen')?.stadt).toBe('Hamburg');
   });
   it('die Spalte id hält die ID stabil, auch wenn der Stand umbenannt wird', () => {
     const [e] = importiereCsv('id,stand,saison,geschmack\nimport-2025-001-salz-chrom,Chrom,2025,6');
@@ -84,7 +84,7 @@ describe('Bestandsdaten 2025', () => {
     expect(importiereCsv(csv).map((e) => e.id)).toEqual(eintraege.map((e) => e.id));
   });
 
-  it('Rangliste: Chrom und Ikea Altona Platz 1 (6.33), Rathaus Schloss Platz 3 (6.25), Max letzter (3.67, Weggießen)', () => {
+  it('Rangliste: Chrom und Ikea Altona Platz 1 (6.33), Elbschlösschen (früher „Rathaus Schloss“) Platz 3 (6.25), Max letzter (3.67, Weggießen)', () => {
     const liste = rangliste(eintraege, (e) => bewerte(e.noten, DEFAULT_GEWICHTE).gesamt);
     const zeile = (p: (typeof liste)[number]) => {
       const w = bewerte(p.eintrag.noten, DEFAULT_GEWICHTE);
@@ -95,7 +95,7 @@ describe('Bestandsdaten 2025', () => {
     expect(z.slice(0, 3)).toEqual([
       { rang: 1, stand: 'Chrom', gesamt: '6.33', urteil: 'Richtig gut' },
       { rang: 1, stand: 'Ikea Altona', gesamt: '6.33', urteil: 'Richtig gut' },
-      { rang: 3, stand: 'Rathaus Schloss', gesamt: '6.25', urteil: 'Richtig gut' },
+      { rang: 3, stand: 'Elbschlösschen', gesamt: '6.25', urteil: 'Richtig gut' },
     ]);
     expect(z.at(-1)).toEqual({ rang: 14, stand: 'Max', gesamt: '3.67', urteil: 'Weggießen' });
   });
