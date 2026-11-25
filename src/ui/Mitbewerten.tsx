@@ -65,6 +65,9 @@ export function Mitbewerten() {
 
   return (
     <main class="fokus">
+      <a href="#/" class="mb-2 inline-flex min-h-[44px] items-center gap-1 text-sm font-semibold text-eis no-underline">
+        <span aria-hidden="true">‹</span> {t('Zur Startseite')}
+      </a>
       <p class="eyebrow">{t('Du wurdest eingeladen')}</p>
       <h1 class="fokus-titel">{b.stand}</h1>
       <p class="fokus-unter">

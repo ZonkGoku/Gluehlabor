@@ -1,17 +1,12 @@
 // QR-Code zum gemeinsamen Bewerten. Funktioniert ohne Netz: Die Stammdaten stecken im Link.
-import { useEffect, useState } from 'preact/hooks';
 import { db } from '../daten/db';
+import { type Besuch } from '../lib/besuch';
+import { TeilenBlock } from './TeilenBlock';
 import { leseEntwurf } from '../daten/entwurf';
-import { synchronisiere } from '../daten/sync';
-import { besuchsLink, type Besuch } from '../lib/besuch';
-import { MARKE } from '../marke';
-import { anzeigeName } from '../lib/community';
 import { stadtVon, zerlegeFreienMarkt } from '../lib/orte';
 import { useLive } from './hooks';
-import { Qr } from './Qr';
 import { MARKTLISTE } from './stammdaten';
-import { Symbol } from './Symbol';
-import { t, tn } from '../i18n';
+import { t } from '../i18n';
 
 function queryDerAdresse(): URLSearchParams {
   return new URLSearchParams(location.hash.split('?')[1] ?? '');
@@ -34,19 +29,6 @@ async function ladeBesuch(): Promise<Besuch | null> {
 
 export function Teilen() {
   const besuch = useLive(ladeBesuch, [location.hash], undefined as Besuch | null | undefined);
-  const mitDabei = useLive(
-    async () => (besuch ? (await db.eintraege.where('besuchId').equals(besuch.id).toArray()) : []),
-    [besuch?.id],
-    [],
-  );
-  const [kopiert, setKopiert] = useState(false);
-
-  // Solange der QR-Code offen ist, kurz nachfragen: Die Mitbewertenden sollen schnell auftauchen.
-  // (Die öffentliche Liste wird am Rand 5 s zwischengespeichert, deshalb nicht öfter.)
-  useEffect(() => {
-    const t = setInterval(() => void synchronisiere(), 10_000);
-    return () => clearInterval(t);
-  }, []);
   const zurueck = queryDerAdresse().get('e') ? '#/' : '#/erfassen';
 
   if (besuch === undefined) return null;
@@ -66,56 +48,25 @@ export function Teilen() {
     );
   }
 
-  const link = besuchsLink(location.origin + location.pathname, besuch);
-  const teile = async () => {
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: `${MARKE.name}: ${besuch.stand}`, text: t('Bewerte mit mir: {stand}', { stand: besuch.stand }), url: link });
-        return;
-      }
-    } catch {
-      /* abgebrochen oder nicht möglich: dann kopieren */
-    }
-    try {
-      await navigator.clipboard.writeText(link);
-      setKopiert(true);
-      setTimeout(() => setKopiert(false), 2500);
-    } catch {
-      window.prompt?.(t('Link kopieren'), link);
-    }
-  };
-
-  const namen = mitDabei.map((e) => anzeigeName(e));
   return (
     <main class="fokus">
-      <p class="eyebrow">Gemeinsam bewerten</p>
+      <a href={zurueck} class="mb-2 inline-flex min-h-[44px] items-center gap-1 text-sm font-semibold text-eis no-underline">
+        <span aria-hidden="true">‹</span> {t('Zurück')}
+      </a>
+      <p class="eyebrow">{t('Gemeinsam bewerten')}</p>
       <h1 class="fokus-titel">{besuch.stand}</h1>
       <p class="fokus-unter">
         {besuch.markt}
         {besuch.stadt ? ` · ${besuch.stadt}` : ''}
       </p>
 
-      <div class="qr-box">
-        <Qr text={link} titel={t('QR-Code zum Mitbewerten bei {stand}', { stand: besuch.stand })} />
-      </div>
-      <p class="fokus-hinweis">
-        {t('Die anderen scannen den Code mit der Handykamera. Es öffnet sich das {name} mit diesem Stand, jeder bewertet für sich. Dafür braucht niemand ein Konto oder eine App.', { name: MARKE.name })}
-      </p>
+      <TeilenBlock besuch={besuch} />
 
-      <div class="knopfreihe" style={{ justifyContent: 'center' }}>
-        <button class="knopf primaer" onClick={() => void teile()}>
-          <Symbol name="plus" groesse={16} /> {kopiert ? t('Link kopiert') : t('Link teilen')}
-        </button>
-        <a class="knopf" href={zurueck} style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
-          {t('Fertig')}
+      <div class="knopfreihe" style={{ justifyContent: 'center', marginTop: '16px' }}>
+        <a class="knopf" href={zurueck} style={{ display: 'inline-flex', alignItems: 'center', minHeight: '44px', textDecoration: 'none', color: 'inherit' }}>
+          {queryDerAdresse().get('e') ? t('Zurück') : t('Zurück zur Bewertung')}
         </a>
       </div>
-
-      {namen.length > 0 && (
-        <p class="fokus-hinweis" aria-live="polite">
-          <b>{tn(namen.length, '{n} Bewertung', '{n} Bewertungen')} {t('zu diesem Besuch:')}</b> {namen.join(', ')}
-        </p>
-      )}
     </main>
   );
 }

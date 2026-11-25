@@ -15,7 +15,6 @@ import { synchronisiere } from '../daten/sync';
 import { abendDatum, naechsteBecherNr } from '../lib/abend';
 import { besuchIdAusBytes } from '../lib/besuch';
 import { istOrtsname } from '../lib/community';
-import { MARKE } from '../marke';
 import { ortTeile, stadtVon, zerlegeFreienMarkt } from '../lib/orte';
 import { baueStaende } from '../lib/staende';
 import { kanonischerStand, schlageStaendeVor, type Vorschlag } from '../lib/standvorschlag';
@@ -27,6 +26,7 @@ import { berechnePreisLeistung, MENGEN, PREIS_MAX, PREIS_MIN, referenzPreis, ver
 import { schonBewertet } from '../lib/staende';
 import { useGeraetId } from './daten';
 import { useLive } from './hooks';
+import { MenueBlatt } from './nacht/MenueBlatt';
 import { NameBlatt } from './nacht/NameBlatt';
 import { NotenZeile } from './NotenZeile';
 import { SyncAnzeige } from './SyncAnzeige';
@@ -99,6 +99,7 @@ export function Erfassen() {
   const [e, setE] = useState<Entwurf>(startEntwurf);
   const [ortOffen, setOrtOffen] = useState(false);
   const [nameOffen, setNameOffen] = useState(false);
+  const [menueOffen, setMenueOffen] = useState(false);
   const [warnung, setWarnung] = useState<string | null>(null);
   const [preisText, setPreisText] = useState(() => {
     const p = leseEntwurf()?.preis;
@@ -266,18 +267,16 @@ export function Erfassen() {
   return (
     <>
     <main class="erf">
-      <header class="kopf">
-        <span class="marke">{MARKE.name}</span>
-        <span class="titel" />
-        <SyncAnzeige />
-        {e.stand.trim() && (
-          <button type="button" class="kopf-knopf" onClick={zeigeQr} aria-label={t('QR-Code zum gemeinsamen Bewerten zeigen')}>
-            QR
-          </button>
-        )}
-        <a href="#/" aria-label={t('Zur Übersicht')}>
-          {t('Fertig')}
+      <header class="kopf kopf-bewerten">
+        <a href="#/" class="kopf-zurueck" aria-label={t('Zurück zur Übersicht')}>
+          <Symbol name="pfeil" groesse={18} />
+          {t('Zurück')}
         </a>
+        <span class="titel">{t('Bewerten')}</span>
+        <SyncAnzeige />
+        <button type="button" class="kopf-menue" onClick={() => setMenueOffen(true)} aria-haspopup="dialog">
+          {t('Menü')}
+        </button>
       </header>
 
       {e.gesperrt ? (
@@ -347,6 +346,18 @@ export function Erfassen() {
         </button>
       </div>
       )}
+
+      <button
+        type="button"
+        class="qr-zeile"
+        onClick={() => (e.stand.trim() ? zeigeQr() : (setFehlt(true), standRef.current?.focus()))}
+      >
+        <span class="qr-zeile-text">
+          <b>{t('Seid ihr zu mehreren?')}</b>
+          <small>{t('QR-Code zeigen: Die anderen bewerten selbst mit.')}</small>
+        </span>
+        <span class="qr-zeile-code" aria-hidden="true">QR</span>
+      </button>
 
       {!e.gesperrt && staendeHier.length > 0 && (
         <div class="hier-staende">
@@ -546,6 +557,7 @@ export function Erfassen() {
         }}
       />
     )}
+    {menueOffen && <MenueBlatt onZu={() => setMenueOffen(false)} />}
     {fertigId && <TicketBlatt id={fertigId} onNaechster={() => setFertigId(null)} />}
     </>
   );

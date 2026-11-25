@@ -2,10 +2,12 @@
 import { useEffect, useState } from 'preact/hooks';
 import { HAT_SERVER } from '../daten/config';
 import { leseEinstellung } from '../daten/db';
-import { entferne, entzieheZugang, fehlerText, ladeMeldungen, loescheGeraet, sperreGeraet, verstecke, verwirfMeldung, type Meldung } from '../daten/moderation';
+import { aendereStand, entferne, entzieheZugang, fehlerText, ladeMeldungen, loescheGeraet, sperreGeraet, verstecke, verwirfMeldung, type Meldung } from '../daten/moderation';
 import { MELDEGRUENDE } from '../daten/sync';
 import { useEintraege, useGeraetId } from './daten';
 import { anzeigeName, istPruefstelle } from '../lib/community';
+import { findeDubletten, type Dublette } from '../lib/dubletten';
+import { baueStaende } from '../lib/staende';
 import { zahl2 } from '../lib/format';
 import { bewerte } from '../lib/scoring';
 import { useGewichte } from './daten';
@@ -13,7 +15,7 @@ import { datumKurz } from './bausteine';
 import { ortText } from '../lib/orte';
 import { MARKTLISTE } from './stammdaten';
 import { useLive } from './hooks';
-import { t } from '../i18n';
+import { t, tn } from '../i18n';
 
 const KNOPF = 'glas rounded-full px-3.5 py-2 text-xs font-semibold text-eis transition hover:text-gold-300 disabled:opacity-50';
 const FELD = 'glas w-full rounded-2xl px-3.5 py-2.5 text-sm text-eis outline-none focus-visible:ring-2 focus-visible:ring-gold-400/70';
@@ -120,6 +122,42 @@ export function Moderation() {
           </li>
         ))}
       </ul>
+
+      {(() => {
+        const dubletten = alle ? findeDubletten(baueStaende(alle, MARKTLISTE, gewichte)) : [];
+        const namen = (st: Dublette['von']) => [...new Set(st.bewertungen.map((e) => (istPruefstelle(e) ? t('Prüfstelle') : anzeigeName(e))))].join(', ');
+        const fuehrZusammen = (von: Dublette['von'], nach: Dublette['von']) =>
+          confirm(t('„{a}" ({n} Bewertungen) in „{b}" zusammenführen? Wer bewertet hat, bleibt an jeder Bewertung erhalten.', { a: von.stand, n: von.bewertungen.length, b: nach.stand })) &&
+          void tu(() => aendereStand(von.bewertungen.map((e) => e.id), nach.stand, nach.markt, nach.stadt ?? ''), 'Zusammengeführt.');
+        return (
+          <section class="glas mt-6 rounded-3xl p-4">
+            <h2 class="etikett !text-[11px]">{t('Mögliche Doppelte')} · {dubletten.length}</h2>
+            <p class="mt-1 text-xs text-dunst">{t('Gleiche Stadt, ähnlicher Name. Beim Zusammenführen bleibt an jeder Bewertung, wer sie abgegeben hat.')}</p>
+            {dubletten.length === 0 && <p class="mt-2 text-sm text-dunst">{t('Keine Doppelten gefunden.')}</p>}
+            <ul class="mt-2 grid gap-2">
+              {dubletten.map((d) => (
+                <li class="rounded-2xl border border-rand bg-flaeche p-3.5">
+                  <p class="text-sm text-eis">
+                    <b>{d.von.stand}</b> <span class="text-dunst">({tn(d.von.bewertungen.length, '{n} Bewertung', '{n} Bewertungen')}: {namen(d.von)})</span>
+                  </p>
+                  <p class="text-sm text-eis">
+                    <b>{d.nach.stand}</b> <span class="text-dunst">({tn(d.nach.bewertungen.length, '{n} Bewertung', '{n} Bewertungen')}: {namen(d.nach)})</span>
+                  </p>
+                  <p class="mt-1 text-xs text-dunst">{[d.nach.stadt, d.nach.markt].filter(Boolean).join(' · ')}</p>
+                  <div class="mt-2 flex flex-wrap gap-2">
+                    <button type="button" class={KNOPF} onClick={() => fuehrZusammen(d.von, d.nach)}>
+                      {t('Alles zu „{b}"', { b: d.nach.stand })}
+                    </button>
+                    <button type="button" class={KNOPF} onClick={() => fuehrZusammen(d.nach, d.von)}>
+                      {t('Alles zu „{b}"', { b: d.von.stand })}
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })()}
 
       <section class="glas mt-6 rounded-3xl p-4">
         <h2 class="etikett !text-[11px]">{t('Alle Bewertungen')}{alle ? ` · ${alle.length}` : ''}</h2>

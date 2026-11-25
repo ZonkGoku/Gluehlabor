@@ -1,10 +1,11 @@
 // „Dein Ticket": erscheint direkt nach dem Speichern eines Bechers. Der Moment, in dem man teilen will.
 import { useState } from 'preact/hooks';
 import { filtere, ranglisteMitWertung } from '../../lib/auswertung';
-import { ortText } from '../../lib/orte';
+import { ortText, stadtVon } from '../../lib/orte';
 import { useEintraege, useGewichte } from '../daten';
 import { MARKTLISTE } from '../stammdaten';
 import { Symbol } from '../Symbol';
+import { TeilenBlock } from '../TeilenBlock';
 import { Hintergrund } from './Hintergrund';
 import { kartenDaten, teileKartenBild } from './karteBild';
 import { TopKarte } from './Ticket';
@@ -33,9 +34,17 @@ export function TicketBlatt({ id, onNaechster }: { id: string; onNaechster: () =
     <div class="nm fixed inset-0 z-50 overflow-y-auto bg-[var(--bg)] font-sans text-eis" role="dialog" aria-modal="true" aria-label={t('Dein Ticket')}>
       <Hintergrund />
       <div class="mx-auto flex min-h-full max-w-md flex-col px-4 pb-10 pt-8">
-        <p class="etikett mt-6 !text-gold-300">{t('Probe gesichert')}</p>
-        <h1 class="mt-2 font-display text-[44px] uppercase leading-none tracking-wide">{t('Dein Ticket')}</h1>
-        <p class="mb-5 mt-2 min-h-5 text-xs text-dunst">{e.sync === 'offen' ? t('Wird gesendet, sobald Netz da ist.') : ''}</p>
+        <p class="etikett mt-4 !text-gold-300">{t('Gespeichert')}</p>
+        <h1 class="mt-2 font-display text-[40px] uppercase leading-none tracking-wide">{t('Danke für deine Bewertung')}</h1>
+        <p class="mb-4 mt-2 min-h-5 text-xs text-dunst">{e.sync === 'offen' ? t('Wird gesendet, sobald Netz da ist.') : ''}</p>
+
+        {e.besuchId && (
+          <section class="glas mb-6 rounded-3xl p-5" aria-label={t('Andere mitbewerten lassen')}>
+            <h2 class="text-center font-display text-2xl uppercase tracking-wide text-eis">{t('Seid ihr zu mehreren? Alle bewerten selbst.')}</h2>
+            <p class="mb-4 mt-1 text-center text-sm text-gold-300">{e.stand}</p>
+            <TeilenBlock besuch={{ id: e.besuchId, stand: e.stand, markt: e.markt, stadt: stadtVon(MARKTLISTE, e) ?? undefined, sorte: e.sorte }} />
+          </section>
+        )}
 
         <TopKarte zeile={zeile} ort={ort} hinweis={zeile.rang ? t('Platz {r} von {n}', { r: zeile.rang, n: zeilen.length }) : undefined} ohneLink />
 

@@ -837,3 +837,77 @@ button.glas,
 .nm.glas[role='group'] {
   border-color: var(--nm-bedienung);
 }
+
+/* Erfassung: Kopf mit Zurück und Menü, sichtbare QR-Zeile */
+.erf .kopf-bewerten {
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding-bottom: 6px;
+}
+.erf .kopf-bewerten a.kopf-zurueck {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 44px;
+  margin: 0 0 0 -6px;
+  padding: 0 10px 0 4px;
+  font: 600 15px var(--sans);
+  color: var(--text);
+}
+.erf .kopf-bewerten a.kopf-zurueck svg {
+  transform: rotate(180deg);
+}
+.erf .kopf-bewerten .titel {
+  font: 400 22px var(--font-display, var(--sans));
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+  text-align: center;
+}
+.erf .kopf-menue {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--rand-kontrast);
+  background: transparent;
+  color: var(--text);
+  font: 600 14px var(--sans);
+  cursor: pointer;
+}
+.erf .qr-zeile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 14px;
+  border-radius: 16px;
+  border: 1.5px dashed var(--nm-akzent-text);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.erf .qr-zeile-text {
+  display: grid;
+  gap: 2px;
+}
+.erf .qr-zeile-text b {
+  font-size: 16px;
+}
+.erf .qr-zeile-text small {
+  font-size: 13px;
+  color: var(--text-2);
+}
+.erf .qr-zeile-code {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #fff;
+  color: #000;
+  font: 700 14px var(--mono);
+}
