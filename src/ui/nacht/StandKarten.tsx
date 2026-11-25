@@ -43,7 +43,7 @@ export function StandTopKarte({ stand, klein, quelle = 'alle', hinweis, klasse, 
 
 export function StandZeile({ stand }: { stand: Stand }) {
   const zeile = standAlsZeile(stand);
-  return <RangZeile zeile={zeile} ort={stand.stadt ?? ortText(MARKTLISTE, zeile.eintrag)} href={standHref(stand)} zusatz={stempel(stand)} siegel={stand.pruefstelle.anzahl > 0} deal={stand.deal.top} />;
+  return <RangZeile zeile={zeile} ort={stand.stadt ?? ortText(MARKTLISTE, zeile.eintrag)} href={standHref(stand)} anzahl={stand.wert.anzahl} siegel={stand.pruefstelle.anzahl > 0} deal={stand.deal.top} />;
 }
 
 /** Zeile der Top-Deals-Liste: Preis-Leistung statt Gesamtnote, dazu der übliche Preis. */
@@ -55,7 +55,7 @@ export function DealZeile({ stand }: { stand: Stand }) {
       zeile={zeile}
       ort={[stand.stadt ?? ortText(MARKTLISTE, zeile.eintrag), preis].filter(Boolean).join(' · ')}
       href={standHref(stand)}
-      zusatz={stempel(stand)}
+      anzahl={stand.wert.anzahl}
       siegel={stand.pruefstelle.anzahl > 0}
       deal={stand.deal.top}
     />

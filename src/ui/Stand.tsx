@@ -5,7 +5,7 @@ import { HAT_SERVER } from '../daten/config';
 import { entwurfHatInhalt, leseEntwurf, schreibeEntwurf } from '../daten/entwurf';
 import { leseEinstellung, type LokalerEintrag } from '../daten/db';
 import { anzeigeName, istPruefstelle } from '../lib/community';
-import { zahl2, euro } from '../lib/format';
+import { euro, sterneText } from '../lib/format';
 import { KRITERIEN, leereNoten } from '../lib/modell';
 import { abendDatum } from '../lib/abend';
 import { ortText } from '../lib/orte';
@@ -19,13 +19,13 @@ import { StandTopKarte } from './nacht/StandKarten';
 import { DealMarke } from './nacht/DealMarke';
 import { HilfePunkt } from './nacht/HilfePunkt';
 import { FotoStreifen } from './FotoStreifen';
-import { SterneWert } from './nacht/SterneWert';
+import { SterneGross, SterneZeile } from './nacht/SterneWert';
 import { Netzdiagramm, NotenBalken, type Reihe } from './Netzdiagramm';
 import { SiegelEtikett } from './nacht/PruefSiegel';
 import { ANKER, MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
 import { URTEILE } from '../lib/auswertung';
-import { kriteriumLabel, t, tn } from '../i18n';
+import { kriteriumLabel, t } from '../i18n';
 
 const FELD = 'glas w-full rounded-2xl px-3.5 py-2.5 text-sm text-eis outline-none focus-visible:ring-2 focus-visible:ring-gold-400/70';
 const KNOPF = 'glas rounded-full px-4 py-2.5 text-sm font-semibold text-eis transition hover:text-gold-300 disabled:opacity-50';
@@ -84,7 +84,7 @@ export function StandSeite({ id }: { id: string }) {
       </a>
       {s.pruefstelle.anzahl > 0 && (
         <div class="mt-3 flex flex-wrap items-center gap-2">
-          <SiegelEtikett text={t('Von David & Philip getestet: {n}', { n: s.pruefstelle.gesamt === null ? '–' : zahl2(s.pruefstelle.gesamt) })} />
+          <SiegelEtikett text={t('Von David & Philip getestet: {n}', { n: s.pruefstelle.gesamt === null ? '–' : sterneText(s.pruefstelle.gesamt) })} />
           <HilfePunkt text={t('Von David & Philip getestet.')} />
         </div>
       )}
@@ -94,13 +94,11 @@ export function StandSeite({ id }: { id: string }) {
           <div class="grid grid-cols-2 gap-3">
             <Kachel innen="p-4">
               <p class="etikett">{t('Prüfstelle · David & Philip')}</p>
-              <p class="mt-2 font-display text-[44px] leading-none text-gold-300"><SterneWert wert={s.pruefstelle.gesamt} /></p>
-              <p class="mt-1 text-xs text-dunst">{s.pruefstelle.anzahl === 0 ? t('noch nicht bewertet') : tn(s.pruefstelle.anzahl, '{n} Bewertung', '{n} Bewertungen')}</p>
+              <p class="mt-2">{s.pruefstelle.anzahl === 0 ? <span class="text-sm text-dunst">{t('noch nicht bewertet')}</span> : <SterneGross wert={s.pruefstelle.gesamt} anzahl={s.pruefstelle.anzahl} />}</p>
             </Kachel>
             <Kachel innen="p-4">
               <p class="etikett">{t('Community')}</p>
-              <p class="mt-2 font-display text-[44px] leading-none text-gold-300"><SterneWert wert={s.community.gesamt} /></p>
-              <p class="mt-1 text-xs text-dunst">{s.community.anzahl === 0 ? t('noch nicht bewertet') : tn(s.community.anzahl, '{n} Bewertung', '{n} Bewertungen')}</p>
+              <p class="mt-2">{s.community.anzahl === 0 ? <span class="text-sm text-dunst">{t('noch nicht bewertet')}</span> : <SterneGross wert={s.community.gesamt} anzahl={s.community.anzahl} />}</p>
             </Kachel>
           </div>
           <Kachel innen="p-4">
@@ -110,7 +108,7 @@ export function StandSeite({ id }: { id: string }) {
                   {t('Preis-Leistung')}{' '}
                   <HilfePunkt text={t('Glühwein-Note, minus 0,5 je Euro über dem üblichen Preis.')} />
                 </p>
-                <p class="mt-2 font-display text-[44px] leading-none text-gold-300"><SterneWert wert={s.deal.punkte} /></p>
+                <p class="mt-2"><SterneGross wert={s.deal.punkte} /></p>
                 <p class="mt-1 text-xs text-dunst">
                   {s.preis.median === null
                     ? t('noch kein Preis gemeldet')
@@ -193,7 +191,7 @@ export function StandSeite({ id }: { id: string }) {
                   {e.notiz && <span class="mt-1 block text-sm text-eis/90">„{e.notiz}"</span>}
                 </span>
                 <span class="text-right">
-                  <span class="block font-display text-[28px] leading-none text-gold-300"><SterneWert wert={w.gesamt} /></span>
+                  <span class="block text-sm"><SterneZeile wert={w.gesamt} /></span>
                   <UrteilPill urteil={w.urteil} />
                 </span>
               </a>

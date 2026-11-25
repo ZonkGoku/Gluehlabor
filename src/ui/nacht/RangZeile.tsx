@@ -2,10 +2,10 @@
 import type { Zeile } from '../../lib/auswertung';
 import { DealMarke } from './DealMarke';
 import { PruefSiegel } from './PruefSiegel';
-import { SterneWert } from './SterneWert';
+import { SterneZeile } from './SterneWert';
 import { stufe } from './Ticket';
 
-export function RangZeile({ zeile, ort, href, zusatz, siegel = false, deal = false }: { zeile: Zeile; ort?: string; href?: string; zusatz?: string; siegel?: boolean; deal?: boolean }) {
+export function RangZeile({ zeile, ort, href, anzahl, siegel = false, deal = false }: { zeile: Zeile; ort?: string; href?: string; anzahl?: number; siegel?: boolean; deal?: boolean }) {
   const { eintrag: e, wertung: w, rang } = zeile;
   const s = stufe(rang);
   return (
@@ -25,16 +25,11 @@ export function RangZeile({ zeile, ort, href, zusatz, siegel = false, deal = fal
           <span class="truncate text-[17px] font-semibold leading-tight">{e.stand}</span>
           {siegel && <PruefSiegel groesse={18} />}
         </span>
+        <span class="mt-1 block text-sm"><SterneZeile wert={w.gesamt} anzahl={anzahl} /></span>
         <span class="mt-1 flex min-w-0 items-center gap-2 text-sm text-dunst">
           {deal && <DealMarke />}
           <span class="truncate">{ort ?? e.markt}</span>
         </span>
-      </span>
-      <span class="shrink-0 text-right">
-        <span class="block font-display text-[30px] leading-none text-gold-300">
-          <SterneWert wert={w.gesamt} />
-        </span>
-        {zusatz && <span class="mt-1 block text-xs text-dunst">{zusatz}</span>}
       </span>
     </a>
   );

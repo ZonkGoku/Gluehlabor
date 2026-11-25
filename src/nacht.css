@@ -114,6 +114,8 @@ html:root:root {
   --nm-rand: light-dark(rgb(30 22 51 / 0.11), rgb(255 255 255 / 0.09));
   --nm-rand-stark: light-dark(rgb(30 22 51 / 0.24), rgb(255 255 255 / 0.2));
   --nm-bedienung: light-dark(rgb(30 22 51 / 0.5), rgb(255 255 255 / 0.42));
+  --nm-stern: light-dark(#e69a00, #ffc857);
+  --nm-stern-leer: light-dark(rgb(30 22 51 / 0.2), rgb(255 255 255 / 0.22));
   --nm-spur: light-dark(rgb(30 22 51 / 0.1), rgb(255 255 255 / 0.1));
   --nm-glas-a: light-dark(rgb(255 255 255 / 0.8), rgb(255 255 255 / 0.075));
   --nm-glas-b: light-dark(rgb(255 255 255 / 0.5), rgb(255 255 255 / 0.03));
@@ -654,15 +656,16 @@ body {
   transform: scale(0.94);
 }
 .erf .nz-stufen button[data-an='true'] {
-  border-color: transparent;
-  background: linear-gradient(135deg, #ffe29a, #ff8a3d);
-  color: #1a1020;
+  border-color: var(--nm-stern);
+}
+.erf .nz-stufen button {
+  display: grid;
+  place-items: center;
 }
 .erf .nz-segmente {
-  display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  gap: 4px;
-  height: 14px;
+  display: flex;
+  align-items: center;
+  min-height: 30px;
 }
 .erf .nz-segmente span {
   border-radius: 4px;
@@ -748,6 +751,13 @@ body {
   }
   .erf .messwert .kopfzeile {
     flex: 1 0 100%;
+    align-items: center;
+  }
+  .erf .messwert .unter {
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
   }
   .erf .messwert .gesamt {
     font-size: 30px;

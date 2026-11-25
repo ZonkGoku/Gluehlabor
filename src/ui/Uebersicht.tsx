@@ -14,7 +14,7 @@ import { InstallKarte } from './InstallKarte';
 import { useEintraege, useGeraetId, useGewichte, useMeineAnzahl, useName, useSaison } from './daten';
 import { leseZuletzt } from '../daten/zuletzt';
 import { useEinblenden } from './nacht/bewegung';
-import { SterneWert } from './nacht/SterneWert';
+import { SterneZeile } from './nacht/SterneWert';
 import { StandZeile } from './nacht/StandKarten';
 import { baueStaende } from '../lib/staende';
 import { MARKTLISTE } from './stammdaten';
@@ -113,7 +113,7 @@ function HeuteAbend({ a, besuchId }: { a: ReturnType<typeof abend>; besuchId?: s
       <p class="etikett !text-gold-300">{t('Heute Abend')}</p>
       <p class="mt-1 font-display text-[34px] uppercase leading-none tracking-wide text-eis">
         {a.anzahl === 1 ? t('1 Glühwein bewertet') : t('{n} Glühweine bewertet', { n: a.anzahl })}
-        {a.mittel !== null && <span class="ml-2 text-gold-300">Ø <SterneWert wert={a.mittel} /></span>}
+        {a.mittel !== null && <span class="ml-2 text-gold-300"><SterneZeile wert={a.mittel} groesse={22} /></span>}
       </p>
       <a
         href="#/erfassen"
@@ -234,12 +234,14 @@ export function Uebersicht() {
                     class="flex items-center gap-3 rounded-2xl border border-rand bg-flaeche px-3.5 py-3 text-eis no-underline transition hover:border-[var(--nm-rand-stark)] hover:bg-flaeche-hover"
                   >
                     <span class="min-w-0 flex-1">
-                      <span class="block truncate font-semibold">{e.stand}</span>
+                      <span class="block truncate text-[17px] font-semibold">{e.stand}</span>
+                      <span class="mt-1 block text-sm">
+                        <SterneZeile wert={bewerte(e.noten, gewichte).gesamt} />
+                      </span>
                       <span class="block truncate text-sm text-dunst">
                         {[ortText(MARKTLISTE, e), istPruefstelle(e) ? t('Prüfstelle') : anzeigeName(e)].filter(Boolean).join(' · ')}
                       </span>
                     </span>
-                    <span class="font-display text-[26px] leading-none text-gold-300"><SterneWert wert={bewerte(e.noten, gewichte).gesamt} /></span>
                   </a>
                 </li>
               ))}

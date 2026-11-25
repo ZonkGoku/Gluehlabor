@@ -5,6 +5,8 @@ import { useMemo, useState } from 'preact/hooks';
 import type { Zeile } from '../../lib/auswertung';
 import { anzeigeName, istPruefstelle } from '../../lib/community';
 import { sterneText } from '../../lib/format';
+import { sterne1 } from '../../lib/scoring';
+import { Sterne } from './SterneWert';
 import { UrteilPill } from '../bausteine';
 import { DealMarke } from './DealMarke';
 import { PruefSiegel } from './PruefSiegel';
@@ -160,7 +162,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
   const { eintrag: e, wertung: w, rang } = zeile;
   const pruef = istPruefstelle(e);
   const zeigeSiegel = siegel || (stempel === undefined && pruef);
-  const zahl = useZaehler(w.gesamt);
+  const zahl = useZaehler(w.gesamt === null ? null : sterne1(w.gesamt), 1);
   const [meldung, setMeldung] = useState('');
   const link = `${location.origin}${location.pathname}${teilenLink ?? `#/becher/${encodeURIComponent(e.id)}`}`;
   const teilen = async (ev: Event) => {
@@ -206,6 +208,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
               aria-label={t('Gesamtnote {n}', { n: sterneText(w.gesamt) })}
             >
               {zahl}
+              <div class="mt-2"><Sterne wert={w.gesamt} groesse={klein ? 18 : 24} /></div>
             </div>
             {!schlicht && (
               <div class="min-w-[8.5rem] flex-1 basis-[8.5rem] space-y-2 pb-1.5">

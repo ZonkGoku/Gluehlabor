@@ -3,6 +3,7 @@
 // Die Stufen passen zu den Beschreibungen der Noten (data/anker.json: 2, 4, 6, 8, 10).
 import { t } from '../i18n';
 import { halbSterne } from '../lib/format';
+import { Stern, Sterne } from './nacht/SterneWert';
 import type { Note } from '../lib/modell';
 
 const STUFEN = [2, 4, 6, 8, 10] as const;
@@ -55,15 +56,13 @@ export function NotenZeile({ name, wert, onWert, auto = false, offen, onHilfe, a
         <div class="nz-stufen" role="radiogroup" aria-label={name}>
           {STUFEN.map((n) => (
             <button type="button" role="radio" aria-label={t('{n} Sterne', { n: n / 2 })} aria-checked={wert === n} data-an={wert === n} onClick={() => setze(wert === n ? null : n)}>
-              {n / 2}
+              <Stern fuellung={wert === null ? 0 : (wert - (n - 2)) / 2} groesse={38} />
             </button>
           ))}
         </div>
       ) : (
         <div class="nz-segmente" aria-hidden="true">
-          {Array.from({ length: 10 }, (_, i) => (
-            <span data-voll={wert !== null && i < wert} />
-          ))}
+          <Sterne wert={wert} groesse={26} />
         </div>
       )}
       {offen && (

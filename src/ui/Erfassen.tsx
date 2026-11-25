@@ -31,6 +31,7 @@ import { MenueBlatt } from './nacht/MenueBlatt';
 import { NameBlatt } from './nacht/NameBlatt';
 import { QrBlatt } from './nacht/QrBlatt';
 import { NotenZeile } from './NotenZeile';
+import { Sterne } from './nacht/SterneWert';
 import { SyncAnzeige } from './SyncAnzeige';
 import { TicketBlatt } from './nacht/TicketBlatt';
 import { OrtBlatt } from './nacht/OrtBlatt';
@@ -559,10 +560,9 @@ export function Erfassen() {
         <div class="messwert" aria-live="polite">
           <span class="kopfzeile">
             <span class={wertung.gesamt === null ? 'gesamt leer' : 'gesamt'}>{sterneText(wertung.gesamt)}</span>
-            <span class="urteil">{wertung.urteil ? t(wertung.urteil) : t('{n} von 6 bewertet', { n: bewertet })}</span>
+            <Sterne wert={wertung.gesamt} groesse={16} />
           </span>
-          <span class="unter">{t('Glühwein')}&nbsp;{sterneText(wertung.gluehwein)}</span>
-          <span class="unter">{t('Drumherum')}&nbsp;{sterneText(wertung.drumherum)}</span>
+          <span class="unter">{wertung.urteil ? t(wertung.urteil) : t('{n} von 6 bewertet', { n: bewertet })}</span>
         </div>
         <button
           type="button"

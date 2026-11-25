@@ -7,6 +7,31 @@ import { qrModule } from './qr';
 import { kurzId } from './Ticket';
 import { t as uebersetze } from '../../i18n';
 
+/** Fünf Sterne mit anteiliger Füllung (Google/Amazon-Stil), `punkte` auf der 10er-Skala. */
+function zeichneSterne(k: CanvasRenderingContext2D, x: number, y: number, groesse: number, punkte: number | null): void {
+  const stern = new Path2D('M12 2.6l2.8 5.9 6.5.8-4.8 4.5 1.2 6.4L12 17l-5.7 3.2 1.2-6.4L2.7 9.3l6.5-.8z');
+  const s = punkte === null ? 0 : Math.max(0, Math.min(5, punkte / 2));
+  const m = groesse / 24;
+  for (let i = 0; i < 5; i++) {
+    const f = Math.max(0, Math.min(1, s - i));
+    k.save();
+    k.translate(x + i * (groesse + 8), y);
+    k.scale(m, m);
+    k.fillStyle = 'rgba(255,255,255,.22)';
+    k.fill(stern);
+    if (f > 0) {
+      k.save();
+      k.beginPath();
+      k.rect(0, 0, 24 * f, 24);
+      k.clip();
+      k.fillStyle = '#ffc857';
+      k.fill(stern);
+      k.restore();
+    }
+    k.restore();
+  }
+}
+
 export interface KartenDaten {
   rang: number | null;
   stand: string;
@@ -297,6 +322,9 @@ export async function erzeugeKartenBild(d: KartenDaten): Promise<Blob> {
     k.fillStyle = fg;
     k.fillText(uebersetze(d.urteil), pad + 30, noteY + 80);
   }
+
+  // Sterne unter der Note
+  zeichneSterne(k, pad, noteY + 130, 64, d.gesamt);
 
   // Messbalken rechts neben der Note
   const balken = (label: string, wert: number | null, by: number) => {
