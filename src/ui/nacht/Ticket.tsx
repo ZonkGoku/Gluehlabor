@@ -103,17 +103,10 @@ function Messer({ etikett, wert }: { etikett: string; wert: number | null }) {
     <div>
       <div class="flex items-baseline justify-between gap-2">
         <span class="etikett !text-[11px] !tracking-[0.1em]">{etikett}</span>
-        <span class="whitespace-nowrap font-mono text-xs text-eis">{sterneText(wert)}</span>
-      </div>
-      <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-spur">
-        <div
-          class="h-full rounded-full"
-          style={{
-            width: `${(wert ?? 0) * 10}%`,
-            background: 'linear-gradient(90deg,var(--nm-licht-1),var(--color-glut-500) 60%,var(--color-wein-500))',
-            boxShadow: '0 0 12px rgb(255 138 61 / 0.7)',
-          }}
-        />
+        <span class="inline-flex items-center gap-1.5 whitespace-nowrap font-mono text-xs text-eis">
+          {sterneText(wert)}
+          <Sterne wert={wert} groesse={13} />
+        </span>
       </div>
     </div>
   );
@@ -182,7 +175,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
         <Inhalt klein={klein} href={ohneLink ? undefined : (href ?? `#/becher/${encodeURIComponent(e.id)}`)}>
           <div class="flex items-start justify-between gap-3">
             <div class="flex items-baseline gap-2">
-              <span class={`font-display leading-none licht-text ${klein ? 'text-[40px]' : 'text-[52px]'}`}>{String(rang ?? '–').padStart(2, '0')}</span>
+              <span class={`font-display leading-none licht-text ${klein ? 'text-[40px]' : 'text-[52px]'}`}>{String(rang ?? '–')}</span>
               <span class={`etikett ${klein && zeigeSiegel ? 'hidden' : ''}`}>{t('Platz')}</span>
             </div>
             <div class="flex items-center gap-2">

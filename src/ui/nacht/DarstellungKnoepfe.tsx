@@ -6,7 +6,7 @@ import { Symbol } from '../Symbol';
 import { t } from '../../i18n';
 
 export const ICONKNOPF =
-  'glas grid size-10 shrink-0 place-items-center rounded-full text-dunst transition duration-200 hover:text-gold-300 hover:shadow-glut cursor-pointer';
+  'glas grid size-11 shrink-0 place-items-center rounded-full text-dunst transition duration-200 hover:text-gold-300 hover:shadow-glut cursor-pointer';
 
 /** Wechselt zwischen Hell und Dunkel. Zeigt das Ziel, nicht den Ist-Zustand. */
 export function ThemeKnopf({ klasse = ICONKNOPF }: { klasse?: string }) {

@@ -1130,3 +1130,10 @@ button.glas,
     padding: 0;
   }
 }
+
+/* Telefone: nur jede zweite Schneeflocke (schont Akku und hält die Anzeige ruhig) */
+@media (max-width: 640px) {
+  .animate-schnee:nth-of-type(2n) {
+    display: none;
+  }
+}

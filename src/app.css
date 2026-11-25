@@ -1626,7 +1626,8 @@ a.karte.spitze {
 .rechtliches a {
   color: inherit;
   display: inline-block;
-  padding: 12px 4px;
+  padding: 13px 0;
+  margin-right: 10px;
 }
 .text-seite h2 {
   margin: 22px 0 8px;

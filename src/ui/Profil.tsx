@@ -6,7 +6,7 @@ import { db, holeGeraet, leseEinstellung, schreibeEinstellung, setzeName } from 
 import { abonniereSync, synchronisiere, type SyncInfo } from '../daten/sync';
 import { GRENZEN, pruefeName } from '../lib/community';
 import { Betreiber } from './bausteine';
-import { Pass } from './Pass';
+import { PassAbzeichen, PassKopf } from './Pass';
 import { useGeraetId, useName } from './daten';
 import { useLive } from './hooks';
 import { t, tn } from '../i18n';
@@ -69,7 +69,7 @@ export function Profil() {
         </div>
       </div>
       <div class="nm" style={{ marginBottom: '20px' }}>
-        <Pass />
+        <PassKopf />
       </div>
       <div class="raster">
         <section class="karte seite" style={{ padding: '18px' }}>
@@ -99,7 +99,13 @@ export function Profil() {
           {(nameMeldung || nameFehler) && <div class="meldung">{nameMeldung || t('Der Server hat den Namen abgelehnt: {grund}', { grund: t(nameFehler) })}</div>}
         </section>
 
-        <section class="karte seite" style={{ padding: '18px' }}>
+        <div class="nm" style={{ gridColumn: '1 / -1' }}>
+          <PassAbzeichen />
+        </div>
+
+        <details class="karte seite" style={{ padding: '18px', gridColumn: '1 / -1' }}>
+          <summary style={{ cursor: 'pointer', minHeight: '44px', display: 'flex', alignItems: 'center', fontWeight: 600 }}>{t('Technik und Prüfstelle')}</summary>
+        <section>
           <h2 style={{ margin: 0 }}>{t('Verbindung')}</h2>
           <p style={{ margin: '8px 0 0' }}>{t(VERBINDUNG[info.zustand])}</p>
           {info.meldung && <div class="meldung">{t(info.meldung)}</div>}
@@ -122,7 +128,7 @@ export function Profil() {
           </p>
         </section>
 
-        <section class="karte seite" style={{ padding: '18px' }}>
+        <section style={{ marginTop: '18px' }}>
           <h2 style={{ margin: 0 }}>{t('Prüfstelle · nur David & Philip')}</h2>
           {pruefstelle ? (
             <>
@@ -157,6 +163,7 @@ export function Profil() {
             </>
           )}
         </section>
+        </details>
 
       </div>
       <Betreiber />

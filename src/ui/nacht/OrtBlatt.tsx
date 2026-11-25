@@ -238,7 +238,7 @@ export function OrtBlatt({ start, bestand, onWahl, onZu, ohneMarkt = false }: Pr
         <header class="px-4 pb-3 pt-4">
           <div class="flex items-center gap-3">
             <h2 class="flex-1 font-display text-[28px] uppercase leading-none tracking-wide">{stadt === null ? t('Wo bist du?') : t('Welcher Markt?')}</h2>
-            <button type="button" onClick={onZu} aria-label={t('Schließen')} class="grid size-10 place-items-center rounded-full border border-rand bg-flaeche text-dunst hover:text-eis">
+            <button type="button" onClick={onZu} aria-label={t('Schließen')} class="grid size-11 place-items-center rounded-full border border-rand bg-flaeche text-dunst hover:text-eis">
               <Symbol name="schliessen" groesse={20} />
             </button>
           </div>

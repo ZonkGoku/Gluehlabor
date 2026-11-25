@@ -8,40 +8,41 @@ import { t, tn } from '../i18n';
 export function AbzeichenKachel({ a }: { a: Abzeichen }) {
   return (
     <li
-      class={`flex items-center gap-3 rounded-2xl border-2 p-3 ${a.erreicht ? 'border-[var(--nm-stern)] bg-flaeche' : 'border-rand opacity-70'}`}
+      class={`flex min-w-0 flex-col items-center gap-1.5 rounded-2xl border-2 p-3 text-center ${a.erreicht ? 'border-[var(--nm-stern)] bg-flaeche' : 'border-rand opacity-75'}`}
       aria-label={a.erreicht ? t('{name}: erreicht', { name: t(a.name) }) : t('{name}: noch nicht erreicht', { name: t(a.name) })}
     >
       <span
-        class="grid size-12 shrink-0 place-items-center rounded-full"
+        class="grid size-11 shrink-0 place-items-center rounded-full"
         style={a.erreicht ? { background: 'linear-gradient(135deg,#ffe29a,#ff8a3d)', color: '#1a1020' } : { background: 'var(--nm-stern-leer)', color: 'var(--nm-text-2)' }}
       >
-        <Symbol name={a.symbol} groesse={24} />
+        <Symbol name={a.symbol} groesse={22} />
       </span>
-      <span class="min-w-0 flex-1">
-        <b class="block text-[15px] leading-tight text-eis">{t(a.name)}</b>
-        <span class="block text-sm leading-snug text-dunst">
-          {t(a.text)}
-          {!a.erreicht && a.ziel > 1 && ` · ${a.stand}/${a.ziel}`}
-        </span>
+      <b class="block text-sm leading-tight text-eis">{t(a.name)}</b>
+      <span class="block text-xs leading-snug text-dunst">
+        {t(a.text)}
+        {!a.erreicht && a.ziel > 1 && ` · ${a.stand}/${a.ziel}`}
       </span>
     </li>
   );
 }
 
-export function Pass() {
+function useMeine() {
   const alle = useEintraege();
   const gewichte = useGewichte();
   const geraetId = useGeraetId();
   if (!alle) return null;
   // Meine: von dieser Gerätekennung, oder (ganz frisch, noch nicht beim Server angemeldet) ohne Kennung
   const meine = alle.filter((e) => e.sync !== 'bestand' && !e.id.startsWith('import-') && (geraetId ? e.geraet === geraetId : !e.geraet));
-  const abzeichen = berechneAbzeichen(meine, alle, MARKTLISTE, gewichte);
-  const stand = stufeFuer(meine.length);
-  const stempel = passStempel(meine, MARKTLISTE);
-  const erreicht = abzeichen.filter((a) => a.erreicht).length;
+  return { meine, abzeichen: berechneAbzeichen(meine, alle, MARKTLISTE, gewichte), stempel: passStempel(meine, MARKTLISTE) };
+}
 
+export function PassKopf() {
+  const d = useMeine();
+  if (!d) return null;
+  const { meine } = d;
+  const stand = stufeFuer(meine.length);
   return (
-    <section class="grid gap-4" aria-label={t('Dein Glühwein-Pass')}>
+    <section aria-label={t('Dein Glühwein-Pass')}>
       <div class="glas rahmen-licht rounded-3xl p-5">
         <p class="etikett !text-gold-300">{t('Dein Glühwein-Pass')}</p>
         <p class="mt-1 font-display text-[40px] uppercase leading-none tracking-wide text-eis">{t(stand.stufe.name)}</p>
@@ -62,12 +63,22 @@ export function Pass() {
           </a>
         )}
       </div>
+    </section>
+  );
+}
 
+export function PassAbzeichen() {
+  const d = useMeine();
+  if (!d) return null;
+  const { abzeichen, stempel } = d;
+  const erreicht = abzeichen.filter((a) => a.erreicht).length;
+  return (
+    <section class="grid gap-4">
       <div>
         <h2 class="mb-3 font-display text-[26px] uppercase leading-none tracking-wide text-eis">
           {t('Abzeichen')} <span class="font-mono text-base text-dunst">{erreicht}/{abzeichen.length}</span>
         </h2>
-        <ul class="m-0 grid list-none gap-2 p-0 md:grid-cols-2">
+        <ul class="m-0 grid list-none grid-cols-2 gap-2 p-0 md:grid-cols-3">
           {abzeichen.map((a) => (
             <AbzeichenKachel a={a} />
           ))}

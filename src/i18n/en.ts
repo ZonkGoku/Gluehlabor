@@ -861,4 +861,5 @@ export const EN: Record<string, string> = {
   "Neues Abzeichen": "New badge",
   "{name}: erreicht": "{name}: earned",
   "{name}: noch nicht erreicht": "{name}: not earned yet",
+  "Technik und Prüfstelle": "Technical details and Prüfstelle",
 };
