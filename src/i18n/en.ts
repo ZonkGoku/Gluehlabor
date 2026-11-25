@@ -822,4 +822,9 @@ export const EN: Record<string, string> = {
   "¼ Stern je Euro über oder unter dem üblichen Preis ({ref}{stadt}).": "¼ star per euro above or below the usual price ({ref}{stadt}).",
   "Gesamtwertung {n} von 5 Sternen": "Overall rating {n} of 5 stars",
   "Nutzen die Bewertenden die ganze Skala?": "Do raters use the whole scale?",
+  "Bewertungssymbol (zum Ausprobieren)": "Rating symbol (to try out)",
+  "Gilt nur auf diesem Gerät. Zeigt, wie die Bewertung mit anderem Symbol aussähe.": "Applies to this device only. Shows how the rating would look with another symbol.",
+  "Stern": "Star",
+  "Schneeflocke": "Snowflake",
+  "Glühweinbecher": "Mulled wine mug",
 };

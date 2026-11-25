@@ -9,6 +9,7 @@ import { anzeigeName, istPruefstelle } from '../lib/community';
 import { findeDubletten, type Dublette } from '../lib/dubletten';
 import { AdminStaende } from './AdminStaende';
 import { GewichteEditor } from './GewichteEditor';
+import { Stern, setzeSymbol, useSymbol, type Symbolart } from './nacht/SterneWert';
 import { baueStaende } from '../lib/staende';
 import { sterneText } from '../lib/format';
 import { bewerte } from '../lib/scoring';
@@ -56,6 +57,27 @@ function DoppeltZeile({ d, namen, fuehrZusammen, mitName }: {
         </button>
       </div>
     </li>
+  );
+}
+
+const SYMBOL_NAME: Record<Symbolart, string> = { stern: 'Stern', flocke: 'Schneeflocke', becher: 'Glühweinbecher' };
+function SymbolWahl({ art }: { art: Symbolart }) {
+  const aktuell = useSymbol();
+  return (
+    <button
+      type="button"
+      onClick={() => setzeSymbol(art)}
+      aria-pressed={aktuell === art}
+      class={`flex min-h-[56px] items-center justify-between gap-3 rounded-2xl border-2 px-4 text-left ${aktuell === art ? 'border-[var(--nm-stern)]' : 'border-rand'}`}
+    >
+      <span class="font-semibold text-eis">{t(SYMBOL_NAME[art])}</span>
+      <span class="flex items-center gap-1">
+        <Stern fuellung={1} groesse={22} art={art} />
+        <Stern fuellung={1} groesse={22} art={art} />
+        <Stern fuellung={0.7} groesse={22} art={art} />
+        <Stern fuellung={0} groesse={22} art={art} />
+      </span>
+    </button>
   );
 }
 
@@ -289,6 +311,16 @@ export function Moderation() {
 
       {ansicht === 'mehr' && (
         <>
+          <section class="glas mb-4 rounded-3xl p-4">
+            <h2 class="etikett !text-[11px]">{t('Bewertungssymbol (zum Ausprobieren)')}</h2>
+            <p class="mt-1 text-xs text-dunst">{t('Gilt nur auf diesem Gerät. Zeigt, wie die Bewertung mit anderem Symbol aussähe.')}</p>
+            <div class="mt-3 grid gap-2">
+              {(['stern', 'flocke', 'becher'] as Symbolart[]).map((a) => (
+                <SymbolWahl art={a} />
+              ))}
+            </div>
+          </section>
+
           <section class="glas rounded-3xl p-4">
             <h2 class="etikett !text-[11px]">{t('Gewichtung der Noten')}</h2>
             <p class="mt-1 text-xs text-dunst">{t('Gilt nur auf diesem Gerät. Für alle anderen zählen die Standardwerte.')}</p>
