@@ -1,4 +1,5 @@
 import { Detail } from './ui/Detail';
+import { Entdecken } from './ui/Entdecken';
 import { Einstellungen } from './ui/Einstellungen';
 import { Erfassen } from './ui/Erfassen';
 import { Profil } from './ui/Profil';
@@ -31,6 +32,7 @@ export function App() {
   else if (route.startsWith('stand/')) seite = <StandSeite id={decodeURIComponent(route.slice(6))} />;
   else if (route === 'moderation') seite = <Moderation />;
   else if (route === 'mehr') seite = <Mehr />;
+  else if (route === 'entdecken') seite = <Entdecken />;
   else if (route === 'vergleich') seite = <Vergleich />;
   else if (route === 'statistik') seite = <Statistik />;
   else if (route === 'spickzettel') seite = <Spickzettel />;

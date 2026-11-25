@@ -13,6 +13,7 @@ const PUNKTE = [
 ] as const;
 /** Seltener gebraucht: eigene, kleinere Gruppe. */
 const MEHR = [
+  { route: 'entdecken', label: 'Entdecken', symbol: 'uebersicht' },
   { route: 'spickzettel', label: 'Hilfe & Regeln', symbol: 'spickzettel' },
   { route: 'vergleich', label: 'Vergleich', symbol: 'vergleich' },
   { route: 'statistik', label: 'Statistik', symbol: 'statistik' },

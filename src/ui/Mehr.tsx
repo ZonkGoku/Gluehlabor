@@ -16,6 +16,7 @@ interface Punkt {
 export function Mehr() {
   const pruefstelle = useLive(() => leseEinstellung<boolean>('pruefstelle', false), [], false);
   const punkte: Punkt[] = [
+    { href: '#/entdecken', symbol: 'uebersicht', titel: 'Entdecken', text: 'Karte, Top Deals, Preise und der Verlauf der Saison.' },
     { href: '#/spickzettel', symbol: 'spickzettel', titel: 'Hilfe & Regeln', text: 'So bewertest du: Regeln und was die Noten bedeuten.' },
     { href: '#/vergleich', symbol: 'vergleich', titel: 'Vergleich', text: 'Über die Jahre: welche Stände wieder dabei waren und welche Märkte noch fehlen.' },
     { href: '#/statistik', symbol: 'statistik', titel: 'Statistik', text: 'Selbstkontrolle: nutzt ihr die ganze Skala von 1 bis 10?' },

@@ -181,7 +181,11 @@ scripts/logo.mjs         erzeugt alle Logo- und Icon-Dateien aus assets/logo-ori
 - Erfassen kann jedes Gerät, der Knopf ist überall sichtbar (Startseite, Tab-Leiste, Seitenleiste).
   Kein Konto, kein Token. Ohne Netz oder ohne Server bleibt der Becher lokal und geht später hoch.
 
-## Startseite (`#/`, Datei `src/ui/Uebersicht.tsx`)
+## Startseite (`#/`, Datei `src/ui/Uebersicht.tsx`), seit 25.11.2026 stark gekürzt
+
+Nur noch: Einstieg (neu: Überschrift, ein Satz, „Jetzt bewerten“; wer heute schon bewertet hat: „Heute Abend“ mit „Nächsten Glühwein bewerten“ und QR für die Gruppe), „Die Besten in <Stadt>“ (drei Zeilen, Stadt = zuletzt gewählte, sonst die mit den meisten Bewertungen), „Gerade bewertet“ (3 echte Bewertungen), Link „Mehr entdecken“, Installationshinweis. Kennzahlen, Karte, Top Deals, Preise und Saisonverlauf liegen auf `#/entdecken` (`ui/Entdecken.tsx`, unter „Mehr“). Gemessen: von 3708 auf ca. 1130 px Höhe und von 316 auf ca. 100 Wörter.
+
+(Älterer Text, teils überholt:)
 
 Reihenfolge: Bühne (Spitzenreiter, oder nach dem ersten eigenen Becher des Abends
 „Heute Abend"), Plus-Balken „Nächster Becher Nr. N" (immer, auch am Rechner), vier Kennzahlen,
