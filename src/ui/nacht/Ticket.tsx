@@ -48,7 +48,7 @@ interface RahmenProps {
   rang: number | null;
   klein?: boolean;
   kinder: ComponentChildren;
-  stummel: ComponentChildren;
+  stummel: ComponentChildren | null;
   /** zusätzliche Klassen der äußeren Hülle */
   klasse?: string;
 }
@@ -64,7 +64,7 @@ export function TicketRahmen({ rang, klein, kinder, stummel, klasse = '' }: Rahm
       class={`nm group @container h-full rounded-[28px] shadow-[0_0_46px_-24px_var(--glow)] transition-shadow duration-300 hover:shadow-[0_0_84px_-14px_var(--glow)] will-change-transform ${klasse}`}
       style={{ '--glow': s.glow }}
     >
-      <div class="ticket-kerbe rahmen-licht glas relative flex h-full flex-col overflow-hidden rounded-[28px]" style={{ '--rahmen': s.rahmen }}>
+      <div class={`${stummel ? 'ticket-kerbe ' : ''}rahmen-licht glas relative flex h-full flex-col overflow-hidden rounded-[28px]`} style={{ '--rahmen': s.rahmen }}>
         {/* Lichtfleck folgt der Maus */}
         <div
           aria-hidden="true"
@@ -85,8 +85,12 @@ export function TicketRahmen({ rang, klein, kinder, stummel, klasse = '' }: Rahm
         </svg>
         <div class="relative z-10 flex-1">{kinder}</div>
         {/* Abrisslinie */}
-        <div class="relative z-10 border-t-2 border-dashed border-[var(--nm-rand-stark)]" />
-        <div class="relative z-10 flex min-h-[74px] items-center gap-3 px-5 py-3">{stummel}</div>
+        {stummel && (
+          <>
+            <div class="relative z-10 border-t-2 border-dashed border-[var(--nm-rand-stark)]" />
+            <div class="relative z-10 flex min-h-[74px] items-center gap-3 px-5 py-3">{stummel}</div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -135,6 +139,8 @@ interface TopKarteProps {
   siegel?: boolean;
   /** „Top Deal"-Marke neben dem Urteil. */
   deal?: boolean;
+  /** Schlicht: ohne Stempel, Messer und QR-Abriss (Rangliste). Teilen und QR gibt es auf der Stand-Seite. */
+  schlicht?: boolean;
 }
 
 /** Kopfteil der Karte: Link zur Detailseite oder einfacher Block. */
@@ -150,7 +156,7 @@ function Inhalt({ href, klein, children }: { href?: string; klein?: boolean; chi
 }
 
 /** Die Karte für einen Spitzenplatz. */
-export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, ohneLink = false, href, stempel, von, teilenLink, siegel = false, deal = false }: TopKarteProps) {
+export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, ohneLink = false, href, stempel, von, teilenLink, siegel = false, deal = false, schlicht = false }: TopKarteProps) {
   const { eintrag: e, wertung: w, rang } = zeile;
   const pruef = istPruefstelle(e);
   const zeigeSiegel = siegel || (stempel === undefined && pruef);
@@ -179,7 +185,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
             </div>
             <div class="flex items-center gap-2">
             {zeigeSiegel && <PruefSiegel groesse={klein ? 34 : 42} />}
-            {stempel !== undefined ? (
+            {schlicht ? null : stempel !== undefined ? (
               <span class="whitespace-nowrap rounded-md border border-[var(--nm-rand-stark)] px-2 py-1 font-mono text-[11px] uppercase tracking-[0.14em] text-dunst">{stempel}</span>
             ) : pruef ? (
               <span class="-rotate-3 rounded-md border border-gold-400/70 px-2 py-1 font-mono text-[11px] uppercase tracking-[0.18em] text-gold-300">
@@ -201,10 +207,12 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
             >
               {zahl}
             </div>
-            <div class="min-w-[8.5rem] flex-1 basis-[8.5rem] space-y-2 pb-1.5">
-              <Messer etikett={t('Glühwein')} wert={w.gluehwein} />
-              <Messer etikett={t('Drumherum')} wert={w.drumherum} />
-            </div>
+            {!schlicht && (
+              <div class="min-w-[8.5rem] flex-1 basis-[8.5rem] space-y-2 pb-1.5">
+                <Messer etikett={t('Glühwein')} wert={w.gluehwein} />
+                <Messer etikett={t('Drumherum')} wert={w.drumherum} />
+              </div>
+            )}
           </div>
           <div class={`flex flex-wrap items-center gap-2 ${klein ? 'mt-2' : 'mt-3'}`}>
             <UrteilPill urteil={w.urteil} />
@@ -213,6 +221,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
         </Inhalt>
       }
       stummel={
+        schlicht ? null : (
         <>
           <QrStummel link={link} titel={t('QR-Code: öffnet {stand}', { stand: titel ?? e.stand })} />
           <div class="min-w-0 flex-1 leading-tight">
@@ -230,6 +239,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
             {meldung || t('Teilen')}
           </button>
         </>
+        )
       }
     />
   );

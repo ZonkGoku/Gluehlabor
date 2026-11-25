@@ -19,18 +19,19 @@ export function seitenText(s: Stand): string {
 
 const stempel = (s: Stand) => tn(s.wert.anzahl, '{n} Bewertung', '{n} Bewertungen');
 
-export function StandTopKarte({ stand, klein, quelle = 'alle', hinweis, klasse, titel, ort, ohneLink }: { stand: Stand; ohneLink?: boolean; klein?: boolean; quelle?: Quelle; hinweis?: string; klasse?: string; titel?: string; ort?: string }) {
+export function StandTopKarte({ stand, klein, quelle = 'alle', hinweis, klasse, titel, ort, ohneLink, schlicht }: { stand: Stand; schlicht?: boolean; ohneLink?: boolean; klein?: boolean; quelle?: Quelle; hinweis?: string; klasse?: string; titel?: string; ort?: string }) {
   const zeile = standAlsZeile(stand);
   return (
     <TopKarte
       zeile={zeile}
-      ort={ort ?? ortText(MARKTLISTE, zeile.eintrag)}
+      ort={ort ?? (schlicht ? (stand.stadt ?? ortText(MARKTLISTE, zeile.eintrag)) : ortText(MARKTLISTE, zeile.eintrag))}
       titel={titel}
-      hinweis={[hinweis, stand.vorlaeufig ? tt('wenige Bewertungen') : null].filter(Boolean).join(' · ') || undefined}
+      hinweis={schlicht ? stempel(stand) : [hinweis, stand.vorlaeufig ? tt('wenige Bewertungen') : null].filter(Boolean).join(' · ') || undefined}
       klein={klein}
       klasse={klasse}
       href={standHref(stand)}
       ohneLink={ohneLink}
+      schlicht={schlicht}
       teilenLink={standHref(stand)}
       stempel={stempel(stand)}
       siegel={stand.pruefstelle.anzahl > 0}
@@ -42,7 +43,7 @@ export function StandTopKarte({ stand, klein, quelle = 'alle', hinweis, klasse, 
 
 export function StandZeile({ stand }: { stand: Stand }) {
   const zeile = standAlsZeile(stand);
-  return <RangZeile zeile={zeile} ort={ortText(MARKTLISTE, zeile.eintrag)} href={standHref(stand)} zusatz={stempel(stand)} siegel={stand.pruefstelle.anzahl > 0} deal={stand.deal.top} />;
+  return <RangZeile zeile={zeile} ort={stand.stadt ?? ortText(MARKTLISTE, zeile.eintrag)} href={standHref(stand)} zusatz={stempel(stand)} siegel={stand.pruefstelle.anzahl > 0} deal={stand.deal.top} />;
 }
 
 /** Zeile der Top-Deals-Liste: Preis-Leistung statt Gesamtnote, dazu der übliche Preis. */
@@ -52,9 +53,9 @@ export function DealZeile({ stand }: { stand: Stand }) {
   return (
     <RangZeile
       zeile={zeile}
-      ort={ortText(MARKTLISTE, zeile.eintrag)}
+      ort={[stand.stadt ?? ortText(MARKTLISTE, zeile.eintrag), preis].filter(Boolean).join(' · ')}
       href={standHref(stand)}
-      zusatz={[preis, stempel(stand)].filter(Boolean).join(' · ')}
+      zusatz={stempel(stand)}
       siegel={stand.pruefstelle.anzahl > 0}
       deal={stand.deal.top}
     />

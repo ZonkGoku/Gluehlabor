@@ -169,7 +169,6 @@ export function Detail({ id }: { id: string }) {
               <div class="kriterium">
                 <span class="krit">
                   {kriteriumLabel(ANKER[k].label)}
-                  <small>×{gewichte[k]}</small>
                 </span>
                 <span class="wert">{n ?? '–'}</span>
                 <div class="spur" role="img" aria-label={t('{label}: {n} von 10, Durchschnitt {schnitt}', { label: kriteriumLabel(ANKER[k].label), n: n ?? t('nicht bewertet'), schnitt: zahl2(schnitt) })}>

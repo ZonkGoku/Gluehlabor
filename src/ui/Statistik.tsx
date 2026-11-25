@@ -32,7 +32,7 @@ export function Statistik() {
           <p class="eyebrow">{t('Prüfer-Selbstkontrolle')}</p>
           <h1>{t('Benutzt ihr die Skala?')}</h1>
           <p class="unterzeile">
-            {t('{a} Becher, {b} Einzelnoten. Rechnet live mit, auch wenn ihr die Gewichte ändert.', { a: u.eintraege, b: u.einzelnoten })}
+            {t('{a} Becher, {b} Einzelnoten.', { a: u.eintraege, b: u.einzelnoten })}
           </p>
         </div>
         <SaisonSchalter saisons={jahre} wert={saison} onWahl={setSaison} />

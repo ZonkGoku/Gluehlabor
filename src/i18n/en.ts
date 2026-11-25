@@ -790,4 +790,8 @@ export const EN: Record<string, string> = {
   "Du bist in der App eines anderen Dienstes. Öffne diese Seite zuerst im Browser (Safari oder Chrome).": "You're inside another app. Open this page in your browser first (Safari or Chrome).",
   "Erst wenige Bewertungen: die Note kann sich noch ändern (ab {n} gilt sie als gesichert).": "Only a few ratings so far: the score may still change (from {n} it counts as reliable).",
   "Sortiert nach der Note, bei Gleichstand nach Zahl der Bewertungen.": "Sorted by score; ties by number of ratings.",
+  "Gewichtung der Noten": "Score weights",
+  "Gilt nur auf diesem Gerät. Für alle anderen zählen die Standardwerte.": "Applies to this device only. Everyone else uses the defaults.",
+  "{a} Becher, {b} Einzelnoten.": "{a} cups, {b} individual scores.",
+  "Beste Note zuerst.": "Best score first.",
 };

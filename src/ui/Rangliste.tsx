@@ -2,12 +2,10 @@
 import { useState } from 'preact/hooks';
 import { filtere, saisons } from '../lib/auswertung';
 import { baueStaende, type Quelle } from '../lib/staende';
-import { KRITERIEN } from '../lib/modell';
 import { stadtVon } from '../lib/orte';
 import { Betreiber } from './bausteine';
 import { useAktuell } from './hooks';
-import { useEintraege, useGewichte, useSaison } from './daten';
-import { GewichteEditor } from './GewichteEditor';
+import { useEintraege, useGewichte } from './daten';
 import { useEinblenden } from './nacht/bewegung';
 import { Chips } from './nacht/Chips';
 import { PruefSiegel } from './nacht/PruefSiegel';
@@ -23,13 +21,13 @@ export function Rangliste() {
   useAktuell();
   const alle = useEintraege();
   const gewichte = useGewichte();
-  const [saison, setSaison] = useSaison(alle);
+  // Die Rangliste zeigt standardmäßig alle Saisons; die Saison lässt sich unter „Mehr Filter" eingrenzen.
+  const [saison, setSaison] = useState<number | 'alle'>('alle');
   const [stadt, setStadt] = useState<string>('alle');
   const [markt, setMarkt] = useState<string>('alle');
   const [mehrOffen, setMehrOffen] = useState(false);
   const [quelle, setQuelle] = useState<Quelle>('alle');
   const [ansicht, setAnsicht] = useState<'gesamt' | 'deals'>(() => (location.hash.includes('deals') ? 'deals' : 'gesamt'));
-  const [gewichteOffen, setGewichteOffen] = useState(false);
   const wurzel = useEinblenden<HTMLDivElement>();
   if (!alle) return null;
 
@@ -48,7 +46,7 @@ export function Rangliste() {
     setStadt(neu);
     setMarkt('alle');
   };
-  const aktiveExtras = (quelle !== 'alle' ? 1 : 0) + (stadt !== 'alle' && markt !== 'alle' ? 1 : 0);
+  const aktiveExtras = (quelle !== 'alle' ? 1 : 0) + (saison !== 'alle' ? 1 : 0) + (stadt !== 'alle' && markt !== 'alle' ? 1 : 0);
   const filter = stadt === 'alle' ? { saison, markt: 'alle' } : markt === 'alle' ? { saison, markt: 'alle', stadt } : { saison, markt };
   const gewaehlt = filtere(alle, filter, MARKTLISTE);
   const zeilen = baueStaende(gewaehlt, MARKTLISTE, gewichte, quelle);
@@ -64,7 +62,7 @@ export function Rangliste() {
           {tn(zeilen.length, '{n} Stand', '{n} Stände')} · {tn(bewertungen, '{n} Bewertung', '{n} Bewertungen')}
         </p>
         <h1 class="mt-2 font-display text-[44px] uppercase leading-[1] tracking-wide text-eis sm:text-5xl">{t('Rangliste')}</h1>
-        <p class="mt-2 text-sm text-dunst">{t('Sortiert nach der Note, bei Gleichstand nach Zahl der Bewertungen.')}</p>
+        <p class="mt-2 text-sm text-dunst">{t('Beste Note zuerst.')}</p>
         <div class="mt-4 flex flex-wrap items-center gap-2.5">
           <span class="relative">
             <select class={FELD} aria-label={t('Stadt')} value={stadt} onChange={(e) => waehleStadt((e.target as HTMLSelectElement).value)}>
@@ -77,7 +75,6 @@ export function Rangliste() {
               <Symbol name="pfeil" groesse={14} />
             </span>
           </span>
-          <Chips optionen={['alle', ...jahre] as const} wert={saison} onWahl={setSaison} beschriftung={t('Saison')} label={(o) => (o === 'alle' ? t('Alle') : String(o))} />
           <Chips
             optionen={['gesamt', 'deals'] as const}
             wert={ansicht}
@@ -97,6 +94,7 @@ export function Rangliste() {
         </div>
         {mehrOffen && (
           <div class="glas mt-3 grid gap-3 rounded-3xl p-4">
+            <Chips optionen={['alle', ...jahre] as const} wert={saison} onWahl={setSaison} beschriftung={t('Saison')} label={(o) => (o === 'alle' ? t('Alle') : String(o))} />
             <Chips
               optionen={['alle', 'pruefstelle', 'community'] as const}
               wert={quelle}
@@ -117,24 +115,10 @@ export function Rangliste() {
                 </span>
               </span>
             )}
-            <button
-              type="button"
-              aria-expanded={gewichteOffen}
-              onClick={() => setGewichteOffen(!gewichteOffen)}
-              class={`glas min-h-[44px] justify-self-start rounded-full px-4 py-2.5 text-sm transition ${gewichteOffen ? 'text-gold-300' : 'text-eis hover:text-gold-300'}`}
-            >
-              {t('Gewichtung')} <span class="ml-1 font-mono text-xs text-dunst">{KRITERIEN.map((k) => gewichte[k]).join('·')}</span>
-            </button>
           </div>
         )}
       </div>
 
-      {gewichteOffen && (
-        <section class="glas mb-4 rounded-3xl p-4">
-          <h2 class="etikett mb-3 !text-[11px]">{t('Gewichtung · rechnet alles sofort neu')}</h2>
-          <GewichteEditor gewichte={gewichte} />
-        </section>
-      )}
 
       {zeilen.length === 0 ? (
         <div class="glas rounded-3xl p-8 text-center">
@@ -165,7 +149,7 @@ export function Rangliste() {
           <ol class="ohne-balken -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-6 pt-2 md:mx-0 md:grid md:grid-cols-3 md:items-stretch md:overflow-visible md:px-0">
             {podest.map((z) => (
               <li data-ein class="w-[86%] shrink-0 snap-center md:w-auto">
-                <StandTopKarte stand={z} quelle={quelle} klein={podest.length > 1} />
+                <StandTopKarte stand={z} quelle={quelle} klein={podest.length > 1} schlicht />
               </li>
             ))}
           </ol>

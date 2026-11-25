@@ -22,19 +22,18 @@ export function RangZeile({ zeile, ort, href, zusatz, siegel = false, deal = fal
       </span>
       <span class="min-w-0 flex-1">
         <span class="flex items-center gap-1.5">
-          <span class="truncate font-semibold">{e.stand}</span>
+          <span class="truncate text-[17px] font-semibold leading-tight">{e.stand}</span>
           {siegel && <PruefSiegel groesse={18} />}
-          {deal && <DealMarke />}
         </span>
-        <span class="block truncate text-xs text-dunst">{[ort ?? `${e.markt} · ${e.saison}`, zusatz].filter(Boolean).join(' · ')}</span>
-        <span class="mt-1.5 block h-1 overflow-hidden rounded-full bg-spur">
-          <span
-            class="block h-full rounded-full"
-            style={{ width: `${(w.gesamt ?? 0) * 10}%`, background: 'linear-gradient(90deg,var(--nm-licht-1),var(--color-glut-500) 60%,var(--color-wein-500))' }}
-          />
+        <span class="mt-1 flex min-w-0 items-center gap-2 text-sm text-dunst">
+          {deal && <DealMarke />}
+          <span class="truncate">{ort ?? e.markt}</span>
         </span>
       </span>
-      <span class="font-display text-[30px] leading-none text-gold-300">{zahl2(w.gesamt)}</span>
+      <span class="shrink-0 text-right">
+        <span class="block font-display text-[30px] leading-none text-gold-300">{zahl2(w.gesamt)}</span>
+        {zusatz && <span class="mt-1 block text-xs text-dunst">{zusatz}</span>}
+      </span>
     </a>
   );
 }

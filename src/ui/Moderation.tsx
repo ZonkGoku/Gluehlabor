@@ -8,6 +8,7 @@ import { useEintraege, useGeraetId } from './daten';
 import { anzeigeName, istPruefstelle } from '../lib/community';
 import { findeDubletten, type Dublette } from '../lib/dubletten';
 import { AdminStaende } from './AdminStaende';
+import { GewichteEditor } from './GewichteEditor';
 import { baueStaende } from '../lib/staende';
 import { zahl2 } from '../lib/format';
 import { bewerte } from '../lib/scoring';
@@ -288,6 +289,14 @@ export function Moderation() {
 
       {ansicht === 'mehr' && (
         <>
+          <section class="glas rounded-3xl p-4">
+            <h2 class="etikett !text-[11px]">{t('Gewichtung der Noten')}</h2>
+            <p class="mt-1 text-xs text-dunst">{t('Gilt nur auf diesem Gerät. Für alle anderen zählen die Standardwerte.')}</p>
+            <div class="mt-3">
+              <GewichteEditor gewichte={gewichte} />
+            </div>
+          </section>
+
       <section class="glas mt-6 rounded-3xl p-4">
         <h2 class="etikett !text-[11px]">{t('Löschen auf Anfrage')}</h2>
         <p class="mt-1 text-xs text-dunst">{t('Geräte-Kennung steht im Profil der Person. „Name" entfernt nur den Namen, „Alles" macht alle Bewertungen des Geräts unkenntlich.')}</p>

@@ -20,7 +20,7 @@ export function Mehr() {
     { href: '#/spickzettel', symbol: 'spickzettel', titel: 'Hilfe & Regeln', text: 'So bewertest du: Regeln und was die Noten bedeuten.' },
     { href: '#/vergleich', symbol: 'vergleich', titel: 'Vergleich', text: 'Über die Jahre: welche Stände wieder dabei waren und welche Märkte noch fehlen.' },
     { href: '#/statistik', symbol: 'statistik', titel: 'Statistik', text: 'Selbstkontrolle: nutzt ihr die ganze Skala von 1 bis 10?' },
-    { href: '#/einstellungen', symbol: 'einstellungen', titel: 'Einstellungen', text: 'Sprache, Hell oder Dunkel, Gewichtung der Noten.' },
+    { href: '#/einstellungen', symbol: 'einstellungen', titel: 'Einstellungen', text: 'Sprache, Hell oder Dunkel.' },
     ...(pruefstelle ? [{ href: '#/moderation', symbol: 'pokal', titel: 'Moderation', text: 'Meldungen, Bewertungen löschen, Stände pflegen.' }] : []),
   ];
   return (

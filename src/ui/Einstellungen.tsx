@@ -1,17 +1,14 @@
-// Gewichtung, gemeinsamer Datenbestand (Sync) und Darstellung. Kein Token, kein Konto.
+// Gemeinsamer Datenbestand (Sync) und Darstellung. Kein Token, kein Konto. Die Gewichtung der Noten steht nur im Admin-Bereich.
 import { HAT_SERVER } from '../daten/config';
 import { db } from '../daten/db';
 import { synchronisiere } from '../daten/sync';
 import { setzeMenue, setzeTheme, useMenue, useTheme, type Menue, type Theme } from '../daten/darstellung';
 import { Betreiber } from './bausteine';
 import { Chips } from './nacht/Chips';
-import { useGewichte } from './daten';
-import { GewichteEditor } from './GewichteEditor';
 import { useLive } from './hooks';
 import { aktuelleSprache, setzeSprache, t, type Sprache } from '../i18n';
 
 export function Einstellungen() {
-  const gewichte = useGewichte();
   const theme = useTheme();
   const menue = useMenue();
   const offen = useLive(() => db.eintraege.where('sync').equals('offen').count(), [], 0);
@@ -25,11 +22,6 @@ export function Einstellungen() {
         </div>
       </div>
       <div class="raster">
-        <section class="karte">
-          <h2>{t('Gewichtung · gilt für alle Ansichten')}</h2>
-          <GewichteEditor gewichte={gewichte} />
-        </section>
-
         <section class="karte seite" style={{ padding: '18px' }}>
           <h2 style={{ margin: 0 }}>{t('Gemeinsamer Datenbestand')}</h2>
           <p style={{ margin: '8px 0 0' }}>
