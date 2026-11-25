@@ -39,7 +39,7 @@ export function useMeineAnzahl(): number {
 // Saison-Auswahl: pro Betrachter gemerkt, über alle Ansichten geteilt.
 // Ohne eigene Wahl gilt die Standard-Saison (laufendes Jahr, sonst die letzte).
 export type SaisonWahl = number | 'alle';
-const KEY = 'gluehlabor.saison';
+const KEY = 'gluehlabor.saison2'; // neuer Schlüssel am 25.11.2026: alte „Alle"-Wahlen sollen nicht mehr greifen, Standard ist die laufende Saison
 let gewaehlt: SaisonWahl | null = (() => {
   try {
     const v = localStorage.getItem(KEY);

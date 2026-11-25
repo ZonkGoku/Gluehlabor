@@ -27,7 +27,7 @@ let theme: Theme = ((): Theme => {
   const v = lies(KEY_THEME);
   return v === 'hell' || v === 'dunkel' ? v : 'auto';
 })();
-let menue: Menue = lies(KEY_MENUE) === 'schwebend' ? 'schwebend' : 'seitenleiste';
+let menue: Menue = lies(KEY_MENUE) === 'seitenleiste' ? 'seitenleiste' : 'schwebend';
 const hoerer = new Set<() => void>();
 const melde = () => hoerer.forEach((h) => h());
 

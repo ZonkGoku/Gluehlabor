@@ -5,11 +5,11 @@ import { baueStaende, type Quelle } from '../lib/staende';
 import { stadtVon } from '../lib/orte';
 import { Betreiber } from './bausteine';
 import { useAktuell } from './hooks';
-import { useEintraege, useGewichte } from './daten';
+import { useEintraege, useGewichte, useSaison } from './daten';
 import { useEinblenden } from './nacht/bewegung';
 import { Chips } from './nacht/Chips';
 import { PruefSiegel } from './nacht/PruefSiegel';
-import { DealZeile, StandTopKarte, StandZeile } from './nacht/StandKarten';
+import { DealZeile, StandZeile } from './nacht/StandKarten';
 import { MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
 import { t, tn } from '../i18n';
@@ -21,8 +21,8 @@ export function Rangliste() {
   useAktuell();
   const alle = useEintraege();
   const gewichte = useGewichte();
-  // Die Rangliste zeigt standardmäßig alle Saisons; die Saison lässt sich unter „Mehr Filter" eingrenzen.
-  const [saison, setSaison] = useState<number | 'alle'>('alle');
+  // Standard ist die laufende Saison (2026); ältere Saisons stehen unter „Mehr Filter".
+  const [saison, setSaison] = useSaison(alle);
   const [stadt, setStadt] = useState<string>('alle');
   const [markt, setMarkt] = useState<string>('alle');
   const [mehrOffen, setMehrOffen] = useState(false);
@@ -46,13 +46,11 @@ export function Rangliste() {
     setStadt(neu);
     setMarkt('alle');
   };
-  const aktiveExtras = (quelle !== 'alle' ? 1 : 0) + (saison !== 'alle' ? 1 : 0) + (stadt !== 'alle' && markt !== 'alle' ? 1 : 0);
+  const aktiveExtras = (quelle !== 'alle' ? 1 : 0) + (stadt !== 'alle' && markt !== 'alle' ? 1 : 0);
   const filter = stadt === 'alle' ? { saison, markt: 'alle' } : markt === 'alle' ? { saison, markt: 'alle', stadt } : { saison, markt };
   const gewaehlt = filtere(alle, filter, MARKTLISTE);
   const zeilen = baueStaende(gewaehlt, MARKTLISTE, gewichte, quelle);
   const bewertungen = zeilen.reduce((n, s) => n + s.wert.anzahl, 0);
-  const podest = zeilen.slice(0, 3);
-  const rest = zeilen.slice(3);
   const deals = zeilen.filter((s) => s.deal.punkte !== null).sort((a, b) => (a.deal.rang ?? 1e9) - (b.deal.rang ?? 1e9));
 
   return (
@@ -134,9 +132,9 @@ export function Rangliste() {
             {deals.length === 0 ? (
               <p class="glas rounded-3xl p-6 text-center text-dunst">{t('Noch keine Preis-Leistung für diese Auswahl.')}</p>
             ) : (
-              <ol class="grid gap-2 md:grid-cols-2">
+              <ol class="grid grid-cols-1 gap-2 md:grid-cols-2">
                 {deals.map((s) => (
-                  <li data-ein>
+                  <li data-ein class="min-w-0">
                     <DealZeile stand={s} />
                   </li>
                 ))}
@@ -145,24 +143,14 @@ export function Rangliste() {
           </div>
         ) : (
         <div ref={wurzel}>
-          {/* Sammelkarten: am Telefon zum Wischen, am Rechner nebeneinander */}
-          <ol class="ohne-balken -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-6 pt-2 md:mx-0 md:grid md:grid-cols-3 md:items-stretch md:overflow-visible md:px-0">
-            {podest.map((z) => (
-              <li data-ein class="w-[86%] shrink-0 snap-center md:w-auto">
-                <StandTopKarte stand={z} quelle={quelle} klein={podest.length > 1} schlicht />
+          {/* Eine einzige Liste: wer vorn liegt, sieht man am Rang und an der Note, nicht an einer Sonderkarte */}
+          <ol class="grid grid-cols-1 gap-2 md:grid-cols-2">
+            {zeilen.map((z) => (
+              <li data-ein class="min-w-0">
+                <StandZeile stand={z} />
               </li>
             ))}
           </ol>
-
-          {rest.length > 0 && (
-            <ol class="grid gap-2 md:grid-cols-2">
-              {rest.map((z) => (
-                <li data-ein>
-                  <StandZeile stand={z} />
-                </li>
-              ))}
-            </ol>
-          )}
         </div>
         )
       )}
