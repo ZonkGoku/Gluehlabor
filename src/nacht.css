@@ -1075,3 +1075,43 @@ button.glas,
   display: grid;
   gap: 8px;
 }
+
+/* Bewerten, Teilen, Einladen im normalen Gerüst (Kopfzeile oben, keine Tab-Leiste): Platz und Ränder anpassen */
+.inhalt.inhalt-schmal {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 12px);
+}
+.inhalt-schmal > .erf {
+  min-height: 0;
+  padding: 0;
+}
+.inhalt-schmal > .erf .fuss {
+  margin: 0 -16px;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+@media (min-width: 900px) {
+  .inhalt-schmal > .erf .fuss {
+    margin: 0;
+    border-radius: 18px;
+  }
+}
+.inhalt-schmal > .fokus {
+  padding-top: 8px;
+}
+/* „Wo?" und Co.: Inhalt darf nie breiter werden als der Bildschirm (Chip-Leisten scrollen für sich) */
+.erf .wo,
+.erf .wo > * {
+  min-width: 0;
+}
+.erf .wo {
+  grid-template-columns: minmax(0, 1fr);
+}
+.erf .wo-maerkte {
+  max-width: 100%;
+}
+.erf .kopf-bewerten {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 52px;
+}

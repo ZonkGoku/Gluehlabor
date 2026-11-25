@@ -32,7 +32,6 @@ import { NameBlatt } from './nacht/NameBlatt';
 import { QrBlatt } from './nacht/QrBlatt';
 import { NotenZeile } from './NotenZeile';
 import { Sterne } from './nacht/SterneWert';
-import { SyncAnzeige } from './SyncAnzeige';
 import { TicketBlatt } from './nacht/TicketBlatt';
 import { OrtBlatt } from './nacht/OrtBlatt';
 import { Symbol } from './Symbol';
@@ -307,18 +306,16 @@ export function Erfassen() {
 
   return (
     <>
-    <main class="erf">
-      <header class="kopf kopf-bewerten">
+    <div class="erf">
+      <div class="kopf-bewerten">
         <a href="#/" class="kopf-zurueck" aria-label={t('Zurück zur Übersicht')}>
           <Symbol name="pfeil" groesse={18} />
           {t('Zurück')}
         </a>
-        <span class="titel">{t('Bewerten')}</span>
-        <SyncAnzeige />
         <button type="button" class="kopf-menue" onClick={() => setMenueOffen(true)} aria-haspopup="dialog">
           {t('Menü')}
         </button>
-      </header>
+      </div>
 
       {schritt === 'wo' ? (
         <section class="wo" aria-label={t('Wo bewertest du?')}>
@@ -575,7 +572,7 @@ export function Erfassen() {
       </footer>
       </>
       )}
-    </main>
+    </div>
     {ortOffen && (
       <OrtBlatt
         ohneMarkt

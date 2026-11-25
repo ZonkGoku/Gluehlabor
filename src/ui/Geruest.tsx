@@ -14,7 +14,8 @@ import { Symbol } from './Symbol';
 import { SyncAnzeige } from './SyncAnzeige';
 import { t } from '../i18n';
 
-export function Geruest({ route, children }: { route: string; children: ComponentChildren }) {
+/** `ohneNavigation`: nur der Kopf (Logo führt immer zur Startseite), keine schwebende Leiste unten, z. B. beim Bewerten, wo unten „Speichern" sitzt. */
+export function Geruest({ route, children, ohneNavigation = false }: { route: string; children: ComponentChildren; ohneNavigation?: boolean }) {
   const darf = useMeineAnzahl() > 0; // Sync-Status erst zeigen, wenn von diesem Gerät etwas erfasst wurde
   const breit = useMedia('(min-width: 900px)');
   const seitenleiste = breit && useMenue() === 'seitenleiste';
@@ -47,11 +48,11 @@ export function Geruest({ route, children }: { route: string; children: Componen
               <Symbol name="spickzettel" groesse={20} />
             </a>
           </header>
-          <Navigation route={route} />
+          {!ohneNavigation && <Navigation route={route} />}
         </>
       )}
 
-      <main class="inhalt">{children}</main>
+      <main class={`inhalt${ohneNavigation ? ' inhalt-schmal' : ''}`}>{children}</main>
     </div>
   );
 }

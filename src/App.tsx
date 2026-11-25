@@ -22,9 +22,10 @@ import { useSprache } from './i18n/hooks';
 export function App() {
   useSprache(); // Sprachwechsel zeichnet alles neu
   const route = useRoute();
-  if (route === 'erfassen') return <Erfassen />;
-  if (route === 'teilen') return <Teilen />;
-  if (route === 'mitbewerten') return <Mitbewerten />;
+  // Dieselbe Kopfzeile überall: das Logo führt immer zur Startseite. Beim Bewerten ohne Tab-Leiste, dort sitzt unten „Speichern".
+  if (route === 'erfassen') return <Geruest route={route} ohneNavigation><Erfassen /></Geruest>;
+  if (route === 'teilen') return <Geruest route={route} ohneNavigation><Teilen /></Geruest>;
+  if (route === 'mitbewerten') return <Geruest route={route} ohneNavigation><Mitbewerten /></Geruest>;
 
   let seite;
   if (route === 'rangliste') seite = <Rangliste />;
