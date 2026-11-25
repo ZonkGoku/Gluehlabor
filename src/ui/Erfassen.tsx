@@ -528,7 +528,7 @@ export function Erfassen() {
         <input class="feld" type="text" placeholder={t('Notiz')} aria-label={t('Notiz')} enterkeyhint="done" value={e.notiz} onInput={(ev) => setE({ ...e, notiz: (ev.target as HTMLInputElement).value })} />
       </details>
 
-      <section class="noten" aria-label={t('Noten')}>
+      <section class="noten" aria-label={t('Sterne')}>
         <p class="noten-kopf">
           {t('Sterne')} <span>{t('mindestens eine')}</span>
         </p>
@@ -549,7 +549,7 @@ export function Erfassen() {
               k === 'preisLeistung'
                 ? !vergleichbar(e.sorte)
                   ? t('Alkoholfreies und Feuerzangenbowle lassen sich preislich nicht vergleichen: keine Preis-Leistung.')
-                  : t('0,5 Punkte je Euro über oder unter dem üblichen Preis ({ref}{stadt}).', { ref: euro(referenz), stadt: e.stadt ? ` ${t('in')} ${e.stadt}` : '' })
+                  : t('¼ Stern je Euro über oder unter dem üblichen Preis ({ref}{stadt}).', { ref: euro(referenz), stadt: e.stadt ? ` ${t('in')} ${e.stadt}` : '' })
                 : undefined
             }
           />

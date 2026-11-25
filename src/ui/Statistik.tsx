@@ -3,7 +3,9 @@ import { zahl2 } from '../lib/format';
 import { KRITERIEN } from '../lib/modell';
 import { befunde, diagnose, kriteriumStatistik, pegel, ueberblick } from '../lib/statistik';
 import { Betreiber, SaisonSchalter } from './bausteine';
+import { leseEinstellung } from '../daten/db';
 import { useEintraege, useGewichte, useSaison } from './daten';
+import { useLive } from './hooks';
 import { LABELS } from './stammdaten';
 import { t, kriteriumLabel } from '../i18n';
 
@@ -15,7 +17,15 @@ export function Statistik() {
   const alle = useEintraege();
   const gewichte = useGewichte();
   const [saison, setSaison] = useSaison(alle);
+  const pruefstelle = useLive(() => leseEinstellung<boolean>('pruefstelle', false), [], false);
   if (!alle) return null;
+  if (!pruefstelle)
+    return (
+      <div class="karte leer">
+        <b>{t('Nur für die Prüfstelle')}</b>
+        <a href="#/">{t('Zur Startseite')}</a>
+      </div>
+    );
 
   const jahre = [...new Set([...saisons(alle), new Date().getFullYear()])].sort();
   const auswahl = filtere(alle, { saison, markt: 'alle' });

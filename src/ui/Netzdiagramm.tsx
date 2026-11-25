@@ -1,6 +1,7 @@
 // Netzdiagramm (Radar) über die sieben Kriterien. Mehrere Reihen übereinander, z. B. diese Bewertung gegen den Durchschnitt.
 import { t } from '../i18n';
 import { halbSterne } from '../lib/format';
+import { SterneZeile } from './nacht/SterneWert';
 import { alsPunktliste, achsenWinkel, netzPunkt, reihenPunkte } from '../lib/netz';
 
 export interface Reihe {
@@ -119,24 +120,11 @@ export function NotenBalken({ achsen, reihen }: { achsen: string[]; reihen: Reih
       <ul class="m-0 grid list-none gap-3 p-0">
         {zeilen.map((z) => (
           <li>
-            <div class="flex items-baseline justify-between gap-3 text-sm">
-              <span class="text-eis">{z.name}</span>
-              <span class="font-mono text-xs text-dunst">
-                {z.werte.map((w, i) => (
-                  <span key={i} class="ml-3" style={{ color: reihen.length > 1 ? reihen[i].farbe : undefined }}>
-                    {w === null ? '–' : (w / 2).toFixed(1)}
-                  </span>
-                ))}
-              </span>
-            </div>
+            <div class="text-sm font-semibold text-eis">{z.name}</div>
             {z.werte.map((w, i) => (
-              <div
-                key={i}
-                class="mt-1 h-2 overflow-hidden rounded-full bg-spur"
-                role="img"
-                aria-label={`${z.name}, ${reihen[i].name}: ${w === null ? t('nicht bewertet') : (w / 2).toFixed(1)}`}
-              >
-                <div class="h-full rounded-full" style={{ width: `${(w ?? 0) * 10}%`, background: reihen[i].farbe }} />
+              <div key={i} class="mt-1 flex items-center gap-2 text-sm">
+                {reihen.length > 1 && <span class="inline-block size-2.5 shrink-0 rounded-full" style={{ background: reihen[i].farbe }} aria-hidden="true" />}
+                {w === null ? <span class="text-dunst">–</span> : <SterneZeile wert={w} />}
               </div>
             ))}
           </li>

@@ -106,7 +106,7 @@ export function StandSeite({ id }: { id: string }) {
               <div>
                 <p class="etikett">
                   {t('Preis-Leistung')}{' '}
-                  <HilfePunkt text={t('Glühwein-Note, minus 0,5 je Euro über dem üblichen Preis.')} />
+                  <HilfePunkt text={t('Glühwein-Sterne, minus ¼ Stern je Euro über dem üblichen Preis.')} />
                 </p>
                 <p class="mt-2"><SterneGross wert={s.deal.punkte} /></p>
                 <p class="mt-1 text-xs text-dunst">
@@ -132,7 +132,7 @@ export function StandSeite({ id }: { id: string }) {
               {t('QR-Code zum Mitbewerten zeigen')}
             </a>
           )}
-          {s.vorlaeufig && <p class="text-center text-xs text-dunst">{t('Erst wenige Bewertungen: die Note kann sich noch ändern (ab {n} gilt sie als gesichert).', { n: MIN_BEWERTUNGEN })}</p>}
+          {s.vorlaeufig && <p class="text-center text-xs text-dunst">{t('Erst wenige Bewertungen: die Sterne können sich noch ändern (ab {n} gelten sie als gesichert).', { n: MIN_BEWERTUNGEN })}</p>}
           <Kachel titel={t('Verteilung der Urteile')} innen="p-4">
             <ul class="space-y-1.5">
               {URTEILE.map((u) => (
@@ -151,7 +151,7 @@ export function StandSeite({ id }: { id: string }) {
 
       <FotoStreifen eintraege={s.bewertungen} />
 
-      <Kachel titel={t('Noten im Vergleich')} klasse="mt-4" innen="p-4">
+      <Kachel titel={t('Sterne im Vergleich')} klasse="mt-4" innen="p-4">
         {(() => {
           const pruef = s.bewertungen.filter((x) => istPruefstelle(x));
           const comm = s.bewertungen.filter((x) => !istPruefstelle(x));
@@ -165,7 +165,7 @@ export function StandSeite({ id }: { id: string }) {
               <NotenBalken achsen={achsen} reihen={reihen} />
               <details class="mt-4">
                 <summary class="min-h-[44px] cursor-pointer py-2.5 text-sm text-gold-300">{t('Netzdiagramm anzeigen')}</summary>
-                <Netzdiagramm titel={t('Netzdiagramm der sieben Noten')} achsen={achsen} reihen={reihen} />
+                <Netzdiagramm titel={t('Netzdiagramm der sieben Kriterien')} achsen={achsen} reihen={reihen} />
               </details>
             </>
           );

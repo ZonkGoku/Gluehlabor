@@ -205,7 +205,7 @@ export function TopKarte({ zeile, ort, titel, hinweis, klein = false, klasse, oh
           <div class={`flex flex-wrap items-end gap-x-4 gap-y-2 ${klein ? 'mt-2' : 'mt-3'}`}>
             <div
               class={`font-display leading-[0.9] licht-text drop-shadow-[0_0_26px_rgb(255_138_61/0.55)] ${klein ? 'text-[60px]' : 'text-[112px]'}`}
-              aria-label={t('Gesamtnote {n}', { n: sterneText(w.gesamt) })}
+              aria-label={t('Gesamtwertung {n} von 5 Sternen', { n: sterneText(w.gesamt) })}
             >
               {zahl}
               <div class="mt-2"><Sterne wert={w.gesamt} groesse={klein ? 18 : 24} /></div>

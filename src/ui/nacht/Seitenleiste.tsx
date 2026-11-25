@@ -16,7 +16,6 @@ const MEHR = [
   { route: 'entdecken', label: 'Entdecken', symbol: 'uebersicht' },
   { route: 'spickzettel', label: 'Hilfe & Regeln', symbol: 'spickzettel' },
   { route: 'vergleich', label: 'Vergleich', symbol: 'vergleich' },
-  { route: 'statistik', label: 'Statistik', symbol: 'statistik' },
   { route: 'einstellungen', label: 'Einstellungen', symbol: 'einstellungen' },
 ] as const;
 
