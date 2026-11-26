@@ -501,7 +501,7 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
         return new Antwort(200, ['ok' => true]);
     }
 
-    // ── Kamelrennen (Beta) ──
+    // ── Schlittenrennen (Beta) ──
     if ($pfad === '/api/rennen' && $methode === 'POST') {
         $g = anmelden($a, $db);
         $b = lesen($a);
@@ -511,7 +511,7 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
             throw new HttpFehler(422, 'Das Rennen braucht einen Namen.');
         }
         if (!$kname['ok'] || $kname['name'] === null) {
-            throw new HttpFehler(422, 'Dein Kamel braucht einen Namen.');
+            throw new HttpFehler(422, 'Dein Schlitten braucht einen Namen.');
         }
         if (!is_int($b['ziel'] ?? null) || !in_array($b['ziel'], RENNEN_ZIELE, true)) {
             throw new HttpFehler(400, 'Ungültiges Ziel.');
@@ -539,7 +539,7 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
         }
         $kname = pruefeName($b['kamel'] ?? null);
         if (!$kname['ok'] || $kname['name'] === null) {
-            throw new HttpFehler(422, 'Dein Kamel braucht einen Namen.');
+            throw new HttpFehler(422, 'Dein Schlitten braucht einen Namen.');
         }
         if (!is_int($b['farbe'] ?? null) || $b['farbe'] < 0 || $b['farbe'] >= RENNEN_FARBEN) {
             throw new HttpFehler(400, 'Ungültige Farbe.');

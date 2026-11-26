@@ -477,14 +477,14 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
     return json({ ok: true }, 200);
   }
 
-  // ── Kamelrennen (Beta) ──
+  // ── Schlittenrennen (Beta) ──
   if (pfad === '/api/rennen' && methode === 'POST') {
     const g = await anmelden(request, db);
     const b = await lesen(request);
     const rname = pruefeName(b.name);
     const kname = pruefeName(b.kamel);
     if (!rname.ok || !rname.name) throw new HttpFehler(422, 'Das Rennen braucht einen Namen.');
-    if (!kname.ok || !kname.name) throw new HttpFehler(422, 'Dein Kamel braucht einen Namen.');
+    if (!kname.ok || !kname.name) throw new HttpFehler(422, 'Dein Schlitten braucht einen Namen.');
     if (typeof b.ziel !== 'number' || !RENNEN_ZIELE.includes(b.ziel)) throw new HttpFehler(400, 'Ungültiges Ziel.');
     if (typeof b.farbe !== 'number' || !Number.isInteger(b.farbe) || b.farbe < 0 || b.farbe >= RENNEN_FARBEN) throw new HttpFehler(400, 'Ungültige Farbe.');
     if (!(await begrenze(db, `rennen:${g.id}`, TAG, LIMITS.rennenJeGeraetUndTag, jetzt))) throw new HttpFehler(429, 'Heute schon viele Rennen angelegt.');
@@ -498,7 +498,7 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
     const b = await lesen(request);
     if (typeof b.id !== 'string' || !RENNEN_ID.test(b.id)) throw new HttpFehler(400, 'Ungültiges Rennen.');
     const kname = pruefeName(b.kamel);
-    if (!kname.ok || !kname.name) throw new HttpFehler(422, 'Dein Kamel braucht einen Namen.');
+    if (!kname.ok || !kname.name) throw new HttpFehler(422, 'Dein Schlitten braucht einen Namen.');
     if (typeof b.farbe !== 'number' || !Number.isInteger(b.farbe) || b.farbe < 0 || b.farbe >= RENNEN_FARBEN) throw new HttpFehler(400, 'Ungültige Farbe.');
     const r = await db.prepare('SELECT id, ende FROM rennen WHERE id = ?').bind(b.id).first<{ id: string; ende: number }>();
     if (!r) throw new HttpFehler(404, 'Rennen nicht gefunden.');

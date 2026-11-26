@@ -1,12 +1,12 @@
-// Kamelrennen (Beta): Spieler legen ein Rennen an und laden andere per Link/QR ein. Jedes Gerät hat sein eigenes Kamel.
+// Schlittenrennen (Beta): Spieler legen ein Rennen an und laden andere per Link/QR ein. Jedes Gerät hat seinen eigenen Schlitten.
 // Ein Schritt ist eine Bewertung dieses Geräts, die nach dem Beitritt und vor dem Ende des Rennens entstanden ist.
 // Der Server speichert nur Rennen und Teilnehmer; die Schritte rechnet jede App selbst aus den öffentlichen Bewertungen
 // (kein Konto, nichts Zusätzliches zu speichern). Es zählt nicht die Menge: je Gerät, Stand und Abend gibt es nur eine Bewertung.
 
 /** Mögliche Rennlängen in Schritten (Bewertungen). Der Server prüft dieselbe Liste. */
 export const RENNEN_ZIELE = [10, 20, 30] as const;
-/** Farben der Kamele, Index = Farbnummer (der Server erlaubt 0 bis 7). */
-export const KAMEL_FARBEN = ['#ffc857', '#ff8a3d', '#f0344f', '#7fd1ff', '#9be08a', '#d49bff', '#ff9bd0', '#e8e8e8'] as const;
+/** Farben der Schlitten, Index = Farbnummer (der Server erlaubt 0 bis 7). */
+export const SCHLITTEN_FARBEN = ['#ffc857', '#ff8a3d', '#f0344f', '#7fd1ff', '#9be08a', '#d49bff', '#ff9bd0', '#e8e8e8'] as const;
 /** Rennen-Kennung: 8 Zeichen, Kleinbuchstaben und Ziffern. */
 export const RENNEN_ID = /^[a-z0-9]{8}$/;
 
@@ -51,7 +51,7 @@ export interface RennenStand {
 
 /** Link, der das Rennen öffnet. `basis` ist die Adresse der App (mit oder ohne #). */
 export function rennenLink(basis: string, id: string): string {
-  return `${basis.replace(/#.*$/, '')}#/kamelrennen/${id}`;
+  return `${basis.replace(/#.*$/, '')}#/schlittenrennen/${id}`;
 }
 
 export function berechneRennen(rennen: Rennen, teilnehmer: readonly Teilnehmer[], eintraege: readonly Zeile[], jetzt: number = Date.now()): RennenStand {

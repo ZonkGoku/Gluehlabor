@@ -1,4 +1,4 @@
-// Kamelrennen: Zugriff auf den Server und die Liste der eigenen Rennen (nur auf diesem Gerät gemerkt).
+// Schlittenrennen: Zugriff auf den Server und die Liste der eigenen Rennen (nur auf diesem Gerät gemerkt).
 import { api } from './api';
 import { leseEinstellung, schreibeEinstellung } from './db';
 import { sorgeFuerAnmeldung } from './sync';
@@ -35,6 +35,6 @@ export async function vergissRennen(id: string): Promise<void> {
   await schreibeEinstellung('rennen', (await meineRennen()).filter((x) => x !== id));
 }
 
-/** Letzte Wahl für Kamelname und Farbe, damit man sie nicht jedes Mal neu eingeben muss. */
+/** Letzte Wahl für Schlittenname und Farbe, damit man sie nicht jedes Mal neu eingeben muss. */
 export const letztesKamel = () => leseEinstellung<{ name: string; farbe: number } | null>('kamel', null);
 export const merkeKamel = (name: string, farbe: number) => schreibeEinstellung('kamel', { name, farbe });

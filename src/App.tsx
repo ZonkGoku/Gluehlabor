@@ -1,6 +1,6 @@
 import { Detail } from './ui/Detail';
 import { Entdecken } from './ui/Entdecken';
-import { KamelrennenUebersicht, RennenSeite } from './ui/Kamelrennen';
+import { RennenSeite, SchlittenrennenUebersicht } from './ui/Schlittenrennen';
 import { Einstellungen } from './ui/Einstellungen';
 import { Erfassen } from './ui/Erfassen';
 import { Profil } from './ui/Profil';
@@ -35,8 +35,8 @@ export function App() {
   else if (route === 'moderation') seite = <Moderation />;
   else if (route === 'mehr') seite = <Mehr />;
   else if (route === 'entdecken') seite = <Entdecken />;
-  else if (route === 'kamelrennen') seite = <KamelrennenUebersicht />;
-  else if (route.startsWith('kamelrennen/')) seite = <RennenSeite id={route.slice('kamelrennen/'.length)} />;
+  else if (route === 'schlittenrennen' || route === 'kamelrennen') seite = <SchlittenrennenUebersicht />;
+  else if (route.startsWith('schlittenrennen/') || route.startsWith('kamelrennen/')) seite = <RennenSeite id={route.slice(route.indexOf('/') + 1)} />;
   else if (route === 'vergleich') seite = <Vergleich />;
   else if (route === 'statistik') seite = <Statistik />;
   else if (route === 'spickzettel') seite = <Spickzettel />;

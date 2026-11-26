@@ -1,10 +1,10 @@
-// Kamelrennen (Beta): eigene Rennen mit Freunden, jedes Gerät hat sein Kamel. Die Rechnung steht in lib/rennen.ts.
+// Schlittenrennen (Beta): eigene Rennen mit Freunden, jedes Gerät hat seinen Schlitten. Die Rechnung steht in lib/rennen.ts.
 import { useEffect, useState } from 'preact/hooks';
 import { HAT_SERVER } from '../daten/config';
 import { ApiFehler } from '../daten/api';
 import { legeRennenAn, ladeRennen, letztesKamel, merkeKamel, meineRennen, trittBei, vergissRennen, type RennenDaten } from '../daten/rennen';
 import { t, tn } from '../i18n';
-import { berechneRennen, KAMEL_FARBEN, RENNEN_ID, RENNEN_ZIELE, rennenLink, type Bahn } from '../lib/rennen';
+import { berechneRennen, SCHLITTEN_FARBEN, RENNEN_ID, RENNEN_ZIELE, rennenLink, type Bahn } from '../lib/rennen';
 import { Betreiber } from './bausteine';
 import { useEintraege, useGeraetId, useName } from './daten';
 import { useLive } from './hooks';
@@ -17,15 +17,15 @@ const X1 = 306; // Ziellinie
 const KAMEL_B = 40;
 const OBEN = 22;
 
-/** Kamel von der Seite, nach rechts laufend. 42 × 32 Einheiten. */
-function KamelBild({ farbe }: { farbe: string }) {
+/** Schlitten von der Seite, nach rechts fahrend, mit kleiner Figur. 42 × 32 Einheiten. */
+function SchlittenBild({ farbe }: { farbe: string }) {
   return (
     <g fill={farbe} stroke={farbe} stroke-linecap="round" stroke-linejoin="round">
-      <path d="M8 16c0-4 4-5 8-5 2-3 6-3 8 0 4 0 7 2 7 5v5H8z" stroke-width="1" />
-      <path d="M30 14l5-8" stroke-width="3.4" fill="none" />
-      <ellipse cx="37.5" cy="5.6" rx="3.6" ry="2.3" stroke="none" />
-      <path d="M9 21v9M14 21v9M25 21v9M30 21v9" stroke-width="2.4" fill="none" />
-      <path d="M8 15c-3 1-4 4-3 7" stroke-width="1.6" fill="none" />
+      <path d="M4 28h30c4 0 6-3 5-7" stroke-width="2.6" fill="none" />
+      <path d="M11 28v-6M27 28v-6" stroke-width="2.2" fill="none" />
+      <path d="M6 12c5-1 7 1 8 3h20l-3 8H9c0-5-1-8-3-11z" stroke-width="1" />
+      <path d="M12 15c1-5 5-6 9-5" stroke-width="2" fill="none" />
+      <circle cx="30" cy="11" r="3" stroke="none" />
     </g>
   );
 }
@@ -40,7 +40,7 @@ function Rennbahn({ bahnen, ich }: { bahnen: Bahn[]; ich: string | null }) {
   const hoehe = OBEN + bahnH * bahnen.length + 24;
   return (
     <section class="glas rahmen-licht overflow-hidden rounded-3xl p-3" aria-label={t('Rennbahn')}>
-      <svg viewBox={`0 0 ${B} ${hoehe}`} class="block h-auto w-full" role="img" aria-label={t('Rennbahn mit den Kamelen')}>
+      <svg viewBox={`0 0 ${B} ${hoehe}`} class="block h-auto w-full" role="img" aria-label={t('Rennbahn mit den Schlitten')}>
         {bahnen.map((b, i) => {
           const y = OBEN + i * bahnH;
           const x = X0 + b.anteil * (X1 - X0 - KAMEL_B);
@@ -54,7 +54,7 @@ function Rennbahn({ bahnen, ich }: { bahnen: Bahn[]; ich: string | null }) {
               <g class="kamel-lauf" style={{ transform: `translate(${bereit ? x : X0}px, ${y + (bahnH > 50 ? 15 : 10)}px)` }}>
                 <g class={b.platz === 1 && b.schritte > 0 ? 'kamel-wippen' : ''}>
                   <g transform={bahnH > 50 ? 'scale(1.15)' : 'scale(0.95)'}>
-                    <KamelBild farbe={KAMEL_FARBEN[b.farbe % KAMEL_FARBEN.length]} />
+                    <SchlittenBild farbe={SCHLITTEN_FARBEN[b.farbe % SCHLITTEN_FARBEN.length]} />
                   </g>
                 </g>
               </g>
@@ -83,7 +83,7 @@ function KamelWahl({ name, farbe, onName, onFarbe }: { name: string; farbe: numb
   return (
     <div class="grid gap-3">
       <label class="grid gap-1.5 text-[15px] text-dunst">
-        {t('Name deines Kamels')}
+        {t('Name deines Schlittens')}
         <input
           class="feld min-h-[48px] text-[17px]"
           type="text"
@@ -94,7 +94,7 @@ function KamelWahl({ name, farbe, onName, onFarbe }: { name: string; farbe: numb
         />
       </label>
       <div role="radiogroup" aria-label={t('Farbe')} class="flex flex-wrap gap-2">
-        {KAMEL_FARBEN.map((f, i) => (
+        {SCHLITTEN_FARBEN.map((f, i) => (
           <button
             type="button"
             role="radio"
@@ -136,7 +136,7 @@ function Kopf({ titel, text }: { titel: string; text?: string }) {
     <div class="mb-5 mt-2">
       <p class="etikett inline-flex items-center gap-2 !text-gold-300">
         <span class="rounded-full border border-gold-300 px-2 py-0.5">{t('Beta')}</span>
-        <span>{t('Kamelrennen')}</span>
+        <span>{t('Schlittenrennen')}</span>
       </p>
       <h1 class="mt-2 font-display text-[40px] uppercase leading-[1] tracking-wide text-eis sm:text-5xl">{titel}</h1>
       {text && <p class="mt-3 max-w-prose text-[17px] leading-snug text-dunst">{text}</p>}
@@ -147,7 +147,7 @@ function Kopf({ titel, text }: { titel: string; text?: string }) {
 const HINWEIS = 'Beta: Wir probieren das gerade aus. Ab 18. Pro Stand und Abend zählt nur eine Bewertung, es geht nicht ums Trinken.';
 
 // ───────── Übersicht: meine Rennen, neues Rennen ─────────
-export function KamelrennenUebersicht() {
+export function SchlittenrennenUebersicht() {
   const ids = useLive(meineRennen, [], [] as string[]);
   const [daten, setDaten] = useState<Record<string, RennenDaten | null>>({});
   const [neu, setNeu] = useState(false);
@@ -168,7 +168,7 @@ export function KamelrennenUebersicht() {
 
   return (
     <div class="nm karawane">
-      <Kopf titel={t('Kamelrennen')} text={t('Rennen mit Freunden: Jeder hat sein Kamel, jede Bewertung ist ein Schritt.')} />
+      <Kopf titel={t('Schlittenrennen')} text={t('Rennen mit Freunden: Jeder hat seinen Schlitten, jede Bewertung ist ein Schritt.')} />
       {!HAT_SERVER && <p class="glas mb-4 rounded-2xl p-4 text-dunst">{t('Rennen brauchen eine Verbindung zum Server. Hier läuft die App nur lokal.')}</p>}
 
       {ids.length > 0 && (
@@ -180,7 +180,7 @@ export function KamelrennenUebersicht() {
             const meine = stand?.bahnen.find((b) => b.geraet === ich);
             return (
               <li>
-                <a href={`#/kamelrennen/${id}`} class="glas flex min-h-[64px] items-center gap-3 rounded-2xl px-4 py-3 text-eis no-underline">
+                <a href={`#/schlittenrennen/${id}`} class="glas flex min-h-[64px] items-center gap-3 rounded-2xl px-4 py-3 text-eis no-underline">
                   <span class="min-w-0 flex-1">
                     <b class="block truncate text-[17px]">{d ? d.rennen.name : '…'}</b>
                     <span class="block text-sm text-dunst">
@@ -189,7 +189,7 @@ export function KamelrennenUebersicht() {
                           ? t('Vorbei')
                           : tn(stand.tageUebrig, 'Noch {n} Tag', 'Noch {n} Tage')
                         : ''}
-                      {d && ` · ${tn(d.teilnehmer.length, '{n} Kamel', '{n} Kamele')}`}
+                      {d && ` · ${tn(d.teilnehmer.length, '{n} Schlitten', '{n} Schlitten')}`}
                     </span>
                   </span>
                   {meine && <span class="font-display text-3xl text-gold-300">{meine.platz}.</span>}
@@ -224,7 +224,7 @@ export function KamelrennenUebersicht() {
             onInput={(e) => setCode((e.target as HTMLInputElement).value.trim().toLowerCase())}
           />
           <a
-            href={RENNEN_ID.test(code) ? `#/kamelrennen/${code}` : undefined}
+            href={RENNEN_ID.test(code) ? `#/schlittenrennen/${code}` : undefined}
             aria-disabled={!RENNEN_ID.test(code)}
             class="grid min-h-[48px] place-items-center rounded-full border-2 border-[var(--nm-bedienung)] px-5 font-semibold text-eis no-underline aria-disabled:opacity-40"
           >
@@ -251,7 +251,7 @@ function NeuesRennen({ onZu }: { onZu: () => void }) {
     try {
       const id = await legeRennenAn(rname.trim(), ziel, k.name.trim(), k.farbe);
       await merkeKamel(k.name.trim(), k.farbe);
-      location.hash = `#/kamelrennen/${id}`;
+      location.hash = `#/schlittenrennen/${id}`;
     } catch (e) {
       setFehler(fehlerText(e));
       setLaeuft(false);
@@ -327,7 +327,7 @@ export function RennenSeite({ id }: { id: string }) {
     return (
       <div class="nm karawane">
         <Kopf titel={t('Rennen nicht gefunden')} text={t('Vielleicht ist der Code falsch geschrieben.')} />
-        <a href="#/kamelrennen" class={knopf} style={KNOPF_STIL}>
+        <a href="#/schlittenrennen" class={knopf} style={KNOPF_STIL}>
           {t('Zu den Rennen')}
         </a>
         <p class="mt-4 text-center">
@@ -346,7 +346,7 @@ export function RennenSeite({ id }: { id: string }) {
 
   return (
     <div class="nm karawane">
-      <a href="#/kamelrennen" class="mb-1 inline-block min-h-[44px] py-3 text-gold-300 no-underline">
+      <a href="#/schlittenrennen" class="mb-1 inline-block min-h-[44px] py-3 text-gold-300 no-underline">
         ‹ {t('Alle Rennen')}
       </a>
       <Kopf titel={d.rennen.name} text={stand.vorbei ? undefined : `${tn(d.rennen.ziel, '{n} Schritt bis ins Ziel', '{n} Schritte bis ins Ziel')} · ${tn(stand.tageUebrig, 'noch {n} Tag', 'noch {n} Tage')}`} />
@@ -362,7 +362,7 @@ export function RennenSeite({ id }: { id: string }) {
       <ol class="m-0 mt-4 grid list-none gap-2 p-0" aria-label={t('Stand des Rennens')}>
         {stand.bahnen.map((b) => (
           <li class="glas flex min-h-[56px] items-center gap-3 rounded-2xl px-4 py-2">
-            <span class="grid size-8 shrink-0 place-items-center rounded-full font-display text-lg text-[#1a1020]" style={{ background: KAMEL_FARBEN[b.farbe % KAMEL_FARBEN.length] }}>
+            <span class="grid size-8 shrink-0 place-items-center rounded-full font-display text-lg text-[#1a1020]" style={{ background: SCHLITTEN_FARBEN[b.farbe % SCHLITTEN_FARBEN.length] }}>
               {b.platz}
             </span>
             <b class="min-w-0 flex-1 truncate text-[17px] text-eis">
@@ -380,7 +380,7 @@ export function RennenSeite({ id }: { id: string }) {
         <>
           {!stand.vorbei && (
             <a href="#/erfassen" class={`${knopf} mt-5`} style={KNOPF_STIL}>
-              {meine && meine.schritte === 0 ? t('Bewerten und loslaufen') : t('Bewerten und weiterlaufen')}
+              {meine && meine.schritte === 0 ? t('Bewerten und losfahren') : t('Bewerten und weiterfahren')}
             </a>
           )}
           {!stand.vorbei && (
@@ -408,7 +408,7 @@ function TeilenKnopf({ link, name }: { link: string; name: string }) {
   const [kopiert, setKopiert] = useState(false);
   const teile = async () => {
     try {
-      if (navigator.share) return void (await navigator.share({ title: name, text: t('Lauf mit im Kamelrennen: {name}', { name }), url: link }));
+      if (navigator.share) return void (await navigator.share({ title: name, text: t('Fahr mit im Schlittenrennen: {name}', { name }), url: link }));
       await navigator.clipboard.writeText(link);
       setKopiert(true);
       setTimeout(() => setKopiert(false), 2500);
@@ -443,12 +443,12 @@ function BeitrittsBlock({ id, voll, vorbei, danach }: { id: string; voll: boolea
     setLaeuft(false);
   };
   return (
-    <section class="glas mt-5 grid gap-4 rounded-3xl p-4" aria-label={t('Mitlaufen')}>
-      <p class="m-0 text-[17px] font-semibold text-eis">{t('Lauf mit! Such dir ein Kamel aus.')}</p>
+    <section class="glas mt-5 grid gap-4 rounded-3xl p-4" aria-label={t('Mitfahren')}>
+      <p class="m-0 text-[17px] font-semibold text-eis">{t('Fahr mit! Such dir einen Schlitten aus.')}</p>
       <KamelWahl name={k.name} farbe={k.farbe} onName={k.setName} onFarbe={k.setFarbe} />
       {fehler && <p role="alert" class="m-0 text-[15px] text-[var(--warnung)]">{fehler}</p>}
       <button type="button" class={knopf} style={KNOPF_STIL} disabled={!ok || laeuft} onClick={() => void los()}>
-        {t('Mitlaufen')}
+        {t('Mitfahren')}
       </button>
       <p class="m-0 text-sm text-dunst">{t('Es zählen deine Bewertungen ab jetzt. Kein Konto nötig.')}</p>
     </section>
