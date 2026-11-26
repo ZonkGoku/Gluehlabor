@@ -943,4 +943,11 @@ export const EN: Record<string, string> = {
   "{n} Schlitten|1": "{n} sled",
   "{n} Schlitten": "{n} sleds",
   "Dein Schlitten braucht einen Namen.": "Your sled needs a name.",
+  "Rennen löschen": "Delete race",
+  "Rennen verlassen": "Leave race",
+  "Das Rennen wird für alle gelöscht. Das lässt sich nicht rückgängig machen.": "The race will be deleted for everyone. This can't be undone.",
+  "Du verlässt das Rennen. Deine Schritte hier sind dann weg.": "You're leaving the race. Your steps here will be gone.",
+  "Ja, löschen": "Yes, delete",
+  "Ja, verlassen": "Yes, leave",
+  "Nur wer das Rennen angelegt hat, darf es löschen.": "Only the person who created the race can delete it.",
 };

@@ -510,10 +510,25 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
     await db.prepare('INSERT INTO rennen_teilnehmer (rennen_id, geraet_id, kamel, farbe, seit) VALUES (?, ?, ?, ?, ?)').bind(b.id, g.id, kname.name, b.farbe, jetzt).run();
     return json({ ok: true }, 200);
   }
+  if ((pfad === '/api/rennen/verlassen' || pfad === '/api/rennen/loeschen') && methode === 'POST') {
+    const g = await anmelden(request, db);
+    const b = await lesen(request);
+    if (typeof b.id !== 'string' || !RENNEN_ID.test(b.id)) throw new HttpFehler(400, 'Ungültiges Rennen.');
+    const r = await db.prepare('SELECT id, ersteller FROM rennen WHERE id = ?').bind(b.id).first<{ id: string; ersteller: string }>();
+    if (!r) throw new HttpFehler(404, 'Rennen nicht gefunden.');
+    if (pfad === '/api/rennen/loeschen') {
+      if (r.ersteller !== g.id) throw new HttpFehler(403, 'Nur wer das Rennen angelegt hat, darf es löschen.');
+      await db.prepare('DELETE FROM rennen_teilnehmer WHERE rennen_id = ?').bind(b.id).run();
+      await db.prepare('DELETE FROM rennen WHERE id = ?').bind(b.id).run();
+      return json({ ok: true }, 200);
+    }
+    await db.prepare('DELETE FROM rennen_teilnehmer WHERE rennen_id = ? AND geraet_id = ?').bind(b.id, g.id).run();
+    return json({ ok: true }, 200);
+  }
   if (pfad.startsWith('/api/rennen/') && methode === 'GET') {
     const id = pfad.slice('/api/rennen/'.length);
     if (!RENNEN_ID.test(id)) throw new HttpFehler(404, 'Rennen nicht gefunden.');
-    const r = await db.prepare('SELECT id, name, ziel, erstellt_am, ende FROM rennen WHERE id = ?').bind(id).first<Record<string, unknown>>();
+    const r = await db.prepare('SELECT id, name, ziel, ersteller, erstellt_am, ende FROM rennen WHERE id = ?').bind(id).first<Record<string, unknown>>();
     if (!r) throw new HttpFehler(404, 'Rennen nicht gefunden.');
     const { results } = await db
       .prepare('SELECT geraet_id, kamel, farbe, seit FROM rennen_teilnehmer WHERE rennen_id = ? ORDER BY seit ASC, geraet_id ASC')

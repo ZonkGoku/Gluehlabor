@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { HAT_SERVER } from '../daten/config';
 import { ApiFehler } from '../daten/api';
-import { legeRennenAn, ladeRennen, letztesKamel, merkeKamel, meineRennen, trittBei, vergissRennen, type RennenDaten } from '../daten/rennen';
+import { legeRennenAn, ladeRennen, letztesKamel, loescheRennen, merkeKamel, meineRennen, trittBei, verlasseRennen, vergissRennen, type RennenDaten } from '../daten/rennen';
 import { t, tn } from '../i18n';
 import { berechneRennen, SCHLITTEN_FARBEN, RENNEN_ID, RENNEN_ZIELE, rennenLink, type Bahn } from '../lib/rennen';
 import { Betreiber } from './bausteine';
@@ -397,9 +397,57 @@ export function RennenSeite({ id }: { id: string }) {
       ) : (
         <BeitrittsBlock id={id} voll={d.teilnehmer.length >= 12} vorbei={stand.vorbei} danach={() => setNeuLaden((n) => n + 1)} />
       )}
+      {dabei && <Austritt id={id} ersteller={d.rennen.ersteller === ich} />}
       {fehler && <p class="mt-3 text-sm text-dunst">{fehler}</p>}
       <p class="mt-4 text-sm text-dunst">{t(HINWEIS)}</p>
       <Betreiber />
+    </div>
+  );
+}
+
+/** Rennen verlassen (jeder) oder löschen (wer es angelegt hat), jeweils mit einer Rückfrage. */
+function Austritt({ id, ersteller }: { id: string; ersteller: boolean }) {
+  const [frage, setFrage] = useState<'verlassen' | 'loeschen' | null>(null);
+  const [fehler, setFehler] = useState('');
+  const [laeuft, setLaeuft] = useState(false);
+  const los = async () => {
+    setLaeuft(true);
+    setFehler('');
+    try {
+      await (frage === 'loeschen' ? loescheRennen(id) : verlasseRennen(id));
+      location.hash = '#/schlittenrennen';
+    } catch (e) {
+      setFehler(fehlerText(e));
+      setLaeuft(false);
+    }
+  };
+  if (frage)
+    return (
+      <section class="glas mt-5 grid gap-3 rounded-2xl p-4" role="alertdialog" aria-label={frage === 'loeschen' ? t('Rennen löschen') : t('Rennen verlassen')}>
+        <p class="m-0 text-[16px] text-eis">
+          {frage === 'loeschen' ? t('Das Rennen wird für alle gelöscht. Das lässt sich nicht rückgängig machen.') : t('Du verlässt das Rennen. Deine Schritte hier sind dann weg.')}
+        </p>
+        {fehler && <p role="alert" class="m-0 text-[15px] text-[var(--warnung)]">{fehler}</p>}
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" class="min-h-[48px] rounded-full border-2 border-[var(--nm-bedienung)] font-semibold text-eis" onClick={() => setFrage(null)} disabled={laeuft}>
+            {t('Abbrechen')}
+          </button>
+          <button type="button" class="min-h-[48px] rounded-full font-bold text-[#1a1020] disabled:opacity-50" style={{ background: 'linear-gradient(135deg,#ffb4a8,#f0344f)' }} onClick={() => void los()} disabled={laeuft}>
+            {frage === 'loeschen' ? t('Ja, löschen') : t('Ja, verlassen')}
+          </button>
+        </div>
+      </section>
+    );
+  return (
+    <div class="mt-4 flex flex-wrap justify-center gap-x-6">
+      <button type="button" class="min-h-[44px] text-dunst underline" onClick={() => setFrage('verlassen')}>
+        {t('Rennen verlassen')}
+      </button>
+      {ersteller && (
+        <button type="button" class="min-h-[44px] text-dunst underline" onClick={() => setFrage('loeschen')}>
+          {t('Rennen löschen')}
+        </button>
+      )}
     </div>
   );
 }

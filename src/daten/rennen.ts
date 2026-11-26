@@ -24,6 +24,18 @@ export async function trittBei(id: string, kamel: string, farbe: number): Promis
   await merkeRennen(id);
 }
 
+export async function verlasseRennen(id: string): Promise<void> {
+  const geraet = await sorgeFuerAnmeldung();
+  await api('/api/rennen/verlassen', { methode: 'POST', geraet, body: { id } });
+  await vergissRennen(id);
+}
+
+export async function loescheRennen(id: string): Promise<void> {
+  const geraet = await sorgeFuerAnmeldung();
+  await api('/api/rennen/loeschen', { methode: 'POST', geraet, body: { id } });
+  await vergissRennen(id);
+}
+
 export const meineRennen = () => leseEinstellung<string[]>('rennen', []);
 
 export async function merkeRennen(id: string): Promise<void> {

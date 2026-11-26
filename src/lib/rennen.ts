@@ -14,6 +14,8 @@ export interface Rennen {
   id: string;
   name: string;
   ziel: number;
+  /** Gerätekennung dessen, der das Rennen angelegt hat */
+  ersteller?: string;
   erstellt_am: number;
   ende: number;
 }

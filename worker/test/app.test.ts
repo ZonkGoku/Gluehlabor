@@ -141,6 +141,29 @@ describe('Schlittenrennen', () => {
     const g = await geraet({ ip: '9.9.99.1' });
     expect((await ruf('POST', '/api/rennen/beitreten', { auth: g.auth, body: { id, kamel: 'Zu viel', farbe: 0 } })).status).toBe(409);
   });
+  it('verlassen: nur der eigene Platz verschwindet, das Rennen bleibt; erneut verlassen ist harmlos', async () => {
+    const a = await geraet();
+    const b = await geraet();
+    const id = (await neu(a)).json.id;
+    await ruf('POST', '/api/rennen/beitreten', { auth: b.auth, body: { id, kamel: 'Sandy', farbe: 4 } });
+    expect((await ruf('POST', '/api/rennen/verlassen', { auth: b.auth, body: { id } })).status).toBe(200);
+    expect((await ruf('POST', '/api/rennen/verlassen', { auth: b.auth, body: { id } })).status).toBe(200);
+    const l = await ruf('GET', `/api/rennen/${id}`);
+    expect(l.json.teilnehmer.map((t: any) => t.kamel)).toEqual(['Blitz']);
+    expect((await ruf('POST', '/api/rennen/verlassen', { body: { id } })).status).toBe(401);
+    expect((await ruf('POST', '/api/rennen/verlassen', { auth: b.auth, body: { id: 'abcdefgh' } })).status).toBe(404);
+  });
+  it('löschen: nur wer das Rennen angelegt hat; danach ist es weg', async () => {
+    const a = await geraet();
+    const b = await geraet();
+    const id = (await neu(a)).json.id;
+    await ruf('POST', '/api/rennen/beitreten', { auth: b.auth, body: { id, kamel: 'Sandy', farbe: 4 } });
+    expect((await ruf('POST', '/api/rennen/loeschen', { auth: b.auth, body: { id } })).status).toBe(403);
+    expect((await ruf('GET', `/api/rennen/${id}`)).json.rennen.ersteller).toBe(a.id);
+    expect((await ruf('POST', '/api/rennen/loeschen', { auth: a.auth, body: { id } })).status).toBe(200);
+    expect((await ruf('GET', `/api/rennen/${id}`)).status).toBe(404);
+    expect((await ruf('POST', '/api/rennen/loeschen', { auth: a.auth, body: { id } })).status).toBe(404);
+  });
   it('unbekanntes oder kaputtes Rennen lesen: 404', async () => {
     expect((await ruf('GET', '/api/rennen/abcdefgh')).status).toBe(404);
     expect((await ruf('GET', '/api/rennen/x')).status).toBe(404);

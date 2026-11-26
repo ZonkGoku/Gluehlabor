@@ -561,18 +561,39 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
         $db->lauf('INSERT INTO rennen_teilnehmer (rennen_id, geraet_id, kamel, farbe, seit) VALUES (?, ?, ?, ?, ?)', [$b['id'], $g['id'], $kname['name'], $b['farbe'], $jetzt]);
         return new Antwort(200, ['ok' => true]);
     }
+    if (($pfad === '/api/rennen/verlassen' || $pfad === '/api/rennen/loeschen') && $methode === 'POST') {
+        $g = anmelden($a, $db);
+        $b = lesen($a);
+        if (!is_string($b['id'] ?? null) || preg_match('/^[a-z0-9]{8}$/', $b['id']) !== 1) {
+            throw new HttpFehler(400, 'Ungültiges Rennen.');
+        }
+        $r = $db->eins('SELECT id, ersteller FROM rennen WHERE id = ?', [$b['id']]);
+        if (!$r) {
+            throw new HttpFehler(404, 'Rennen nicht gefunden.');
+        }
+        if ($pfad === '/api/rennen/loeschen') {
+            if ((string) $r['ersteller'] !== (string) $g['id']) {
+                throw new HttpFehler(403, 'Nur wer das Rennen angelegt hat, darf es löschen.');
+            }
+            $db->lauf('DELETE FROM rennen_teilnehmer WHERE rennen_id = ?', [$b['id']]);
+            $db->lauf('DELETE FROM rennen WHERE id = ?', [$b['id']]);
+            return new Antwort(200, ['ok' => true]);
+        }
+        $db->lauf('DELETE FROM rennen_teilnehmer WHERE rennen_id = ? AND geraet_id = ?', [$b['id'], $g['id']]);
+        return new Antwort(200, ['ok' => true]);
+    }
     if (str_starts_with($pfad, '/api/rennen/') && $methode === 'GET') {
         $id = substr($pfad, strlen('/api/rennen/'));
         if (preg_match('/^[a-z0-9]{8}$/', $id) !== 1) {
             throw new HttpFehler(404, 'Rennen nicht gefunden.');
         }
-        $r = $db->eins('SELECT id, name, ziel, erstellt_am, ende FROM rennen WHERE id = ?', [$id]);
+        $r = $db->eins('SELECT id, name, ziel, ersteller, erstellt_am, ende FROM rennen WHERE id = ?', [$id]);
         if (!$r) {
             throw new HttpFehler(404, 'Rennen nicht gefunden.');
         }
         $t = $db->alle('SELECT geraet_id, kamel, farbe, seit FROM rennen_teilnehmer WHERE rennen_id = ? ORDER BY seit ASC, geraet_id ASC', [$id]);
         return new Antwort(200, [
-            'rennen' => ['id' => $r['id'], 'name' => $r['name'], 'ziel' => (int) $r['ziel'], 'erstellt_am' => (int) $r['erstellt_am'], 'ende' => (int) $r['ende']],
+            'rennen' => ['id' => $r['id'], 'name' => $r['name'], 'ziel' => (int) $r['ziel'], 'ersteller' => $r['ersteller'], 'erstellt_am' => (int) $r['erstellt_am'], 'ende' => (int) $r['ende']],
             'teilnehmer' => array_map(fn($z) => ['geraet' => $z['geraet_id'], 'kamel' => $z['kamel'], 'farbe' => (int) $z['farbe'], 'seit' => (int) $z['seit']], $t),
         ], ['Cache-Control' => 'no-store']);
     }
