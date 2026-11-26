@@ -883,7 +883,6 @@ export const EN: Record<string, string> = {
   "Tag": "day",
   "Tage": "days",
   "Bewerten und mitlaufen": "Rate and join the race",
-  "Beta: Wir probieren das gerade aus. Ab 18. Pro Stand und Abend zählt nur eine Bewertung, es geht nicht ums Trinken.": "Beta: we're trying this out. 18+. Only one rating per stall and evening counts, it's not about drinking.",
   "Ziel": "Finish",
   "Farbe": "Colour",
   "Farbe {n}": "Colour {n}",
@@ -950,4 +949,5 @@ export const EN: Record<string, string> = {
   "Ja, löschen": "Yes, delete",
   "Ja, verlassen": "Yes, leave",
   "Nur wer das Rennen angelegt hat, darf es löschen.": "Only the person who created the race can delete it.",
+  "Beta: Wir probieren das gerade aus. Jede Bewertung ist ein Schritt, egal an welchem Stand. Ab 18, trink verantwortungsvoll.": "Beta: we're trying this out. Every rating is a step, at any stall. 18+, please drink responsibly.",
 };

@@ -144,7 +144,7 @@ function Kopf({ titel, text }: { titel: string; text?: string }) {
   );
 }
 
-const HINWEIS = 'Beta: Wir probieren das gerade aus. Ab 18. Pro Stand und Abend zählt nur eine Bewertung, es geht nicht ums Trinken.';
+const HINWEIS = 'Beta: Wir probieren das gerade aus. Jede Bewertung ist ein Schritt, egal an welchem Stand. Ab 18, trink verantwortungsvoll.';
 
 // ───────── Übersicht: meine Rennen, neues Rennen ─────────
 export function SchlittenrennenUebersicht() {
