@@ -17,7 +17,7 @@ export function Mehr() {
   const pruefstelle = useLive(() => leseEinstellung<boolean>('pruefstelle', false), [], false);
   const punkte: Punkt[] = [
     { href: '#/entdecken', symbol: 'uebersicht', titel: 'Entdecken', text: 'Karte, Top Deals, Preise und der Verlauf der Saison.' },
-    { href: '#/schlittenfahren', symbol: 'ziel', titel: 'Schlittenfahren (Beta)', text: 'Rennen mit Freunden: Jede Bewertung bringt deinen Schlitten ein Stück weiter.' },
+    { href: '#/schlittenfahren', symbol: 'ziel', titel: 'Schlittenfahren (Beta)', text: 'Wochenrennen für alle und Rennen mit Freunden: Jede Bewertung bringt deinen Schlitten weiter.' },
     { href: '#/spickzettel', symbol: 'spickzettel', titel: 'Hilfe & Regeln', text: 'So bewertest du: Regeln und was die Noten bedeuten.' },
     { href: '#/vergleich', symbol: 'vergleich', titel: 'Vergleich', text: 'Über die Jahre: welche Stände wieder dabei waren und welche Märkte noch fehlen.' },
     { href: '#/einstellungen', symbol: 'einstellungen', titel: 'Einstellungen', text: 'Sprache, Hell oder Dunkel.' },

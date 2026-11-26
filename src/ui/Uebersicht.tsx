@@ -11,6 +11,7 @@ import { setzeName } from '../daten/db';
 import { synchronisiere } from '../daten/sync';
 import { anzeigeName, istPruefstelle, pruefeName } from '../lib/community';
 import { InstallKarte } from './InstallKarte';
+import { WochenKarte } from './Schlittenfahren';
 import { useEintraege, useGeraetId, useGewichte, useMeineAnzahl, useName, useSaison } from './daten';
 import { leseZuletzt } from '../daten/zuletzt';
 import { useEinblenden } from './nacht/bewegung';
@@ -248,6 +249,10 @@ export function Uebersicht() {
             </ul>
           </section>
         )}
+
+        <div data-ein class="mt-6">
+          <WochenKarte />
+        </div>
 
         <a
           data-ein

@@ -1327,3 +1327,50 @@ button.glas,
 .karawane .qr {
   width: min(56vw, 220px);
 }
+
+/* Konfetti am Ende eines Rennens (nur Zierde, bei „Bewegung reduzieren" aus) */
+.konfetti {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  overflow: hidden;
+}
+.konfetti i {
+  position: absolute;
+  top: -20px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: konfetti-fall linear 1 forwards;
+}
+@keyframes konfetti-fall {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    opacity: 0.9;
+    transform: translateY(105vh) rotate(540deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .konfetti {
+    display: none;
+  }
+}
+
+/* Schmale Telefone: im Kopf nur der Statuspunkt der Synchronisation (der Text steht für Screenreader und im Titel), damit alle Knöpfe Platz haben */
+@media (max-width: 520px) {
+  header .sync {
+    min-width: 28px;
+    justify-content: center;
+  }
+  header .sync .sync-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}

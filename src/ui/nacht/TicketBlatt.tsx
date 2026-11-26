@@ -6,6 +6,7 @@ import { ortText, stadtVon } from '../../lib/orte';
 import { useEintraege, useGewichte } from '../daten';
 import { MARKTLISTE } from '../stammdaten';
 import { Symbol } from '../Symbol';
+import { RennenFortschritt } from '../schlitten/Fortschritt';
 import { TeilenBlock } from '../TeilenBlock';
 import { Hintergrund } from './Hintergrund';
 import { kartenDaten, teileKartenBild } from './karteBild';
@@ -54,6 +55,8 @@ export function TicketBlatt({ id, onNaechster }: { id: string; onNaechster: () =
             <span aria-hidden="true" class="text-xl text-gold-300">→</span>
           </a>
         )}
+
+        <RennenFortschritt />
 
         {e.besuchId && (
           <section class="glas mb-6 rounded-3xl p-5" aria-label={t('Andere mitbewerten lassen')}>

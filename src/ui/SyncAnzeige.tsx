@@ -34,8 +34,8 @@ export function SyncAnzeige() {
   }
 
   return (
-    <a class="sync" href="#/profil" data-zustand={art} title={info.meldung ? t(info.meldung) : ''}>
-      {text}
+    <a class="sync" href="#/profil" data-zustand={art} title={info.meldung ? t(info.meldung) : text} aria-label={text}>
+      <span class="sync-text">{text}</span>
     </a>
   );
 }
