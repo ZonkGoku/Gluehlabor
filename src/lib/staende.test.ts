@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { istPruefstelle } from './community';
 import { DEFAULT_GEWICHTE, leereNoten, type Eintrag } from './modell';
-import { anzahlText, baueStaende, gruppenwert, kriterienMittel, standId } from './staende';
+import { anzahlText, baueStaende, gruppenwert, kriterienMittel, personVon, standId } from './staende';
 
 const LISTE = { sonstiger: 'Sonstiger', staedte: [{ stadt: 'Hamburg', maerkte: ['Rathausmarkt'] }] };
 let n = 0;
@@ -110,3 +110,43 @@ describe('Preis und Deals', () => {
     expect(s[0].preis).toEqual({ median: null, n: 0 });
   });
 });
+
+describe('Mehrere Becher derselben Person', () => {
+  const von = (geraet: string, stand: string, note: number) => b(stand, note, { geraet });
+  it('zählen im Durchschnitt zusammen wie einer: erst je Person, dann über die Personen', () => {
+    // Anna bewertet 5 Mal mit 10, Ben einmal mit 4: nicht (50+4)/6 = 9, sondern (10+4)/2 = 7
+    const g = gruppenwert([...Array.from({ length: 5 }, () => von('anna', 'Chrom', 10)), von('ben', 'Chrom', 4)], DEFAULT_GEWICHTE);
+    expect(g.gesamt).toBe(7);
+    expect(g.anzahl).toBe(6);
+    expect(g.personen).toBe(2);
+  });
+  it('mehrere Becher derselben Person mitteln sich zuerst', () => {
+    expect(gruppenwert([von('anna', 'Chrom', 10), von('anna', 'Chrom', 6)], DEFAULT_GEWICHTE).gesamt).toBe(8);
+  });
+  it('„wenige Bewertungen“ und der Gleichstand richten sich nach den Personen, nicht nach den Bechern', () => {
+    const viele = Array.from({ length: 6 }, () => von('anna', 'Allein', 8));
+    const drei = ['a', 'b', 'c'].map((g) => von(g, 'Drei', 8));
+    const s = baueStaende([...viele, ...drei], LISTE, DEFAULT_GEWICHTE);
+    expect(s.map((x) => x.stand)).toEqual(['Drei', 'Allein']); // gleiche Note, mehr Personen vorn
+    expect(s.find((x) => x.stand === 'Allein')!.vorlaeufig).toBe(true);
+    expect(s.find((x) => x.stand === 'Drei')!.vorlaeufig).toBe(false);
+  });
+  it('Bestandsdaten (import-…) und Einträge ohne Kennung zählen einzeln', () => {
+    const a = b('X', 8, { id: 'import-2025-1-x', geraet: 'bestand' });
+    const c = b('X', 4, { id: 'import-2025-2-x', geraet: 'bestand' });
+    expect(personVon(a)).not.toBe(personVon(c));
+    expect(gruppenwert([a, c], DEFAULT_GEWICHTE)).toMatchObject({ gesamt: 6, personen: 2 });
+    expect(gruppenwert([b('Y', 8), b('Y', 4)], DEFAULT_GEWICHTE).personen).toBe(2);
+  });
+  it('die Kriterien-Mittel folgen derselben Regel', () => {
+    const k = kriterienMittel([von('anna', 'Chrom', 10), von('anna', 'Chrom', 10), von('anna', 'Chrom', 10), von('ben', 'Chrom', 4)]);
+    expect(k[0]).toBe(7); // geschmack: Anna 10, Ben 4
+  });
+  it('Preis-Leistung: viele Becher derselben Person zählen einmal', () => {
+    const pl = (g: string, w: number) => b('Deal', 8, { geraet: g, noten: { ...leereNoten(), geschmack: 8, preisLeistung: w } });
+    const [st] = baueStaende([pl('anna', 10), pl('anna', 10), pl('anna', 10), pl('ben', 4)], LISTE, DEFAULT_GEWICHTE);
+    expect(st.deal.punkte).toBe(7);
+    expect(st.deal.anzahl).toBe(2);
+  });
+});
+

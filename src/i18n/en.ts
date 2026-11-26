@@ -983,4 +983,7 @@ export const EN: Record<string, string> = {
   "Das Ergebnis": "The result",
   "Ich habe {name} gewonnen!": "I won {name}!",
   "Mein Ergebnis bei {name}": "My result at {name}",
+  "Nochmal wie eben": "Same again",
+  "Gespeichert: noch ein Becher bei {stand}": "Saved: one more cup at {stand}",
+  "Noch ein Becher bei {stand}": "One more cup at {stand}",
 };

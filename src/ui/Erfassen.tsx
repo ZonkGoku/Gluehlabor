@@ -589,7 +589,7 @@ export function Erfassen() {
       <QrBlatt besuch={{ id: e.besuchId, stand: e.stand.trim(), markt: e.markt.trim() || MARKTLISTE.sonstiger, stadt: e.stadt?.trim() || undefined, sorte: e.sorte }} onZu={() => setQrOffen(false)} />
     )}
     {menueOffen && <MenueBlatt onZu={() => setMenueOffen(false)} />}
-    {fertigId && <TicketBlatt id={fertigId} onNaechster={() => setFertigId(null)} />}
+    {fertigId && <TicketBlatt id={fertigId} onNaechster={() => setFertigId(null)} onNochmal={(neu) => setFertigId(neu)} />}
     </>
   );
 }

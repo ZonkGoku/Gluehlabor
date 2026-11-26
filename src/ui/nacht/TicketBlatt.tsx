@@ -6,6 +6,7 @@ import { ortText, stadtVon } from '../../lib/orte';
 import { useEintraege, useGewichte } from '../daten';
 import { MARKTLISTE } from '../stammdaten';
 import { Symbol } from '../Symbol';
+import { wiederholeBecher } from '../../daten/wiederholen';
 import { RennenFortschritt } from '../schlitten/Fortschritt';
 import { TeilenBlock } from '../TeilenBlock';
 import { Hintergrund } from './Hintergrund';
@@ -13,10 +14,11 @@ import { kartenDaten, teileKartenBild } from './karteBild';
 import { TopKarte } from './Ticket';
 import { t } from '../../i18n';
 
-export function TicketBlatt({ id, onNaechster }: { id: string; onNaechster: () => void }) {
+export function TicketBlatt({ id, onNaechster, onNochmal }: { id: string; onNaechster: () => void; onNochmal?: (neueId: string) => void }) {
   const alle = useEintraege();
   const gewichte = useGewichte();
   const [meldung, setMeldung] = useState('');
+  const [wiederholt, setWiederholt] = useState(false);
   const e = alle?.find((x) => x.id === id);
   const fotoUrl = useMemo(() => (e?.fotoBlob ? URL.createObjectURL(e.fotoBlob) : null), [e?.fotoBlob]);
   useEffect(() => () => void (fotoUrl && URL.revokeObjectURL(fotoUrl)), [fotoUrl]);
@@ -57,6 +59,30 @@ export function TicketBlatt({ id, onNaechster }: { id: string; onNaechster: () =
         )}
 
         <RennenFortschritt />
+
+        {onNochmal && (
+          <button
+            type="button"
+            disabled={wiederholt}
+            onClick={async () => {
+              setWiederholt(true);
+              try {
+                onNochmal(await wiederholeBecher(e));
+              } finally {
+                setTimeout(() => setWiederholt(false), 900);
+              }
+            }}
+            class="glas rahmen-licht mb-4 flex min-h-[64px] w-full items-center gap-3 rounded-3xl p-4 text-left text-eis disabled:opacity-60"
+          >
+            <span class="grid size-11 shrink-0 place-items-center rounded-full text-[#1a1020]" style={{ background: 'linear-gradient(135deg,#ffe29a,#ff8a3d)' }}>
+              <Symbol name="plus" groesse={22} />
+            </span>
+            <span class="min-w-0 flex-1">
+              <b class="block text-[17px] leading-tight">{t('Nochmal wie eben')}</b>
+              <span class="block truncate text-sm text-dunst">{t('Noch ein Becher bei {stand}', { stand: e.stand })}</span>
+            </span>
+          </button>
+        )}
 
         {e.besuchId && (
           <section class="glas mb-6 rounded-3xl p-5" aria-label={t('Andere mitbewerten lassen')}>

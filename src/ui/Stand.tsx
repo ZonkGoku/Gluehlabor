@@ -3,6 +3,7 @@ import { useState } from 'preact/hooks';
 import { fehlerText, aendereStand, entferne, verstecke } from '../daten/moderation';
 import { HAT_SERVER } from '../daten/config';
 import { entwurfHatInhalt, leseEntwurf, schreibeEntwurf } from '../daten/entwurf';
+import { wiederholeBecher } from '../daten/wiederholen';
 import { leseEinstellung, type LokalerEintrag } from '../daten/db';
 import { anzeigeName, istPruefstelle } from '../lib/community';
 import { euro, sterneText } from '../lib/format';
@@ -36,6 +37,8 @@ export function StandSeite({ id }: { id: string }) {
   const geraetId = useGeraetId();
   const pruefstelle = useLive(() => leseEinstellung<boolean>('pruefstelle', false), [], false);
   const [hinweis, setHinweis] = useState('');
+  const [wiederholt, setWiederholt] = useState(false);
+  const [wiederholText, setWiederholText] = useState('');
   if (!alle) return null;
 
   const staende = baueStaende(alle, MARKTLISTE, gewichte, 'alle');
@@ -54,6 +57,8 @@ export function StandSeite({ id }: { id: string }) {
     );
 
   const frueher = s.bewertungen.some((e) => e.geraet === geraetId);
+  // Meine letzte Bewertung an diesem Stand: Vorlage für „Nochmal wie eben“
+  const letzteMeine = geraetId ? [...s.bewertungen].filter((e) => e.geraet === geraetId).sort((a, b) => b.erstelltAm - a.erstelltAm)[0] : undefined;
 
   const bewerten = () => {
     const angefangen = leseEntwurf();
@@ -121,6 +126,26 @@ export function StandSeite({ id }: { id: string }) {
           >
             <Symbol name="plus" groesse={18} /> {frueher ? t('Nochmal bewerten') : t('Diesen Stand bewerten')}
           </button>
+          {letzteMeine && (
+            <button
+              type="button"
+              disabled={wiederholt}
+              onClick={async () => {
+                setWiederholt(true);
+                await wiederholeBecher(letzteMeine);
+                setWiederholText(t('Gespeichert: noch ein Becher bei {stand}', { stand: s.stand }));
+                setTimeout(() => (setWiederholt(false), setWiederholText('')), 2500);
+              }}
+              class="glas flex min-h-[52px] items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold text-eis disabled:opacity-60"
+            >
+              <Symbol name="plus" groesse={18} /> {t('Nochmal wie eben')}
+            </button>
+          )}
+          {wiederholText && (
+            <p class="text-center text-sm text-gold-300" aria-live="polite">
+              {wiederholText}
+            </p>
+          )}
           {mein && (
             <a class="text-center text-sm font-medium text-gold-300 no-underline hover:text-gold-400" href={`#/teilen?e=${encodeURIComponent(mein.id)}`}>
               {t('QR-Code zum Mitbewerten zeigen')}

@@ -1,7 +1,8 @@
 // Stände: Eine Bude (Name, Markt, Stadt) mit den Bewertungen vieler Leute. Reine Funktionen.
 //
 // Ein Eintrag (Becher) ist eine Bewertung einer Person. Die Rangliste zeigt Stände: der Durchschnitt aller
-// Bewertungen, mit Anzahl. Die Reihenfolge ist genau die angezeigte Zahl (auf zwei Stellen), bei Gleichstand
+// Bewertungen, mit Anzahl. Wer denselben Stand mehrfach bewertet (mehrere Becher), zählt im Durchschnitt nur einmal:
+// zuerst wird je Person gemittelt, dann über die Personen (siehe `personVon`). Die Reihenfolge ist genau die angezeigte Zahl (auf zwei Stellen), bei Gleichstand
 // steht der Stand mit mehr Bewertungen vorn. Stände mit wenigen Bewertungen sind nur gekennzeichnet („wenige Bewertungen").
 
 import { istPruefstelle, standIdent } from './community';
@@ -18,7 +19,10 @@ export type Quelle = 'alle' | 'pruefstelle' | 'community';
 
 /** Wertung einer Gruppe von Bewertungen. */
 export interface Gruppenwert {
+  /** Zahl der Bewertungen (Becher). */
   anzahl: number;
+  /** Zahl der Personen (Geräte), die bewertet haben. Sie entscheidet über „wenige Bewertungen" und den Gleichstand. */
+  personen: number;
   /** Durchschnitt der Gesamtnoten, ungerundet. null ohne Bewertung. */
   gesamt: number | null;
   gluehwein: number | null;
@@ -51,10 +55,34 @@ export interface Stand<T extends Eintrag = Eintrag> {
 
 const mittel = (zahlen: number[]): number | null => (zahlen.length ? zahlen.reduce((a, b) => a + b, 0) / zahlen.length : null);
 
+/**
+ * Die Person hinter einer Bewertung: das Gerät. Bestandsdaten (`import-…`) und Einträge ohne Kennung zählen einzeln,
+ * damit die Bewertungen von 2025 unverändert bleiben.
+ */
+export const personVon = (e: Pick<Eintrag, 'id' | 'geraet'>): string => (e.geraet && !e.id.startsWith('import-') ? `g:${e.geraet}` : `e:${e.id}`);
+
+/** Erst je Person mitteln, dann über die Personen: viele Becher derselben Person zählen im Durchschnitt wie einer. */
+function mittelJePerson<T extends Pick<Eintrag, 'id' | 'geraet'>>(liste: readonly T[], wert: (e: T) => number | null): number | null {
+  const je = new Map<string, number[]>();
+  for (const e of liste) {
+    const w = wert(e);
+    if (w === null) continue;
+    const k = personVon(e);
+    je.set(k, [...(je.get(k) ?? []), w]);
+  }
+  return mittel([...je.values()].map((z) => mittel(z) as number));
+}
+
 export function gruppenwert(bewertungen: readonly Eintrag[], gewichte: Gewichte): Gruppenwert {
-  const w = bewertungen.map((e) => bewerte(e.noten, gewichte));
-  const nur = (f: (x: Wertung) => number | null) => mittel(w.map(f).filter((x): x is number => x !== null));
-  return { anzahl: bewertungen.length, gesamt: nur((x) => x.gesamt), gluehwein: nur((x) => x.gluehwein), drumherum: nur((x) => x.drumherum) };
+  const mitWertung = bewertungen.map((e) => ({ id: e.id, geraet: e.geraet, w: bewerte(e.noten, gewichte) }));
+  const nur = (f: (x: Wertung) => number | null) => mittelJePerson(mitWertung, (e) => f(e.w));
+  return {
+    anzahl: bewertungen.length,
+    personen: new Set(bewertungen.map(personVon)).size,
+    gesamt: nur((x) => x.gesamt),
+    gluehwein: nur((x) => x.gluehwein),
+    drumherum: nur((x) => x.drumherum),
+  };
 }
 
 /** Kennung des Stands, zu dem ein Eintrag gehört. Die Stadt folgt wenn nötig aus der gepflegten Marktliste. */
@@ -105,7 +133,7 @@ export function baueStaende<T extends Eintrag>(
       stadt: stadtVon(liste, ref) ?? undefined,
       bewertungen: gewaehlt,
       wert: gruppenwert(gewaehlt, gewichte),
-      plNoten: gewaehlt.map((e) => e.noten.preisLeistung).filter((x): x is number => x !== null),
+      plWerte: gewaehlt.map((e) => ({ id: e.id, geraet: e.geraet, pl: e.noten.preisLeistung })),
       preise: vergleichspreise(gewaehlt),
       pruefstelle: gruppenwert(pruef, gewichte),
       community: gruppenwert(comm, gewichte),
@@ -113,19 +141,21 @@ export function baueStaende<T extends Eintrag>(
   });
   const mitWert = aufbau.filter((s) => s.wert.gesamt !== null);
   // Preis-Leistung hat eine eigene Rangfolge: das Mittel der Preis-Leistungs-Noten, ebenfalls ohne versteckte Gewichtung.
-  const dealWert = (plNoten: number[]) => mittel(plNoten);
+  type PlWert = { id: string; geraet?: string; pl: number | null };
+  const dealWert = (pl: PlWert[]) => mittelJePerson(pl, (e) => e.pl);
+  const dealPersonen = (pl: PlWert[]) => new Set(pl.filter((e) => e.pl !== null).map(personVon)).size;
   const dealRang = new Map(
-    platziere(mitWert.filter((s) => s.plNoten.length > 0), (s) => dealWert(s.plNoten), (s) => s.plNoten.length).map((p) => [p.s.id, p.rang]),
+    platziere(mitWert.filter((s) => dealPersonen(s.plWerte) > 0), (s) => dealWert(s.plWerte), (s) => dealPersonen(s.plWerte)).map((p) => [p.s.id, p.rang]),
   );
   const staende: Stand<T>[] = aufbau.map((s) => {
-    const n = s.wert.anzahl;
+    const n = s.wert.personen;
     const rangWert = s.wert.gesamt;
-    const { plNoten, preise, ...rest } = s;
-    const punkte = mittel(plNoten);
+    const { plWerte, preise, ...rest } = s;
+    const punkte = dealWert(plWerte);
     return {
       ...rest,
       preis: { median: medianVon(preise), n: preise.length },
-      deal: { punkte, anzahl: plNoten.length, rangWert: dealWert(plNoten), rang: dealRang.get(s.id) ?? null, top: punkte !== null && runde2(punkte) >= TOP_DEAL },
+      deal: { punkte, anzahl: dealPersonen(plWerte), rangWert: punkte, rang: dealRang.get(s.id) ?? null, top: punkte !== null && runde2(punkte) >= TOP_DEAL },
       rangWert,
       vorlaeufig: n < MIN_BEWERTUNGEN,
       urteil: urteil(s.wert.gesamt),
@@ -135,7 +165,7 @@ export function baueStaende<T extends Eintrag>(
   return platziere(
     staende.filter((x) => x.wert.anzahl > 0),
     (x) => x.rangWert,
-    (x) => x.wert.anzahl,
+    (x) => x.wert.personen,
   ).map((p) => ({ ...p.s, rang: p.rang }));
 }
 
@@ -168,7 +198,7 @@ export function standAlsZeile(s: Stand): Zeile {
 
 /** Mittel je Kriterium (in der Reihenfolge von KRITERIEN) über mehrere Bewertungen; null, wenn nie bewertet. */
 export function kriterienMittel(bewertungen: readonly Eintrag[]): (number | null)[] {
-  return KRITERIEN.map((k) => mittel(bewertungen.map((e) => e.noten[k]).filter((x): x is number => x !== null)));
+  return KRITERIEN.map((k) => mittelJePerson(bewertungen, (e) => e.noten[k]));
 }
 
 export function anzahlText(n: number): string {
