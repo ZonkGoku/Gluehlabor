@@ -25,7 +25,7 @@ export interface Teilnehmer {
   farbe: number;
   seit: number;
 }
-type Zeile = { id: string; geraet?: string; erstelltAm: number };
+type Zeile = { id: string; geraet?: string; erstelltAm: number; sync?: string };
 
 export interface Bahn {
   geraet: string;
@@ -59,7 +59,7 @@ export function rennenLink(basis: string, id: string): string {
 export function berechneRennen(rennen: Rennen, teilnehmer: readonly Teilnehmer[], eintraege: readonly Zeile[], jetzt: number = Date.now()): RennenStand {
   const bahnen: Bahn[] = teilnehmer.map((t) => {
     const zeiten = eintraege
-      .filter((e) => e.geraet === t.geraet && !('id' in e && String(e.id).startsWith('import-')) && e.erstelltAm >= t.seit && e.erstelltAm <= rennen.ende)
+      .filter((e) => e.geraet === t.geraet && !String(e.id).startsWith('import-') && e.sync !== 'abgelehnt' && e.erstelltAm >= t.seit && e.erstelltAm <= rennen.ende)
       .map((e) => e.erstelltAm)
       .sort((a, b) => a - b);
     const schritte = Math.min(zeiten.length, rennen.ziel);

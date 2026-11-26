@@ -18,6 +18,10 @@ describe('Rennen', () => {
     const s = berechneRennen(rennen, [a], [{ id: 'import-2025-1-x', geraet: 'a', erstelltAm: T0 + 10 }, e('a', 10)], T0 + TAG);
     expect(s.bahnen[0].schritte).toBe(1);
   });
+  it('Bewertungen, die der Server abgelehnt hat (zum Beispiel derselbe Stand am selben Abend), zählen nicht', () => {
+    const s = berechneRennen(rennen, [a], [e('a', 10), { ...e('a', 20), sync: 'abgelehnt' }, { ...e('a', 30), sync: 'fertig' }], T0 + TAG);
+    expect(s.bahnen[0].schritte).toBe(2);
+  });
   it('Plätze nach Schritten, Gleichstand teilt den Platz (1, 1, 3)', () => {
     const c: Teilnehmer = { geraet: 'c', kamel: 'Cem', farbe: 2, seit: T0 };
     const s = berechneRennen(rennen, [a, b, c], [e('a', 10), e('b', 2000), e('a', 20), e('b', 3000)], T0 + TAG);
