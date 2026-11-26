@@ -1301,3 +1301,24 @@ button.glas,
 .erf .ort-knopf.leer-ort {
   border-color: var(--nm-akzent-text);
 }
+
+/* Kamelrennen (Beta) */
+.karawane .kamel-lauf {
+  transition: transform 1.6s cubic-bezier(0.22, 0.8, 0.3, 1);
+}
+.karawane .kamel-wippen {
+  animation: kamel-wippen 0.9s ease-in-out infinite;
+}
+@keyframes kamel-wippen {
+  50% {
+    transform: translateY(-1.5px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .karawane .kamel-lauf {
+    transition: none;
+  }
+  .karawane .kamel-wippen {
+    animation: none;
+  }
+}

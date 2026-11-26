@@ -14,6 +14,7 @@ const PUNKTE = [
 /** Seltener gebraucht: eigene, kleinere Gruppe. */
 const MEHR = [
   { route: 'entdecken', label: 'Entdecken', symbol: 'uebersicht' },
+  { route: 'kamelrennen', label: 'Kamelrennen (Beta)', symbol: 'ziel' },
   { route: 'spickzettel', label: 'Hilfe & Regeln', symbol: 'spickzettel' },
   { route: 'vergleich', label: 'Vergleich', symbol: 'vergleich' },
   { route: 'einstellungen', label: 'Einstellungen', symbol: 'einstellungen' },
