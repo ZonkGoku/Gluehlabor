@@ -9,7 +9,7 @@
 // - Das Prüfstellen-Siegel gibt es nur über einen Code, den David und Philip kennen.
 // - Ausgeblendete Becher werden als Platzhalter ausgeliefert, damit Geräte sie entfernen.
 
-import { abendVon, pruefeEinreichung, pruefeName, pruefeText, saeubere, standIdent, GRENZEN } from '../../src/lib/community';
+import { pruefeEinreichung, pruefeName, pruefeText, saeubere, GRENZEN } from '../../src/lib/community';
 import type { D1Like } from './db';
 
 export interface Env {
@@ -420,17 +420,7 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
         ergebnisse.push({ id: p.eintrag.id, status: 'zu-viele', grund: 'Tageslimit erreicht.' });
         continue;
       }
-      // Eine Bewertung je Gerät, Stand und Abend. Ein neuer Abend ist ein neuer Besuch.
-      const ident = standIdent(p.eintrag);
-      const abend = abendVon(p.eintrag);
-      const { results: eigene } = await db
-        .prepare('SELECT stand, markt, stadt, datum, erstellt_am FROM becher WHERE geraet_id = ? AND versteckt = 0 AND erstellt_am > ?')
-        .bind(g.id, p.eintrag.erstelltAm - 4 * TAG)
-        .all<{ stand: string; markt: string; stadt: string | null; datum: string | null; erstellt_am: number }>();
-      if (eigene.some((z) => standIdent(z) === ident && abendVon({ datum: z.datum, erstelltAm: z.erstellt_am }) === abend)) {
-        ergebnisse.push({ id: p.eintrag.id, status: 'abgelehnt', grund: 'Diesen Stand hast du an diesem Abend schon bewertet.' });
-        continue;
-      }
+      // Mehrere Bewertungen desselben Stands am selben Abend sind erlaubt (jeder Becher ist eine Bewertung); es bleibt beim Tageslimit.
       await einfuegen(db, p.eintrag, g.id, g.name, Boolean(g.pruefstelle), jetzt).run();
       frei--;
       ergebnisse.push({ id: p.eintrag.id, status: 'ok' });

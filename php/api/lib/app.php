@@ -447,20 +447,7 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
                 $ergebnisse[] = ['id' => $e['id'], 'status' => 'zu-viele', 'grund' => 'Tageslimit erreicht.'];
                 continue;
             }
-            // Eine Bewertung je Gerät, Stand und Abend. Ein neuer Abend ist ein neuer Besuch.
-            $ident = standIdent($e['stand'], $e['stadt']);
-            $abend = abendVon($e['datum'], (int) $e['erstelltAm']);
-            $doppelt = false;
-            foreach ($db->alle('SELECT stand, markt, stadt, datum, erstellt_am FROM becher WHERE geraet_id = ? AND versteckt = 0 AND erstellt_am > ?', [$g['id'], $e['erstelltAm'] - 4 * TAG_MS]) as $z) {
-                if (standIdent((string) $z['stand'], $z['stadt']) === $ident && abendVon($z['datum'], (int) $z['erstellt_am']) === $abend) {
-                    $doppelt = true;
-                    break;
-                }
-            }
-            if ($doppelt) {
-                $ergebnisse[] = ['id' => $e['id'], 'status' => 'abgelehnt', 'grund' => 'Diesen Stand hast du an diesem Abend schon bewertet.'];
-                continue;
-            }
+            // Mehrere Bewertungen desselben Stands am selben Abend sind erlaubt (jeder Becher ist eine Bewertung); es bleibt beim Tageslimit.
             fuegeEin($db, $e, (string) $g['id'], $g['name'], (int) $g['pruefstelle'] !== 0, $jetzt);
             $frei--;
             $ergebnisse[] = ['id' => $e['id'], 'status' => 'ok'];

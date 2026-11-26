@@ -124,7 +124,7 @@ export function Datenschutz() {
         </p>
         <p>
           <b>{t('Öffentlich:')}</b>{' '}
-          {t('Bewertungen mit deinem Namen und der Geräte-Kennung kann jeder abrufen, auch ohne die App. Wer mehrere Bewertungen derselben Kennung sieht, erkennt, dass sie vom selben Gerät stammen. Schreib deshalb keine persönlichen Daten in Namen oder Notizen. Je Stand und Abend kannst du ein Gerät nur einmal bewerten; Prüfstellen-Geräte (David und Philip) können außerdem Bewertungen ausblenden und Stände zusammenführen.')}
+          {t('Bewertungen mit deinem Namen und der Geräte-Kennung kann jeder abrufen, auch ohne die App. Wer mehrere Bewertungen derselben Kennung sieht, erkennt, dass sie vom selben Gerät stammen. Schreib deshalb keine persönlichen Daten in Namen oder Notizen. Prüfstellen-Geräte (David und Philip) können außerdem Bewertungen ausblenden und Stände zusammenführen.')}
         </p>
         <p>{t('Meldest du einen Eintrag, speichern wir deine Geräte-Kennung, den Grund und deinen optionalen Text, bis wir die Meldung bearbeitet haben.')}</p>
 

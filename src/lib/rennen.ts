@@ -1,7 +1,7 @@
 // Schlittenfahren (Beta): Spieler legen ein Rennen an und laden andere per Link/QR ein. Jedes Gerät hat seinen eigenen Schlitten.
 // Ein Schritt ist eine Bewertung dieses Geräts, die nach dem Beitritt und vor dem Ende des Rennens entstanden ist.
 // Der Server speichert nur Rennen und Teilnehmer; die Schritte rechnet jede App selbst aus den öffentlichen Bewertungen
-// (kein Konto, nichts Zusätzliches zu speichern). Es zählt die Zahl der Bewertungen, egal an welchem Stand (je Gerät, Stand und Abend gibt es allerdings nur eine).
+// (kein Konto, nichts Zusätzliches zu speichern). Es zählt die Zahl der Bewertungen, egal an welchem Stand.
 
 /** Mögliche Rennlängen in Schritten (Bewertungen). Der Server prüft dieselbe Liste. */
 export const RENNEN_ZIELE = [10, 20, 30] as const;

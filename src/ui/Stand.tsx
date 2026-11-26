@@ -7,10 +7,9 @@ import { leseEinstellung, type LokalerEintrag } from '../daten/db';
 import { anzeigeName, istPruefstelle } from '../lib/community';
 import { euro, sterneText } from '../lib/format';
 import { KRITERIEN, leereNoten } from '../lib/modell';
-import { abendDatum } from '../lib/abend';
 import { ortText } from '../lib/orte';
 import { bewerte, urteil } from '../lib/scoring';
-import { baueStaende, kriterienMittel, MIN_BEWERTUNGEN, schonBewertet, type Stand } from '../lib/staende';
+import { baueStaende, kriterienMittel, MIN_BEWERTUNGEN, type Stand } from '../lib/staende';
 import { datumKurz, UrteilPill } from './bausteine';
 import { useEintraege, useGeraetId, useGewichte } from './daten';
 import { useAktuell, useLive } from './hooks';
@@ -53,10 +52,6 @@ export function StandSeite({ id }: { id: string }) {
         </div>
       </div>
     );
-
-  const jetzt = new Date();
-  const heute = abendDatum(jetzt);
-  const schon = schonBewertet(alle, geraetId, { stand: s.stand, markt: s.markt, stadt: s.stadt, datum: heute, erstelltAm: jetzt.getTime() });
 
   const frueher = s.bewertungen.some((e) => e.geraet === geraetId);
 
@@ -120,12 +115,11 @@ export function StandSeite({ id }: { id: string }) {
           </Kachel>
           <button
             type="button"
-            disabled={schon}
             onClick={bewerten}
             class="animate-puls flex items-center justify-center gap-2 rounded-full px-6 py-3.5 font-semibold text-[#1a1020] disabled:animate-none disabled:opacity-60"
             style={{ background: 'linear-gradient(135deg,#ffe29a,#ff8a3d)' }}
           >
-            <Symbol name="plus" groesse={18} /> {schon ? t('Heute Abend schon bewertet') : frueher ? t('Nochmal bewerten') : t('Diesen Stand bewerten')}
+            <Symbol name="plus" groesse={18} /> {frueher ? t('Nochmal bewerten') : t('Diesen Stand bewerten')}
           </button>
           {mein && (
             <a class="text-center text-sm font-medium text-gold-300 no-underline hover:text-gold-400" href={`#/teilen?e=${encodeURIComponent(mein.id)}`}>

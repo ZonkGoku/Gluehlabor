@@ -208,7 +208,6 @@ export const EN: Record<string, string> = {
   "Vielleicht wurde er umbenannt oder zusammengeführt.": "Maybe it was renamed or merged.",
   "Prüfstelle · David & Philip": "Rating lab · David & Philip",
   "noch nicht bewertet": "not rated yet",
-  "Heute Abend schon bewertet": "Already rated tonight",
   "Diesen Stand bewerten": "Rate this stall",
   "QR-Code zum Mitbewerten zeigen": "Show QR code for joining in",
   "Vorläufig: Ab {n} Bewertungen zählt der Stand voll für die Reihenfolge.": "Provisional: from {n} ratings the stall counts fully for the order.",
@@ -529,7 +528,6 @@ export const EN: Record<string, string> = {
   "3. Auf dem Server (Community)": "3. On the server (community)",
   "Wenn du Bewertungen abgibst, speichert unser Server: die zufällige Geräte-Kennung, einen Hash deines Geräteschlüssels (nicht den Schlüssel selbst), den Namen, den du dir gibst (Spitzname genügt; zum Bewerten ist ein Name nötig), sowie zu jeder Bewertung Stand, Markt, Stadt, Datum, Sorte, Becher-Nr., Preis, Noten, Notiz, die Besuchs-Nr. und Zeitpunkte. Es gibt kein Konto, keine E-Mail-Adresse und keine Telefonnummer.": "When you submit ratings, our server stores: the random device ID, a hash of your device key (not the key itself), the name you choose (a nickname is enough; a name is required to rate), and for each rating the stall, market, city, date, type, cup no., price, scores, note, the visit no. and timestamps. There is no account, no email address and no phone number.",
   "Öffentlich:": "Public:",
-  "Bewertungen mit deinem Namen und der Geräte-Kennung kann jeder abrufen, auch ohne die App. Wer mehrere Bewertungen derselben Kennung sieht, erkennt, dass sie vom selben Gerät stammen. Schreib deshalb keine persönlichen Daten in Namen oder Notizen. Je Stand und Abend kannst du ein Gerät nur einmal bewerten; Prüfstellen-Geräte (David und Philip) können außerdem Bewertungen ausblenden und Stände zusammenführen.": "Anyone can retrieve ratings with your name and device ID, even without the app. Whoever sees several ratings with the same ID can tell they come from the same device. So don't write personal data in names or notes. A device can rate each stall only once per evening; rating lab devices (David and Philip) can also hide ratings and merge stalls.",
   "Meldest du einen Eintrag, speichern wir deine Geräte-Kennung, den Grund und deinen optionalen Text, bis wir die Meldung bearbeitet haben.": "If you report an entry, we store your device ID, the reason and your optional text until we have processed the report.",
   "4. Rechtsgrundlagen": "4. Legal bases",
   "Bereitstellung der Bewertungsfunktion: Art. 6 Abs. 1 lit. b DSGVO. Dein Name: deine Einwilligung, Art. 6 Abs. 1 lit. a DSGVO; du wählst ihn selbst und kannst ihn jederzeit entfernen lassen (dann kannst du nicht mehr bewerten, bis du dir einen neuen gibst). Schutz vor Missbrauch und Sicherheit des Dienstes: berechtigtes Interesse, Art. 6 Abs. 1 lit. f DSGVO.": "Providing the rating function: Art. 6(1)(b) GDPR. Your name: your consent, Art. 6(1)(a) GDPR; you choose it yourself and can have it removed at any time (then you can't rate until you pick a new one). Protection against abuse and security of the service: legitimate interest, Art. 6(1)(f) GDPR.",
@@ -950,4 +948,5 @@ export const EN: Record<string, string> = {
   "Schlittenfahren": "Sledding",
   "Schlittenfahren (Beta)": "Sledding (beta)",
   "Fahr mit beim Schlittenfahren: {name}": "Join the sledding: {name}",
+  "Bewertungen mit deinem Namen und der Geräte-Kennung kann jeder abrufen, auch ohne die App. Wer mehrere Bewertungen derselben Kennung sieht, erkennt, dass sie vom selben Gerät stammen. Schreib deshalb keine persönlichen Daten in Namen oder Notizen. Prüfstellen-Geräte (David und Philip) können außerdem Bewertungen ausblenden und Stände zusammenführen.": "Anyone can retrieve ratings with your name and device ID, even without the app. Whoever sees several ratings with the same ID can tell they come from the same device. So don't write personal data in names or notes. Rating lab devices (David and Philip) can also hide ratings and merge stalls.",
 };

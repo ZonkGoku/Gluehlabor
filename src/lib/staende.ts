@@ -4,7 +4,7 @@
 // Bewertungen, mit Anzahl. Die Reihenfolge ist genau die angezeigte Zahl (auf zwei Stellen), bei Gleichstand
 // steht der Stand mit mehr Bewertungen vorn. Stände mit wenigen Bewertungen sind nur gekennzeichnet („wenige Bewertungen").
 
-import { abendVon, istPruefstelle, standIdent } from './community';
+import { istPruefstelle, standIdent } from './community';
 import { KRITERIEN, type Eintrag, type Gewichte } from './modell';
 import { stadtVon, type MarktListe } from './orte';
 import { medianVon, TOP_DEAL, vergleichspreise } from './preisleistung';
@@ -173,18 +173,6 @@ export function kriterienMittel(bewertungen: readonly Eintrag[]): (number | null
 
 export function anzahlText(n: number): string {
   return n === 1 ? '1 Bewertung' : `${n} Bewertungen`;
-}
-
-/** Hat dieses Gerät den Stand an diesem Abend schon bewertet? Dieselbe Regel wie auf dem Server. */
-export function schonBewertet(
-  eintraege: readonly Eintrag[],
-  geraetId: string | null,
-  kandidat: { stand: string; markt: string; stadt?: string; datum?: string; erstelltAm: number },
-): boolean {
-  if (!geraetId) return false;
-  const ident = standIdent(kandidat);
-  const abend = abendVon(kandidat);
-  return eintraege.some((e) => e.geraet === geraetId && standIdent(e) === ident && abendVon(e) === abend);
 }
 
 /** Auf zwei Stellen gerundet, für Vergleiche in Tests. */

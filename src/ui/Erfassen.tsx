@@ -24,8 +24,6 @@ import { euro, probeNr, sterneText } from '../lib/format';
 import { DEFAULT_GEWICHTE, KRITERIEN, leereNoten, SORTEN, type Eintrag, type Kriterium, type Sorte } from '../lib/modell';
 import { bewerte } from '../lib/scoring';
 import { berechnePreisLeistung, MENGEN, PREIS_MAX, PREIS_MIN, referenzPreis, vergleichbar } from '../lib/preisleistung';
-import { schonBewertet } from '../lib/staende';
-import { useGeraetId } from './daten';
 import { useLive } from './hooks';
 import { MenueBlatt } from './nacht/MenueBlatt';
 import { NameBlatt } from './nacht/NameBlatt';
@@ -108,13 +106,11 @@ export function Erfassen() {
     const d = leseEntwurf();
     return d && (d.gesperrt || (d.stand.trim() && d.stadt)) ? 'bewerten' : 'wo';
   });
-  const [warnung, setWarnung] = useState<string | null>(null);
   const [preisText, setPreisText] = useState(() => {
     const p = leseEntwurf()?.preis;
     return p === undefined ? '' : String(p).replace('.', ',');
   });
   const [preisFehlt, setPreisFehlt] = useState(false);
-  const geraetId = useGeraetId();
   const [becherNrAngefasst, setBecherNrAngefasst] = useState(() => leseEntwurf()?.becherNr !== undefined);
   const [foto, setFoto] = useState<Blob | null>(null);
   const [hilfeOffen, setHilfeOffen] = useState<Kriterium | null>(null);
@@ -209,12 +205,6 @@ export function Erfassen() {
       return;
     }
     const jetzt = new Date();
-    // Eine Bewertung je Stand und Abend. Dieselbe Regel prüft der Server.
-    if (schonBewertet(bestand, geraetId, { stand, markt: e.markt.trim() || MARKTLISTE.sonstiger, stadt: e.stadt?.trim(), datum: abendDatum(jetzt), erstelltAm: jetzt.getTime() })) {
-      setWarnung(t('Heute Abend schon bewertet'));
-      setTimeout(() => setWarnung(null), 3500);
-      return;
-    }
     // Ohne Namen keine Bewertung: erst fragen, dann weiter.
     if (!nameBestaetigt && !(await leseEinstellung<string>('name', ''))) {
       setNameOffen(true);
@@ -302,7 +292,7 @@ export function Erfassen() {
     if (schritt === 'wo' && !e.stadt) setOrtOffen(true);
   }, []);
 
-  const knopfText = warnung ?? gespeichert ?? (bewertet === 0 ? t('Noch keine Sterne') : t('Speichern'));
+  const knopfText = gespeichert ?? (bewertet === 0 ? t('Noch keine Sterne') : t('Speichern'));
 
   return (
     <>

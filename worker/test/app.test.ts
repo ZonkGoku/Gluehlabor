@@ -714,44 +714,25 @@ describe('Löschen auf Anfrage', () => {
   });
 });
 
-describe('Eine Bewertung je Gerät, Stand und Abend', () => {
+describe('Mehrere Bewertungen desselben Stands', () => {
   const am = (stand: string, patch: Record<string, unknown> = {}) => becher({ stand, markt: 'Rathausmarkt', stadt: 'Hamburg', ...patch });
 
-  it('derselbe Stand am selben Abend wird abgelehnt, auch bei anderer Schreibweise', async () => {
+  it('derselbe Stand am selben Abend darf mehrfach bewertet werden, auch bei anderer Schreibweise', async () => {
     const g = await geraet();
     expect((await sende(g, [am('Chrom')])).json.ergebnisse[0].status).toBe('ok');
-    const r = await sende(g, [am(' CHROM! ')]);
-    expect(r.json.ergebnisse[0].status).toBe('abgelehnt');
-    expect(r.json.ergebnisse[0].grund).toMatch(/schon bewertet/);
-    expect((await liste()).json.eintraege).toHaveLength(1);
+    expect((await sende(g, [am(' CHROM! ')])).json.ergebnisse[0].status).toBe('ok');
+    expect((await liste()).json.eintraege).toHaveLength(2);
   });
   it('auch innerhalb einer Anfrage', async () => {
     const g = await geraet();
-    const r = await sende(g, [am('Chrom'), am('chrom')]);
-    expect(r.json.ergebnisse.map((x: any) => x.status)).toEqual(['ok', 'abgelehnt']);
+    const r = await sende(g, [am('Chrom'), am('chrom'), am('Chrom')]);
+    expect(r.json.ergebnisse.map((x: any) => x.status)).toEqual(['ok', 'ok', 'ok']);
   });
-  it('ein anderer Abend, ein anderer Stand, eine andere Stadt und ein anderes Gerät sind erlaubt', async () => {
+  it('die Bewertungen des Stands zählen alle für den Stand', async () => {
     const g = await geraet();
-    const h = await geraet();
-    const r = await sende(g, [
-      am('Chrom'),
-      am('Chrom', { datum: '2026-12-06' }),
-      am('Gustl'),
-      am('Chrom', { stadt: 'Köln' }),
-    ]);
-    expect(r.json.ergebnisse.map((x: any) => x.status)).toEqual(['ok', 'ok', 'ok', 'ok']);
-    expect((await sende(h, [am('Chrom')])).json.ergebnisse[0].status).toBe('ok');
-  });
-  it('derselbe Stand an einem anderen Markt derselben Stadt ist derselbe Stand', async () => {
-    const g = await geraet();
-    expect((await sende(g, [am('Chrom')])).json.ergebnisse[0].status).toBe('ok');
-    expect((await sende(g, [am('Chrom', { markt: 'Winterwald' })])).json.ergebnisse[0].status).toBe('abgelehnt');
-  });
-  it('ausgeblendete Bewertungen zählen nicht mehr', async () => {
-    const g = await geraet();
-    await sende(g, [am('Chrom', { id: 'erste-1234567' })]);
-    await ruf('POST', '/api/admin/verstecken', { auth: ADMIN, body: { id: 'erste-1234567', versteckt: true } });
-    expect((await sende(g, [am('Chrom')])).json.ergebnisse[0].status).toBe('ok');
+    await sende(g, [am('Chrom'), am('Chrom')]);
+    const stande = (await liste()).json.eintraege.filter((e: any) => e.stand === 'Chrom');
+    expect(stande).toHaveLength(2);
   });
 });
 

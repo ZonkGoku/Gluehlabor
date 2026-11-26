@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { istPruefstelle } from './community';
 import { DEFAULT_GEWICHTE, leereNoten, type Eintrag } from './modell';
-import { anzahlText, baueStaende, gruppenwert, kriterienMittel, schonBewertet, standId } from './staende';
+import { anzahlText, baueStaende, gruppenwert, kriterienMittel, standId } from './staende';
 
 const LISTE = { sonstiger: 'Sonstiger', staedte: [{ stadt: 'Hamburg', maerkte: ['Rathausmarkt'] }] };
 let n = 0;
@@ -108,19 +108,5 @@ describe('Preis und Deals', () => {
     const s = baueStaende([mitPl('X', null)], LISTE, DEFAULT_GEWICHTE);
     expect(s[0].deal).toMatchObject({ punkte: null, anzahl: 0, rang: null, top: false });
     expect(s[0].preis).toEqual({ median: null, n: 0 });
-  });
-});
-
-describe('schonBewertet', () => {
-  const mein = b('Chrom', 7, { geraet: 'ich' });
-  it('derselbe Stand am selben Abend', () => {
-    expect(schonBewertet([mein], 'ich', { stand: 'CHROM', markt: 'Rathausmarkt', stadt: 'Hamburg', datum: '2026-12-05', erstelltAm: 1 })).toBe(true);
-  });
-  it('anderer Abend, anderes Gerät, anderer Stand', () => {
-    const k = { stand: 'Chrom', markt: 'Rathausmarkt', stadt: 'Hamburg', datum: '2026-12-06', erstelltAm: 1 };
-    expect(schonBewertet([mein], 'ich', k)).toBe(false);
-    expect(schonBewertet([mein], 'du', { ...k, datum: '2026-12-05' })).toBe(false);
-    expect(schonBewertet([mein], 'ich', { ...k, datum: '2026-12-05', stand: 'Gustl' })).toBe(false);
-    expect(schonBewertet([mein], null, { ...k, datum: '2026-12-05' })).toBe(false);
   });
 });
