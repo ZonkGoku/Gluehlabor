@@ -894,9 +894,6 @@ export const EN: Record<string, string> = {
   "Neues Rennen": "New race",
   "Name des Rennens": "Race name",
   "Länge": "Length",
-  "Kurz": "Short",
-  "Mittel": "Medium",
-  "Lang": "Long",
   "Rennen starten": "Start race",
   "Rennen nicht gefunden": "Race not found",
   "Vielleicht ist der Code falsch geschrieben.": "Maybe the code was mistyped.",
@@ -949,4 +946,8 @@ export const EN: Record<string, string> = {
   "Schlittenfahren (Beta)": "Sledding (beta)",
   "Fahr mit beim Schlittenfahren: {name}": "Join the sledding: {name}",
   "Bewertungen mit deinem Namen und der Geräte-Kennung kann jeder abrufen, auch ohne die App. Wer mehrere Bewertungen derselben Kennung sieht, erkennt, dass sie vom selben Gerät stammen. Schreib deshalb keine persönlichen Daten in Namen oder Notizen. Prüfstellen-Geräte (David und Philip) können außerdem Bewertungen ausblenden und Stände zusammenführen.": "Anyone can retrieve ratings with your name and device ID, even without the app. Whoever sees several ratings with the same ID can tell they come from the same device. So don't write personal data in names or notes. Rating lab devices (David and Philip) can also hide ratings and merge stalls.",
+  "Länge: so viele Bewertungen bis ins Ziel": "Length: this many ratings to the finish",
+  "Eigene Länge": "Custom length",
+  "Einen Schritt weniger": "One step fewer",
+  "Einen Schritt mehr": "One step more",
 };

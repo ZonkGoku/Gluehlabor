@@ -3,8 +3,11 @@
 // Der Server speichert nur Rennen und Teilnehmer; die Schritte rechnet jede App selbst aus den öffentlichen Bewertungen
 // (kein Konto, nichts Zusätzliches zu speichern). Es zählt die Zahl der Bewertungen, egal an welchem Stand.
 
-/** Mögliche Rennlängen in Schritten (Bewertungen). Der Server prüft dieselbe Liste. */
-export const RENNEN_ZIELE = [10, 20, 30] as const;
+/** Rennlänge in Schritten (Bewertungen): jede ganze Zahl von 2 bis 50, der Server prüft dieselben Grenzen. */
+export const RENNEN_MIN = 2;
+export const RENNEN_MAX = 50;
+/** Schnellwahl in der App */
+export const RENNEN_ZIELE = [3, 5, 10, 20] as const;
 /** Farben der Schlitten, Index = Farbnummer (der Server erlaubt 0 bis 7). */
 export const SCHLITTEN_FARBEN = ['#ffc857', '#ff8a3d', '#f0344f', '#7fd1ff', '#9be08a', '#d49bff', '#ff9bd0', '#e8e8e8'] as const;
 /** Rennen-Kennung: 8 Zeichen, Kleinbuchstaben und Ziffern. */
@@ -83,7 +86,64 @@ export function berechneRennen(rennen: Rennen, teilnehmer: readonly Teilnehmer[]
   const gleich = (a: Bahn, b: Bahn) => (a.imZiel && b.imZiel ? a.zielZeit === b.zielZeit : !a.imZiel && !b.imZiel && a.schritte === b.schritte);
   for (const b of bahnen) b.platz = 1 + bahnen.filter((x) => vor(x, b) < 0 && !gleich(x, b)).length;
   bahnen.sort((a, b) => a.platz - b.platz || a.kamel.localeCompare(b.kamel, 'de'));
-  const sieger = bahnen.find((b) => b.imZiel) ?? null;
-  const vorbei = sieger !== null || jetzt > rennen.ende;
+  const zielSieger = bahnen.find((b) => b.imZiel) ?? null;
+  const vorbei = zielSieger !== null || jetzt > rennen.ende;
+  // Läuft die Zeit ab, ohne dass jemand im Ziel ist, gewinnt, wer die meisten Schritte hat (mindestens einen).
+  const sieger = zielSieger ?? (vorbei && bahnen[0] && bahnen[0].schritte > 0 ? bahnen[0] : null);
   return { bahnen, sieger, vorbei, tageUebrig: vorbei ? 0 : Math.max(1, Math.ceil((rennen.ende - jetzt) / 86_400_000)) };
+}
+
+// ───────── Wochenrennen: ein offenes Rennen für alle, jede Woche neu ─────────
+
+/** Länge des Wochenrennens in Schritten (der Server legt es mit demselben Wert an). */
+export const WOCHEN_ZIEL = 20;
+/** Kennung `w<Jahr>w<Woche>` (ISO-Woche, UTC), immer 8 Zeichen, passt zu RENNEN_ID. */
+export const WOCHEN_ID = /^w\d{4}w\d{2}$/;
+export const istWochenrennen = (id: string): boolean => WOCHEN_ID.test(id);
+
+/** Kennung des Wochenrennens, in dem `jetzt` liegt. */
+export function wochenRennenId(jetzt: Date = new Date()): string {
+  const d = new Date(Date.UTC(jetzt.getUTCFullYear(), jetzt.getUTCMonth(), jetzt.getUTCDate()));
+  const tag = d.getUTCDay() || 7; // Mo = 1 … So = 7
+  d.setUTCDate(d.getUTCDate() + 4 - tag); // Donnerstag der Woche bestimmt das Jahr
+  const jahr = d.getUTCFullYear();
+  const woche = Math.ceil(((d.getTime() - Date.UTC(jahr, 0, 1)) / 86_400_000 + 1) / 7);
+  return `w${jahr}w${String(woche).padStart(2, '0')}`;
+}
+
+// ───────── Lage im Rennen (Spannung) ─────────
+
+export interface Lage {
+  art: 'start' | 'vorn' | 'gleich' | 'hinten' | 'ende';
+  /** Abstand in Schritten zum Verfolger (vorn) bzw. zum Führenden (hinten) */
+  abstand: number;
+  /** Name des Verfolgers bzw. des Führenden */
+  gegner: string | null;
+  /** Schritte bis ins Ziel */
+  fehlt: number;
+  platz: number;
+}
+
+/** Wie steht es für das eigene Gerät? null, wenn es nicht mitfährt. */
+export function lage(stand: RennenStand, ziel: number, ich: string | null): Lage | null {
+  const b = stand.bahnen.find((x) => x.geraet === ich);
+  if (!b) return null;
+  const fehlt = Math.max(0, ziel - b.schritte);
+  if (stand.vorbei) return { art: 'ende', abstand: 0, gegner: null, fehlt, platz: b.platz };
+  if (stand.bahnen.every((x) => x.schritte === 0)) return { art: 'start', abstand: 0, gegner: null, fehlt, platz: b.platz };
+  const andere = stand.bahnen.filter((x) => x.geraet !== ich);
+  if (andere.length === 0) return { art: 'vorn', abstand: 0, gegner: null, fehlt, platz: b.platz };
+  const vorn = andere.reduce((m, x) => (x.schritte > m.schritte ? x : m));
+  if (vorn.schritte > b.schritte) return { art: 'hinten', abstand: vorn.schritte - b.schritte, gegner: vorn.kamel, fehlt, platz: b.platz };
+  if (vorn.schritte === b.schritte) return { art: 'gleich', abstand: 0, gegner: vorn.kamel, fehlt, platz: b.platz };
+  return { art: 'vorn', abstand: b.schritte - vorn.schritte, gegner: vorn.kamel, fehlt, platz: b.platz };
+}
+
+/** Bei vielen Fahrern (Wochenrennen) zeigt die Bahn nur die Besten und dich. `rest` = wie viele fehlen. */
+export function sichtbareBahnen(bahnen: readonly Bahn[], ich: string | null, max: number): { sichtbar: Bahn[]; rest: number } {
+  if (bahnen.length <= max) return { sichtbar: [...bahnen], rest: 0 };
+  const spitze = bahnen.slice(0, max - 1);
+  const meine = bahnen.find((b) => b.geraet === ich);
+  const sichtbar = meine && !spitze.includes(meine) ? [...spitze, meine] : bahnen.slice(0, max);
+  return { sichtbar, rest: bahnen.length - sichtbar.length };
 }

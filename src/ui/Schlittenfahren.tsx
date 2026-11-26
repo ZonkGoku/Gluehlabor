@@ -4,7 +4,7 @@ import { HAT_SERVER } from '../daten/config';
 import { ApiFehler } from '../daten/api';
 import { legeRennenAn, ladeRennen, letztesKamel, loescheRennen, merkeKamel, meineRennen, trittBei, verlasseRennen, vergissRennen, type RennenDaten } from '../daten/rennen';
 import { t, tn } from '../i18n';
-import { berechneRennen, SCHLITTEN_FARBEN, RENNEN_ID, RENNEN_ZIELE, rennenLink, type Bahn } from '../lib/rennen';
+import { berechneRennen, SCHLITTEN_FARBEN, RENNEN_ID, RENNEN_MAX, RENNEN_MIN, RENNEN_ZIELE, rennenLink, type Bahn } from '../lib/rennen';
 import { Betreiber } from './bausteine';
 import { useEintraege, useGeraetId, useName } from './daten';
 import { useLive } from './hooks';
@@ -240,7 +240,7 @@ export function SchlittenfahrenUebersicht() {
 
 function NeuesRennen({ onZu }: { onZu: () => void }) {
   const [rname, setRname] = useState('');
-  const [ziel, setZiel] = useState<number>(20);
+  const [ziel, setZiel] = useState<number>(5);
   const k = useKamelWahl();
   const [fehler, setFehler] = useState('');
   const [laeuft, setLaeuft] = useState(false);
@@ -257,7 +257,6 @@ function NeuesRennen({ onZu }: { onZu: () => void }) {
       setLaeuft(false);
     }
   };
-  const LABEL: Record<number, string> = { 10: 'Kurz', 20: 'Mittel', 30: 'Lang' };
   return (
     <section class="glas grid gap-4 rounded-3xl p-4" aria-label={t('Neues Rennen')}>
       <label class="grid gap-1.5 text-[15px] text-dunst">
@@ -265,20 +264,30 @@ function NeuesRennen({ onZu }: { onZu: () => void }) {
         <input class="feld min-h-[48px] text-[17px]" type="text" maxLength={24} value={rname} onInput={(e) => setRname((e.target as HTMLInputElement).value)} autocomplete="off" />
       </label>
       <div>
-        <p class="mb-1.5 text-[15px] text-dunst">{t('Länge')}</p>
-        <div role="radiogroup" aria-label={t('Länge')} class="grid grid-cols-3 gap-2">
+        <p class="mb-1.5 text-[15px] text-dunst">{t('Länge: so viele Bewertungen bis ins Ziel')}</p>
+        <div role="radiogroup" aria-label={t('Länge')} class="grid grid-cols-4 gap-2">
           {RENNEN_ZIELE.map((z) => (
             <button
               type="button"
               role="radio"
               aria-checked={ziel === z}
               onClick={() => setZiel(z)}
-              class={`min-h-[56px] rounded-2xl border-2 px-2 text-center ${ziel === z ? 'border-[var(--nm-stern)] bg-flaeche text-eis' : 'border-[var(--nm-bedienung)] text-dunst'}`}
+              class={`min-h-[56px] rounded-2xl border-2 px-2 text-center font-display text-2xl ${ziel === z ? 'border-[var(--nm-stern)] bg-flaeche text-eis' : 'border-[var(--nm-bedienung)] text-dunst'}`}
             >
-              <b class="block text-[16px]">{t(LABEL[z])}</b>
-              <span class="block text-xs">{tn(z, '{n} Schritt', '{n} Schritte')}</span>
+              {z}
             </button>
           ))}
+        </div>
+        <div class="mt-2 flex items-center justify-center gap-4" role="group" aria-label={t('Eigene Länge')}>
+          <button type="button" class="size-12 rounded-full border-2 border-[var(--nm-bedienung)] text-2xl text-eis disabled:opacity-40" aria-label={t('Einen Schritt weniger')} disabled={ziel <= RENNEN_MIN} onClick={() => setZiel(Math.max(RENNEN_MIN, ziel - 1))}>
+            −
+          </button>
+          <output class="min-w-[9ch] text-center text-[17px] text-eis" aria-live="polite">
+            {tn(ziel, '{n} Schritt', '{n} Schritte')}
+          </output>
+          <button type="button" class="size-12 rounded-full border-2 border-[var(--nm-bedienung)] text-2xl text-eis disabled:opacity-40" aria-label={t('Einen Schritt mehr')} disabled={ziel >= RENNEN_MAX} onClick={() => setZiel(Math.min(RENNEN_MAX, ziel + 1))}>
+            +
+          </button>
         </div>
       </div>
       <KamelWahl name={k.name} farbe={k.farbe} onName={k.setName} onFarbe={k.setFarbe} />

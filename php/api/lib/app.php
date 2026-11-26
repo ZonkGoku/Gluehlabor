@@ -19,7 +19,10 @@ const LIMITS = [
 ];
 const MAX_STAND_IDS = 200;
 const MELDEGRUENDE = ['unpassend', 'spam', 'falsch', 'persoenlich', 'sonstiges'];
-const RENNEN_ZIELE = [10, 20, 30];
+const WOCHEN_ZIEL = 20;
+const WOCHEN_MAX_TEILNEHMER = 500;
+const RENNEN_MIN = 2;
+const RENNEN_MAX = 50;
 const RENNEN_FARBEN = 8;
 const RENNEN_DAUER_MS = 14 * 24 * 60 * 60 * 1000;
 const MIN_MS = 60_000;
@@ -117,6 +120,26 @@ function begrenze(Db $db, string $schluessel, int $fensterMs, int $max, int $jet
 }
 
 /** @return array<string,mixed> */
+/** Zeitfenster eines Wochenrennens `w<Jahr>w<Woche>` (ISO-Woche, Montag 00:00 UTC bis nächster Montag), sonst null. @return array{start:int, ende:int}|null */
+function wochenFenster(string $id): ?array
+{
+    if (preg_match('/^w(\d{4})w(\d{2})$/', $id, $m) !== 1) {
+        return null;
+    }
+    $jahr = (int) $m[1];
+    $woche = (int) $m[2];
+    if ($woche < 1 || $woche > 53) {
+        return null;
+    }
+    $jan4 = gmmktime(0, 0, 0, 1, 4, $jahr);
+    $dow = (int) gmdate('N', $jan4);
+    $start = $jan4 - ($dow - 1) * 86400 + ($woche - 1) * 7 * 86400;
+    if ((int) gmdate('Y', $start + 3 * 86400) !== $jahr) {
+        return null;
+    }
+    return ['start' => $start * 1000, 'ende' => ($start + 7 * 86400) * 1000];
+}
+
 function anmelden(Anfrage $a, Db $db): array
 {
     $kopf = $a->kopf['authorization'] ?? $a->kopf['x-auth'] ?? '';
@@ -500,7 +523,7 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
         if (!$kname['ok'] || $kname['name'] === null) {
             throw new HttpFehler(422, 'Dein Schlitten braucht einen Namen.');
         }
-        if (!is_int($b['ziel'] ?? null) || !in_array($b['ziel'], RENNEN_ZIELE, true)) {
+        if (!is_int($b['ziel'] ?? null) || $b['ziel'] < RENNEN_MIN || $b['ziel'] > RENNEN_MAX) {
             throw new HttpFehler(400, 'Ungültiges Ziel.');
         }
         if (!is_int($b['farbe'] ?? null) || $b['farbe'] < 0 || $b['farbe'] >= RENNEN_FARBEN) {
@@ -531,6 +554,17 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
         if (!is_int($b['farbe'] ?? null) || $b['farbe'] < 0 || $b['farbe'] >= RENNEN_FARBEN) {
             throw new HttpFehler(400, 'Ungültige Farbe.');
         }
+        // Das Wochenrennen für alle legt der Server beim ersten Beitritt der Woche selbst an.
+        $woche = wochenFenster($b['id']);
+        if (preg_match('/^w\d{4}w\d{2}$/', $b['id']) === 1) {
+            if ($woche === null) {
+                throw new HttpFehler(400, 'Ungültiges Rennen.');
+            }
+            if ($jetzt < $woche['start'] || $jetzt >= $woche['ende']) {
+                throw new HttpFehler(410, 'Dieses Rennen ist vorbei.');
+            }
+            $db->lauf($db->ignoriere() . " INTO rennen (id, name, ziel, ersteller, erstellt_am, ende) VALUES (?, 'Wochenrennen', ?, 'wochenrennen', ?, ?)", [$b['id'], WOCHEN_ZIEL, $woche['start'], $woche['ende']]);
+        }
         $r = $db->eins('SELECT id, ende FROM rennen WHERE id = ?', [$b['id']]);
         if (!$r) {
             throw new HttpFehler(404, 'Rennen nicht gefunden.');
@@ -542,7 +576,7 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
             throw new HttpFehler(410, 'Dieses Rennen ist vorbei.');
         }
         $n = $db->eins('SELECT COUNT(*) AS n FROM rennen_teilnehmer WHERE rennen_id = ?', [$b['id']]);
-        if ((int) ($n['n'] ?? 0) >= LIMITS['maxTeilnehmerJeRennen']) {
+        if ((int) ($n['n'] ?? 0) >= ($woche !== null ? WOCHEN_MAX_TEILNEHMER : LIMITS['maxTeilnehmerJeRennen'])) {
             throw new HttpFehler(409, 'Das Rennen ist voll.');
         }
         $db->lauf('INSERT INTO rennen_teilnehmer (rennen_id, geraet_id, kamel, farbe, seit) VALUES (?, ?, ?, ?, ?)', [$b['id'], $g['id'], $kname['name'], $b['farbe'], $jetzt]);
@@ -576,7 +610,12 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
         }
         $r = $db->eins('SELECT id, name, ziel, ersteller, erstellt_am, ende FROM rennen WHERE id = ?', [$id]);
         if (!$r) {
-            throw new HttpFehler(404, 'Rennen nicht gefunden.');
+            // Wochenrennen ohne Teilnehmer gibt es noch nicht in der Datenbank, aber jeder darf es ansehen.
+            $w = wochenFenster($id);
+            if ($w === null) {
+                throw new HttpFehler(404, 'Rennen nicht gefunden.');
+            }
+            $r = ['id' => $id, 'name' => 'Wochenrennen', 'ziel' => WOCHEN_ZIEL, 'ersteller' => 'wochenrennen', 'erstellt_am' => $w['start'], 'ende' => $w['ende']];
         }
         $t = $db->alle('SELECT geraet_id, kamel, farbe, seit FROM rennen_teilnehmer WHERE rennen_id = ? ORDER BY seit ASC, geraet_id ASC', [$id]);
         return new Antwort(200, [

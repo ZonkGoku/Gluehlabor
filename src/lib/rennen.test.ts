@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { berechneRennen, rennenLink, type Rennen, type Teilnehmer } from './rennen';
+import { berechneRennen, istWochenrennen, lage, rennenLink, sichtbareBahnen, wochenRennenId, type Rennen, type Teilnehmer } from './rennen';
 
 const T0 = Date.parse('2026-12-01T18:00:00Z');
 const TAG = 86_400_000;
@@ -38,10 +38,10 @@ describe('Rennen', () => {
     const s = berechneRennen(rennen, [a], Array.from({ length: 8 }, (_, i) => e('a', 10 + i)), T0 + TAG);
     expect(s.bahnen[0]).toMatchObject({ schritte: 3, anteil: 1, imZiel: true });
   });
-  it('Zeit abgelaufen ohne Sieger: vorbei, vorn liegt, wer die meisten Schritte hat', () => {
+  it('Zeit abgelaufen ohne Ziel: vorbei, Sieger ist, wer die meisten Schritte hat', () => {
     const s = berechneRennen(rennen, [a, b], [e('a', 10), e('b', 2000), e('b', 3000)], T0 + 15 * TAG);
     expect(s.vorbei).toBe(true);
-    expect(s.sieger).toBeNull();
+    expect(s.sieger?.kamel).toBe('Ben');
     expect(s.bahnen[0].kamel).toBe('Ben');
   });
   it('Resttage laufen runter', () => {
@@ -51,4 +51,54 @@ describe('Rennen', () => {
   it('Link', () => {
     expect(rennenLink('https://gluehlabor.de/#/mehr', 'abcd2345')).toBe('https://gluehlabor.de/#/schlittenfahren/abcd2345');
   });
+});
+
+describe('Sieger bei Zeitablauf', () => {
+  it('ohne Ziel gewinnt, wer am Ende die meisten Schritte hat; ohne Schritte gewinnt niemand', () => {
+    const spaet = T0 + 15 * TAG;
+    expect(berechneRennen(rennen, [a, b], [e('a', 10), e('b', 2000), e('b', 3000)], spaet).sieger?.kamel).toBe('Ben');
+    expect(berechneRennen(rennen, [a, b], [], spaet).sieger).toBeNull();
+  });
+});
+
+describe('Wochenrennen', () => {
+  it('Kennung ist die ISO-Woche, 8 Zeichen', () => {
+    expect(wochenRennenId(new Date(Date.UTC(2026, 10, 26)))).toBe('w2026w48'); // Do 26.11.2026
+    expect(wochenRennenId(new Date(Date.UTC(2026, 10, 23, 0, 0)))).toBe('w2026w48'); // Montag
+    expect(wochenRennenId(new Date(Date.UTC(2026, 10, 29, 23, 59)))).toBe('w2026w48'); // Sonntag
+    expect(wochenRennenId(new Date(Date.UTC(2026, 10, 30)))).toBe('w2026w49');
+    expect(wochenRennenId(new Date(Date.UTC(2027, 0, 1)))).toBe('w2026w53'); // Fr 1.1.2027 gehört zu KW 53/2026
+    expect(wochenRennenId(new Date(Date.UTC(2027, 0, 4)))).toBe('w2027w01');
+    expect(wochenRennenId(new Date(Date.UTC(2026, 10, 26)))).toHaveLength(8);
+  });
+  it('erkennt Wochenkennungen', () => {
+    expect(istWochenrennen('w2026w48')).toBe(true);
+    expect(istWochenrennen('abcd2345')).toBe(false);
+  });
+});
+
+describe('Lage', () => {
+  const c: Teilnehmer = { geraet: 'c', kamel: 'Cem', farbe: 2, seit: T0 };
+  const lg = (eintr: ReturnType<typeof e>[], ich: string) => lage(berechneRennen(rennen, [a, b, c], eintr, T0 + TAG), rennen.ziel, ich);
+  it('Start: noch keiner gefahren', () => expect(lg([], 'a')?.art).toBe('start'));
+  it('vorn, mit Abstand zum Verfolger', () => {
+    expect(lg([e('a', 10), e('a', 20), e('b', 2000)], 'a')).toMatchObject({ art: 'vorn', abstand: 1, gegner: 'Ben', fehlt: 1, platz: 1 });
+  });
+  it('gleichauf', () => expect(lg([e('a', 10), e('b', 2000)], 'a')).toMatchObject({ art: 'gleich', gegner: 'Ben' }));
+  it('hinten, mit Abstand zum Führenden', () => {
+    expect(lg([e('b', 2000), e('b', 3000), e('a', 10)], 'a')).toMatchObject({ art: 'hinten', abstand: 1, gegner: 'Ben', fehlt: 2, platz: 2 });
+  });
+  it('nicht dabei: null', () => expect(lg([e('a', 10)], 'x')).toBeNull());
+  it('Ende', () => expect(lage(berechneRennen(rennen, [a], [], T0 + 15 * TAG), 3, 'a')?.art).toBe('ende'));
+});
+
+describe('sichtbare Bahnen', () => {
+  const viele = Array.from({ length: 20 }, (_, i) => ({ geraet: 'g' + i, kamel: 'K' + i, farbe: 0, schritte: 20 - i, anteil: 0, platz: i + 1, imZiel: false, zielZeit: null }));
+  it('wenige: alle', () => expect(sichtbareBahnen(viele.slice(0, 5), 'g0', 6)).toEqual({ sichtbar: viele.slice(0, 5), rest: 0 }));
+  it('viele: Spitze plus du, wenn du nicht dabei bist', () => {
+    const r = sichtbareBahnen(viele, 'g15', 6);
+    expect(r.sichtbar.map((x) => x.geraet)).toEqual(['g0', 'g1', 'g2', 'g3', 'g4', 'g15']);
+    expect(r.rest).toBe(14);
+  });
+  it('viele: bist du vorn, genau die ersten', () => expect(sichtbareBahnen(viele, 'g1', 6).sichtbar).toHaveLength(6));
 });

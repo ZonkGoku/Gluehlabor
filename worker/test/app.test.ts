@@ -102,10 +102,21 @@ describe('Schlittenfahren', () => {
     expect((await ruf('POST', '/api/rennen', { body: { name: 'x', ziel: 20, kamel: 'y', farbe: 0 } })).status).toBe(401);
     expect((await neu(g, { name: '' })).status).toBe(422);
     expect((await neu(g, { kamel: null })).status).toBe(422);
-    expect((await neu(g, { ziel: 7 })).status).toBe(400);
+    expect((await neu(g, { ziel: 1 })).status).toBe(400);
+    expect((await neu(g, { ziel: 51 })).status).toBe(400);
+    expect((await neu(g, { ziel: 7.5 })).status).toBe(400);
+    expect((await neu(g, { ziel: '10' })).status).toBe(400);
     expect((await neu(g, { farbe: 9 })).status).toBe(400);
     expect((await neu(g, { farbe: 1.5 })).status).toBe(400);
     expect((await neu(g, { name: 'http://böse.de' })).status).toBe(422);
+  });
+  it('kurze und lange Rennen sind möglich: von 2 bis 50 Schritten', async () => {
+    const g = await geraet();
+    for (const ziel of [2, 3, 7, 50]) {
+      const r = await neu(g, { ziel });
+      expect(r.status).toBe(201);
+      expect((await ruf('GET', `/api/rennen/${r.json.id}`)).json.rennen.ziel).toBe(ziel);
+    }
   });
   it('höchstens 5 neue Rennen je Gerät und Tag', async () => {
     const g = await geraet();
@@ -163,6 +174,50 @@ describe('Schlittenfahren', () => {
     expect((await ruf('POST', '/api/rennen/loeschen', { auth: a.auth, body: { id } })).status).toBe(200);
     expect((await ruf('GET', `/api/rennen/${id}`)).status).toBe(404);
     expect((await ruf('POST', '/api/rennen/loeschen', { auth: a.auth, body: { id } })).status).toBe(404);
+  });
+  describe('Wochenrennen für alle', () => {
+    const WOCHE = 'w2026w49'; // Mo 30.11. bis So 6.12.2026, JETZT ist Sa 5.12.
+    const trittBei = (g: { auth: string }, id = WOCHE, kamel = 'Flitzer') => ruf('POST', '/api/rennen/beitreten', { auth: g.auth, body: { id, kamel, farbe: 1 } });
+
+    it('ansehen geht auch, bevor jemand mitfährt: ein leeres Rennen mit Zeitfenster der Woche', async () => {
+      const l = await ruf('GET', `/api/rennen/${WOCHE}`);
+      expect(l.status).toBe(200);
+      expect(l.json.rennen).toMatchObject({ id: WOCHE, name: 'Wochenrennen', ziel: 20, ende: Date.UTC(2026, 11, 7), erstellt_am: Date.UTC(2026, 10, 30) });
+      expect(l.json.teilnehmer).toEqual([]);
+    });
+    it('der erste Beitritt legt das Rennen an, weitere Geräte fahren mit, mehr als 12 sind möglich', async () => {
+      for (let i = 0; i < 13; i++) {
+        const g = await geraet({ ip: `8.8.${i}.1` });
+        expect((await trittBei(g, WOCHE, `Fahrer${i}`)).status).toBe(200);
+      }
+      const l = await ruf('GET', `/api/rennen/${WOCHE}`);
+      expect(l.json.teilnehmer).toHaveLength(13);
+      expect(l.json.rennen.ersteller).toBe('wochenrennen');
+    });
+    it('niemand kann das Wochenrennen löschen', async () => {
+      const g = await geraet();
+      await trittBei(g);
+      expect((await ruf('POST', '/api/rennen/loeschen', { auth: g.auth, body: { id: WOCHE } })).status).toBe(403);
+      expect((await ruf('POST', '/api/rennen/verlassen', { auth: g.auth, body: { id: WOCHE } })).status).toBe(200);
+      expect((await ruf('GET', `/api/rennen/${WOCHE}`)).json.teilnehmer).toEqual([]);
+    });
+    it('nur die laufende Woche: vergangene und künftige sind zu, ungültige Wochen 400', async () => {
+      const g = await geraet();
+      expect((await trittBei(g, 'w2026w48')).status).toBe(410);
+      expect((await trittBei(g, 'w2026w50')).status).toBe(410);
+      expect((await trittBei(g, 'w2026w99')).status).toBe(400);
+      expect((await trittBei(g, 'w2025w53')).status).toBe(400); // 2025 hat nur 52 Wochen
+      expect((await trittBei(g, 'w2026w00')).status).toBe(400);
+    });
+    it('Wochenkennungen ohne Sinn lassen sich nicht ansehen', async () => {
+      expect((await ruf('GET', '/api/rennen/w2026w99')).status).toBe(404);
+      expect((await ruf('GET', '/api/rennen/w2025w53')).status).toBe(404);
+    });
+    it('ein gewöhnliches Rennen hat weiter höchstens 12 Teilnehmer', async () => {
+      const id = (await neu(await geraet())).json.id;
+      for (let i = 0; i < 11; i++) expect((await ruf('POST', '/api/rennen/beitreten', { auth: (await geraet({ ip: `7.7.${i}.1` })).auth, body: { id, kamel: `K${i}`, farbe: 0 } })).status).toBe(200);
+      expect((await ruf('POST', '/api/rennen/beitreten', { auth: (await geraet({ ip: '7.7.99.1' })).auth, body: { id, kamel: 'Zuviel', farbe: 0 } })).status).toBe(409);
+    });
   });
   it('unbekanntes oder kaputtes Rennen lesen: 404', async () => {
     expect((await ruf('GET', '/api/rennen/abcdefgh')).status).toBe(404);
