@@ -24,7 +24,7 @@ const KLEIN =
   'grid size-9 shrink-0 place-items-center rounded-full border border-rand bg-flaeche text-dunst transition duration-200 hover:text-gold-300 hover:bg-flaeche-hover cursor-pointer';
 
 export function Seitenleiste({ route, zeigeSync }: { route: string; zeigeSync: boolean }) {
-  const aktiv = (r: string) => route === r || (r === 'rangliste' && (route.startsWith('becher/') || route.startsWith('stand/')));
+  const aktiv = (r: string) => route === r || (r === 'kamelrennen' && route.startsWith('kamelrennen/')) || (r === 'rangliste' && (route.startsWith('becher/') || route.startsWith('stand/')));
   const link = (p: { route: string; label: string; symbol: string }, klein = false) => (
     <a
       href={`#/${p.route}`}

@@ -81,6 +81,72 @@ const becher = (patch: Record<string, unknown> = {}) => ({
 const sende = (g: { auth: string }, eintraege: unknown[], o: Opt = {}) => ruf('POST', '/api/becher', { ...o, auth: g.auth, body: { eintraege } });
 const liste = (query = '', o: Opt = {}) => ruf('GET', `/api/becher${query}`, o);
 
+describe('Kamelrennen', () => {
+  const neu = (g: { auth: string }, patch: Record<string, unknown> = {}) =>
+    ruf('POST', '/api/rennen', { auth: g.auth, body: { name: 'Feierabendrennen', ziel: 20, kamel: 'Blitz', farbe: 2, ...patch } });
+
+  it('anlegen: Ersteller läuft gleich mit, jeder kann das Rennen lesen', async () => {
+    const g = await geraet();
+    const r = await neu(g);
+    expect(r.status).toBe(201);
+    expect(r.json.id).toMatch(/^[a-z0-9]{8}$/);
+    const l = await ruf('GET', `/api/rennen/${r.json.id}`, { origin: null });
+    expect(l.status).toBe(200);
+    expect(l.json.rennen).toMatchObject({ id: r.json.id, name: 'Feierabendrennen', ziel: 20 });
+    expect(l.json.rennen.ende).toBeGreaterThan(JETZT);
+    expect(l.json.teilnehmer).toEqual([{ geraet: g.id, kamel: 'Blitz', farbe: 2, seit: JETZT }]);
+    expect(l.kopf.get('access-control-allow-origin')).toBe('*');
+  });
+  it('anlegen braucht Anmeldung, Namen, ein erlaubtes Ziel und eine Farbe', async () => {
+    const g = await geraet();
+    expect((await ruf('POST', '/api/rennen', { body: { name: 'x', ziel: 20, kamel: 'y', farbe: 0 } })).status).toBe(401);
+    expect((await neu(g, { name: '' })).status).toBe(422);
+    expect((await neu(g, { kamel: null })).status).toBe(422);
+    expect((await neu(g, { ziel: 7 })).status).toBe(400);
+    expect((await neu(g, { farbe: 9 })).status).toBe(400);
+    expect((await neu(g, { farbe: 1.5 })).status).toBe(400);
+    expect((await neu(g, { name: 'http://böse.de' })).status).toBe(422);
+  });
+  it('höchstens 5 neue Rennen je Gerät und Tag', async () => {
+    const g = await geraet();
+    for (let i = 0; i < 5; i++) expect((await neu(g)).status).toBe(201);
+    expect((await neu(g)).status).toBe(429);
+  });
+  it('beitreten: einmal je Gerät, doppelt ist harmlos, Kamel bleibt wie gewählt', async () => {
+    const a = await geraet();
+    const b = await geraet();
+    const id = (await neu(a)).json.id;
+    expect((await ruf('POST', '/api/rennen/beitreten', { auth: b.auth, body: { id, kamel: 'Sandy', farbe: 4 } })).status).toBe(200);
+    const nochmal = await ruf('POST', '/api/rennen/beitreten', { auth: b.auth, body: { id, kamel: 'Anders', farbe: 5 } });
+    expect(nochmal.json.schon).toBe(true);
+    const l = await ruf('GET', `/api/rennen/${id}`);
+    expect(l.json.teilnehmer.map((t: any) => t.kamel).sort()).toEqual(['Blitz', 'Sandy']);
+  });
+  it('beitreten: unbekanntes Rennen 404, ungültige Angaben 400/422', async () => {
+    const g = await geraet();
+    expect((await ruf('POST', '/api/rennen/beitreten', { auth: g.auth, body: { id: 'abcdefgh', kamel: 'Xi', farbe: 0 } })).status).toBe(404);
+    expect((await ruf('POST', '/api/rennen/beitreten', { auth: g.auth, body: { id: '../../x', kamel: 'Xi', farbe: 0 } })).status).toBe(400);
+    const id = (await neu(await geraet())).json.id;
+    expect((await ruf('POST', '/api/rennen/beitreten', { auth: g.auth, body: { id, kamel: '', farbe: 0 } })).status).toBe(422);
+    expect((await ruf('POST', '/api/rennen/beitreten', { auth: g.auth, body: { id, kamel: 'Xi', farbe: -1 } })).status).toBe(400);
+  });
+  it('vorbei: kein Beitritt mehr; voll bei 12 Teilnehmern', async () => {
+    const id = (await neu(await geraet())).json.id;
+    const spaet = JETZT + 15 * 24 * 3600_000;
+    expect((await ruf('POST', '/api/rennen/beitreten', { auth: (await geraet({ jetzt: spaet })).auth, jetzt: spaet, body: { id, kamel: 'Spaet', farbe: 0 } })).status).toBe(410);
+    for (let i = 0; i < 11; i++) {
+      const g = await geraet({ ip: `9.9.${i}.1` });
+      expect((await ruf('POST', '/api/rennen/beitreten', { auth: g.auth, body: { id, kamel: `K${i}`, farbe: i % 8 } })).status).toBe(200);
+    }
+    const g = await geraet({ ip: '9.9.99.1' });
+    expect((await ruf('POST', '/api/rennen/beitreten', { auth: g.auth, body: { id, kamel: 'Zu viel', farbe: 0 } })).status).toBe(409);
+  });
+  it('unbekanntes oder kaputtes Rennen lesen: 404', async () => {
+    expect((await ruf('GET', '/api/rennen/abcdefgh')).status).toBe(404);
+    expect((await ruf('GET', '/api/rennen/x')).status).toBe(404);
+  });
+});
+
 describe('Status', () => {
   it('antwortet', async () => {
     const r = await ruf('GET', '/api/status');

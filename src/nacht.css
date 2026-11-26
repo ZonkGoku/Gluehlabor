@@ -1322,3 +1322,8 @@ button.glas,
     animation: none;
   }
 }
+
+/* QR im Kamelrennen: etwas kleiner als beim Mitbewerten */
+.karawane .qr {
+  width: min(56vw, 220px);
+}

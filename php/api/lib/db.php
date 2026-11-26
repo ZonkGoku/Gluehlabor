@@ -112,6 +112,14 @@ final class Db
         if (!$hatMenge) {
             $this->pdo->exec("ALTER TABLE becher ADD COLUMN menge $kommazahl");
         }
+        $hatRennen = $this->typ === 'mysql'
+            ? $this->eins("SELECT 1 AS x FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'rennen'")
+            : $this->eins("SELECT 1 AS x FROM sqlite_master WHERE type = 'table' AND name = 'rennen'");
+        if (!$hatRennen) {
+            foreach ($this->rennenSchema() as $q) {
+                $this->pdo->exec($q);
+            }
+        }
     }
 
     private function schema(): void
@@ -154,9 +162,28 @@ final class Db
             'CREATE INDEX meldungen_offen ON meldungen(bearbeitet, becher_id)',
             "CREATE TABLE zaehler (name $id PRIMARY KEY, wert $zahl NOT NULL)$ende",
             "INSERT INTO zaehler (name, wert) VALUES ('seq', 0)",
+            ...$this->rennenSchema(),
         ];
         foreach ($sql as $s) {
             $this->pdo->exec($s);
         }
+    }
+
+    /** Tabellen des Kamelrennens (Beta). @return list<string> */
+    private function rennenSchema(): array
+    {
+        $my = $this->typ === 'mysql';
+        $text = $my ? 'VARCHAR(255)' : 'TEXT';
+        $id = $my ? 'VARCHAR(64)' : 'TEXT';
+        $zahl = $my ? 'BIGINT' : 'INTEGER';
+        $ende = $my ? ' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin' : '';
+        return [
+            "CREATE TABLE rennen (
+               id $id PRIMARY KEY, name $text NOT NULL, ziel INTEGER NOT NULL, ersteller $id NOT NULL,
+               erstellt_am $zahl NOT NULL, ende $zahl NOT NULL)$ende",
+            "CREATE TABLE rennen_teilnehmer (
+               rennen_id $id NOT NULL, geraet_id $id NOT NULL, kamel $text NOT NULL, farbe INTEGER NOT NULL, seit $zahl NOT NULL,
+               PRIMARY KEY (rennen_id, geraet_id))$ende",
+        ];
     }
 }

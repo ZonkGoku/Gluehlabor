@@ -19,6 +19,7 @@ const UNTER_MEHR = ['entdecken', 'kamelrennen', 'vergleich', 'statistik', 'spick
 
 export function platz(route: string): number {
   if (route.startsWith('becher/') || route.startsWith('stand/')) return 1;
+  if (route.startsWith('kamelrennen/')) return 3;
   if (UNTER_MEHR.includes(route)) return 3;
   return PUNKTE.findIndex((p) => p !== null && p.route === route);
 }

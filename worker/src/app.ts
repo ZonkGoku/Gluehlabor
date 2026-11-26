@@ -30,11 +30,17 @@ const LIMITS = {
   becherJeGeraetUndTagPruefstelle: 1000,
   schreibzugriffeJeIpUndMinute: 240,
   meldungenJeGeraetUndTag: 20,
+  rennenJeGeraetUndTag: 5,
+  maxTeilnehmerJeRennen: 12,
   maxBodyBytes: 64_000,
   maxEintraegeJeAnfrage: 20,
   maxImport: 100,
 };
 const MAX_STAND_IDS = 200;
+const RENNEN_ZIELE = [10, 20, 30];
+const RENNEN_DAUER = 14 * 24 * 60 * 60_000;
+const RENNEN_FARBEN = 8;
+const RENNEN_ID = /^[a-z0-9]{8}$/;
 const MELDEGRUENDE = ['unpassend', 'spam', 'falsch', 'persoenlich', 'sonstiges'];
 const MIN = 60_000;
 const STUNDE = 60 * MIN;
@@ -266,7 +272,7 @@ export async function handle(request: Request, env: Env, jetzt: number = Date.no
   const url = new URL(request.url);
   const pfad = url.pathname.replace(/\/+$/, '') || '/';
   const methode = request.method.toUpperCase();
-  const nurLesen = methode === 'GET' && (pfad === '/api/becher' || pfad === '/api/status');
+  const nurLesen = methode === 'GET' && (pfad === '/api/becher' || pfad === '/api/status' || pfad.startsWith('/api/rennen/'));
   const cors = corsKopf(request, env, nurLesen);
 
   try {
@@ -469,6 +475,51 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
       .bind(b.id, g.id, b.grund, text, jetzt)
       .run();
     return json({ ok: true }, 200);
+  }
+
+  // ── Kamelrennen (Beta) ──
+  if (pfad === '/api/rennen' && methode === 'POST') {
+    const g = await anmelden(request, db);
+    const b = await lesen(request);
+    const rname = pruefeName(b.name);
+    const kname = pruefeName(b.kamel);
+    if (!rname.ok || !rname.name) throw new HttpFehler(422, 'Das Rennen braucht einen Namen.');
+    if (!kname.ok || !kname.name) throw new HttpFehler(422, 'Dein Kamel braucht einen Namen.');
+    if (typeof b.ziel !== 'number' || !RENNEN_ZIELE.includes(b.ziel)) throw new HttpFehler(400, 'Ungültiges Ziel.');
+    if (typeof b.farbe !== 'number' || !Number.isInteger(b.farbe) || b.farbe < 0 || b.farbe >= RENNEN_FARBEN) throw new HttpFehler(400, 'Ungültige Farbe.');
+    if (!(await begrenze(db, `rennen:${g.id}`, TAG, LIMITS.rennenJeGeraetUndTag, jetzt))) throw new HttpFehler(429, 'Heute schon viele Rennen angelegt.');
+    const id = [...crypto.getRandomValues(new Uint8Array(8))].map((x) => 'abcdefghijkmnpqrstuvwxyz23456789'[x % 32]).join('');
+    await db.prepare('INSERT INTO rennen (id, name, ziel, ersteller, erstellt_am, ende) VALUES (?, ?, ?, ?, ?, ?)').bind(id, rname.name, b.ziel, g.id, jetzt, jetzt + RENNEN_DAUER).run();
+    await db.prepare('INSERT INTO rennen_teilnehmer (rennen_id, geraet_id, kamel, farbe, seit) VALUES (?, ?, ?, ?, ?)').bind(id, g.id, kname.name, b.farbe, jetzt).run();
+    return json({ ok: true, id }, 201);
+  }
+  if (pfad === '/api/rennen/beitreten' && methode === 'POST') {
+    const g = await anmelden(request, db);
+    const b = await lesen(request);
+    if (typeof b.id !== 'string' || !RENNEN_ID.test(b.id)) throw new HttpFehler(400, 'Ungültiges Rennen.');
+    const kname = pruefeName(b.kamel);
+    if (!kname.ok || !kname.name) throw new HttpFehler(422, 'Dein Kamel braucht einen Namen.');
+    if (typeof b.farbe !== 'number' || !Number.isInteger(b.farbe) || b.farbe < 0 || b.farbe >= RENNEN_FARBEN) throw new HttpFehler(400, 'Ungültige Farbe.');
+    const r = await db.prepare('SELECT id, ende FROM rennen WHERE id = ?').bind(b.id).first<{ id: string; ende: number }>();
+    if (!r) throw new HttpFehler(404, 'Rennen nicht gefunden.');
+    const schon = await db.prepare('SELECT geraet_id FROM rennen_teilnehmer WHERE rennen_id = ? AND geraet_id = ?').bind(b.id, g.id).first();
+    if (schon) return json({ ok: true, schon: true }, 200);
+    if (r.ende < jetzt) throw new HttpFehler(410, 'Dieses Rennen ist vorbei.');
+    const n = await db.prepare('SELECT COUNT(*) AS n FROM rennen_teilnehmer WHERE rennen_id = ?').bind(b.id).first<{ n: number }>();
+    if ((n?.n ?? 0) >= LIMITS.maxTeilnehmerJeRennen) throw new HttpFehler(409, 'Das Rennen ist voll.');
+    await db.prepare('INSERT INTO rennen_teilnehmer (rennen_id, geraet_id, kamel, farbe, seit) VALUES (?, ?, ?, ?, ?)').bind(b.id, g.id, kname.name, b.farbe, jetzt).run();
+    return json({ ok: true }, 200);
+  }
+  if (pfad.startsWith('/api/rennen/') && methode === 'GET') {
+    const id = pfad.slice('/api/rennen/'.length);
+    if (!RENNEN_ID.test(id)) throw new HttpFehler(404, 'Rennen nicht gefunden.');
+    const r = await db.prepare('SELECT id, name, ziel, erstellt_am, ende FROM rennen WHERE id = ?').bind(id).first<Record<string, unknown>>();
+    if (!r) throw new HttpFehler(404, 'Rennen nicht gefunden.');
+    const { results } = await db
+      .prepare('SELECT geraet_id, kamel, farbe, seit FROM rennen_teilnehmer WHERE rennen_id = ? ORDER BY seit ASC, geraet_id ASC')
+      .bind(id)
+      .all<{ geraet_id: string; kamel: string; farbe: number; seit: number }>();
+    return json({ rennen: r, teilnehmer: results.map((t) => ({ geraet: t.geraet_id, kamel: t.kamel, farbe: t.farbe, seit: t.seit })) }, 200, { 'Cache-Control': 'no-store' });
   }
 
   // ── Moderation ──

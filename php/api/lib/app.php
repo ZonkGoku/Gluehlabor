@@ -11,12 +11,17 @@ const LIMITS = [
     'becherJeGeraetUndTagPruefstelle' => 1000,
     'schreibzugriffeJeIpUndMinute' => 240,
     'meldungenJeGeraetUndTag' => 20,
+    'rennenJeGeraetUndTag' => 5,
+    'maxTeilnehmerJeRennen' => 12,
     'maxBodyBytes' => 64000,
     'maxEintraegeJeAnfrage' => 20,
     'maxImport' => 100,
 ];
 const MAX_STAND_IDS = 200;
 const MELDEGRUENDE = ['unpassend', 'spam', 'falsch', 'persoenlich', 'sonstiges'];
+const RENNEN_ZIELE = [10, 20, 30];
+const RENNEN_FARBEN = 8;
+const RENNEN_DAUER_MS = 14 * 24 * 60 * 60 * 1000;
 const MIN_MS = 60_000;
 const STUNDE_MS = 3_600_000;
 
@@ -292,7 +297,7 @@ function behandle(Anfrage $a, Db $db, array $env, int $jetzt): Antwort
 {
     $pfad = rtrim($a->pfad, '/') ?: '/';
     $methode = strtoupper($a->methode);
-    $nurLesen = $methode === 'GET' && ($pfad === '/api/becher' || $pfad === '/api/status');
+    $nurLesen = $methode === 'GET' && ($pfad === '/api/becher' || $pfad === '/api/status' || str_starts_with($pfad, '/api/rennen/'));
     $cors = corsKopf($a, $env, $nurLesen);
 
     try {
@@ -494,6 +499,82 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
         }
         $db->lauf($db->ignoriere() . ' INTO meldungen (becher_id, geraet_id, grund, text, erstellt_am) VALUES (?, ?, ?, ?, ?)', [$b['id'], $g['id'], $b['grund'], $text, $jetzt]);
         return new Antwort(200, ['ok' => true]);
+    }
+
+    // ── Kamelrennen (Beta) ──
+    if ($pfad === '/api/rennen' && $methode === 'POST') {
+        $g = anmelden($a, $db);
+        $b = lesen($a);
+        $rname = pruefeName($b['name'] ?? null);
+        $kname = pruefeName($b['kamel'] ?? null);
+        if (!$rname['ok'] || $rname['name'] === null) {
+            throw new HttpFehler(422, 'Das Rennen braucht einen Namen.');
+        }
+        if (!$kname['ok'] || $kname['name'] === null) {
+            throw new HttpFehler(422, 'Dein Kamel braucht einen Namen.');
+        }
+        if (!is_int($b['ziel'] ?? null) || !in_array($b['ziel'], RENNEN_ZIELE, true)) {
+            throw new HttpFehler(400, 'Ungültiges Ziel.');
+        }
+        if (!is_int($b['farbe'] ?? null) || $b['farbe'] < 0 || $b['farbe'] >= RENNEN_FARBEN) {
+            throw new HttpFehler(400, 'Ungültige Farbe.');
+        }
+        if (!begrenze($db, 'rennen:' . $g['id'], TAG_MS, LIMITS['rennenJeGeraetUndTag'], $jetzt)) {
+            throw new HttpFehler(429, 'Heute schon viele Rennen angelegt.');
+        }
+        $zeichen = 'abcdefghijkmnpqrstuvwxyz23456789';
+        $id = '';
+        foreach (str_split(random_bytes(8)) as $c) {
+            $id .= $zeichen[ord($c) % 32];
+        }
+        $db->lauf('INSERT INTO rennen (id, name, ziel, ersteller, erstellt_am, ende) VALUES (?, ?, ?, ?, ?, ?)', [$id, $rname['name'], $b['ziel'], $g['id'], $jetzt, $jetzt + RENNEN_DAUER_MS]);
+        $db->lauf('INSERT INTO rennen_teilnehmer (rennen_id, geraet_id, kamel, farbe, seit) VALUES (?, ?, ?, ?, ?)', [$id, $g['id'], $kname['name'], $b['farbe'], $jetzt]);
+        return new Antwort(201, ['ok' => true, 'id' => $id]);
+    }
+    if ($pfad === '/api/rennen/beitreten' && $methode === 'POST') {
+        $g = anmelden($a, $db);
+        $b = lesen($a);
+        if (!is_string($b['id'] ?? null) || preg_match('/^[a-z0-9]{8}$/', $b['id']) !== 1) {
+            throw new HttpFehler(400, 'Ungültiges Rennen.');
+        }
+        $kname = pruefeName($b['kamel'] ?? null);
+        if (!$kname['ok'] || $kname['name'] === null) {
+            throw new HttpFehler(422, 'Dein Kamel braucht einen Namen.');
+        }
+        if (!is_int($b['farbe'] ?? null) || $b['farbe'] < 0 || $b['farbe'] >= RENNEN_FARBEN) {
+            throw new HttpFehler(400, 'Ungültige Farbe.');
+        }
+        $r = $db->eins('SELECT id, ende FROM rennen WHERE id = ?', [$b['id']]);
+        if (!$r) {
+            throw new HttpFehler(404, 'Rennen nicht gefunden.');
+        }
+        if ($db->eins('SELECT geraet_id FROM rennen_teilnehmer WHERE rennen_id = ? AND geraet_id = ?', [$b['id'], $g['id']])) {
+            return new Antwort(200, ['ok' => true, 'schon' => true]);
+        }
+        if ((int) $r['ende'] < $jetzt) {
+            throw new HttpFehler(410, 'Dieses Rennen ist vorbei.');
+        }
+        $n = $db->eins('SELECT COUNT(*) AS n FROM rennen_teilnehmer WHERE rennen_id = ?', [$b['id']]);
+        if ((int) ($n['n'] ?? 0) >= LIMITS['maxTeilnehmerJeRennen']) {
+            throw new HttpFehler(409, 'Das Rennen ist voll.');
+        }
+        $db->lauf('INSERT INTO rennen_teilnehmer (rennen_id, geraet_id, kamel, farbe, seit) VALUES (?, ?, ?, ?, ?)', [$b['id'], $g['id'], $kname['name'], $b['farbe'], $jetzt]);
+        return new Antwort(200, ['ok' => true]);
+    }
+    if (str_starts_with($pfad, '/api/rennen/') && $methode === 'GET') {
+        $id = substr($pfad, strlen('/api/rennen/'));
+        if (preg_match('/^[a-z0-9]{8}$/', $id) !== 1) {
+            throw new HttpFehler(404, 'Rennen nicht gefunden.');
+        }
+        $r = $db->eins('SELECT id, name, ziel, erstellt_am, ende FROM rennen WHERE id = ?', [$id]);
+        if (!$r) {
+            throw new HttpFehler(404, 'Rennen nicht gefunden.');
+        }
+        $t = $db->alle('SELECT geraet_id, kamel, farbe, seit FROM rennen_teilnehmer WHERE rennen_id = ? ORDER BY seit ASC, geraet_id ASC', [$id]);
+        return new Antwort(200, [
+            'rennen' => ['id' => $r['id'], 'name' => $r['name'], 'ziel' => (int) $r['ziel'], 'erstellt_am' => (int) $r['erstellt_am'], 'ende' => (int) $r['ende']],
+            'teilnehmer' => array_map(fn($z) => ['geraet' => $z['geraet_id'], 'kamel' => $z['kamel'], 'farbe' => (int) $z['farbe'], 'seit' => (int) $z['seit']], $t),
+        ], ['Cache-Control' => 'no-store']);
     }
 
     // ── Moderation ──

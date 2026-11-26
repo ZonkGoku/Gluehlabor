@@ -193,3 +193,10 @@ export function starteSync(): void {
 }
 
 export type { LokalerEintrag };
+
+/** Stellt sicher, dass dieses Gerät beim Server angemeldet ist (für Funktionen außerhalb des Abgleichs, z. B. Rennen). */
+export async function sorgeFuerAnmeldung(): Promise<Awaited<ReturnType<typeof holeGeraet>>> {
+  const geraet = await holeGeraet();
+  await anmelden(geraet);
+  return geraet;
+}
