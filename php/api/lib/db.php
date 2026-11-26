@@ -169,7 +169,7 @@ final class Db
         }
     }
 
-    /** Tabellen des Schlittenrennens (Beta). @return list<string> */
+    /** Tabellen des Schlittenfahrens (Beta). @return list<string> */
     private function rennenSchema(): array
     {
         $my = $this->typ === 'mysql';

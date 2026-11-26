@@ -1,4 +1,4 @@
-// Schlittenrennen: Zugriff auf den Server und die Liste der eigenen Rennen (nur auf diesem Gerät gemerkt).
+// Schlittenfahren: Zugriff auf den Server und die Liste der eigenen Rennen (nur auf diesem Gerät gemerkt).
 import { api } from './api';
 import { leseEinstellung, schreibeEinstellung } from './db';
 import { sorgeFuerAnmeldung } from './sync';

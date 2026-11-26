@@ -1,4 +1,4 @@
-// Schlittenrennen (Beta): Spieler legen ein Rennen an und laden andere per Link/QR ein. Jedes Gerät hat seinen eigenen Schlitten.
+// Schlittenfahren (Beta): Spieler legen ein Rennen an und laden andere per Link/QR ein. Jedes Gerät hat seinen eigenen Schlitten.
 // Ein Schritt ist eine Bewertung dieses Geräts, die nach dem Beitritt und vor dem Ende des Rennens entstanden ist.
 // Der Server speichert nur Rennen und Teilnehmer; die Schritte rechnet jede App selbst aus den öffentlichen Bewertungen
 // (kein Konto, nichts Zusätzliches zu speichern). Es zählt die Zahl der Bewertungen, egal an welchem Stand (je Gerät, Stand und Abend gibt es allerdings nur eine).
@@ -53,7 +53,7 @@ export interface RennenStand {
 
 /** Link, der das Rennen öffnet. `basis` ist die Adresse der App (mit oder ohne #). */
 export function rennenLink(basis: string, id: string): string {
-  return `${basis.replace(/#.*$/, '')}#/schlittenrennen/${id}`;
+  return `${basis.replace(/#.*$/, '')}#/schlittenfahren/${id}`;
 }
 
 export function berechneRennen(rennen: Rennen, teilnehmer: readonly Teilnehmer[], eintraege: readonly Zeile[], jetzt: number = Date.now()): RennenStand {

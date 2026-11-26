@@ -1,4 +1,4 @@
-// Schlittenrennen (Beta): eigene Rennen mit Freunden, jedes Gerät hat seinen Schlitten. Die Rechnung steht in lib/rennen.ts.
+// Schlittenfahren (Beta): eigene Rennen mit Freunden, jedes Gerät hat seinen Schlitten. Die Rechnung steht in lib/rennen.ts.
 import { useEffect, useState } from 'preact/hooks';
 import { HAT_SERVER } from '../daten/config';
 import { ApiFehler } from '../daten/api';
@@ -136,7 +136,7 @@ function Kopf({ titel, text }: { titel: string; text?: string }) {
     <div class="mb-5 mt-2">
       <p class="etikett inline-flex items-center gap-2 !text-gold-300">
         <span class="rounded-full border border-gold-300 px-2 py-0.5">{t('Beta')}</span>
-        <span>{t('Schlittenrennen')}</span>
+        <span>{t('Schlittenfahren')}</span>
       </p>
       <h1 class="mt-2 font-display text-[40px] uppercase leading-[1] tracking-wide text-eis sm:text-5xl">{titel}</h1>
       {text && <p class="mt-3 max-w-prose text-[17px] leading-snug text-dunst">{text}</p>}
@@ -147,7 +147,7 @@ function Kopf({ titel, text }: { titel: string; text?: string }) {
 const HINWEIS = 'Beta: Wir probieren das gerade aus. Jede Bewertung ist ein Schritt, egal an welchem Stand. Ab 18, trink verantwortungsvoll.';
 
 // ───────── Übersicht: meine Rennen, neues Rennen ─────────
-export function SchlittenrennenUebersicht() {
+export function SchlittenfahrenUebersicht() {
   const ids = useLive(meineRennen, [], [] as string[]);
   const [daten, setDaten] = useState<Record<string, RennenDaten | null>>({});
   const [neu, setNeu] = useState(false);
@@ -168,7 +168,7 @@ export function SchlittenrennenUebersicht() {
 
   return (
     <div class="nm karawane">
-      <Kopf titel={t('Schlittenrennen')} text={t('Rennen mit Freunden: Jeder hat seinen Schlitten, jede Bewertung ist ein Schritt.')} />
+      <Kopf titel={t('Schlittenfahren')} text={t('Rennen mit Freunden: Jeder hat seinen Schlitten, jede Bewertung ist ein Schritt.')} />
       {!HAT_SERVER && <p class="glas mb-4 rounded-2xl p-4 text-dunst">{t('Rennen brauchen eine Verbindung zum Server. Hier läuft die App nur lokal.')}</p>}
 
       {ids.length > 0 && (
@@ -180,7 +180,7 @@ export function SchlittenrennenUebersicht() {
             const meine = stand?.bahnen.find((b) => b.geraet === ich);
             return (
               <li>
-                <a href={`#/schlittenrennen/${id}`} class="glas flex min-h-[64px] items-center gap-3 rounded-2xl px-4 py-3 text-eis no-underline">
+                <a href={`#/schlittenfahren/${id}`} class="glas flex min-h-[64px] items-center gap-3 rounded-2xl px-4 py-3 text-eis no-underline">
                   <span class="min-w-0 flex-1">
                     <b class="block truncate text-[17px]">{d ? d.rennen.name : '…'}</b>
                     <span class="block text-sm text-dunst">
@@ -224,7 +224,7 @@ export function SchlittenrennenUebersicht() {
             onInput={(e) => setCode((e.target as HTMLInputElement).value.trim().toLowerCase())}
           />
           <a
-            href={RENNEN_ID.test(code) ? `#/schlittenrennen/${code}` : undefined}
+            href={RENNEN_ID.test(code) ? `#/schlittenfahren/${code}` : undefined}
             aria-disabled={!RENNEN_ID.test(code)}
             class="grid min-h-[48px] place-items-center rounded-full border-2 border-[var(--nm-bedienung)] px-5 font-semibold text-eis no-underline aria-disabled:opacity-40"
           >
@@ -251,7 +251,7 @@ function NeuesRennen({ onZu }: { onZu: () => void }) {
     try {
       const id = await legeRennenAn(rname.trim(), ziel, k.name.trim(), k.farbe);
       await merkeKamel(k.name.trim(), k.farbe);
-      location.hash = `#/schlittenrennen/${id}`;
+      location.hash = `#/schlittenfahren/${id}`;
     } catch (e) {
       setFehler(fehlerText(e));
       setLaeuft(false);
@@ -327,7 +327,7 @@ export function RennenSeite({ id }: { id: string }) {
     return (
       <div class="nm karawane">
         <Kopf titel={t('Rennen nicht gefunden')} text={t('Vielleicht ist der Code falsch geschrieben.')} />
-        <a href="#/schlittenrennen" class={knopf} style={KNOPF_STIL}>
+        <a href="#/schlittenfahren" class={knopf} style={KNOPF_STIL}>
           {t('Zu den Rennen')}
         </a>
         <p class="mt-4 text-center">
@@ -346,7 +346,7 @@ export function RennenSeite({ id }: { id: string }) {
 
   return (
     <div class="nm karawane">
-      <a href="#/schlittenrennen" class="mb-1 inline-block min-h-[44px] py-3 text-gold-300 no-underline">
+      <a href="#/schlittenfahren" class="mb-1 inline-block min-h-[44px] py-3 text-gold-300 no-underline">
         ‹ {t('Alle Rennen')}
       </a>
       <Kopf titel={d.rennen.name} text={stand.vorbei ? undefined : `${tn(d.rennen.ziel, '{n} Schritt bis ins Ziel', '{n} Schritte bis ins Ziel')} · ${tn(stand.tageUebrig, 'noch {n} Tag', 'noch {n} Tage')}`} />
@@ -415,7 +415,7 @@ function Austritt({ id, ersteller }: { id: string; ersteller: boolean }) {
     setFehler('');
     try {
       await (frage === 'loeschen' ? loescheRennen(id) : verlasseRennen(id));
-      location.hash = '#/schlittenrennen';
+      location.hash = '#/schlittenfahren';
     } catch (e) {
       setFehler(fehlerText(e));
       setLaeuft(false);
@@ -456,7 +456,7 @@ function TeilenKnopf({ link, name }: { link: string; name: string }) {
   const [kopiert, setKopiert] = useState(false);
   const teile = async () => {
     try {
-      if (navigator.share) return void (await navigator.share({ title: name, text: t('Fahr mit im Schlittenrennen: {name}', { name }), url: link }));
+      if (navigator.share) return void (await navigator.share({ title: name, text: t('Fahr mit beim Schlittenfahren: {name}', { name }), url: link }));
       await navigator.clipboard.writeText(link);
       setKopiert(true);
       setTimeout(() => setKopiert(false), 2500);

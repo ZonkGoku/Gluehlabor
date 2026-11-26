@@ -14,7 +14,7 @@ const PUNKTE = [
 /** Seltener gebraucht: eigene, kleinere Gruppe. */
 const MEHR = [
   { route: 'entdecken', label: 'Entdecken', symbol: 'uebersicht' },
-  { route: 'schlittenrennen', label: 'Schlittenrennen (Beta)', symbol: 'ziel' },
+  { route: 'schlittenfahren', label: 'Schlittenfahren (Beta)', symbol: 'ziel' },
   { route: 'spickzettel', label: 'Hilfe & Regeln', symbol: 'spickzettel' },
   { route: 'vergleich', label: 'Vergleich', symbol: 'vergleich' },
   { route: 'einstellungen', label: 'Einstellungen', symbol: 'einstellungen' },
@@ -24,7 +24,7 @@ const KLEIN =
   'grid size-9 shrink-0 place-items-center rounded-full border border-rand bg-flaeche text-dunst transition duration-200 hover:text-gold-300 hover:bg-flaeche-hover cursor-pointer';
 
 export function Seitenleiste({ route, zeigeSync }: { route: string; zeigeSync: boolean }) {
-  const aktiv = (r: string) => route === r || (r === 'schlittenrennen' && (route.startsWith('schlittenrennen/') || route.startsWith('kamelrennen/'))) || (r === 'rangliste' && (route.startsWith('becher/') || route.startsWith('stand/')));
+  const aktiv = (r: string) => route === r || (r === 'schlittenfahren' && (route.startsWith('schlittenfahren/') || route.startsWith('schlittenrennen/') || route.startsWith('kamelrennen/'))) || (r === 'rangliste' && (route.startsWith('becher/') || route.startsWith('stand/')));
   const link = (p: { route: string; label: string; symbol: string }, klein = false) => (
     <a
       href={`#/${p.route}`}

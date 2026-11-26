@@ -1,4 +1,4 @@
--- Schlittenrennen (Beta): von Spielern angelegte Rennen und ihre Teilnehmer. Die Schritte zählt die App aus den öffentlichen Bewertungen.
+-- Schlittenfahren (Beta): von Spielern angelegte Rennen und ihre Teilnehmer. Die Schritte zählt die App aus den öffentlichen Bewertungen.
 CREATE TABLE rennen (
   id          TEXT PRIMARY KEY,
   name        TEXT NOT NULL,

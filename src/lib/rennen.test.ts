@@ -49,6 +49,6 @@ describe('Rennen', () => {
     expect(berechneRennen(rennen, [a], [], T0 + 13.5 * TAG).tageUebrig).toBe(1);
   });
   it('Link', () => {
-    expect(rennenLink('https://gluehlabor.de/#/mehr', 'abcd2345')).toBe('https://gluehlabor.de/#/schlittenrennen/abcd2345');
+    expect(rennenLink('https://gluehlabor.de/#/mehr', 'abcd2345')).toBe('https://gluehlabor.de/#/schlittenfahren/abcd2345');
   });
 });

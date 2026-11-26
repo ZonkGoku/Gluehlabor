@@ -81,7 +81,7 @@ const becher = (patch: Record<string, unknown> = {}) => ({
 const sende = (g: { auth: string }, eintraege: unknown[], o: Opt = {}) => ruf('POST', '/api/becher', { ...o, auth: g.auth, body: { eintraege } });
 const liste = (query = '', o: Opt = {}) => ruf('GET', `/api/becher${query}`, o);
 
-describe('Schlittenrennen', () => {
+describe('Schlittenfahren', () => {
   const neu = (g: { auth: string }, patch: Record<string, unknown> = {}) =>
     ruf('POST', '/api/rennen', { auth: g.auth, body: { name: 'Feierabendrennen', ziel: 20, kamel: 'Blitz', farbe: 2, ...patch } });
 

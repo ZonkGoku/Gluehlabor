@@ -477,7 +477,7 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
     return json({ ok: true }, 200);
   }
 
-  // ── Schlittenrennen (Beta) ──
+  // ── Schlittenfahren (Beta) ──
   if (pfad === '/api/rennen' && methode === 'POST') {
     const g = await anmelden(request, db);
     const b = await lesen(request);

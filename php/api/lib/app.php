@@ -501,7 +501,7 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
         return new Antwort(200, ['ok' => true]);
     }
 
-    // ── Schlittenrennen (Beta) ──
+    // ── Schlittenfahren (Beta) ──
     if ($pfad === '/api/rennen' && $methode === 'POST') {
         $g = anmelden($a, $db);
         $b = lesen($a);
