@@ -1374,3 +1374,55 @@ button.glas,
     white-space: nowrap;
   }
 }
+
+/* Sparmodus (public/theme-init.js, Einstellungen → Darstellung): keine Unschärfe, kein Schnee, kein Leuchten, keine Dauerbewegung.
+   Android und schwache Geräte hängen sonst, vor allem durch backdrop-filter und animierte Unschärfe. */
+html[data-lite] *,
+html[data-lite] *::before,
+html[data-lite] *::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html[data-lite] .animate-schnee,
+html[data-lite] .animate-flackern,
+html[data-lite] .animate-funkeln {
+  display: none !important;
+}
+html[data-lite] .animate-puls,
+html[data-lite] .animate-schimmer,
+html[data-lite] .kamel-wippen {
+  animation: none !important;
+}
+html[data-lite] .glas,
+html[data-lite] .glas-stark,
+html[data-lite] .karte {
+  box-shadow: none;
+}
+html[data-lite] [class*='blur-'] {
+  filter: none !important;
+}
+
+/* „Weitere Sterne“: kleiner Knopf unter dem ersten Kriterium */
+.erf .mehr-sterne {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 4px;
+  border: 0;
+  border-top: 1px solid var(--linie);
+  background: transparent;
+  color: var(--nm-akzent-text);
+  font: 600 15px var(--sans);
+  cursor: pointer;
+}
+
+/* Schwebende Leiste: weg, solange die Tastatur offen ist (sonst springt sie auf Android mitten auf den Bildschirm) */
+html[data-tastatur] [data-schwebende-leiste] {
+  display: none;
+}
+/* Kein Zoom durch Doppeltippen (Pinch-Zoom bleibt): nach einem Zoom „schwebten“ feste Elemente mitten im Bild */
+html {
+  touch-action: manipulation;
+}

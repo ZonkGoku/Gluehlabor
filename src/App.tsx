@@ -1,5 +1,7 @@
 import { Detail } from './ui/Detail';
 import { Entdecken } from './ui/Entdecken';
+import { Aendern } from './ui/Aendern';
+import { MeineBewertungen } from './ui/MeineBewertungen';
 import { RennenSeite, SchlittenfahrenUebersicht } from './ui/Schlittenfahren';
 import { Einstellungen } from './ui/Einstellungen';
 import { Erfassen } from './ui/Erfassen';
@@ -27,6 +29,7 @@ export function App() {
   if (route === 'erfassen') return <Geruest route={route} ohneNavigation><Erfassen /></Geruest>;
   if (route === 'teilen') return <Geruest route={route} ohneNavigation><Teilen /></Geruest>;
   if (route === 'mitbewerten') return <Geruest route={route} ohneNavigation><Mitbewerten /></Geruest>;
+  if (route.startsWith('aendern/')) return <Geruest route={route} ohneNavigation><Aendern id={decodeURIComponent(route.slice('aendern/'.length))} /></Geruest>;
 
   let seite;
   if (route === 'rangliste') seite = <Rangliste />;
@@ -35,6 +38,7 @@ export function App() {
   else if (route === 'moderation') seite = <Moderation />;
   else if (route === 'mehr') seite = <Mehr />;
   else if (route === 'entdecken') seite = <Entdecken />;
+  else if (route === 'meine') seite = <MeineBewertungen />;
   else if (route === 'schlittenfahren' || route === 'schlittenrennen' || route === 'kamelrennen') seite = <SchlittenfahrenUebersicht />;
   else if (route.startsWith('schlittenfahren/') || route.startsWith('schlittenrennen/') || route.startsWith('kamelrennen/')) seite = <RennenSeite id={route.slice(route.indexOf('/') + 1)} />;
   else if (route === 'vergleich') seite = <Vergleich />;

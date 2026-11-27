@@ -21,6 +21,7 @@ export function platz(route: string): number {
   if (route.startsWith('becher/') || route.startsWith('stand/')) return 1;
   if (route.startsWith('schlittenfahren/') || route.startsWith('schlittenrennen/') || route.startsWith('kamelrennen/')) return 3;
   if (UNTER_MEHR.includes(route)) return 3;
+  if (route === 'meine' || route.startsWith('aendern/')) return PUNKTE.findIndex((p) => p !== null && p.route === 'profil');
   return PUNKTE.findIndex((p) => p !== null && p.route === route);
 }
 
@@ -45,6 +46,7 @@ export function Navigation({ route }: { route: string }) {
   return (
     <nav
       aria-label={t('Ansichten')}
+      data-schwebende-leiste
       class="nm glas-stark fixed left-1/2 z-40 w-[min(92vw,440px)] -translate-x-1/2 rounded-full p-1.5"
       style={{ bottom: 'calc(env(safe-area-inset-bottom) + 14px)' }}
     >

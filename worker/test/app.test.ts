@@ -175,50 +175,6 @@ describe('Schlittenfahren', () => {
     expect((await ruf('GET', `/api/rennen/${id}`)).status).toBe(404);
     expect((await ruf('POST', '/api/rennen/loeschen', { auth: a.auth, body: { id } })).status).toBe(404);
   });
-  describe('Wochenrennen für alle', () => {
-    const WOCHE = 'w2026w49'; // Mo 30.11. bis So 6.12.2026, JETZT ist Sa 5.12.
-    const trittBei = (g: { auth: string }, id = WOCHE, kamel = 'Flitzer') => ruf('POST', '/api/rennen/beitreten', { auth: g.auth, body: { id, kamel, farbe: 1 } });
-
-    it('ansehen geht auch, bevor jemand mitfährt: ein leeres Rennen mit Zeitfenster der Woche', async () => {
-      const l = await ruf('GET', `/api/rennen/${WOCHE}`);
-      expect(l.status).toBe(200);
-      expect(l.json.rennen).toMatchObject({ id: WOCHE, name: 'Wochenrennen', ziel: 20, ende: Date.UTC(2026, 11, 7), erstellt_am: Date.UTC(2026, 10, 30) });
-      expect(l.json.teilnehmer).toEqual([]);
-    });
-    it('der erste Beitritt legt das Rennen an, weitere Geräte fahren mit, mehr als 12 sind möglich', async () => {
-      for (let i = 0; i < 13; i++) {
-        const g = await geraet({ ip: `8.8.${i}.1` });
-        expect((await trittBei(g, WOCHE, `Fahrer${i}`)).status).toBe(200);
-      }
-      const l = await ruf('GET', `/api/rennen/${WOCHE}`);
-      expect(l.json.teilnehmer).toHaveLength(13);
-      expect(l.json.rennen.ersteller).toBe('wochenrennen');
-    });
-    it('niemand kann das Wochenrennen löschen', async () => {
-      const g = await geraet();
-      await trittBei(g);
-      expect((await ruf('POST', '/api/rennen/loeschen', { auth: g.auth, body: { id: WOCHE } })).status).toBe(403);
-      expect((await ruf('POST', '/api/rennen/verlassen', { auth: g.auth, body: { id: WOCHE } })).status).toBe(200);
-      expect((await ruf('GET', `/api/rennen/${WOCHE}`)).json.teilnehmer).toEqual([]);
-    });
-    it('nur die laufende Woche: vergangene und künftige sind zu, ungültige Wochen 400', async () => {
-      const g = await geraet();
-      expect((await trittBei(g, 'w2026w48')).status).toBe(410);
-      expect((await trittBei(g, 'w2026w50')).status).toBe(410);
-      expect((await trittBei(g, 'w2026w99')).status).toBe(400);
-      expect((await trittBei(g, 'w2025w53')).status).toBe(400); // 2025 hat nur 52 Wochen
-      expect((await trittBei(g, 'w2026w00')).status).toBe(400);
-    });
-    it('Wochenkennungen ohne Sinn lassen sich nicht ansehen', async () => {
-      expect((await ruf('GET', '/api/rennen/w2026w99')).status).toBe(404);
-      expect((await ruf('GET', '/api/rennen/w2025w53')).status).toBe(404);
-    });
-    it('ein gewöhnliches Rennen hat weiter höchstens 12 Teilnehmer', async () => {
-      const id = (await neu(await geraet())).json.id;
-      for (let i = 0; i < 11; i++) expect((await ruf('POST', '/api/rennen/beitreten', { auth: (await geraet({ ip: `7.7.${i}.1` })).auth, body: { id, kamel: `K${i}`, farbe: 0 } })).status).toBe(200);
-      expect((await ruf('POST', '/api/rennen/beitreten', { auth: (await geraet({ ip: '7.7.99.1' })).auth, body: { id, kamel: 'Zuviel', farbe: 0 } })).status).toBe(409);
-    });
-  });
   it('unbekanntes oder kaputtes Rennen lesen: 404', async () => {
     expect((await ruf('GET', '/api/rennen/abcdefgh')).status).toBe(404);
     expect((await ruf('GET', '/api/rennen/x')).status).toBe(404);
@@ -788,6 +744,60 @@ describe('Mehrere Bewertungen desselben Stands', () => {
     await sende(g, [am('Chrom'), am('Chrom')]);
     const stande = (await liste()).json.eintraege.filter((e: any) => e.stand === 'Chrom');
     expect(stande).toHaveLength(2);
+  });
+});
+
+describe('Eigene Bewertung ändern', () => {
+  const aendern = (g: { auth: string } | null, body: Record<string, unknown>) => ruf('POST', '/api/becher/aendern', { ...(g ? { auth: g.auth } : {}), body });
+  const neueNoten = { ...leereNoten(), geschmack: 4, geruch: 10, preisLeistung: 6 };
+
+  it('ändert Noten, Preis, Größe, Sorte und Notiz; Stand, Ort und Zeitpunkt bleiben; neue Sync-Nummer', async () => {
+    const g = await geraet();
+    await sende(g, [becher({ id: 'aendern-1234', stand: 'Chrom', notiz: 'alt', sorte: 'rot', menge: 0.25 })]);
+    const vorher = (await liste()).json.eintraege[0];
+    const r = await aendern(g, { id: 'aendern-1234', noten: neueNoten, preis: 5.5, menge: 0.3, sorte: 'weiss', notiz: 'neu' });
+    expect(r.status).toBe(200);
+    const nachher = (await liste()).json.eintraege.find((e: any) => e.id === 'aendern-1234');
+    expect(nachher).toMatchObject({ stand: 'Chrom', erstelltAm: vorher.erstelltAm, markt: vorher.markt, stadt: vorher.stadt, preis: 5.5, menge: 0.3, sorte: 'weiss', notiz: 'neu', name: 'Tester' });
+    expect(nachher.noten).toMatchObject({ geschmack: 4, geruch: 10, preisLeistung: 6, temperatur: null });
+    expect(nachher.seq).toBeGreaterThan(vorher.seq);
+    expect((await liste(`?nach=${vorher.seq}`)).json.eintraege.map((e: any) => e.id)).toContain('aendern-1234');
+  });
+  it('fehlende Felder werden gelöscht (Größe, Sorte, Notiz)', async () => {
+    const g = await geraet();
+    await sende(g, [becher({ id: 'loeschen-1234', notiz: 'weg', sorte: 'rot', menge: 0.25 })]);
+    expect((await aendern(g, { id: 'loeschen-1234', noten: neueNoten, preis: 4 })).status).toBe(200);
+    const e = (await liste()).json.eintraege.find((x: any) => x.id === 'loeschen-1234');
+    expect(e.notiz).toBeUndefined();
+    expect(e.sorte).toBeUndefined();
+    expect(e.menge).toBeUndefined();
+  });
+  it('nur die eigene Bewertung: fremde, unbekannte und ausgeblendete sind 404, ohne Anmeldung 401', async () => {
+    const g = await geraet();
+    const h = await geraet();
+    await sende(g, [becher({ id: 'fremd-12345' })]);
+    expect((await aendern(h, { id: 'fremd-12345', noten: neueNoten, preis: 4 })).status).toBe(404);
+    expect((await aendern(g, { id: 'gibt-es-nicht', noten: neueNoten, preis: 4 })).status).toBe(404);
+    expect((await aendern(null, { id: 'fremd-12345', noten: neueNoten, preis: 4 })).status).toBe(401);
+    await ruf('POST', '/api/admin/verstecken', { auth: ADMIN, body: { id: 'fremd-12345', versteckt: true } });
+    expect((await aendern(g, { id: 'fremd-12345', noten: neueNoten, preis: 4 })).status).toBe(404);
+  });
+  it('dieselbe Prüfung wie beim Einreichen: ungültige Note, keine Note, kein Preis, falsche Größe, Link in der Notiz', async () => {
+    const g = await geraet();
+    await sende(g, [becher({ id: 'pruefen-1234' })]);
+    expect((await aendern(g, { id: 'pruefen-1234', noten: { ...neueNoten, geschmack: 11 }, preis: 4 })).status).toBe(422);
+    expect((await aendern(g, { id: 'pruefen-1234', noten: { ...neueNoten, geschmack: 4.5 }, preis: 4 })).status).toBe(422);
+    expect((await aendern(g, { id: 'pruefen-1234', noten: leereNoten(), preis: 4 })).status).toBe(422);
+    expect((await aendern(g, { id: 'pruefen-1234', noten: neueNoten })).status).toBe(422);
+    expect((await aendern(g, { id: 'pruefen-1234', noten: neueNoten, preis: 4, menge: 5 })).status).toBe(422);
+    expect((await aendern(g, { id: 'pruefen-1234', noten: neueNoten, preis: 4, notiz: 'https://spam.de' })).status).toBe(422);
+    expect((await aendern(g, { noten: neueNoten, preis: 4 })).status).toBe(400);
+    expect((await liste()).json.eintraege[0].noten.geschmack).toBe(8); // nichts davon hat etwas verändert
+  });
+  it('auch eine ältere Bewertung lässt sich ändern', async () => {
+    const g = await geraet();
+    await sende(g, [becher({ id: 'alt-12345678', erstelltAm: JETZT - 100 * 24 * 3600_000, datum: '2026-08-27' })]);
+    expect((await aendern(g, { id: 'alt-12345678', noten: neueNoten, preis: 4 })).status).toBe(200);
   });
 });
 

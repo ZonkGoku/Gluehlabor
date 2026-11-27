@@ -19,6 +19,8 @@ export interface LokalerEintrag extends Eintrag {
   /** Foto des Bechers. Bleibt vorerst auf dem Gerät; der Server nimmt noch keine Fotos an. */
   fotoBlob?: Blob;
   syncFehler?: string;
+  /** Die Bewertung wurde nach dem Senden geändert; die Änderung ist noch nicht beim Server (siehe sendeAenderungen). */
+  aenderung?: boolean;
 }
 
 export interface Einstellung {

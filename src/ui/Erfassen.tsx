@@ -117,6 +117,26 @@ export function Erfassen() {
   const [fehlt, setFehlt] = useState(false);
   const [gespeichert, setGespeichert] = useState<string | null>(null);
   const [fertigId, setFertigId] = useState<string | null>(null);
+  const [speicherFehler, setSpeicherFehler] = useState('');
+  // Neulinge sehen zuerst nur „Geschmack“. Die übrigen Sterne stehen hinter einem Knopf (die Wahl merkt sich das Gerät, auch wenn schon weitere Sterne gesetzt sind).
+  const [alleSterne, setAlleSterne] = useState(() => {
+    try {
+      if (localStorage.getItem('gluehlabor.alleSterne') === '1') return true;
+    } catch {
+      /* ohne Speicher: eingeklappt */
+    }
+    const n = leseEntwurf()?.noten;
+    return KRITERIEN.some((k) => k !== 'geschmack' && k !== 'preisLeistung' && n?.[k] != null);
+  });
+  const schalteSterne = () => {
+    const neu = !alleSterne;
+    setAlleSterne(neu);
+    try {
+      localStorage.setItem('gluehlabor.alleSterne', neu ? '1' : '0');
+    } catch {
+      /* nicht kritisch */
+    }
+  };
   const standRef = useRef<HTMLInputElement>(null);
   // Alle Becher dieses Geräts, auch die schon synchronisierten der Community: daraus kommen die Vorschläge.
   const bestand = useLive(() => db.eintraege.toArray(), [], []);
@@ -187,7 +207,7 @@ export function Erfassen() {
     setOrtOffen(false);
   };
 
-  const speichern = async (nameBestaetigt = false) => {
+  const speichernInnen = async (nameBestaetigt = false) => {
     const stand = kanonischerStand(bestand, e.stand, e.markt, e.stadt);
     if (!stand) {
       setFehlt(true);
@@ -249,6 +269,17 @@ export function Erfassen() {
     navigator.vibrate?.([20, 40, 20]);
     setTimeout(() => setGespeichert(null), 2200);
     void synchronisiere();
+  };
+
+  // Scheitert das Speichern (z. B. Speicher des Browsers voll oder gesperrt), soll man das sehen und nicht vor einem toten Knopf stehen.
+  const speichern = async (nameBestaetigt = false) => {
+    setSpeicherFehler('');
+    try {
+      await speichernInnen(nameBestaetigt);
+    } catch (err) {
+      console.error(err);
+      setSpeicherFehler(`${t('Das Speichern hat nicht geklappt.')} ${err instanceof Error ? err.message : ''}`.trim());
+    }
   };
 
   // Besuch teilen: Besuchs-Nr. vergeben und den QR-Code als Blatt zeigen. Stand und Stadt gehören in den Link.
@@ -521,9 +552,9 @@ export function Erfassen() {
 
       <section class="noten" aria-label={t('Sterne')}>
         <p class="noten-kopf">
-          {t('Sterne')} <span>{t('mindestens eine')}</span>
+          {t('Sterne')} <span>{alleSterne ? t('mindestens eine') : t('Tippe auf die Sterne, mehr brauchst du nicht')}</span>
         </p>
-        {KRITERIEN.map((k) => (
+        {(alleSterne ? KRITERIEN : KRITERIEN.filter((k) => k === 'geschmack')).map((k) => (
           <NotenZeile
             key={k}
             name={kriteriumLabel(ANKER[k].label)}
@@ -545,9 +576,17 @@ export function Erfassen() {
             }
           />
         ))}
+        <button type="button" class="mehr-sterne" aria-expanded={alleSterne} onClick={schalteSterne}>
+          {alleSterne ? t('Weniger Sterne zeigen') : t('Weitere Sterne vergeben (Geruch, Temperatur, Personal …)')}
+        </button>
       </section>
 
       <footer class="fuss">
+        {speicherFehler && (
+          <p role="alert" class="m-0 mb-2 w-full text-sm font-semibold text-[var(--warnung)]">
+            {speicherFehler} {t('Tippe noch einmal auf Speichern. Hilft das nicht, schließ die App ganz und öffne sie neu.')}
+          </p>
+        )}
         <div class="messwert" aria-live="polite">
           <span class="kopfzeile">
             <span class={wertung.gesamt === null ? 'gesamt leer' : 'gesamt'}>{sterneText(wertung.gesamt)}</span>

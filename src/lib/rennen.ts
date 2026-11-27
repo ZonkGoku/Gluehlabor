@@ -93,24 +93,6 @@ export function berechneRennen(rennen: Rennen, teilnehmer: readonly Teilnehmer[]
   return { bahnen, sieger, vorbei, tageUebrig: vorbei ? 0 : Math.max(1, Math.ceil((rennen.ende - jetzt) / 86_400_000)) };
 }
 
-// ───────── Wochenrennen: ein offenes Rennen für alle, jede Woche neu ─────────
-
-/** Länge des Wochenrennens in Schritten (der Server legt es mit demselben Wert an). */
-export const WOCHEN_ZIEL = 20;
-/** Kennung `w<Jahr>w<Woche>` (ISO-Woche, UTC), immer 8 Zeichen, passt zu RENNEN_ID. */
-export const WOCHEN_ID = /^w\d{4}w\d{2}$/;
-export const istWochenrennen = (id: string): boolean => WOCHEN_ID.test(id);
-
-/** Kennung des Wochenrennens, in dem `jetzt` liegt. */
-export function wochenRennenId(jetzt: Date = new Date()): string {
-  const d = new Date(Date.UTC(jetzt.getUTCFullYear(), jetzt.getUTCMonth(), jetzt.getUTCDate()));
-  const tag = d.getUTCDay() || 7; // Mo = 1 … So = 7
-  d.setUTCDate(d.getUTCDate() + 4 - tag); // Donnerstag der Woche bestimmt das Jahr
-  const jahr = d.getUTCFullYear();
-  const woche = Math.ceil(((d.getTime() - Date.UTC(jahr, 0, 1)) / 86_400_000 + 1) / 7);
-  return `w${jahr}w${String(woche).padStart(2, '0')}`;
-}
-
 // ───────── Lage im Rennen (Spannung) ─────────
 
 export interface Lage {

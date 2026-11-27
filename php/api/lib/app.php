@@ -19,8 +19,6 @@ const LIMITS = [
 ];
 const MAX_STAND_IDS = 200;
 const MELDEGRUENDE = ['unpassend', 'spam', 'falsch', 'persoenlich', 'sonstiges'];
-const WOCHEN_ZIEL = 20;
-const WOCHEN_MAX_TEILNEHMER = 500;
 const RENNEN_MIN = 2;
 const RENNEN_MAX = 50;
 const RENNEN_FARBEN = 8;
@@ -120,26 +118,6 @@ function begrenze(Db $db, string $schluessel, int $fensterMs, int $max, int $jet
 }
 
 /** @return array<string,mixed> */
-/** Zeitfenster eines Wochenrennens `w<Jahr>w<Woche>` (ISO-Woche, Montag 00:00 UTC bis nächster Montag), sonst null. @return array{start:int, ende:int}|null */
-function wochenFenster(string $id): ?array
-{
-    if (preg_match('/^w(\d{4})w(\d{2})$/', $id, $m) !== 1) {
-        return null;
-    }
-    $jahr = (int) $m[1];
-    $woche = (int) $m[2];
-    if ($woche < 1 || $woche > 53) {
-        return null;
-    }
-    $jan4 = gmmktime(0, 0, 0, 1, 4, $jahr);
-    $dow = (int) gmdate('N', $jan4);
-    $start = $jan4 - ($dow - 1) * 86400 + ($woche - 1) * 7 * 86400;
-    if ((int) gmdate('Y', $start + 3 * 86400) !== $jahr) {
-        return null;
-    }
-    return ['start' => $start * 1000, 'ende' => ($start + 7 * 86400) * 1000];
-}
-
 function anmelden(Anfrage $a, Db $db): array
 {
     $kopf = $a->kopf['authorization'] ?? $a->kopf['x-auth'] ?? '';
@@ -478,6 +456,42 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
         return new Antwort(200, ['ergebnisse' => $ergebnisse]);
     }
 
+    // Eigene Bewertung nachträglich ändern: Noten, Preis, Größe, Sorte, Notiz. Stand, Ort, Zeitpunkt und Besuch bleiben.
+    // Fehlen menge, sorte oder notiz (oder sind sie null), werden sie gelöscht. Dieselbe Prüfung wie beim Einreichen.
+    if ($pfad === '/api/becher/aendern' && $methode === 'POST') {
+        $g = anmelden($a, $db);
+        $b = lesen($a);
+        if (!is_string($b['id'] ?? null)) {
+            throw new HttpFehler(400, 'Bewertung nötig.');
+        }
+        $z = $db->eins('SELECT * FROM becher WHERE id = ? AND geraet_id = ? AND versteckt = 0', [$b['id'], $g['id']]);
+        if (!$z) {
+            throw new HttpFehler(404, 'Bewertung nicht gefunden.');
+        }
+        $roh = alsEintrag($z);
+        $roh['noten'] = $b['noten'] ?? null;
+        $roh['preis'] = $b['preis'] ?? null;
+        $roh['menge'] = $b['menge'] ?? null;
+        $roh['sorte'] = $b['sorte'] ?? null;
+        $roh['notiz'] = $b['notiz'] ?? null;
+        $p = pruefeEinreichung($roh, (int) $z['erstellt_am']);
+        if (!$p['ok']) {
+            throw new HttpFehler(422, $p['grund']);
+        }
+        $e = $p['eintrag'];
+        if ($e['preis'] === null) {
+            throw new HttpFehler(422, 'Der Preis fehlt.');
+        }
+        $n = $e['noten'];
+        aendere(
+            $db,
+            'sorte = ?, preis = ?, menge = ?, notiz = ?, geschmack = ?, geruch = ?, temperatur = ?, personal = ?, atmosphaere = ?, preis_leistung = ?, becher = ?',
+            [$e['sorte'], $e['preis'], $e['menge'], $e['notiz'], $n['geschmack'], $n['geruch'], $n['temperatur'], $n['personal'], $n['atmosphaere'], $n['preisLeistung'], $n['becher']],
+            (string) $z['id'],
+        );
+        return new Antwort(200, ['ok' => true]);
+    }
+
     if ($pfad === '/api/becher' && $methode === 'GET') {
         $nach = max(0, (int) floor((float) ($a->query['nach'] ?? 0)));
         $limit = (int) floor((float) ($a->query['limit'] ?? 200));
@@ -554,17 +568,6 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
         if (!is_int($b['farbe'] ?? null) || $b['farbe'] < 0 || $b['farbe'] >= RENNEN_FARBEN) {
             throw new HttpFehler(400, 'Ungültige Farbe.');
         }
-        // Das Wochenrennen für alle legt der Server beim ersten Beitritt der Woche selbst an.
-        $woche = wochenFenster($b['id']);
-        if (preg_match('/^w\d{4}w\d{2}$/', $b['id']) === 1) {
-            if ($woche === null) {
-                throw new HttpFehler(400, 'Ungültiges Rennen.');
-            }
-            if ($jetzt < $woche['start'] || $jetzt >= $woche['ende']) {
-                throw new HttpFehler(410, 'Dieses Rennen ist vorbei.');
-            }
-            $db->lauf($db->ignoriere() . " INTO rennen (id, name, ziel, ersteller, erstellt_am, ende) VALUES (?, 'Wochenrennen', ?, 'wochenrennen', ?, ?)", [$b['id'], WOCHEN_ZIEL, $woche['start'], $woche['ende']]);
-        }
         $r = $db->eins('SELECT id, ende FROM rennen WHERE id = ?', [$b['id']]);
         if (!$r) {
             throw new HttpFehler(404, 'Rennen nicht gefunden.');
@@ -576,7 +579,7 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
             throw new HttpFehler(410, 'Dieses Rennen ist vorbei.');
         }
         $n = $db->eins('SELECT COUNT(*) AS n FROM rennen_teilnehmer WHERE rennen_id = ?', [$b['id']]);
-        if ((int) ($n['n'] ?? 0) >= ($woche !== null ? WOCHEN_MAX_TEILNEHMER : LIMITS['maxTeilnehmerJeRennen'])) {
+        if ((int) ($n['n'] ?? 0) >= LIMITS['maxTeilnehmerJeRennen']) {
             throw new HttpFehler(409, 'Das Rennen ist voll.');
         }
         $db->lauf('INSERT INTO rennen_teilnehmer (rennen_id, geraet_id, kamel, farbe, seit) VALUES (?, ?, ?, ?, ?)', [$b['id'], $g['id'], $kname['name'], $b['farbe'], $jetzt]);
@@ -610,12 +613,7 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
         }
         $r = $db->eins('SELECT id, name, ziel, ersteller, erstellt_am, ende FROM rennen WHERE id = ?', [$id]);
         if (!$r) {
-            // Wochenrennen ohne Teilnehmer gibt es noch nicht in der Datenbank, aber jeder darf es ansehen.
-            $w = wochenFenster($id);
-            if ($w === null) {
-                throw new HttpFehler(404, 'Rennen nicht gefunden.');
-            }
-            $r = ['id' => $id, 'name' => 'Wochenrennen', 'ziel' => WOCHEN_ZIEL, 'ersteller' => 'wochenrennen', 'erstellt_am' => $w['start'], 'ende' => $w['ende']];
+            throw new HttpFehler(404, 'Rennen nicht gefunden.');
         }
         $t = $db->alle('SELECT geraet_id, kamel, farbe, seit FROM rennen_teilnehmer WHERE rennen_id = ? ORDER BY seit ASC, geraet_id ASC', [$id]);
         return new Antwort(200, [

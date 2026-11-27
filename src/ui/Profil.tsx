@@ -71,6 +71,13 @@ export function Profil() {
       <div class="nm" style={{ marginBottom: '20px' }}>
         <PassKopf />
       </div>
+      <a href="#/meine" class="nm glas rahmen-licht mb-4 flex min-h-[64px] items-center gap-3 rounded-3xl p-4 text-eis no-underline">
+        <span class="min-w-0 flex-1">
+          <b class="block text-[17px]">{t('Meine Bewertungen')}</b>
+          <span class="block text-sm text-dunst">{t('Deine Rangliste, alle Bewertungen und Ändern')}</span>
+        </span>
+        <span aria-hidden="true" class="text-xl text-gold-300">→</span>
+      </a>
       <div class="raster">
         <section class="karte seite" style={{ padding: '18px' }}>
           <h2 style={{ margin: 0 }}>{t('Dein Name · nötig zum Bewerten')}</h2>

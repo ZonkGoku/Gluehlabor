@@ -4,9 +4,11 @@ import { useEffect, useState } from 'preact/hooks';
 
 export type Theme = 'auto' | 'hell' | 'dunkel';
 export type Menue = 'seitenleiste' | 'schwebend';
+export type Sparmodus = 'auto' | 'an' | 'aus';
 
 const KEY_THEME = 'gluehlabor.theme';
 const KEY_MENUE = 'gluehlabor.menue';
+const KEY_SPAR = 'gluehlabor.sparmodus';
 
 function lies(key: string): string | null {
   try {
@@ -28,6 +30,10 @@ let theme: Theme = ((): Theme => {
   return v === 'hell' || v === 'dunkel' ? v : 'auto';
 })();
 let menue: Menue = lies(KEY_MENUE) === 'seitenleiste' ? 'seitenleiste' : 'schwebend';
+let spar: Sparmodus = ((): Sparmodus => {
+  const v = lies(KEY_SPAR);
+  return v === 'an' || v === 'aus' ? v : 'auto';
+})();
 const hoerer = new Set<() => void>();
 const melde = () => hoerer.forEach((h) => h());
 
@@ -56,6 +62,29 @@ export function setzeTheme(t: Theme): void {
   melde();
 }
 
+/** Gilt als schwach: Android, wenig Arbeitsspeicher oder wenige Prozessorkerne. Dieselbe Regel steht in public/theme-init.js (vor dem ersten Zeichnen). */
+export function istSchwachesGeraet(): boolean {
+  const nav = navigator as Navigator & { deviceMemory?: number };
+  return /Android/i.test(nav.userAgent) || (nav.deviceMemory !== undefined && nav.deviceMemory <= 4) || (nav.hardwareConcurrency !== undefined && nav.hardwareConcurrency <= 4);
+}
+
+/** Läuft der Sparmodus gerade (weniger Effekte)? */
+export function sparmodusAktiv(s: Sparmodus = spar): boolean {
+  return s === 'an' || (s === 'auto' && istSchwachesGeraet());
+}
+
+export function wendeSparmodusAn(s: Sparmodus = spar): void {
+  if (sparmodusAktiv(s)) document.documentElement.setAttribute('data-lite', '');
+  else document.documentElement.removeAttribute('data-lite');
+}
+
+export function setzeSparmodus(s: Sparmodus): void {
+  spar = s;
+  schreibe(KEY_SPAR, s);
+  wendeSparmodusAn(s);
+  melde();
+}
+
 export function setzeMenue(m: Menue): void {
   menue = m;
   schreibe(KEY_MENUE, m);
@@ -74,6 +103,7 @@ function useStore<T>(lese: () => T): T {
 
 export const useTheme = (): Theme => useStore(() => theme);
 export const useMenue = (): Menue => useStore(() => menue);
+export const useSparmodus = (): Sparmodus => useStore(() => spar);
 
 /** Media-Query als Hook, z. B. ob die Seite breit genug für die Seitenleiste ist. */
 export function useMedia(abfrage: string): boolean {
@@ -89,8 +119,31 @@ export function useMedia(abfrage: string): boolean {
 }
 
 /** Folgt der Systemeinstellung, solange das Theme auf Auto steht (Browserleiste). */
+/**
+ * Solange ein Eingabefeld Fokus hat (Bildschirmtastatur offen), steht `data-tastatur` am Dokument. Die schwebende Leiste unten verschwindet dann:
+ * Auf Android schrumpft die Seite mit der Tastatur, und eine fest unten verankerte Leiste sprang sonst mitten auf den Bildschirm.
+ */
+function beobachteTastatur(): void {
+  const root = document.documentElement;
+  const istFeld = (el: unknown): boolean => {
+    if (!(el instanceof HTMLElement)) return false;
+    if (el.matches('textarea, select, [contenteditable="true"]')) return true;
+    return el instanceof HTMLInputElement && !/^(checkbox|radio|range|button|submit|reset|file|color|image)$/.test(el.type);
+  };
+  document.addEventListener('focusin', (e) => {
+    if (istFeld(e.target)) root.setAttribute('data-tastatur', '');
+  });
+  document.addEventListener('focusout', () => {
+    setTimeout(() => {
+      if (!istFeld(document.activeElement)) root.removeAttribute('data-tastatur');
+    }, 120);
+  });
+}
+
 export function starteDarstellung(): void {
   wendeThemeAn();
+  wendeSparmodusAn();
+  beobachteTastatur();
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
     if (theme === 'auto') melde();
   });

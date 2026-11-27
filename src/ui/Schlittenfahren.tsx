@@ -18,7 +18,7 @@ import {
   type RennenDaten,
 } from '../daten/rennen';
 import { t, tn } from '../i18n';
-import { berechneRennen, istWochenrennen, lage, RENNEN_ID, RENNEN_MAX, RENNEN_MIN, RENNEN_ZIELE, rennenLink, sichtbareBahnen, wochenRennenId, SCHLITTEN_FARBEN } from '../lib/rennen';
+import { berechneRennen, lage, RENNEN_ID, RENNEN_MAX, RENNEN_MIN, RENNEN_ZIELE, rennenLink, sichtbareBahnen, SCHLITTEN_FARBEN } from '../lib/rennen';
 import { Betreiber } from './bausteine';
 import { useEintraege, useGeraetId, useName } from './daten';
 import { useLive } from './hooks';
@@ -86,45 +86,10 @@ function Kopf({ titel, text }: { titel: string; text?: string }) {
 
 const HINWEIS = 'Beta: Wir probieren das gerade aus. Jede Bewertung ist ein Schritt, egal an welchem Stand. Ab 18, trink verantwortungsvoll.';
 
-// ───────── Karte „Wochenrennen“ (Übersicht und Startseite) ─────────
-export function WochenKarte() {
-  const id = wochenRennenId();
-  const { d } = useRennenDaten(HAT_SERVER ? id : null, 30_000);
-  const alle = useEintraege();
-  const ich = useGeraetId();
-  if (!HAT_SERVER) return null;
-  const stand = d && alle ? berechneRennen(d.rennen, d.teilnehmer, alle) : null;
-  const meine = stand?.bahnen.find((b) => b.geraet === ich);
-  return (
-    <a href={`#/schlittenfahren/${id}`} class="glas rahmen-licht mb-4 flex min-h-[72px] items-center gap-3 rounded-3xl p-4 text-eis no-underline">
-      <svg viewBox="0 0 46 34" class="w-14 shrink-0" aria-hidden="true">
-        <g transform="translate(2 1)">
-          <path d="M4 28h30c4 0 6-3 5-7M11 28v-6M27 28v-6" stroke="#ffc857" stroke-width="2.4" stroke-linecap="round" fill="none" />
-          <path d="M6 12c5-1 7 1 8 3h20l-3 8H9c0-5-1-8-3-11z" fill="#ffc857" />
-          <circle cx="30" cy="11" r="3" fill="#ffc857" />
-        </g>
-      </svg>
-      <span class="min-w-0 flex-1">
-        <b class="block text-[17px]">{t('Wochenrennen')}</b>
-        <span class="block text-sm text-dunst">
-          {meine && stand
-            ? t('Du bist Platz {n} von {m}.', { n: meine.platz, m: stand.bahnen.length })
-            : stand && stand.bahnen.length > 0
-              ? t('{n} fahren mit. Fahr mit!', { n: stand.bahnen.length })
-              : t('Jede Woche neu, für alle. Fahr mit!')}
-        </span>
-      </span>
-      <span aria-hidden="true" class="text-xl text-gold-300">
-        →
-      </span>
-    </a>
-  );
-}
-
-// ───────── Übersicht: Wochenrennen, meine Rennen, neues Rennen ─────────
+// ───────── Übersicht: meine Rennen, neues Rennen ─────────
 export function SchlittenfahrenUebersicht() {
   const ids = useLive(meineRennen, [], [] as string[]);
-  const meine = ids.filter((x) => !istWochenrennen(x));
+  const meine = ids;
   const [daten, setDaten] = useState<Record<string, RennenDaten | null>>({});
   const [optionen, setOptionen] = useState(false);
   const [code, setCode] = useState('');
@@ -159,8 +124,6 @@ export function SchlittenfahrenUebersicht() {
     <div class="nm karawane">
       <Kopf titel={t('Schlittenfahren')} text={t('Jede Bewertung bringt deinen Schlitten einen Schritt weiter. Wer zuerst im Ziel ist, gewinnt.')} />
       {!HAT_SERVER && <p class="glas mb-4 rounded-2xl p-4 text-dunst">{t('Rennen brauchen eine Verbindung zum Server. Hier läuft die App nur lokal.')}</p>}
-
-      <WochenKarte />
 
       {meine.length > 0 && (
         <ul class="m-0 mb-4 grid list-none gap-2 p-0" aria-label={t('Deine Rennen')}>
@@ -314,7 +277,6 @@ export function RennenSeite({ id }: { id: string }) {
   const alle = useEintraege();
   const ich = useGeraetId();
   const [meldung, setMeldung] = useState('');
-  const woche = istWochenrennen(id);
 
   if (nichtDa)
     return (
@@ -342,11 +304,11 @@ export function RennenSeite({ id }: { id: string }) {
   const link = rennenLink(location.href, id);
   const meine = stand.bahnen.find((b) => b.geraet === ich) ?? null;
   const satz = lageText(lage(stand, d.rennen.ziel, ich));
-  const titel = woche ? t('Wochenrennen') : d.rennen.name;
+  const titel = d.rennen.name;
   const liste = sichtbareBahnen(stand.bahnen, ich, 10);
   const unter = stand.vorbei
     ? undefined
-    : [woche ? t('{n} fahren mit', { n: stand.bahnen.length }) : null, tn(d.rennen.ziel, '{n} Schritt bis ins Ziel', '{n} Schritte bis ins Ziel'), tn(stand.tageUebrig, 'noch {n} Tag', 'noch {n} Tage')].filter(Boolean).join(' · ');
+    : [t('{n} fahren mit', { n: stand.bahnen.length }), tn(d.rennen.ziel, '{n} Schritt bis ins Ziel', '{n} Schritte bis ins Ziel'), tn(stand.tageUebrig, 'noch {n} Tag', 'noch {n} Tage')].filter(Boolean).join(' · ');
 
   const teile = async () => {
     setMeldung(t('Erzeuge Bild …'));
@@ -417,21 +379,17 @@ export function RennenSeite({ id }: { id: string }) {
           )}
           {!stand.vorbei && (
             <section class="glas mt-4 grid justify-items-center gap-3 rounded-3xl p-4 text-center">
-              <p class="m-0 text-[17px] font-semibold text-eis">{woche ? t('Freunde zum Wochenrennen einladen') : t('Freunde einladen')}</p>
-              {!woche && (
-                <>
-                  <div class="qr-box">
-                    <Qr text={link} titel={t('QR-Code zum Rennen {name}', { name: d.rennen.name })} />
-                  </div>
-                  <p class="m-0 font-mono text-2xl tracking-[0.25em] text-gold-300">{id.toUpperCase()}</p>
-                </>
-              )}
+              <p class="m-0 text-[17px] font-semibold text-eis">{t('Freunde einladen')}</p>
+              <div class="qr-box">
+                <Qr text={link} titel={t('QR-Code zum Rennen {name}', { name: d.rennen.name })} />
+              </div>
+              <p class="m-0 font-mono text-2xl tracking-[0.25em] text-gold-300">{id.toUpperCase()}</p>
               <TeilenKnopf link={link} name={titel} />
             </section>
           )}
         </>
       ) : (
-        <BeitrittsBlock id={id} voll={d.teilnehmer.length >= (woche ? 500 : 12)} vorbei={stand.vorbei} danach={neuLaden} woche={woche} />
+        <BeitrittsBlock id={id} voll={d.teilnehmer.length >= 12} vorbei={stand.vorbei} danach={neuLaden} />
       )}
       {dabei && <Austritt id={id} ersteller={d.rennen.ersteller === ich} />}
       {fehler && <p class="mt-3 text-sm text-dunst">{fehler}</p>}
@@ -511,7 +469,7 @@ function TeilenKnopf({ link, name }: { link: string; name: string }) {
   );
 }
 
-function BeitrittsBlock({ id, voll, vorbei, danach, woche }: { id: string; voll: boolean; vorbei: boolean; danach: () => void; woche: boolean }) {
+function BeitrittsBlock({ id, voll, vorbei, danach }: { id: string; voll: boolean; vorbei: boolean; danach: () => void }) {
   const k = useKamelWahl();
   const [fehler, setFehler] = useState('');
   const [laeuft, setLaeuft] = useState(false);
@@ -536,7 +494,7 @@ function BeitrittsBlock({ id, voll, vorbei, danach, woche }: { id: string; voll:
   };
   return (
     <section class="glas mt-5 grid gap-4 rounded-3xl p-4" aria-label={t('Mitfahren')}>
-      <p class="m-0 text-[17px] font-semibold text-eis">{woche ? t('Fahr im Wochenrennen mit!') : t('Fahr mit! Such dir einen Schlitten aus.')}</p>
+      <p class="m-0 text-[17px] font-semibold text-eis">{t('Fahr mit! Such dir einen Schlitten aus.')}</p>
       {aendern ? (
         <>
           <KamelWahl name={k.name} farbe={k.farbe} onName={k.setName} onFarbe={k.setFarbe} />

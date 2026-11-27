@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { berechneRennen, istWochenrennen, lage, rennenLink, sichtbareBahnen, wochenRennenId, type Rennen, type Teilnehmer } from './rennen';
+import { berechneRennen, lage, rennenLink, sichtbareBahnen, type Rennen, type Teilnehmer } from './rennen';
 
 const T0 = Date.parse('2026-12-01T18:00:00Z');
 const TAG = 86_400_000;
@@ -58,22 +58,6 @@ describe('Sieger bei Zeitablauf', () => {
     const spaet = T0 + 15 * TAG;
     expect(berechneRennen(rennen, [a, b], [e('a', 10), e('b', 2000), e('b', 3000)], spaet).sieger?.kamel).toBe('Ben');
     expect(berechneRennen(rennen, [a, b], [], spaet).sieger).toBeNull();
-  });
-});
-
-describe('Wochenrennen', () => {
-  it('Kennung ist die ISO-Woche, 8 Zeichen', () => {
-    expect(wochenRennenId(new Date(Date.UTC(2026, 10, 26)))).toBe('w2026w48'); // Do 26.11.2026
-    expect(wochenRennenId(new Date(Date.UTC(2026, 10, 23, 0, 0)))).toBe('w2026w48'); // Montag
-    expect(wochenRennenId(new Date(Date.UTC(2026, 10, 29, 23, 59)))).toBe('w2026w48'); // Sonntag
-    expect(wochenRennenId(new Date(Date.UTC(2026, 10, 30)))).toBe('w2026w49');
-    expect(wochenRennenId(new Date(Date.UTC(2027, 0, 1)))).toBe('w2026w53'); // Fr 1.1.2027 gehört zu KW 53/2026
-    expect(wochenRennenId(new Date(Date.UTC(2027, 0, 4)))).toBe('w2027w01');
-    expect(wochenRennenId(new Date(Date.UTC(2026, 10, 26)))).toHaveLength(8);
-  });
-  it('erkennt Wochenkennungen', () => {
-    expect(istWochenrennen('w2026w48')).toBe(true);
-    expect(istWochenrennen('abcd2345')).toBe(false);
   });
 });
 

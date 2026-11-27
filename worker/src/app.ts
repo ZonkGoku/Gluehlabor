@@ -37,27 +37,12 @@ const LIMITS = {
   maxImport: 100,
 };
 const MAX_STAND_IDS = 200;
-const WOCHEN_ZIEL = 20;
-const WOCHEN_MAX_TEILNEHMER = 500;
 const RENNEN_MIN = 2;
 const RENNEN_MAX = 50;
 const RENNEN_DAUER = 14 * 24 * 60 * 60_000;
 const RENNEN_FARBEN = 8;
 const RENNEN_ID = /^[a-z0-9]{8}$/;
 
-/** Zeitfenster eines Wochenrennens `w<Jahr>w<Woche>` (ISO-Woche, Montag 00:00 UTC bis nächster Montag), sonst null. */
-function wochenFenster(id: string): { start: number; ende: number } | null {
-  const m = /^w(\d{4})w(\d{2})$/.exec(id);
-  if (!m) return null;
-  const jahr = Number(m[1]);
-  const woche = Number(m[2]);
-  if (woche < 1 || woche > 53) return null;
-  const jan4 = Date.UTC(jahr, 0, 4);
-  const montag1 = jan4 - ((new Date(jan4).getUTCDay() || 7) - 1) * 86_400_000;
-  const start = montag1 + (woche - 1) * 7 * 86_400_000;
-  if (new Date(start + 3 * 86_400_000).getUTCFullYear() !== jahr) return null;
-  return { start, ende: start + 7 * 86_400_000 };
-}
 const MELDEGRUENDE = ['unpassend', 'spam', 'falsch', 'persoenlich', 'sonstiges'];
 const MIN = 60_000;
 const STUNDE = 60 * MIN;
@@ -445,6 +430,29 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
     return json({ ergebnisse }, 200);
   }
 
+  // Eigene Bewertung nachträglich ändern: Noten, Preis, Größe, Sorte, Notiz. Stand, Ort, Zeitpunkt und Besuch bleiben.
+  // Fehlen menge, sorte oder notiz (oder sind sie null), werden sie gelöscht. Dieselbe Prüfung wie beim Einreichen.
+  if (pfad === '/api/becher/aendern' && methode === 'POST') {
+    const g = await anmelden(request, db);
+    const b = await lesen(request);
+    if (typeof b.id !== 'string') throw new HttpFehler(400, 'Bewertung nötig.');
+    const z = await db.prepare('SELECT * FROM becher WHERE id = ? AND geraet_id = ? AND versteckt = 0').bind(b.id, g.id).first<BecherZeile>();
+    if (!z) throw new HttpFehler(404, 'Bewertung nicht gefunden.');
+    const roh = { ...alsEintrag(z), noten: b.noten, preis: b.preis ?? null, menge: b.menge ?? null, sorte: b.sorte ?? null, notiz: b.notiz ?? null };
+    const p = pruefeEinreichung(roh, z.erstellt_am);
+    if (!p.ok) throw new HttpFehler(422, p.grund);
+    if (p.eintrag.preis === undefined) throw new HttpFehler(422, 'Der Preis fehlt.');
+    const e = p.eintrag;
+    await db
+      .prepare(
+        `UPDATE becher SET sorte = ?, preis = ?, menge = ?, notiz = ?, geschmack = ?, geruch = ?, temperatur = ?, personal = ?,
+           atmosphaere = ?, preis_leistung = ?, becher = ?, seq = ${NAECHSTE_SEQ} WHERE id = ? AND geraet_id = ?`,
+      )
+      .bind(e.sorte ?? null, e.preis, e.menge ?? null, e.notiz ?? null, e.noten.geschmack, e.noten.geruch, e.noten.temperatur, e.noten.personal, e.noten.atmosphaere, e.noten.preisLeistung, e.noten.becher, z.id, g.id)
+      .run();
+    return json({ ok: true }, 200);
+  }
+
   if (pfad === '/api/becher' && methode === 'GET') {
     const q = new URL(request.url).searchParams;
     const nach = Math.max(0, Math.floor(Number(q.get('nach') ?? 0)) || 0);
@@ -507,23 +515,13 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
     const kname = pruefeName(b.kamel);
     if (!kname.ok || !kname.name) throw new HttpFehler(422, 'Dein Schlitten braucht einen Namen.');
     if (typeof b.farbe !== 'number' || !Number.isInteger(b.farbe) || b.farbe < 0 || b.farbe >= RENNEN_FARBEN) throw new HttpFehler(400, 'Ungültige Farbe.');
-    // Das Wochenrennen für alle legt der Server beim ersten Beitritt der Woche selbst an.
-    const woche = wochenFenster(b.id);
-    if (b.id.startsWith('w') && /^w\d{4}w\d{2}$/.test(b.id)) {
-      if (!woche) throw new HttpFehler(400, 'Ungültiges Rennen.');
-      if (jetzt < woche.start || jetzt >= woche.ende) throw new HttpFehler(410, 'Dieses Rennen ist vorbei.');
-      await db
-        .prepare("INSERT OR IGNORE INTO rennen (id, name, ziel, ersteller, erstellt_am, ende) VALUES (?, 'Wochenrennen', ?, 'wochenrennen', ?, ?)")
-        .bind(b.id, WOCHEN_ZIEL, woche.start, woche.ende)
-        .run();
-    }
     const r = await db.prepare('SELECT id, ende FROM rennen WHERE id = ?').bind(b.id).first<{ id: string; ende: number }>();
     if (!r) throw new HttpFehler(404, 'Rennen nicht gefunden.');
     const schon = await db.prepare('SELECT geraet_id FROM rennen_teilnehmer WHERE rennen_id = ? AND geraet_id = ?').bind(b.id, g.id).first();
     if (schon) return json({ ok: true, schon: true }, 200);
     if (r.ende < jetzt) throw new HttpFehler(410, 'Dieses Rennen ist vorbei.');
     const n = await db.prepare('SELECT COUNT(*) AS n FROM rennen_teilnehmer WHERE rennen_id = ?').bind(b.id).first<{ n: number }>();
-    if ((n?.n ?? 0) >= (woche ? WOCHEN_MAX_TEILNEHMER : LIMITS.maxTeilnehmerJeRennen)) throw new HttpFehler(409, 'Das Rennen ist voll.');
+    if ((n?.n ?? 0) >= LIMITS.maxTeilnehmerJeRennen) throw new HttpFehler(409, 'Das Rennen ist voll.');
     await db.prepare('INSERT INTO rennen_teilnehmer (rennen_id, geraet_id, kamel, farbe, seit) VALUES (?, ?, ?, ?, ?)').bind(b.id, g.id, kname.name, b.farbe, jetzt).run();
     return json({ ok: true }, 200);
   }
@@ -545,13 +543,8 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
   if (pfad.startsWith('/api/rennen/') && methode === 'GET') {
     const id = pfad.slice('/api/rennen/'.length);
     if (!RENNEN_ID.test(id)) throw new HttpFehler(404, 'Rennen nicht gefunden.');
-    let r = await db.prepare('SELECT id, name, ziel, ersteller, erstellt_am, ende FROM rennen WHERE id = ?').bind(id).first<Record<string, unknown>>();
-    if (!r) {
-      // Wochenrennen ohne Teilnehmer gibt es noch nicht in der Datenbank, aber jeder darf es ansehen.
-      const w = wochenFenster(id);
-      if (!w) throw new HttpFehler(404, 'Rennen nicht gefunden.');
-      r = { id, name: 'Wochenrennen', ziel: WOCHEN_ZIEL, ersteller: 'wochenrennen', erstellt_am: w.start, ende: w.ende };
-    }
+    const r = await db.prepare('SELECT id, name, ziel, ersteller, erstellt_am, ende FROM rennen WHERE id = ?').bind(id).first<Record<string, unknown>>();
+    if (!r) throw new HttpFehler(404, 'Rennen nicht gefunden.');
     const { results } = await db
       .prepare('SELECT geraet_id, kamel, farbe, seit FROM rennen_teilnehmer WHERE rennen_id = ? ORDER BY seit ASC, geraet_id ASC')
       .bind(id)

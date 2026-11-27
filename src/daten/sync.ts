@@ -94,6 +94,31 @@ async function sendeBecher(geraet: Awaited<ReturnType<typeof holeGeraet>>): Prom
   }
 }
 
+/** Schickt nachträgliche Änderungen eigener Bewertungen (Noten, Preis, Größe, Sorte, Notiz) an den Server. */
+async function sendeAenderungen(geraet: Awaited<ReturnType<typeof holeGeraet>>): Promise<void> {
+  const offen = (await db.eintraege.toArray()).filter((e) => e.aenderung === true);
+  for (const e of offen) {
+    try {
+      await api('/api/becher/aendern', {
+        methode: 'POST',
+        geraet,
+        body: { id: e.id, noten: e.noten, preis: e.preis, menge: e.menge ?? null, sorte: e.sorte ?? null, notiz: e.notiz ?? null },
+      });
+      await db.eintraege.update(e.id, { aenderung: undefined, syncFehler: undefined });
+    } catch (err) {
+      if (err instanceof ApiFehler && err.status === 404) {
+        // Die Bewertung gibt es auf dem Server nicht mehr (ausgeblendet): nichts mehr zu senden.
+        await db.eintraege.update(e.id, { aenderung: undefined });
+      } else if (err instanceof ApiFehler && err.status === 422) {
+        // Der Server mag die Änderung nicht: Grund merken, die Änderung gilt dann nur auf diesem Gerät.
+        await db.eintraege.update(e.id, { aenderung: undefined, syncFehler: err.message });
+      } else {
+        throw err;
+      }
+    }
+  }
+}
+
 interface Seite {
   eintraege: unknown[];
   naechste: number;
@@ -116,7 +141,7 @@ export async function holeBecher(): Promise<number> {
         }
         if (!istEintrag(roh)) continue;
         const lokal = await db.eintraege.get(roh.id);
-        if (lokal?.sync === 'offen') continue; // lokale Fassung gewinnt, bis sie gesendet ist
+        if (lokal?.sync === 'offen' || lokal?.aenderung) continue; // lokale Fassung gewinnt, bis sie gesendet ist
         if (!lokal) neu++;
         // Foto bleibt erhalten: es liegt nur lokal.
         await db.eintraege.put({ ...(lokal ?? {}), ...roh, sync: 'fertig', syncFehler: undefined });
@@ -160,6 +185,7 @@ async function lauf(): Promise<void> {
     await anmelden(geraet);
     await sendeName(geraet);
     await sendeBecher(geraet);
+    await sendeAenderungen(geraet);
     await holeBecher();
     setze({ zustand: 'bereit', zuletzt: Date.now() });
   } catch (err) {

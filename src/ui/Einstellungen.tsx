@@ -2,7 +2,7 @@
 import { HAT_SERVER } from '../daten/config';
 import { db } from '../daten/db';
 import { synchronisiere } from '../daten/sync';
-import { setzeMenue, setzeTheme, useMenue, useTheme, type Menue, type Theme } from '../daten/darstellung';
+import { setzeMenue, setzeSparmodus, setzeTheme, useMenue, useSparmodus, useTheme, type Menue, type Sparmodus, type Theme } from '../daten/darstellung';
 import { Betreiber } from './bausteine';
 import { Chips } from './nacht/Chips';
 import { useLive } from './hooks';
@@ -10,6 +10,7 @@ import { aktuelleSprache, setzeSprache, t, type Sprache } from '../i18n';
 
 export function Einstellungen() {
   const theme = useTheme();
+  const spar = useSparmodus();
   const menue = useMenue();
   const offen = useLive(() => db.eintraege.where('sync').equals('offen').count(), [], 0);
 
@@ -59,6 +60,17 @@ export function Einstellungen() {
             <div>
               <div class="etikett mb-2">{t('Sprache')}</div>
               <Chips<Sprache> optionen={['de', 'en'] as const} wert={aktuelleSprache()} onWahl={setzeSprache} beschriftung={t('Sprache')} label={(s) => (s === 'de' ? 'Deutsch' : 'English')} />
+            </div>
+            <div>
+              <div class="etikett mb-2">{t('Weniger Effekte (Sparmodus)')}</div>
+              <Chips<Sparmodus>
+                optionen={['auto', 'an', 'aus'] as const}
+                wert={spar}
+                onWahl={setzeSparmodus}
+                beschriftung={t('Weniger Effekte (Sparmodus)')}
+                label={(w) => (w === 'auto' ? t('Automatisch') : w === 'an' ? t('An') : t('Aus'))}
+              />
+              <p class="mt-2 text-sm text-dunst">{t('Ohne Schnee und Unschärfe, das hilft, wenn die App ruckelt oder hängt. Automatisch an auf Android und schwachen Geräten.')}</p>
             </div>
             <div class="hidden min-[900px]:block">
               <div class="etikett mb-2">{t('Menü am Rechner')}</div>

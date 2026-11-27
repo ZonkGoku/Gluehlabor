@@ -4,6 +4,8 @@ import type { ComponentChildren } from 'preact';
 import { useMedia, useMenue } from '../daten/darstellung';
 import { MARKE } from '../marke';
 import { useMeineAnzahl } from './daten';
+import { RennenLeiste } from './schlitten/RennenLeiste';
+import { SyncProblem } from './SyncProblem';
 import { ICONKNOPF, MenueKnopf, SpracheKnopf, ThemeKnopf } from './nacht/DarstellungKnoepfe';
 import { Hintergrund } from './nacht/Hintergrund';
 import { Navigation } from './nacht/Navigation';
@@ -52,6 +54,8 @@ export function Geruest({ route, children, ohneNavigation = false }: { route: st
         </>
       )}
 
+      <RennenLeiste route={route} />
+      <SyncProblem />
       <main class={`inhalt${ohneNavigation ? ' inhalt-schmal' : ''}`}>{children}</main>
     </div>
   );

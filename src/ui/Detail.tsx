@@ -94,6 +94,13 @@ export function Detail({ id }: { id: string }) {
             ))}
           </div>
           {e.notiz && <p style={{ margin: '14px 0 0', lineHeight: 1.5 }}>„{e.notiz}"</p>}
+          {e.geraet === geraetId && e.sync !== 'bestand' && (
+            <p style={{ margin: '14px 0 0' }}>
+              <a class="pillknopf" href={`#/aendern/${encodeURIComponent(e.id)}`}>
+                {t('Bewertung ändern')}
+              </a>
+            </p>
+          )}
           {e.geraet === geraetId && e.besuchId && (
             <p style={{ margin: '14px 0 0' }}>
               <a class="pillknopf" href={`#/teilen?e=${encodeURIComponent(e.id)}`}>
