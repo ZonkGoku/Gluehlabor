@@ -33,6 +33,11 @@ const LIMITS = {
   rennenJeGeraetUndTag: 5,
   maxTeilnehmerJeRennen: 12,
   maxBodyBytes: 64_000,
+  maxBodyFoto: 700_000,
+  fotoMaxBytes: 400_000,
+  fotoKleinMaxBytes: 40_000,
+  fotosJeGeraetUndTag: 30,
+  fotosGesamtMaxBytes: 1_500_000_000,
   maxEintraegeJeAnfrage: 20,
   maxImport: 100,
 };
@@ -104,9 +109,9 @@ function gleich(a: string, b: string): boolean {
   return diff === 0;
 }
 
-async function lesen(request: Request): Promise<Record<string, unknown>> {
+async function lesen(request: Request, maxZeichen: number = LIMITS.maxBodyBytes): Promise<Record<string, unknown>> {
   const text = await request.text();
-  if (text.length > LIMITS.maxBodyBytes) throw new HttpFehler(413, 'Anfrage zu groß.');
+  if (text.length > maxZeichen) throw new HttpFehler(413, 'Anfrage zu groß.');
   try {
     const x = JSON.parse(text);
     if (!x || typeof x !== 'object' || Array.isArray(x)) throw new Error();
@@ -197,6 +202,8 @@ interface BecherZeile {
   becher: number | null;
   erstellt_am: number;
   versteckt: number;
+  /** Nur in der Liste: Zeitpunkt des sichtbaren Fotos, sonst null */
+  foto_am?: number | null;
 }
 
 function alsEintrag(z: BecherZeile): Record<string, unknown> {
@@ -229,6 +236,7 @@ function alsEintrag(z: BecherZeile): Record<string, unknown> {
   if (z.notiz) e.notiz = z.notiz;
   if (z.name) e.name = z.name;
   if (z.besuch_id) e.besuchId = z.besuch_id;
+  if (z.foto_am) e.foto = `/api/foto/${z.id}?v=${z.foto_am}`;
   return e;
 }
 
@@ -282,7 +290,7 @@ export async function handle(request: Request, env: Env, jetzt: number = Date.no
   const url = new URL(request.url);
   const pfad = url.pathname.replace(/\/+$/, '') || '/';
   const methode = request.method.toUpperCase();
-  const nurLesen = methode === 'GET' && (pfad === '/api/becher' || pfad === '/api/status' || pfad.startsWith('/api/rennen/'));
+  const nurLesen = methode === 'GET' && (pfad === '/api/becher' || pfad === '/api/status' || pfad.startsWith('/api/rennen/') || pfad.startsWith('/api/foto/'));
   const cors = corsKopf(request, env, nurLesen);
 
   try {
@@ -461,12 +469,64 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
     return json({ ok: true }, 200);
   }
 
+  // ── Fotos ──
+  // Ein Foto je Bewertung, nur vom Besitzer, nur mit ausdrücklicher Einwilligung (alle dürfen es sehen). JPEG als Base64.
+  if (pfad === '/api/foto' && methode === 'POST') {
+    const g = await anmelden(request, db);
+    const b = await lesen(request, LIMITS.maxBodyFoto);
+    if (typeof b.id !== 'string') throw new HttpFehler(400, 'Bewertung nötig.');
+    if (b.einwilligung !== true) throw new HttpFehler(422, 'Bitte bestätige, dass alle das Foto sehen dürfen.');
+    const z = await db.prepare('SELECT id FROM becher WHERE id = ? AND geraet_id = ? AND versteckt = 0').bind(b.id, g.id).first<{ id: string }>();
+    if (!z) throw new HttpFehler(404, 'Bewertung nicht gefunden.');
+    const pruefeBild = (roh: unknown, max: number): number => {
+      if (typeof roh !== 'string' || !/^[A-Za-z0-9+/]+={0,2}$/.test(roh)) throw new HttpFehler(422, 'Das Foto ist kein gültiges Bild.');
+      if (!roh.startsWith('/9j/')) throw new HttpFehler(422, 'Das Foto muss ein JPEG sein.');
+      const bytes = Math.floor((roh.length * 3) / 4) - (roh.endsWith('==') ? 2 : roh.endsWith('=') ? 1 : 0);
+      if (bytes > max) throw new HttpFehler(413, 'Das Foto ist zu groß.');
+      return bytes;
+    };
+    const groesse = pruefeBild(b.gross, LIMITS.fotoMaxBytes);
+    pruefeBild(b.klein, LIMITS.fotoKleinMaxBytes);
+    if (!(await begrenze(db, `foto:${g.id}`, TAG, LIMITS.fotosJeGeraetUndTag, jetzt))) throw new HttpFehler(429, 'Heute schon viele Fotos hochgeladen.');
+    const summe = (await db.prepare('SELECT COALESCE(SUM(groesse), 0) AS s FROM fotos').first<{ s: number }>())?.s ?? 0;
+    if (summe + groesse > LIMITS.fotosGesamtMaxBytes) throw new HttpFehler(507, 'Der Speicher für Fotos ist voll.');
+    await db.prepare('DELETE FROM fotos WHERE becher_id = ?').bind(b.id).run();
+    await db
+      .prepare('INSERT INTO fotos (becher_id, geraet_id, groesse, gross, klein, erstellt_am, versteckt) VALUES (?, ?, ?, ?, ?, ?, 0)')
+      .bind(b.id, g.id, groesse, b.gross, b.klein, jetzt)
+      .run();
+    await db.prepare(`UPDATE becher SET seq = ${NAECHSTE_SEQ} WHERE id = ?`).bind(b.id).run();
+    return json({ ok: true }, 201);
+  }
+  if (pfad === '/api/foto/loeschen' && methode === 'POST') {
+    const g = await anmelden(request, db);
+    const b = await lesen(request);
+    if (typeof b.id !== 'string') throw new HttpFehler(400, 'Bewertung nötig.');
+    const r = await db.prepare('DELETE FROM fotos WHERE becher_id = ? AND geraet_id = ?').bind(b.id, g.id).run();
+    if (r.meta.changes === 0) throw new HttpFehler(404, 'Foto nicht gefunden.');
+    await db.prepare(`UPDATE becher SET seq = ${NAECHSTE_SEQ} WHERE id = ?`).bind(b.id).run();
+    return json({ ok: true }, 200);
+  }
+  if (pfad.startsWith('/api/foto/') && methode === 'GET') {
+    const id = decodeURIComponent(pfad.slice('/api/foto/'.length));
+    if (!/^[A-Za-z0-9_-]{8,64}$/.test(id)) throw new HttpFehler(404, 'Foto nicht gefunden.');
+    const z = await db
+      .prepare('SELECT f.gross AS gross, f.klein AS klein FROM fotos f JOIN becher b ON b.id = f.becher_id WHERE f.becher_id = ? AND f.versteckt = 0 AND b.versteckt = 0')
+      .bind(id)
+      .first<{ gross: string; klein: string }>();
+    if (!z) throw new HttpFehler(404, 'Foto nicht gefunden.');
+    const klein = new URL(request.url).searchParams.get('g') === 'klein';
+    const bin = atob(klein ? z.klein : z.gross);
+    const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+    return new Response(bytes, { status: 200, headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=86400', 'X-Content-Type-Options': 'nosniff' } });
+  }
+
   if (pfad === '/api/becher' && methode === 'GET') {
     const q = new URL(request.url).searchParams;
     const nach = Math.max(0, Math.floor(Number(q.get('nach') ?? 0)) || 0);
     const limit = Math.min(500, Math.max(1, Math.floor(Number(q.get('limit') ?? 200)) || 200));
     const { results } = await db
-      .prepare('SELECT * FROM becher WHERE seq > ? ORDER BY seq ASC LIMIT ?')
+      .prepare('SELECT b.*, f.erstellt_am AS foto_am FROM becher b LEFT JOIN fotos f ON f.becher_id = b.id AND f.versteckt = 0 WHERE b.seq > ? ORDER BY b.seq ASC LIMIT ?')
       .bind(nach, limit + 1)
       .all<BecherZeile>();
     const mehr = results.length > limit;
@@ -600,6 +660,15 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
       return json({ ok: true }, 200);
     }
 
+    // Foto ausblenden (oder wieder einblenden), ohne die Bewertung anzutasten.
+    if (pfad === '/api/admin/foto-verstecken' && methode === 'POST') {
+      if (typeof b.id !== 'string' || typeof b.versteckt !== 'boolean') throw new HttpFehler(400, 'id und versteckt nötig.');
+      const r = await db.prepare('UPDATE fotos SET versteckt = ? WHERE becher_id = ?').bind(b.versteckt ? 1 : 0, b.id).run();
+      if (r.meta.changes === 0) throw new HttpFehler(404, 'Foto nicht gefunden.');
+      await db.prepare(`UPDATE becher SET seq = ${NAECHSTE_SEQ} WHERE id = ?`).bind(b.id).run();
+      return json({ ok: true }, 200);
+    }
+
     // Stand umbenennen oder zusammenführen: gibt allen genannten Bewertungen denselben Stand, Markt und dieselbe Stadt.
     if (pfad === '/api/admin/stand-aendern' && methode === 'POST') {
       if (!Array.isArray(b.ids) || b.ids.length === 0 || b.ids.length > MAX_STAND_IDS || !b.ids.every((x) => typeof x === 'string')) {
@@ -640,6 +709,7 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
           .run();
         betroffen += r.meta.changes;
         await db.prepare('DELETE FROM meldungen WHERE becher_id = ?').bind(id).run();
+        await db.prepare('DELETE FROM fotos WHERE becher_id = ?').bind(id).run();
       }
       return json({ ok: true, betroffen }, 200);
     }
@@ -691,6 +761,7 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
           .bind(z.id)
           .run();
       }
+      if (b.modus === 'alles') await db.prepare('DELETE FROM fotos WHERE geraet_id = ?').bind(b.geraet).run();
       if (b.modus === 'name') await db.prepare('UPDATE geraete SET name = NULL WHERE id = ?').bind(b.geraet).run();
       else await db.prepare("UPDATE geraete SET name = NULL, gesperrt = 1, schluessel_hash = '-' WHERE id = ?").bind(b.geraet).run();
       // Meldungen, die dieses Gerät abgegeben hat, und Meldungen über seine Becher sind damit erledigt.

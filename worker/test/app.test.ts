@@ -818,6 +818,135 @@ describe('Eigene Bewertung ändern', () => {
   });
 });
 
+describe('Fotos', () => {
+  /** Ein winziges JPEG (Kopf FF D8 FF), als Base64; für die Prüfung zählt Kopf und Größe */
+  const jpeg = (bytes: number) => Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(Math.max(0, bytes - 4), 7)]).toString('base64');
+  const hochladen = (g: { auth: string } | null, body: Record<string, unknown>) => ruf('POST', '/api/foto', { ...(g ? { auth: g.auth } : {}), body });
+  const ok = { einwilligung: true, gross: jpeg(3000), klein: jpeg(500) };
+  const bild = (id: string, klein = false) => ruf('GET', `/api/foto/${id}${klein ? '?g=klein' : ''}`, { origin: null });
+
+  it('Hochladen mit Einwilligung: Bild abrufbar (groß und klein), Bewertung trägt den Foto-Link, neue Sync-Nummer', async () => {
+    const g = await geraet();
+    await sende(g, [becher({ id: 'foto-12345678' })]);
+    const vorher = (await liste()).json.eintraege[0];
+    expect(vorher.foto).toBeUndefined();
+    expect((await hochladen(g, { id: 'foto-12345678', ...ok })).status).toBe(201);
+    const nachher = (await liste()).json.eintraege[0];
+    expect(nachher.foto).toMatch(/^\/api\/foto\/foto-12345678\?v=\d+$/);
+    expect(nachher.seq).toBeGreaterThan(vorher.seq);
+    const gross = await ruf('GET', '/api/foto/foto-12345678', { origin: null });
+    expect(gross.status).toBe(200);
+    expect(gross.kopf.get('content-type')).toBe('image/jpeg');
+    expect(gross.kopf.get('access-control-allow-origin')).toBe('*');
+    expect(gross.kopf.get('cache-control')).toContain('max-age');
+  });
+  it('liefert die Bytes unverändert aus (groß und klein)', async () => {
+    const g = await geraet();
+    await sende(g, [becher({ id: 'bytes-123456' })]);
+    await hochladen(g, { id: 'bytes-123456', einwilligung: true, gross: jpeg(2000), klein: jpeg(300) });
+    for (const [klein, laenge] of [[false, 2000], [true, 300]] as const) {
+      const url = `https://api.test/api/foto/bytes-123456${klein ? '?g=klein' : ''}`;
+      const res = await handle(new Request(url), env, JETZT);
+      const buf = new Uint8Array(await res.arrayBuffer());
+      expect(buf.length).toBe(laenge);
+      expect([...buf.slice(0, 3)]).toEqual([0xff, 0xd8, 0xff]);
+    }
+  });
+  it('ohne ausdrückliche Einwilligung 422, ohne Anmeldung 401, fremde oder unbekannte Bewertung 404', async () => {
+    const g = await geraet();
+    const h = await geraet();
+    await sende(g, [becher({ id: 'recht-123456' })]);
+    expect((await hochladen(g, { id: 'recht-123456', gross: ok.gross, klein: ok.klein })).status).toBe(422);
+    expect((await hochladen(g, { id: 'recht-123456', ...ok, einwilligung: 'ja' })).status).toBe(422);
+    expect((await hochladen(null, { id: 'recht-123456', ...ok })).status).toBe(401);
+    expect((await hochladen(h, { id: 'recht-123456', ...ok })).status).toBe(404);
+    expect((await hochladen(g, { id: 'gibt-es-nicht', ...ok })).status).toBe(404);
+    expect((await hochladen(g, { ...ok })).status).toBe(400);
+  });
+  it('prüft das Bild: nur JPEG, nur Base64, Größenlimits', async () => {
+    const g = await geraet();
+    await sende(g, [becher({ id: 'pruef-123456' })]);
+    const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, ...Array(100).fill(1)]).toString('base64');
+    expect((await hochladen(g, { id: 'pruef-123456', einwilligung: true, gross: png, klein: ok.klein })).status).toBe(422);
+    expect((await hochladen(g, { id: 'pruef-123456', einwilligung: true, gross: 'kein base64 !!', klein: ok.klein })).status).toBe(422);
+    expect((await hochladen(g, { id: 'pruef-123456', einwilligung: true, gross: ok.gross, klein: 42 })).status).toBe(422);
+    expect((await hochladen(g, { id: 'pruef-123456', einwilligung: true, gross: jpeg(400_001), klein: ok.klein })).status).toBe(413);
+    expect((await hochladen(g, { id: 'pruef-123456', einwilligung: true, gross: ok.gross, klein: jpeg(40_001) })).status).toBe(413);
+    expect((await hochladen(g, { id: 'pruef-123456', einwilligung: true, gross: jpeg(400_000), klein: jpeg(40_000) })).status).toBe(201);
+  });
+  it('ein Foto je Bewertung: neues ersetzt das alte; Löschen durch den Besitzer', async () => {
+    const g = await geraet();
+    const h = await geraet();
+    await sende(g, [becher({ id: 'ersetz-12345' })]);
+    await hochladen(g, { id: 'ersetz-12345', ...ok });
+    const v1 = (await liste()).json.eintraege[0].foto;
+    await new Promise((r) => setTimeout(r, 2));
+    expect((await hochladen(g, { id: 'ersetz-12345', einwilligung: true, gross: jpeg(4000), klein: jpeg(600), }, )).status).toBe(201);
+    expect((await ruf('POST', '/api/foto/loeschen', { auth: h.auth, body: { id: 'ersetz-12345' } })).status).toBe(404);
+    expect((await ruf('POST', '/api/foto/loeschen', { auth: g.auth, body: { id: 'ersetz-12345' } })).status).toBe(200);
+    expect((await bild('ersetz-12345')).status).toBe(404);
+    expect((await liste()).json.eintraege[0].foto).toBeUndefined();
+    expect((await ruf('POST', '/api/foto/loeschen', { auth: g.auth, body: { id: 'ersetz-12345' } })).status).toBe(404);
+    expect(v1).toBeDefined();
+  });
+  it('Prüfstelle kann ein Foto ausblenden (und wieder einblenden), die Bewertung bleibt', async () => {
+    const g = await geraet();
+    await sende(g, [becher({ id: 'blende-12345' })]);
+    await hochladen(g, { id: 'blende-12345', ...ok });
+    expect((await ruf('POST', '/api/admin/foto-verstecken', { body: { id: 'blende-12345', versteckt: true } })).status).toBe(401);
+    expect((await ruf('POST', '/api/admin/foto-verstecken', { auth: ADMIN, body: { id: 'blende-12345', versteckt: true } })).status).toBe(200);
+    expect((await bild('blende-12345')).status).toBe(404);
+    const e = (await liste()).json.eintraege[0];
+    expect(e.foto).toBeUndefined();
+    expect(e.stand).toBeDefined();
+    expect((await ruf('POST', '/api/admin/foto-verstecken', { auth: ADMIN, body: { id: 'blende-12345', versteckt: false } })).status).toBe(200);
+    expect((await bild('blende-12345')).status).toBe(200);
+    expect((await ruf('POST', '/api/admin/foto-verstecken', { auth: ADMIN, body: { id: 'gibt-es-nicht', versteckt: true } })).status).toBe(404);
+  });
+  it('ausgeblendete oder entfernte Bewertungen zeigen kein Foto mehr; Entfernen löscht das Foto endgültig', async () => {
+    const g = await geraet();
+    await sende(g, [becher({ id: 'weg-1234567' }), becher({ id: 'weg-7654321' })]);
+    await hochladen(g, { id: 'weg-1234567', ...ok });
+    await hochladen(g, { id: 'weg-7654321', ...ok });
+    await ruf('POST', '/api/admin/verstecken', { auth: ADMIN, body: { id: 'weg-1234567', versteckt: true } });
+    expect((await bild('weg-1234567')).status).toBe(404);
+    await ruf('POST', '/api/admin/verstecken', { auth: ADMIN, body: { id: 'weg-1234567', versteckt: false } });
+    expect((await bild('weg-1234567')).status).toBe(200);
+    await ruf('POST', '/api/admin/entfernen', { auth: ADMIN, body: { ids: ['weg-7654321'] } });
+    expect((await bild('weg-7654321')).status).toBe(404);
+    await ruf('POST', '/api/admin/verstecken', { auth: ADMIN, body: { id: 'weg-7654321', versteckt: false } });
+    expect((await bild('weg-7654321')).status).toBe(404); // auch eingeblendet nicht: das Foto ist gelöscht
+  });
+  it('„Löschen auf Anfrage (alles)“ entfernt auch die Fotos des Geräts', async () => {
+    const g = await geraet();
+    await sende(g, [becher({ id: 'anfr-1234567' })]);
+    await hochladen(g, { id: 'anfr-1234567', ...ok });
+    await ruf('POST', '/api/admin/loeschen', { auth: ADMIN, body: { geraet: g.id, modus: 'alles' } });
+    await ruf('POST', '/api/admin/verstecken', { auth: ADMIN, body: { id: 'anfr-1234567', versteckt: false } });
+    expect((await bild('anfr-1234567')).status).toBe(404);
+  });
+  it('höchstens 30 Fotos je Gerät und Tag', async () => {
+    const g = await geraet();
+    const eintraege = Array.from({ length: 20 }, (_, i) => becher({ id: `tag-a-${String(i).padStart(6, '0')}` }));
+    const mehr = Array.from({ length: 12 }, (_, i) => becher({ id: `tag-b-${String(i).padStart(6, '0')}` }));
+    await sende(g, eintraege);
+    await sende(g, mehr);
+    let angenommen = 0;
+    let abgelehnt = 0;
+    for (const e of [...eintraege, ...mehr]) {
+      const r = await hochladen(g, { id: e.id, ...ok });
+      if (r.status === 201) angenommen++;
+      else if (r.status === 429) abgelehnt++;
+    }
+    expect(angenommen).toBe(30);
+    expect(abgelehnt).toBe(2);
+  });
+  it('unbekannte oder kaputte Foto-Adressen: 404', async () => {
+    expect((await bild('gibt-es-nicht')).status).toBe(404);
+    expect((await bild('x')).status).toBe(404);
+  });
+});
+
 describe('Preis und Größe', () => {
   it('ohne Preis keine neue Bewertung; die Meldung sagt warum', async () => {
     const g = await geraet();

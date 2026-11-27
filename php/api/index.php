@@ -49,7 +49,9 @@ if (($env['testmodus'] ?? false) === true) {
 $pfad = (string) parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $query = [];
 parse_str((string) ($_SERVER['QUERY_STRING'] ?? ''), $query);
-$body = (string) file_get_contents('php://input', false, null, 0, LIMITS['maxBodyBytes'] + 1);
+// Nur das Hochladen eines Fotos darf mehr als 64 KB senden (Base64-Bild); app.php prüft die Grenzen je Route.
+$maxLesen = $pfad === '/api/foto' ? LIMITS['maxBodyFoto'] : LIMITS['maxBodyBytes'];
+$body = (string) file_get_contents('php://input', false, null, 0, $maxLesen + 1);
 $anfrage = new Anfrage((string) $_SERVER['REQUEST_METHOD'], $pfad, $query, $kopf, $body, $ip, $_SERVER['HTTP_HOST'] ?? null);
 
 try {
@@ -71,7 +73,9 @@ try {
 }
 
 http_response_code($antwort->status);
-$kopf = ['Content-Type' => 'application/json; charset=utf-8', 'X-Content-Type-Options' => 'nosniff', 'X-Robots-Tag' => 'noindex, nofollow', 'Cache-Control' => 'no-store'] + $antwort->kopf;
+$standard = ['Content-Type' => 'application/json; charset=utf-8', 'X-Content-Type-Options' => 'nosniff', 'X-Robots-Tag' => 'noindex, nofollow', 'Cache-Control' => 'no-store'];
+// Bei einer rohen Antwort (Bild) bestimmt sie Content-Type und Cache selbst; sonst gelten die Standards.
+$kopf = $antwort->roh !== null ? array_merge($standard, $antwort->kopf) : $standard + $antwort->kopf;
 if ($pfad === '/api/status') {
     $oeffentlich = filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false;
     $kopf['X-Adresse-Erkannt'] = $oeffentlich ? 'ja' : 'nein';
@@ -79,6 +83,8 @@ if ($pfad === '/api/status') {
 foreach ($kopf as $name => $wert) {
     header($name . ': ' . $wert);
 }
-if ($antwort->daten !== null) {
+if ($antwort->roh !== null) {
+    echo $antwort->roh;
+} elseif ($antwort->daten !== null) {
     echo json_aus($antwort->daten);
 }

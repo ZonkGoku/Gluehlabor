@@ -120,6 +120,14 @@ final class Db
                 $this->pdo->exec($q);
             }
         }
+        $hatFotos = $this->typ === 'mysql'
+            ? $this->eins("SELECT 1 AS x FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'fotos'")
+            : $this->eins("SELECT 1 AS x FROM sqlite_master WHERE type = 'table' AND name = 'fotos'");
+        if (!$hatFotos) {
+            foreach ($this->fotosSchema() as $q) {
+                $this->pdo->exec($q);
+            }
+        }
         $hatFahrzeug = $this->typ === 'mysql'
             ? $this->eins("SELECT 1 AS x FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'rennen_teilnehmer' AND column_name = 'fahrzeug'")
             : $this->eins("SELECT 1 AS x FROM pragma_table_info('rennen_teilnehmer') WHERE name = 'fahrzeug'");
@@ -169,6 +177,7 @@ final class Db
             "CREATE TABLE zaehler (name $id PRIMARY KEY, wert $zahl NOT NULL)$ende",
             "INSERT INTO zaehler (name, wert) VALUES ('seq', 0)",
             ...$this->rennenSchema(),
+            ...$this->fotosSchema(),
         ];
         foreach ($sql as $s) {
             $this->pdo->exec($s);
@@ -190,6 +199,22 @@ final class Db
             "CREATE TABLE rennen_teilnehmer (
                rennen_id $id NOT NULL, geraet_id $id NOT NULL, kamel $text NOT NULL, farbe INTEGER NOT NULL, seit $zahl NOT NULL, fahrzeug INTEGER NOT NULL DEFAULT 0,
                PRIMARY KEY (rennen_id, geraet_id))$ende",
+        ];
+    }
+
+    /** Tabelle der Fotos (Base64-Text). @return list<string> */
+    private function fotosSchema(): array
+    {
+        $my = $this->typ === 'mysql';
+        $id = $my ? 'VARCHAR(64)' : 'TEXT';
+        $zahl = $my ? 'BIGINT' : 'INTEGER';
+        $lang = $my ? 'LONGTEXT' : 'TEXT';
+        $ende = $my ? ' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin' : '';
+        return [
+            "CREATE TABLE fotos (
+               becher_id $id PRIMARY KEY, geraet_id $id NOT NULL, groesse INTEGER NOT NULL, gross $lang NOT NULL, klein $lang NOT NULL,
+               erstellt_am $zahl NOT NULL, versteckt INTEGER NOT NULL DEFAULT 0)$ende",
+            'CREATE INDEX fotos_geraet ON fotos(geraet_id)',
         ];
     }
 }

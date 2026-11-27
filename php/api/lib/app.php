@@ -14,6 +14,11 @@ const LIMITS = [
     'rennenJeGeraetUndTag' => 5,
     'maxTeilnehmerJeRennen' => 12,
     'maxBodyBytes' => 64000,
+    'maxBodyFoto' => 700000,
+    'fotoMaxBytes' => 400000,
+    'fotoKleinMaxBytes' => 40000,
+    'fotosJeGeraetUndTag' => 30,
+    'fotosGesamtMaxBytes' => 1500000000,
     'maxEintraegeJeAnfrage' => 20,
     'maxImport' => 100,
 ];
@@ -38,8 +43,8 @@ final class HttpFehler extends Exception
 
 final class Antwort
 {
-    /** @param array<string,string> $kopf */
-    public function __construct(public int $status, public mixed $daten, public array $kopf = [])
+    /** @param array<string,string> $kopf @param ?string $roh Antwort ohne JSON (z. B. ein Bild); dann bestimmt `$kopf` den Content-Type */
+    public function __construct(public int $status, public mixed $daten, public array $kopf = [], public ?string $roh = null)
     {
     }
 }
@@ -81,9 +86,9 @@ function raeumeAuf(Db $db, int $jetzt): int
 }
 
 /** @return array<string,mixed> */
-function lesen(Anfrage $a): array
+function lesen(Anfrage $a, ?int $maxZeichen = null): array
 {
-    if (strlen($a->body) > LIMITS['maxBodyBytes']) {
+    if (strlen($a->body) > ($maxZeichen ?? LIMITS['maxBodyBytes'])) {
         throw new HttpFehler(413, 'Anfrage zu groß.');
     }
     $erste = ltrim($a->body)[0] ?? '';
@@ -209,6 +214,9 @@ function alsEintrag(array $z): array
     if ($z['becher_nr'] !== null) {
         $e['becherNr'] = (int) $z['becher_nr'];
     }
+    if (!empty($z['foto_am'])) {
+        $e['foto'] = '/api/foto/' . $z['id'] . '?v=' . (int) $z['foto_am'];
+    }
     if ($z['preis'] !== null) {
         $e['preis'] = (float) $z['preis'];
     }
@@ -272,6 +280,14 @@ function aendere(Db $db, string $setzen, array $werte, string $id): int
     });
 }
 
+/** Gibt einer Bewertung eine neue Sync-Nummer, damit alle Geräte sie (mit geändertem Foto) noch einmal holen. */
+function neueSeq(Db $db, string $id): void
+{
+    $db->transaktion(function () use ($db, $id) {
+        $db->lauf('UPDATE becher SET seq = ? WHERE id = ?', [$db->naechsteSeq(), $id]);
+    });
+}
+
 /** @return list<string> */
 function erlaubteUrspruenge(array $env): array
 {
@@ -311,7 +327,7 @@ function behandle(Anfrage $a, Db $db, array $env, int $jetzt): Antwort
 {
     $pfad = rtrim($a->pfad, '/') ?: '/';
     $methode = strtoupper($a->methode);
-    $nurLesen = $methode === 'GET' && ($pfad === '/api/becher' || $pfad === '/api/status' || str_starts_with($pfad, '/api/rennen/'));
+    $nurLesen = $methode === 'GET' && ($pfad === '/api/becher' || $pfad === '/api/status' || str_starts_with($pfad, '/api/rennen/') || str_starts_with($pfad, '/api/foto/'));
     $cors = corsKopf($a, $env, $nurLesen);
 
     try {
@@ -505,11 +521,77 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
         return new Antwort(200, ['ok' => true]);
     }
 
+    // ── Fotos ──
+    // Ein Foto je Bewertung, nur vom Besitzer, nur mit ausdrücklicher Einwilligung (alle dürfen es sehen). JPEG als Base64.
+    if ($pfad === '/api/foto' && $methode === 'POST') {
+        $g = anmelden($a, $db);
+        $b = lesen($a, LIMITS['maxBodyFoto']);
+        if (!is_string($b['id'] ?? null)) {
+            throw new HttpFehler(400, 'Bewertung nötig.');
+        }
+        if (($b['einwilligung'] ?? null) !== true) {
+            throw new HttpFehler(422, 'Bitte bestätige, dass alle das Foto sehen dürfen.');
+        }
+        if (!$db->eins('SELECT id FROM becher WHERE id = ? AND geraet_id = ? AND versteckt = 0', [$b['id'], $g['id']])) {
+            throw new HttpFehler(404, 'Bewertung nicht gefunden.');
+        }
+        $pruefeBild = static function (mixed $roh, int $max): int {
+            if (!is_string($roh) || preg_match('/^[A-Za-z0-9+\/]+={0,2}$/', $roh) !== 1) {
+                throw new HttpFehler(422, 'Das Foto ist kein gültiges Bild.');
+            }
+            if (!str_starts_with($roh, '/9j/')) {
+                throw new HttpFehler(422, 'Das Foto muss ein JPEG sein.');
+            }
+            $bytes = intdiv(strlen($roh) * 3, 4) - (str_ends_with($roh, '==') ? 2 : (str_ends_with($roh, '=') ? 1 : 0));
+            if ($bytes > $max) {
+                throw new HttpFehler(413, 'Das Foto ist zu groß.');
+            }
+            return $bytes;
+        };
+        $groesse = $pruefeBild($b['gross'] ?? null, LIMITS['fotoMaxBytes']);
+        $pruefeBild($b['klein'] ?? null, LIMITS['fotoKleinMaxBytes']);
+        if (!begrenze($db, 'foto:' . $g['id'], TAG_MS, LIMITS['fotosJeGeraetUndTag'], $jetzt)) {
+            throw new HttpFehler(429, 'Heute schon viele Fotos hochgeladen.');
+        }
+        $summe = (int) ($db->eins('SELECT COALESCE(SUM(groesse), 0) AS s FROM fotos')['s'] ?? 0);
+        if ($summe + $groesse > LIMITS['fotosGesamtMaxBytes']) {
+            throw new HttpFehler(507, 'Der Speicher für Fotos ist voll.');
+        }
+        $db->lauf('DELETE FROM fotos WHERE becher_id = ?', [$b['id']]);
+        $db->lauf('INSERT INTO fotos (becher_id, geraet_id, groesse, gross, klein, erstellt_am, versteckt) VALUES (?, ?, ?, ?, ?, ?, 0)', [$b['id'], $g['id'], $groesse, $b['gross'], $b['klein'], $jetzt]);
+        neueSeq($db, (string) $b['id']);
+        return new Antwort(201, ['ok' => true]);
+    }
+    if ($pfad === '/api/foto/loeschen' && $methode === 'POST') {
+        $g = anmelden($a, $db);
+        $b = lesen($a);
+        if (!is_string($b['id'] ?? null)) {
+            throw new HttpFehler(400, 'Bewertung nötig.');
+        }
+        if ($db->lauf('DELETE FROM fotos WHERE becher_id = ? AND geraet_id = ?', [$b['id'], $g['id']]) === 0) {
+            throw new HttpFehler(404, 'Foto nicht gefunden.');
+        }
+        neueSeq($db, (string) $b['id']);
+        return new Antwort(200, ['ok' => true]);
+    }
+    if (str_starts_with($pfad, '/api/foto/') && $methode === 'GET') {
+        $id = rawurldecode(substr($pfad, strlen('/api/foto/')));
+        if (preg_match('/^[A-Za-z0-9_-]{8,64}$/', $id) !== 1) {
+            throw new HttpFehler(404, 'Foto nicht gefunden.');
+        }
+        $z = $db->eins('SELECT f.gross AS gross, f.klein AS klein FROM fotos f JOIN becher b ON b.id = f.becher_id WHERE f.becher_id = ? AND f.versteckt = 0 AND b.versteckt = 0', [$id]);
+        if (!$z) {
+            throw new HttpFehler(404, 'Foto nicht gefunden.');
+        }
+        $bytes = base64_decode((string) (($a->query['g'] ?? '') === 'klein' ? $z['klein'] : $z['gross']), true);
+        return new Antwort(200, null, ['Content-Type' => 'image/jpeg', 'Cache-Control' => 'public, max-age=86400'], $bytes === false ? '' : $bytes);
+    }
+
     if ($pfad === '/api/becher' && $methode === 'GET') {
         $nach = max(0, (int) floor((float) ($a->query['nach'] ?? 0)));
         $limit = (int) floor((float) ($a->query['limit'] ?? 200));
         $limit = min(500, max(1, $limit ?: 200));
-        $zeilen = $db->alle('SELECT * FROM becher WHERE seq > ? ORDER BY seq ASC LIMIT ?', [$nach, $limit + 1]);
+        $zeilen = $db->alle('SELECT b.*, f.erstellt_am AS foto_am FROM becher b LEFT JOIN fotos f ON f.becher_id = b.id AND f.versteckt = 0 WHERE b.seq > ? ORDER BY b.seq ASC LIMIT ?', [$nach, $limit + 1]);
         $mehr = count($zeilen) > $limit;
         $seite = $mehr ? array_slice($zeilen, 0, $limit) : $zeilen;
         $letzte = $seite === [] ? $nach : (int) $seite[count($seite) - 1]['seq'];
@@ -686,6 +768,16 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
         }
 
         // Stand umbenennen oder zusammenführen: gibt allen genannten Bewertungen denselben Stand, Markt und dieselbe Stadt.
+        if ($pfad === '/api/admin/foto-verstecken') {
+            if (!is_string($b['id'] ?? null) || !is_bool($b['versteckt'] ?? null)) {
+                throw new HttpFehler(400, 'id und versteckt nötig.');
+            }
+            if ($db->lauf('UPDATE fotos SET versteckt = ? WHERE becher_id = ?', [$b['versteckt'] ? 1 : 0, $b['id']]) === 0) {
+                throw new HttpFehler(404, 'Foto nicht gefunden.');
+            }
+            neueSeq($db, (string) $b['id']);
+            return new Antwort(200, ['ok' => true]);
+        }
         if ($pfad === '/api/admin/stand-aendern') {
             $ids = $b['ids'] ?? null;
             if (!is_array($ids) || !array_is_list($ids) || count($ids) === 0 || count($ids) > MAX_STAND_IDS) {
@@ -742,6 +834,7 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
                     $betroffen++;
                 }
                 $db->lauf('DELETE FROM meldungen WHERE becher_id = ?', [$id]);
+                $db->lauf('DELETE FROM fotos WHERE becher_id = ?', [$id]);
             }
             return new Antwort(200, ['ok' => true, 'betroffen' => $betroffen]);
         }
@@ -795,6 +888,9 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
                 $db->lauf('UPDATE geraete SET name = NULL WHERE id = ?', [$b['geraet']]);
             } else {
                 $db->lauf("UPDATE geraete SET name = NULL, gesperrt = 1, schluessel_hash = '-' WHERE id = ?", [$b['geraet']]);
+            }
+            if ($b['modus'] === 'alles') {
+                $db->lauf('DELETE FROM fotos WHERE geraet_id = ?', [$b['geraet']]);
             }
             $db->lauf('DELETE FROM meldungen WHERE geraet_id = ? OR becher_id IN (SELECT id FROM (SELECT id FROM becher WHERE geraet_id = ?) AS t)', [$b['geraet'], $b['geraet']]);
             return new Antwort(200, ['ok' => true, 'betroffen' => count($zeilen)]);
