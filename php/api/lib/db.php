@@ -120,6 +120,12 @@ final class Db
                 $this->pdo->exec($q);
             }
         }
+        $hatFahrzeug = $this->typ === 'mysql'
+            ? $this->eins("SELECT 1 AS x FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'rennen_teilnehmer' AND column_name = 'fahrzeug'")
+            : $this->eins("SELECT 1 AS x FROM pragma_table_info('rennen_teilnehmer') WHERE name = 'fahrzeug'");
+        if (!$hatFahrzeug) {
+            $this->pdo->exec('ALTER TABLE rennen_teilnehmer ADD COLUMN fahrzeug INTEGER NOT NULL DEFAULT 0');
+        }
     }
 
     private function schema(): void
@@ -182,7 +188,7 @@ final class Db
                id $id PRIMARY KEY, name $text NOT NULL, ziel INTEGER NOT NULL, ersteller $id NOT NULL,
                erstellt_am $zahl NOT NULL, ende $zahl NOT NULL)$ende",
             "CREATE TABLE rennen_teilnehmer (
-               rennen_id $id NOT NULL, geraet_id $id NOT NULL, kamel $text NOT NULL, farbe INTEGER NOT NULL, seit $zahl NOT NULL,
+               rennen_id $id NOT NULL, geraet_id $id NOT NULL, kamel $text NOT NULL, farbe INTEGER NOT NULL, seit $zahl NOT NULL, fahrzeug INTEGER NOT NULL DEFAULT 0,
                PRIMARY KEY (rennen_id, geraet_id))$ende",
         ];
     }

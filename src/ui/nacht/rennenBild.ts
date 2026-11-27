@@ -1,4 +1,5 @@
 // Das Ergebnis eines Schlittenrennens als Bild für Stories (1080 × 1920, immer im Nachtlook), gezeichnet auf einer Canvas wie die Sammelkarte.
+import { FAHRZEUGE, FAHRZEUG_ANZAHL } from '../../lib/fahrzeuge';
 import { SCHLITTEN_FARBEN, type Bahn } from '../../lib/rennen';
 import { t as uebersetze } from '../../i18n';
 
@@ -15,27 +16,30 @@ export interface RennenBildDaten {
   link: string;
 }
 
-function schlitten(c: CanvasRenderingContext2D, x: number, y: number, s: number, farbe: string): void {
+/** Zeichnet ein Fahrzeug (Beschreibung in lib/fahrzeuge.ts) mit der linken oberen Ecke bei (x, y). */
+function fahrzeug(c: CanvasRenderingContext2D, x: number, y: number, s: number, farbe: string, nr: number): void {
+  const f = FAHRZEUGE[((nr % FAHRZEUG_ANZAHL) + FAHRZEUG_ANZAHL) % FAHRZEUG_ANZAHL];
   c.save();
   c.translate(x, y);
   c.scale(s, s);
-  c.strokeStyle = farbe;
-  c.fillStyle = farbe;
   c.lineCap = 'round';
   c.lineJoin = 'round';
-  c.lineWidth = 2.6;
-  c.stroke(new Path2D('M4 28h30c4 0 6-3 5-7'));
-  c.lineWidth = 2.2;
-  c.stroke(new Path2D('M11 28v-6M27 28v-6'));
-  c.lineWidth = 1;
-  const k = new Path2D('M6 12c5-1 7 1 8 3h20l-3 8H9c0-5-1-8-3-11z');
-  c.fill(k);
-  c.stroke(k);
-  c.lineWidth = 2;
-  c.stroke(new Path2D('M12 15c1-5 5-6 9-5'));
-  c.beginPath();
-  c.arc(30, 11, 3, 0, Math.PI * 2);
-  c.fill();
+  for (const t of f.teile) {
+    const farbeTeil = t.farbe ?? farbe;
+    const pfad = new Path2D();
+    if (t.kreis) pfad.arc(t.kreis[0], t.kreis[1], t.kreis[2], 0, Math.PI * 2);
+    else if (t.ellipse) pfad.ellipse(t.ellipse[0], t.ellipse[1], t.ellipse[2], t.ellipse[3], 0, 0, Math.PI * 2);
+    else if (t.d) pfad.addPath(new Path2D(t.d));
+    if (!t.nurStrich) {
+      c.fillStyle = t.fuellung ?? farbeTeil;
+      c.fill(pfad);
+    }
+    if (t.strich !== undefined) {
+      c.strokeStyle = farbeTeil;
+      c.lineWidth = t.strich;
+      c.stroke(pfad);
+    }
+  }
   c.restore();
 }
 
@@ -110,7 +114,7 @@ export async function erzeugeRennenBild(d: RennenBildDaten): Promise<Blob> {
     c.font = '120px Anton';
     c.fillText(String(s.platz), s.x, boden - s.h + 130);
     if (s.b) {
-      schlitten(c, s.x - 100, boden - s.h - 160, 4.8, SCHLITTEN_FARBEN[s.b.farbe % SCHLITTEN_FARBEN.length]);
+      fahrzeug(c, s.x - 100, boden - s.h - 160, 4.8, SCHLITTEN_FARBEN[s.b.farbe % SCHLITTEN_FARBEN.length], s.b.fahrzeug);
       c.fillStyle = '#ffffff';
       c.font = '44px "IBM Plex Sans"';
       c.fillText(s.b.kamel, s.x, boden - s.h - 190, 290);

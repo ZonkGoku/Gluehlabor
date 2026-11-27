@@ -41,7 +41,15 @@ const RENNEN_MIN = 2;
 const RENNEN_MAX = 50;
 const RENNEN_DAUER = 14 * 24 * 60 * 60_000;
 const RENNEN_FARBEN = 8;
+const FAHRZEUGE = 4;
 const RENNEN_ID = /^[a-z0-9]{8}$/;
+
+/** Fahrzeug aus der Anfrage: fehlt es, gilt 0 (Schlitten); sonst muss es eine ganze Zahl von 0 bis FAHRZEUGE - 1 sein. */
+function fahrzeugAus(roh: unknown): number {
+  if (roh === undefined || roh === null) return 0;
+  if (typeof roh !== 'number' || !Number.isInteger(roh) || roh < 0 || roh >= FAHRZEUGE) throw new HttpFehler(400, 'Ungültiges Fahrzeug.');
+  return roh;
+}
 
 const MELDEGRUENDE = ['unpassend', 'spam', 'falsch', 'persoenlich', 'sonstiges'];
 const MIN = 60_000;
@@ -502,10 +510,11 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
     if (!kname.ok || !kname.name) throw new HttpFehler(422, 'Dein Schlitten braucht einen Namen.');
     if (typeof b.ziel !== 'number' || !Number.isInteger(b.ziel) || b.ziel < RENNEN_MIN || b.ziel > RENNEN_MAX) throw new HttpFehler(400, 'Ungültiges Ziel.');
     if (typeof b.farbe !== 'number' || !Number.isInteger(b.farbe) || b.farbe < 0 || b.farbe >= RENNEN_FARBEN) throw new HttpFehler(400, 'Ungültige Farbe.');
+    const fahrzeug = fahrzeugAus(b.fahrzeug);
     if (!(await begrenze(db, `rennen:${g.id}`, TAG, LIMITS.rennenJeGeraetUndTag, jetzt))) throw new HttpFehler(429, 'Heute schon viele Rennen angelegt.');
     const id = [...crypto.getRandomValues(new Uint8Array(8))].map((x) => 'abcdefghijkmnpqrstuvwxyz23456789'[x % 32]).join('');
     await db.prepare('INSERT INTO rennen (id, name, ziel, ersteller, erstellt_am, ende) VALUES (?, ?, ?, ?, ?, ?)').bind(id, rname.name, b.ziel, g.id, jetzt, jetzt + RENNEN_DAUER).run();
-    await db.prepare('INSERT INTO rennen_teilnehmer (rennen_id, geraet_id, kamel, farbe, seit) VALUES (?, ?, ?, ?, ?)').bind(id, g.id, kname.name, b.farbe, jetzt).run();
+    await db.prepare('INSERT INTO rennen_teilnehmer (rennen_id, geraet_id, kamel, farbe, seit, fahrzeug) VALUES (?, ?, ?, ?, ?, ?)').bind(id, g.id, kname.name, b.farbe, jetzt, fahrzeug).run();
     return json({ ok: true, id }, 201);
   }
   if (pfad === '/api/rennen/beitreten' && methode === 'POST') {
@@ -515,6 +524,7 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
     const kname = pruefeName(b.kamel);
     if (!kname.ok || !kname.name) throw new HttpFehler(422, 'Dein Schlitten braucht einen Namen.');
     if (typeof b.farbe !== 'number' || !Number.isInteger(b.farbe) || b.farbe < 0 || b.farbe >= RENNEN_FARBEN) throw new HttpFehler(400, 'Ungültige Farbe.');
+    const fahrzeug = fahrzeugAus(b.fahrzeug);
     const r = await db.prepare('SELECT id, ende FROM rennen WHERE id = ?').bind(b.id).first<{ id: string; ende: number }>();
     if (!r) throw new HttpFehler(404, 'Rennen nicht gefunden.');
     const schon = await db.prepare('SELECT geraet_id FROM rennen_teilnehmer WHERE rennen_id = ? AND geraet_id = ?').bind(b.id, g.id).first();
@@ -522,7 +532,7 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
     if (r.ende < jetzt) throw new HttpFehler(410, 'Dieses Rennen ist vorbei.');
     const n = await db.prepare('SELECT COUNT(*) AS n FROM rennen_teilnehmer WHERE rennen_id = ?').bind(b.id).first<{ n: number }>();
     if ((n?.n ?? 0) >= LIMITS.maxTeilnehmerJeRennen) throw new HttpFehler(409, 'Das Rennen ist voll.');
-    await db.prepare('INSERT INTO rennen_teilnehmer (rennen_id, geraet_id, kamel, farbe, seit) VALUES (?, ?, ?, ?, ?)').bind(b.id, g.id, kname.name, b.farbe, jetzt).run();
+    await db.prepare('INSERT INTO rennen_teilnehmer (rennen_id, geraet_id, kamel, farbe, seit, fahrzeug) VALUES (?, ?, ?, ?, ?, ?)').bind(b.id, g.id, kname.name, b.farbe, jetzt, fahrzeug).run();
     return json({ ok: true }, 200);
   }
   if ((pfad === '/api/rennen/verlassen' || pfad === '/api/rennen/loeschen') && methode === 'POST') {
@@ -546,10 +556,10 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
     const r = await db.prepare('SELECT id, name, ziel, ersteller, erstellt_am, ende FROM rennen WHERE id = ?').bind(id).first<Record<string, unknown>>();
     if (!r) throw new HttpFehler(404, 'Rennen nicht gefunden.');
     const { results } = await db
-      .prepare('SELECT geraet_id, kamel, farbe, seit FROM rennen_teilnehmer WHERE rennen_id = ? ORDER BY seit ASC, geraet_id ASC')
+      .prepare('SELECT geraet_id, kamel, farbe, seit, fahrzeug FROM rennen_teilnehmer WHERE rennen_id = ? ORDER BY seit ASC, geraet_id ASC')
       .bind(id)
-      .all<{ geraet_id: string; kamel: string; farbe: number; seit: number }>();
-    return json({ rennen: r, teilnehmer: results.map((t) => ({ geraet: t.geraet_id, kamel: t.kamel, farbe: t.farbe, seit: t.seit })) }, 200, { 'Cache-Control': 'no-store' });
+      .all<{ geraet_id: string; kamel: string; farbe: number; seit: number; fahrzeug: number }>();
+    return json({ rennen: r, teilnehmer: results.map((t) => ({ geraet: t.geraet_id, kamel: t.kamel, farbe: t.farbe, fahrzeug: t.fahrzeug ?? 0, seit: t.seit })) }, 200, { 'Cache-Control': 'no-store' });
   }
 
   // ── Moderation ──

@@ -77,7 +77,7 @@ describe('Lage', () => {
 });
 
 describe('sichtbare Bahnen', () => {
-  const viele = Array.from({ length: 20 }, (_, i) => ({ geraet: 'g' + i, kamel: 'K' + i, farbe: 0, schritte: 20 - i, anteil: 0, platz: i + 1, imZiel: false, zielZeit: null }));
+  const viele = Array.from({ length: 20 }, (_, i) => ({ geraet: 'g' + i, kamel: 'K' + i, farbe: 0, fahrzeug: 0, schritte: 20 - i, anteil: 0, platz: i + 1, imZiel: false, zielZeit: null }));
   it('wenige: alle', () => expect(sichtbareBahnen(viele.slice(0, 5), 'g0', 6)).toEqual({ sichtbar: viele.slice(0, 5), rest: 0 }));
   it('viele: Spitze plus du, wenn du nicht dabei bist', () => {
     const r = sichtbareBahnen(viele, 'g15', 6);

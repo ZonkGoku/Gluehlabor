@@ -25,16 +25,35 @@ import { useLive } from './hooks';
 import { Qr } from './Qr';
 import { teileRennenBild } from './nacht/rennenBild';
 import { Konfetti, lageText, Rennbahn, Siegerpodest, farbeVon } from './schlitten/Bahn';
+import { FahrzeugBild } from './schlitten/FahrzeugBild';
+import { FAHRZEUGE } from '../lib/fahrzeuge';
 import { fehlerText, useRennenDaten } from './schlitten/laden';
 
 // ───────── Schlitten wählen (Name und Farbe) ─────────
-function KamelWahl({ name, farbe, onName, onFarbe }: { name: string; farbe: number; onName: (n: string) => void; onFarbe: (f: number) => void }) {
+function KamelWahl({ name, farbe, fahrzeug, onName, onFarbe, onFahrzeug }: { name: string; farbe: number; fahrzeug: number; onName: (n: string) => void; onFarbe: (f: number) => void; onFahrzeug: (f: number) => void }) {
   return (
     <div class="grid gap-3">
       <label class="grid gap-1.5 text-[15px] text-dunst">
         {t('Name deines Schlittens')}
         <input class="feld min-h-[48px] text-[17px]" type="text" maxLength={24} value={name} onInput={(e) => onName((e.target as HTMLInputElement).value)} autocomplete="off" />
       </label>
+      <div role="radiogroup" aria-label={t('Fahrzeug')} class="grid grid-cols-4 gap-2">
+        {FAHRZEUGE.map((f, i) => (
+          <button
+            type="button"
+            role="radio"
+            aria-checked={fahrzeug === i}
+            aria-label={t(f.name)}
+            onClick={() => onFahrzeug(i)}
+            class={`grid min-h-[64px] place-items-center gap-0.5 rounded-2xl border-2 px-1 py-1 ${fahrzeug === i ? 'border-[var(--nm-stern)] bg-flaeche' : 'border-[var(--nm-bedienung)]'}`}
+          >
+            <svg viewBox="0 0 46 34" class="w-10" aria-hidden="true">
+              <FahrzeugBild farbe={SCHLITTEN_FARBEN[farbe % SCHLITTEN_FARBEN.length]} fahrzeug={i} />
+            </svg>
+            <span class="text-[11px] text-dunst">{t(f.name)}</span>
+          </button>
+        ))}
+      </div>
       <div role="radiogroup" aria-label={t('Farbe')} class="flex flex-wrap gap-2">
         {SCHLITTEN_FARBEN.map((f, i) => (
           <button
@@ -56,16 +75,18 @@ function useKamelWahl() {
   const standard = useName();
   const [name, setName] = useState('');
   const [farbe, setFarbe] = useState(0);
+  const [fahrzeug, setFahrzeug] = useState(0);
   useEffect(() => {
     void letztesKamel().then((k) => {
       if (k) {
         setName(k.name);
         setFarbe(k.farbe);
+        setFahrzeug(k.fahrzeug ?? 0);
       }
     });
   }, []);
   useEffect(() => setName((n) => n || standard), [standard]);
-  return { name, setName, farbe, setFarbe };
+  return { name, setName, farbe, setFarbe, fahrzeug, setFahrzeug };
 }
 
 const knopf = 'flex min-h-[56px] w-full items-center justify-center rounded-full px-6 text-[17px] font-bold text-[#1a1020] no-underline disabled:opacity-50';
@@ -212,8 +233,8 @@ function NeuesRennen({ onZu }: { onZu: () => void }) {
     setLaeuft(true);
     setFehler('');
     try {
-      const id = await legeRennenAn(rname.trim(), ziel, k.name.trim(), k.farbe);
-      await merkeKamel(k.name.trim(), k.farbe);
+      const id = await legeRennenAn(rname.trim(), ziel, k.name.trim(), k.farbe, k.fahrzeug);
+      await merkeKamel(k.name.trim(), k.farbe, k.fahrzeug);
       location.hash = `#/schlittenfahren/${id}`;
     } catch (e) {
       setFehler(fehlerText(e));
@@ -253,7 +274,7 @@ function NeuesRennen({ onZu }: { onZu: () => void }) {
           </button>
         </div>
       </div>
-      <KamelWahl name={k.name} farbe={k.farbe} onName={k.setName} onFarbe={k.setFarbe} />
+      <KamelWahl name={k.name} farbe={k.farbe} fahrzeug={k.fahrzeug} onName={k.setName} onFarbe={k.setFarbe} onFahrzeug={k.setFahrzeug} />
       {fehler && (
         <p role="alert" class="m-0 text-[15px] text-[var(--warnung)]">
           {fehler}
@@ -483,8 +504,8 @@ function BeitrittsBlock({ id, voll, vorbei, danach }: { id: string; voll: boolea
     try {
       if (schnell) await trittMitStandardBei(id);
       else {
-        await trittBei(id, k.name.trim(), k.farbe);
-        await merkeKamel(k.name.trim(), k.farbe);
+        await trittBei(id, k.name.trim(), k.farbe, k.fahrzeug);
+        await merkeKamel(k.name.trim(), k.farbe, k.fahrzeug);
       }
       danach();
     } catch (e) {
@@ -497,7 +518,7 @@ function BeitrittsBlock({ id, voll, vorbei, danach }: { id: string; voll: boolea
       <p class="m-0 text-[17px] font-semibold text-eis">{t('Fahr mit! Such dir einen Schlitten aus.')}</p>
       {aendern ? (
         <>
-          <KamelWahl name={k.name} farbe={k.farbe} onName={k.setName} onFarbe={k.setFarbe} />
+          <KamelWahl name={k.name} farbe={k.farbe} fahrzeug={k.fahrzeug} onName={k.setName} onFarbe={k.setFarbe} onFahrzeug={k.setFahrzeug} />
           <button type="button" class={knopf} style={KNOPF_STIL} disabled={!ok || laeuft} onClick={() => void los(false)}>
             {t('Mitfahren')}
           </button>

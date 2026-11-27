@@ -26,6 +26,8 @@ export interface Teilnehmer {
   geraet: string;
   kamel: string;
   farbe: number;
+  /** Fahrzeug (lib/fahrzeuge.ts), ältere Rennen: 0 = Schlitten */
+  fahrzeug?: number;
   seit: number;
 }
 type Zeile = { id: string; geraet?: string; erstelltAm: number; sync?: string };
@@ -34,6 +36,7 @@ export interface Bahn {
   geraet: string;
   kamel: string;
   farbe: number;
+  fahrzeug: number;
   schritte: number;
   /** 0 bis 1 */
   anteil: number;
@@ -70,6 +73,7 @@ export function berechneRennen(rennen: Rennen, teilnehmer: readonly Teilnehmer[]
       geraet: t.geraet,
       kamel: t.kamel,
       farbe: t.farbe,
+      fahrzeug: t.fahrzeug ?? 0,
       schritte,
       anteil: schritte / rennen.ziel,
       platz: 0,

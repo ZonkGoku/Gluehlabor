@@ -94,7 +94,7 @@ describe('Schlittenfahren', () => {
     expect(l.status).toBe(200);
     expect(l.json.rennen).toMatchObject({ id: r.json.id, name: 'Feierabendrennen', ziel: 20 });
     expect(l.json.rennen.ende).toBeGreaterThan(JETZT);
-    expect(l.json.teilnehmer).toEqual([{ geraet: g.id, kamel: 'Blitz', farbe: 2, seit: JETZT }]);
+    expect(l.json.teilnehmer).toEqual([{ geraet: g.id, kamel: 'Blitz', farbe: 2, fahrzeug: 0, seit: JETZT }]);
     expect(l.kopf.get('access-control-allow-origin')).toBe('*');
   });
   it('anlegen braucht Anmeldung, Namen, ein erlaubtes Ziel und eine Farbe', async () => {
@@ -174,6 +174,23 @@ describe('Schlittenfahren', () => {
     expect((await ruf('POST', '/api/rennen/loeschen', { auth: a.auth, body: { id } })).status).toBe(200);
     expect((await ruf('GET', `/api/rennen/${id}`)).status).toBe(404);
     expect((await ruf('POST', '/api/rennen/loeschen', { auth: a.auth, body: { id } })).status).toBe(404);
+  });
+  it('Fahrzeug: wählbar beim Anlegen und Beitreten, ohne Angabe Schlitten, ungültig 400', async () => {
+    const a = await geraet();
+    const b = await geraet();
+    const id = (await neu(a, { fahrzeug: 1 })).json.id;
+    expect((await ruf('POST', '/api/rennen/beitreten', { auth: b.auth, body: { id, kamel: 'Sandy', farbe: 4, fahrzeug: 3 } })).status).toBe(200);
+    const c = await geraet();
+    expect((await ruf('POST', '/api/rennen/beitreten', { auth: c.auth, body: { id, kamel: 'Ohne', farbe: 0 } })).status).toBe(200);
+    const l = await ruf('GET', `/api/rennen/${id}`);
+    const nach = Object.fromEntries(l.json.teilnehmer.map((t: any) => [t.kamel, t.fahrzeug]));
+    expect(nach).toEqual({ Blitz: 1, Sandy: 3, Ohne: 0 });
+    const d = await geraet();
+    expect((await neu(d, { fahrzeug: 4 })).status).toBe(400);
+    expect((await neu(d, { fahrzeug: -1 })).status).toBe(400);
+    expect((await neu(d, { fahrzeug: 1.5 })).status).toBe(400);
+    expect((await neu(d, { fahrzeug: '1' })).status).toBe(400);
+    expect((await ruf('POST', '/api/rennen/beitreten', { auth: d.auth, body: { id, kamel: 'Falsch', farbe: 0, fahrzeug: 9 } })).status).toBe(400);
   });
   it('unbekanntes oder kaputtes Rennen lesen: 404', async () => {
     expect((await ruf('GET', '/api/rennen/abcdefgh')).status).toBe(404);

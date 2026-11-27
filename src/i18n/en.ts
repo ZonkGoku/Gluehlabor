@@ -1016,4 +1016,8 @@ export const EN: Record<string, string> = {
   "Tippe auf die Sterne, mehr brauchst du nicht": "Tap the stars, that's all you need",
   "Weniger Sterne zeigen": "Show fewer stars",
   "Weitere Sterne vergeben (Geruch, Temperatur, Personal …)": "Rate more (smell, temperature, staff …)",
+  "Fahrzeug": "Vehicle",
+  "Schlitten": "Sled",
+  "Rennwagen": "Race car",
+  "Rentier": "Reindeer",
 };
