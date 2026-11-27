@@ -46,9 +46,17 @@ export function Geruest({ route, children, ohneNavigation = false }: { route: st
             <SpracheKnopf />
             {breit && <MenueKnopf />}
             <ThemeKnopf />
-            <a class={ICONKNOPF} href="#/spickzettel" aria-label={t('Hilfe & Regeln')}>
-              <Symbol name="spickzettel" groesse={20} />
-            </a>
+            {/* Wer schon bewertet hat, kommt von überall mit einem Tipp zu seinen Bewertungen. Am Telefon ersetzt das Symbol die Hilfe (die steht unter „Mehr“). */}
+            {darf && (
+              <a class={ICONKNOPF} href="#/meine" aria-label={t('Meine Bewertungen')} aria-current={route === 'meine' ? 'page' : undefined} title={t('Meine Bewertungen')}>
+                <Symbol name="rangliste" groesse={20} />
+              </a>
+            )}
+            {(!darf || breit) && (
+              <a class={ICONKNOPF} href="#/spickzettel" aria-label={t('Hilfe & Regeln')}>
+                <Symbol name="spickzettel" groesse={20} />
+              </a>
+            )}
           </header>
           {!ohneNavigation && <Navigation route={route} />}
         </>

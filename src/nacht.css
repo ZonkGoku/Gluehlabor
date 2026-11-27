@@ -1426,3 +1426,10 @@ html[data-tastatur] [data-schwebende-leiste] {
 html {
   touch-action: manipulation;
 }
+
+/* Sehr schmale Telefone: der Statuspunkt der Synchronisation entfällt im Kopf (Probleme zeigt SyncProblem, Stand steht unter „Meine Bewertungen“) */
+@media (max-width: 399px) {
+  header .sync {
+    display: none;
+  }
+}
