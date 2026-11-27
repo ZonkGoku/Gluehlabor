@@ -3,6 +3,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { t, tn } from '../../i18n';
 import { sichtbareBahnen, SCHLITTEN_FARBEN, type Bahn, type Lage } from '../../lib/rennen';
 import { FahrzeugBild } from './FahrzeugBild';
+import { useGesicht } from './gesicht';
 
 export const farbeVon = (i: number): string => SCHLITTEN_FARBEN[i % SCHLITTEN_FARBEN.length];
 
@@ -29,6 +30,7 @@ const MAX_BAHNEN = 6;
 
 export function Rennbahn({ bahnen, ich }: { bahnen: Bahn[]; ich: string | null }) {
   const bereit = useBereit();
+  const gesicht = useGesicht();
   const { sichtbar, rest } = sichtbareBahnen(bahnen, ich, MAX_BAHNEN);
   const bahnH = sichtbar.length > 4 ? 46 : 58;
   const hoehe = OBEN + bahnH * sichtbar.length + 24;
@@ -49,7 +51,7 @@ export function Rennbahn({ bahnen, ich }: { bahnen: Bahn[]; ich: string | null }
               <g class="kamel-lauf" style={{ transform: `translate(${bereit ? x : X0}px, ${y + (bahnH > 50 ? 15 : 10)}px)` }}>
                 <g class={b.platz === 1 && b.schritte > 0 ? 'kamel-wippen' : ''}>
                   <g transform={bahnH > 50 ? 'scale(1.15)' : 'scale(0.95)'}>
-                    <FahrzeugBild farbe={farbeVon(b.farbe)} fahrzeug={b.fahrzeug} />
+                    <FahrzeugBild farbe={farbeVon(b.farbe)} fahrzeug={b.fahrzeug} gesicht={ichBin ? gesicht : null} />
                   </g>
                 </g>
               </g>
@@ -77,13 +79,14 @@ export function Rennbahn({ bahnen, ich }: { bahnen: Bahn[]; ich: string | null }
 /** Ein einzelner Streifen: dein Schlitten fährt von `von` nach `nach` (je 0 bis 1). Für das Ticket nach dem Bewerten. */
 export function MiniBahn({ farbe, von, nach, fahrzeug = 0 }: { farbe: string; von: number; nach: number; fahrzeug?: number }) {
   const bereit = useBereit();
+  const gesicht = useGesicht();
   const x = (a: number) => X0 + a * (X1 - X0 - SCHLITTEN_B);
   return (
     <svg viewBox={`0 0 ${B} 52`} class="block h-auto w-full" role="img" aria-label={t('Dein Schlitten auf der Bahn')}>
       <rect x={X0 - 10} y="4" width={X1 - X0 + 34} height="44" rx="14" fill="currentColor" opacity="0.08" />
       <path d={`M${X0} 40H${X1 + 10}`} stroke="currentColor" opacity="0.25" stroke-dasharray="3 6" stroke-linecap="round" fill="none" />
       <g class="kamel-lauf" style={{ transform: `translate(${x(bereit ? nach : von)}px, 8px)` }}>
-        <FahrzeugBild farbe={farbe} fahrzeug={fahrzeug} />
+        <FahrzeugBild farbe={farbe} fahrzeug={fahrzeug} gesicht={gesicht} />
       </g>
       <g aria-hidden="true">
         {[0, 1, 2, 3, 4].map((r) => [0, 1].map((c) => <rect x={X1 + 14 + c * 8} y={6 + r * 8} width="8" height="8" fill={(r + c) % 2 ? '#ffc857' : '#1a1020'} />))}

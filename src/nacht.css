@@ -1433,3 +1433,35 @@ html {
     display: none;
   }
 }
+
+/* Einwilligung „Foto für alle sichtbar“ unter dem Foto-Knopf */
+.erf .foto-oeffentlich {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--linie-stark);
+  border-radius: 16px;
+  background: var(--flaeche);
+  cursor: pointer;
+}
+.erf .foto-oeffentlich input {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin-top: 2px;
+  accent-color: var(--nm-akzent-text);
+}
+.erf .foto-oeffentlich b {
+  display: block;
+  font-size: 16px;
+  color: var(--text);
+}
+.erf .foto-oeffentlich small {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--text-2);
+}

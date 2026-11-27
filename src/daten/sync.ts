@@ -9,6 +9,7 @@ import { eintragFuerServer, istEintrag } from '../lib/veroeffentlichung';
 import { api, ApiFehler } from './api';
 import { HAT_SERVER } from './config';
 import { db, holeGeraet, leseEinstellung, schreibeEinstellung, type LokalerEintrag } from './db';
+import { bereiteFotoFuerUpload } from './foto';
 
 export type SyncZustand = 'bereit' | 'laeuft' | 'offline' | 'kein-server' | 'fehler' | 'gesperrt';
 
@@ -119,6 +120,27 @@ async function sendeAenderungen(geraet: Awaited<ReturnType<typeof holeGeraet>>):
   }
 }
 
+/** Lädt Fotos hoch, die der Bewertende für alle freigegeben hat (und nur die). Scheitert ein Bild dauerhaft, bleibt es privat und der Grund wird gemerkt. */
+async function sendeFotos(geraet: Awaited<ReturnType<typeof holeGeraet>>): Promise<void> {
+  const offen = (await db.eintraege.toArray()).filter((e) => e.sync === 'fertig' && e.fotoBlob && e.fotoOeffentlich && !e.fotoHochgeladen);
+  for (const e of offen) {
+    try {
+      const { gross, klein } = await bereiteFotoFuerUpload(e.fotoBlob as Blob);
+      await api('/api/foto', { methode: 'POST', geraet, body: { id: e.id, einwilligung: true, gross, klein } });
+      await db.eintraege.update(e.id, { fotoHochgeladen: true, fotoFehler: undefined });
+    } catch (err) {
+      if (err instanceof ApiFehler && (err.status === 429 || err.status === 507)) {
+        await db.eintraege.update(e.id, { fotoFehler: err.message });
+        return; // später wieder
+      }
+      if (err instanceof ApiFehler && err.status >= 500) throw err;
+      if (err instanceof TypeError) throw err; // kein Netz: später wieder
+      // Das Bild ist nicht brauchbar oder der Server mag es nicht: privat lassen, Grund merken
+      await db.eintraege.update(e.id, { fotoOeffentlich: false, fotoFehler: err instanceof Error ? err.message : 'Das Foto konnte nicht hochgeladen werden.' });
+    }
+  }
+}
+
 interface Seite {
   eintraege: unknown[];
   naechste: number;
@@ -144,7 +166,8 @@ export async function holeBecher(): Promise<number> {
         if (lokal?.sync === 'offen' || lokal?.aenderung) continue; // lokale Fassung gewinnt, bis sie gesendet ist
         if (!lokal) neu++;
         // Foto bleibt erhalten: es liegt nur lokal.
-        await db.eintraege.put({ ...(lokal ?? {}), ...roh, sync: 'fertig', syncFehler: undefined });
+        // `foto` kommt immer vom Server (fehlt es dort, ist das Foto privat, gelöscht oder ausgeblendet)
+        await db.eintraege.put({ ...(lokal ?? {}), ...roh, foto: (roh as { foto?: string }).foto, sync: 'fertig', syncFehler: undefined });
       }
     });
     cursor = seite.naechste;
@@ -186,6 +209,7 @@ async function lauf(): Promise<void> {
     await sendeName(geraet);
     await sendeBecher(geraet);
     await sendeAenderungen(geraet);
+    await sendeFotos(geraet);
     await holeBecher();
     setze({ zustand: 'bereit', zuletzt: Date.now() });
   } catch (err) {

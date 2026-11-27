@@ -21,6 +21,12 @@ export interface LokalerEintrag extends Eintrag {
   syncFehler?: string;
   /** Die Bewertung wurde nach dem Senden geändert; die Änderung ist noch nicht beim Server (siehe sendeAenderungen). */
   aenderung?: boolean;
+  /** Der Bewertende hat erlaubt, dass alle das Foto sehen (ausdrücklich, je Foto). Ohne das bleibt es auf diesem Gerät. */
+  fotoOeffentlich?: boolean;
+  /** Das Foto liegt beim Server. */
+  fotoHochgeladen?: boolean;
+  /** Grund, warum das Foto nicht hochgeladen wurde */
+  fotoFehler?: string;
 }
 
 export interface Einstellung {
@@ -69,7 +75,7 @@ export const leseGewichte = () => leseEinstellung<Gewichte>('gewichte', { ...DEF
  * meldet die Oberfläche „gespeichert". Bittet den Browser außerdem, den
  * Speicher nicht bei Platzmangel zu räumen.
  */
-export async function speichereNeuenEintrag(e: Eintrag, fotoBlob?: Blob): Promise<void> {
+export async function speichereNeuenEintrag(e: Eintrag, fotoBlob?: Blob, fotoOeffentlich = false): Promise<void> {
   const geraet = await holeGeraet();
   const name = await leseEinstellung<string>('name', '');
   await db.eintraege.add({
@@ -77,7 +83,7 @@ export async function speichereNeuenEintrag(e: Eintrag, fotoBlob?: Blob): Promis
     geraet: geraet.id,
     ...(name ? { name } : {}),
     sync: 'offen',
-    ...(fotoBlob ? { fotoBlob } : {}),
+    ...(fotoBlob ? { fotoBlob, fotoOeffentlich } : {}),
   });
   try {
     if (navigator.storage?.persist && !(await navigator.storage.persisted())) {

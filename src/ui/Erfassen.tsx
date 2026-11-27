@@ -113,6 +113,22 @@ export function Erfassen() {
   const [preisFehlt, setPreisFehlt] = useState(false);
   const [becherNrAngefasst, setBecherNrAngefasst] = useState(() => leseEntwurf()?.becherNr !== undefined);
   const [foto, setFoto] = useState<Blob | null>(null);
+  // Foto für alle sichtbar? Nur wer es ausdrücklich ankreuzt. Die letzte Wahl merkt sich das Gerät, sie steht aber bei jedem Foto sichtbar da.
+  const [fotoOeffentlich, setFotoOeffentlich] = useState(() => {
+    try {
+      return localStorage.getItem('gluehlabor.fotoOeffentlich') === '1';
+    } catch {
+      return false;
+    }
+  });
+  const waehleOeffentlich = (an: boolean) => {
+    setFotoOeffentlich(an);
+    try {
+      localStorage.setItem('gluehlabor.fotoOeffentlich', an ? '1' : '0');
+    } catch {
+      /* nicht kritisch */
+    }
+  };
   const [hilfeOffen, setHilfeOffen] = useState<Kriterium | null>(null);
   const [fehlt, setFehlt] = useState(false);
   const [gespeichert, setGespeichert] = useState<string | null>(null);
@@ -251,7 +267,7 @@ export function Erfassen() {
     if (e.menge !== undefined) eintrag.menge = e.menge;
     if (e.notiz.trim()) eintrag.notiz = e.notiz.trim();
 
-    await speichereNeuenEintrag(eintrag, foto ?? undefined);
+    await speichereNeuenEintrag(eintrag, foto ?? undefined, Boolean(foto) && fotoOeffentlich);
     // Ab hier ist der Becher sicher auf dem Gerät.
     if (eintrag.stadt) merkeOrt(eintrag.stadt, eintrag.markt === MARKTLISTE.sonstiger ? undefined : eintrag.markt);
     await schreibeEntwurfFoto(null);
@@ -516,6 +532,15 @@ export function Erfassen() {
         <span>{foto ? t('Foto ändern') : t('Foto hinzufügen')}</span>
         <input type="file" accept="image/*" aria-label={t('Foto')} onChange={waehleFoto} />
       </label>
+      {foto && (
+        <label class="foto-oeffentlich">
+          <input type="checkbox" checked={fotoOeffentlich} onChange={(ev) => waehleOeffentlich((ev.target as HTMLInputElement).checked)} />
+          <span>
+            <b>{t('Foto für alle sichtbar machen')}</b>
+            <small>{t('Alle in der App können es sehen, auch ohne Namen auf dem Bild. Du kannst es jederzeit wieder privat machen oder löschen. Bitte nur Fotos ohne erkennbare fremde Personen.')}</small>
+          </span>
+        </label>
+      )}
 
       <details class="mehr-angaben" open={Boolean(e.sorte || e.notiz.trim())}>
         <summary>{t('Mehr Angaben')}</summary>

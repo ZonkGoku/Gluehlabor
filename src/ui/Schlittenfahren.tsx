@@ -28,6 +28,44 @@ import { Konfetti, lageText, Rennbahn, Siegerpodest, farbeVon } from './schlitte
 import { FahrzeugBild } from './schlitten/FahrzeugBild';
 import { FAHRZEUGE } from '../lib/fahrzeuge';
 import { fehlerText, useRennenDaten } from './schlitten/laden';
+import { useGesicht } from './schlitten/gesicht';
+import { loescheGesicht, setzeGesicht } from '../daten/gesicht';
+
+// ───────── Fahrer-Foto (nur auf diesem Gerät) ─────────
+function FahrerFoto() {
+  const gesicht = useGesicht();
+  const [fehler, setFehler] = useState('');
+  const waehle = async (ev: Event) => {
+    const datei = (ev.target as HTMLInputElement).files?.[0];
+    if (!datei) return;
+    try {
+      await setzeGesicht(datei);
+      setFehler('');
+    } catch {
+      setFehler(t('Das Bild ließ sich nicht lesen.'));
+    }
+  };
+  return (
+    <div class="flex items-center gap-3 rounded-2xl border border-[var(--linie-stark)] p-3">
+      <span class="grid size-14 shrink-0 place-items-center overflow-hidden rounded-full border-2 border-[var(--nm-bedienung)] bg-flaeche text-dunst">
+        {gesicht ? <img src={gesicht} alt="" class="size-full object-cover" /> : <span class="text-xs">{t('Foto')}</span>}
+      </span>
+      <span class="min-w-0 flex-1">
+        <label class="inline-flex min-h-[44px] cursor-pointer items-center font-semibold text-gold-300">
+          {gesicht ? t('Fahrer-Foto ändern') : t('Fahrer-Foto hinzufügen')}
+          <input type="file" accept="image/*" class="sr-only" aria-label={t('Fahrer-Foto')} onChange={waehle} />
+        </label>
+        {gesicht && (
+          <button type="button" class="ml-3 min-h-[44px] text-sm text-dunst underline" onClick={() => void loescheGesicht()}>
+            {t('Entfernen')}
+          </button>
+        )}
+        <small class="block text-[13px] leading-snug text-dunst">{t('Bleibt auf deinem Handy. Andere sehen dich nur als Fahrzeug.')}</small>
+        {fehler && <small class="block text-[13px] text-[var(--warnung)]">{fehler}</small>}
+      </span>
+    </div>
+  );
+}
 
 // ───────── Schlitten wählen (Name und Farbe) ─────────
 function KamelWahl({ name, farbe, fahrzeug, onName, onFarbe, onFahrzeug }: { name: string; farbe: number; fahrzeug: number; onName: (n: string) => void; onFarbe: (f: number) => void; onFahrzeug: (f: number) => void }) {
@@ -54,6 +92,7 @@ function KamelWahl({ name, farbe, fahrzeug, onName, onFarbe, onFahrzeug }: { nam
           </button>
         ))}
       </div>
+      <FahrerFoto />
       <div role="radiogroup" aria-label={t('Farbe')} class="flex flex-wrap gap-2">
         {SCHLITTEN_FARBEN.map((f, i) => (
           <button

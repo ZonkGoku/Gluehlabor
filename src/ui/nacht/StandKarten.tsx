@@ -3,6 +3,7 @@ import { t as tt, tn } from '../../i18n';
 import { euro, sterneText } from '../../lib/format';
 import { ortText } from '../../lib/orte';
 import { dealAlsZeile, standAlsZeile, type Quelle, type Stand } from '../../lib/staende';
+import { fotoAdresse } from '../../daten/fotos';
 import { MARKTLISTE } from '../stammdaten';
 import { RangZeile } from './RangZeile';
 import { TopKarte } from './Ticket';
@@ -43,7 +44,9 @@ export function StandTopKarte({ stand, klein, quelle = 'alle', hinweis, klasse, 
 
 export function StandZeile({ stand }: { stand: Stand }) {
   const zeile = standAlsZeile(stand);
-  return <RangZeile zeile={zeile} ort={stand.stadt ?? ortText(MARKTLISTE, zeile.eintrag)} href={standHref(stand)} anzahl={stand.wert.anzahl} siegel={stand.pruefstelle.anzahl > 0} deal={stand.deal.top} />;
+  // Das neueste Foto der Community (vom Server) als kleine Vorschau
+  const mitFoto = stand.bewertungen.find((e) => e.foto);
+  return <RangZeile zeile={zeile} ort={stand.stadt ?? ortText(MARKTLISTE, zeile.eintrag)} href={standHref(stand)} anzahl={stand.wert.anzahl} siegel={stand.pruefstelle.anzahl > 0} deal={stand.deal.top} bild={mitFoto ? fotoAdresse(mitFoto, true) : undefined} />;
 }
 
 /** Zeile der Top-Deals-Liste: Preis-Leistung statt Gesamtnote, dazu der übliche Preis. */

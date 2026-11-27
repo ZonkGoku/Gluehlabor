@@ -36,6 +36,12 @@ export async function verstecke(ids: string[], versteckt: boolean): Promise<void
   await holeBecher();
 }
 
+/** Foto einer Bewertung ausblenden oder wieder einblenden (nur Prüfstelle). */
+export async function versteckeFoto(id: string, versteckt: boolean): Promise<void> {
+  await admin('foto-verstecken', { id, versteckt });
+  await holeBecher();
+}
+
 export const verwirfMeldung = (id: string) => admin('meldung-verwerfen', { id });
 export const sperreGeraet = async (geraet: string, gesperrt: boolean) => {
   await admin('sperren', { geraet, gesperrt });

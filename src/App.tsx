@@ -1,6 +1,7 @@
 import { Detail } from './ui/Detail';
 import { Entdecken } from './ui/Entdecken';
 import { Aendern } from './ui/Aendern';
+import { Fotos } from './ui/Fotos';
 import { MeineBewertungen } from './ui/MeineBewertungen';
 import { RennenSeite, SchlittenfahrenUebersicht } from './ui/Schlittenfahren';
 import { Einstellungen } from './ui/Einstellungen';
@@ -39,6 +40,7 @@ export function App() {
   else if (route === 'mehr') seite = <Mehr />;
   else if (route === 'entdecken') seite = <Entdecken />;
   else if (route === 'meine') seite = <MeineBewertungen />;
+  else if (route === 'fotos') seite = <Fotos />;
   else if (route === 'schlittenfahren' || route === 'schlittenrennen' || route === 'kamelrennen') seite = <SchlittenfahrenUebersicht />;
   else if (route.startsWith('schlittenfahren/') || route.startsWith('schlittenrennen/') || route.startsWith('kamelrennen/')) seite = <RennenSeite id={route.slice(route.indexOf('/') + 1)} />;
   else if (route === 'vergleich') seite = <Vergleich />;

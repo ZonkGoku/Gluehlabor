@@ -19,6 +19,8 @@ export interface Teil {
 export interface Fahrzeug {
   name: string;
   teile: Teil[];
+  /** Wo das eigene Fahrer-Foto sitzt: Mitte x, Mitte y, Radius (nur auf dem eigenen Gerät sichtbar) */
+  fahrer: [number, number, number];
 }
 
 /** Anzahl der Fahrzeuge; der Server prüft denselben Wert (FAHRZEUGE). */
@@ -27,6 +29,7 @@ export const FAHRZEUG_ANZAHL = 4;
 export const FAHRZEUGE: readonly Fahrzeug[] = [
   {
     name: 'Schlitten',
+    fahrer: [30, 9, 6],
     teile: [
       { d: 'M4 28h30c4 0 6-3 5-7', strich: 2.6, nurStrich: true },
       { d: 'M11 28v-6M27 28v-6', strich: 2.2, nurStrich: true },
@@ -37,6 +40,7 @@ export const FAHRZEUGE: readonly Fahrzeug[] = [
   },
   {
     name: 'Rennwagen',
+    fahrer: [24, 12, 5.5],
     teile: [
       { d: 'M3 23c0-4 3-6 8-7l6-5h10l5 5c4 .6 7 2 7 5v3H3z', strich: 1 },
       { d: 'M17 16l4-3.5h6.5l3.5 3.5z', farbe: 'rgba(10,16,40,.78)' },
@@ -49,6 +53,7 @@ export const FAHRZEUGE: readonly Fahrzeug[] = [
   },
   {
     name: 'Rentier',
+    fahrer: [19, 10, 6],
     teile: [
       { ellipse: [19, 18, 11, 6] },
       { d: 'M28 15l5-7', strich: 3.2, nurStrich: true },
@@ -61,6 +66,7 @@ export const FAHRZEUGE: readonly Fahrzeug[] = [
   },
   {
     name: 'Tasse',
+    fahrer: [18, 8, 6.5],
     teile: [
       { d: 'M8 10h20v13a5 5 0 0 1-5 5H13a5 5 0 0 1-5-5z', strich: 1 },
       { d: 'M28 13h3a4 4 0 0 1 0 8h-3', strich: 2.4, nurStrich: true },

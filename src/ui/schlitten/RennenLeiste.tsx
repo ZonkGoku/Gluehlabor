@@ -2,13 +2,15 @@
 import { t } from '../../i18n';
 import { farbeVon } from './Bahn';
 import { FahrzeugBild } from './FahrzeugBild';
+import { useGesicht } from './gesicht';
 import { useMeineRennen, type MeinRennen } from './meine';
 
 function Mini({ farbe, fahrzeug = 0 }: { farbe: string; fahrzeug?: number }) {
+  const gesicht = useGesicht();
   return (
     <svg viewBox="0 0 46 34" class="w-9 shrink-0" aria-hidden="true">
       <g transform="translate(2 1)">
-        <FahrzeugBild farbe={farbe} fahrzeug={fahrzeug} />
+        <FahrzeugBild farbe={farbe} fahrzeug={fahrzeug} gesicht={gesicht} />
       </g>
     </svg>
   );

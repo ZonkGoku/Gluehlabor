@@ -5,7 +5,7 @@ import { PruefSiegel } from './PruefSiegel';
 import { SterneZeile } from './SterneWert';
 import { stufe } from './Ticket';
 
-export function RangZeile({ zeile, ort, href, anzahl, siegel = false, deal = false }: { zeile: Zeile; ort?: string; href?: string; anzahl?: number; siegel?: boolean; deal?: boolean }) {
+export function RangZeile({ zeile, ort, href, anzahl, siegel = false, deal = false, bild }: { zeile: Zeile; ort?: string; href?: string; anzahl?: number; siegel?: boolean; deal?: boolean; bild?: string }) {
   const { eintrag: e, wertung: w, rang } = zeile;
   const s = stufe(rang);
   return (
@@ -20,6 +20,7 @@ export function RangZeile({ zeile, ort, href, anzahl, siegel = false, deal = fal
       >
         {rang ?? '–'}
       </span>
+      {bild && <img src={bild} alt="" loading="lazy" decoding="async" class="size-12 shrink-0 rounded-xl border border-rand object-cover" />}
       <span class="min-w-0 flex-1">
         <span class="flex items-center gap-1.5">
           <span class="truncate text-[17px] font-semibold leading-tight">{e.stand}</span>

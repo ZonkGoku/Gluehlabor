@@ -10,6 +10,7 @@ import { Betreiber } from './bausteine';
 import { setzeName } from '../daten/db';
 import { synchronisiere } from '../daten/sync';
 import { anzeigeName, istPruefstelle, pruefeName } from '../lib/community';
+import { FotoLeiste } from './Fotos';
 import { InstallKarte } from './InstallKarte';
 import { RennenKarte } from './schlitten/RennenLeiste';
 import { useEintraege, useGeraetId, useGewichte, useMeineAnzahl, useName, useSaison } from './daten';
@@ -249,6 +250,8 @@ export function Uebersicht() {
             </ul>
           </section>
         )}
+
+        <FotoLeiste />
 
         <div data-ein class="mt-6">
           <RennenKarte />

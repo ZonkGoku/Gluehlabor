@@ -170,6 +170,13 @@ Eigenes Spiel unter „Mehr“ (`#/schlittenfahren`, `#/schlittenfahren/<id>`, a
 - **Schwebende Leiste unten** (`data-schwebende-leiste`): verschwindet, solange ein Eingabefeld Fokus hat (`data-tastatur`, sonst sprang sie mit der Android-Tastatur mitten auf den Bildschirm); `touch-action: manipulation` gegen Doppeltipp-Zoom.
 - **Erfassen für Neulinge:** zuerst nur das Kriterium „Geschmack“, die übrigen sechs hinter „Weitere Sterne vergeben“ (Wahl pro Gerät in `gluehlabor.alleSterne`, offen, sobald schon weitere Sterne gesetzt sind).
 
+## Fahrzeuge, Fotos, Galerie, Fahrer-Foto (seit 27.11.2026, Tester-Wunsch)
+
+- **Fahrzeug wählen** (Schlitten, Rennwagen, Rentier, Tasse; `src/lib/fahrzeuge.ts` beschreibt sie einmal, SVG `ui/schlitten/FahrzeugBild.tsx` und Canvas `ui/nacht/rennenBild.ts` zeichnen daraus). Feld `fahrzeug` an `rennen_teilnehmer` (Migration `0005_fahrzeug.sql`, PHP rüstet nach), Feld heißt weiter `kamel` für den Namen.
+- **Fotos für alle sichtbar** (Migration `0006_fotos.sql`, Tabelle `fotos`, Base64 als Text, damit D1/SQLite/MySQL/PHP gleich laufen): beim Erfassen Kästchen „Foto für alle sichtbar“ (**ausdrückliche Einwilligung je Foto**, Server verlangt `einwilligung: true`; Wahl pro Gerät in `gluehlabor.fotoOeffentlich`). Die App erzeugt Groß (≤ 1024 px, ≤ 390 KB) und Klein (240 px) im Canvas, das entfernt EXIF/Ort. Endpunkte `POST /api/foto`, `GET /api/foto/<id>?g=klein` (öffentlich), Löschen/„privat machen“ durch den Besitzer, Admin „Foto ausblenden“ (`versteckeFoto`). Limits in `LIMITS` (30 je Gerät und Tag, Gesamtdeckel `fotosGesamtMaxBytes` 1,5 GB, **Hetzner-Speicher noch nicht geklärt**). Bewertungen tragen `foto` (URL) aus dem Listen-Query. Sync lädt hoch in `sendeFotos`.
+- **Galerie** `#/fotos` (`ui/Fotos.tsx`, Streifen `FotoLeiste` auf der Startseite, Eintrag unter „Mehr“), Vorschaubilder in Rangliste/Stand-Zeilen (`RangZeile bild`), Stand-Seite `FotoStreifen`. Datenschutz-Text (`Rechtliches.tsx`) nennt Fotos; **Entwurf, nicht geprüft**.
+- **Fahrer-Foto nur lokal** (`daten/gesicht.ts`, Einstellung `gesicht`, 160-px-Quadrat): erscheint nur auf dem **eigenen** Fahrzeug im Rennen (Bahn, MiniBahn, Leiste), wird **nie hochgeladen**; andere sehen nur das Fahrzeug. Ein Upload von Gesichtern auf den Server ist bewusst nicht gebaut (erst Datenschutzprüfung, Einwilligung, Moderation).
+
 ## Scoring-Regeln (verbindlich, siehe Tests in src/lib/scoring.test.ts)
 
 - Noten: Ganzzahl 1..10 oder `null`. **`null` fällt aus Zähler UND Nenner, zählt nie als 0.**
