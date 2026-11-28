@@ -50,4 +50,5 @@ jobs:
           git add data/maerkte-osm.json
           git commit -m "Märkte aus OpenStreetMap aktualisiert"
           git push origin "$zweig"
-          gh pr create --base main --head "$zweig" --title "Märkte aus OpenStreetMap aktualisiert" --body "Automatisch erzeugt von scripts/maerkte-osm.mjs. Stichproben ansehen (data/maerkte-osm.json), dann mergen."
+          # Darf Actions keine Pull Requests öffnen (Repo-Einstellung), scheitert das hier. Der Zweig ist dann trotzdem gepusht: Link im Log.
+          gh pr create --base main --head "$zweig" --title "Märkte aus OpenStreetMap aktualisiert" --body "Automatisch erzeugt von scripts/maerkte-osm.mjs. Stichproben ansehen (data/maerkte-osm.json), dann mergen." || echo "::warning::Pull Request konnte nicht geöffnet werden. Der Zweig $zweig ist gepusht: https://github.com/${{ github.repository }}/compare/main...$zweig?expand=1"
