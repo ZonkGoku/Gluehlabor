@@ -106,7 +106,7 @@ export function Vergleich() {
               {l.checkliste.map((m) => (
                 <div class={`markt ${m.abdeckung === 'noch nie da' ? 'nie' : m.abdeckung === 'abgedeckt' ? 'abgedeckt' : ''}`}>
                   <div class="n">{m.markt}</div>
-                  <div class="z">{m.becher === 0 ? t('noch nie da') : `${t('{n} Becher', { n: m.becher })} · ${t(m.abdeckung)}`}</div>
+                  <div class="z">{m.becher === 0 ? t('noch nie da') : `${tn(m.becher, '{n} Bewertung', '{n} Bewertungen')} · ${t(m.abdeckung)}`}</div>
                 </div>
               ))}
             </div>

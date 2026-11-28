@@ -23,7 +23,7 @@ export function RangZeile({ zeile, ort, href, anzahl, siegel = false, deal = fal
       {bild && <img src={bild} alt="" loading="lazy" decoding="async" class="size-12 shrink-0 rounded-xl border border-rand object-cover" />}
       <span class="min-w-0 flex-1">
         <span class="flex items-center gap-1.5">
-          <span class="truncate text-[17px] font-semibold leading-tight">{e.stand}</span>
+          <span class="line-clamp-2 break-words text-[17px] font-semibold leading-tight">{e.stand}</span>
           {siegel && <PruefSiegel groesse={18} />}
         </span>
         <span class="mt-1 block text-sm"><SterneZeile wert={w.gesamt} anzahl={anzahl} /></span>

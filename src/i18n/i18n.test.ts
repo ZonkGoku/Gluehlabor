@@ -14,7 +14,7 @@ describe('t und tn', () => {
   });
   it('Englisch übersetzt, unbekannte Texte bleiben deutsch', () => {
     setzeSprache('en');
-    expect(t('Rangliste')).toBe('Leaderboard');
+    expect(t('Rangliste')).toBe('Ranking');
     expect(t('Alle {n}', { n: 4 })).toBe('All 4');
     expect(tn(1, '{n} Stand', '{n} Stände')).toBe('1 stall');
     expect(tn(2, '{n} Stand', '{n} Stände')).toBe('2 stalls');

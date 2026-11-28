@@ -88,6 +88,14 @@ export function StandSeite({ id }: { id: string }) {
           <HilfePunkt text={t('Von David & Philip getestet.')} />
         </div>
       )}
+      <button
+        type="button"
+        onClick={bewerten}
+        class="mt-3 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold text-[#1a1020] md:hidden"
+        style={{ background: 'linear-gradient(135deg,#ffe29a,#ff8a3d)' }}
+      >
+        <Symbol name="plus" groesse={18} /> {frueher ? t('Nochmal bewerten') : t('Diesen Stand bewerten')}
+      </button>
       <div class="mt-3 grid gap-4 md:grid-cols-2">
         <StandTopKarte stand={s} ohneLink ort={ortText(MARKTLISTE, { markt: s.markt, stadt: s.stadt })} hinweis={s.rang ? t('Platz {r} von {n}', { r: s.rang, n: staende.length }) : undefined} />
         <div class="grid content-start gap-3">
@@ -121,7 +129,7 @@ export function StandSeite({ id }: { id: string }) {
           <button
             type="button"
             onClick={bewerten}
-            class="animate-puls flex items-center justify-center gap-2 rounded-full px-6 py-3.5 font-semibold text-[#1a1020] disabled:animate-none disabled:opacity-60"
+            class="animate-puls hidden md:flex items-center justify-center gap-2 rounded-full px-6 py-3.5 font-semibold text-[#1a1020] disabled:animate-none disabled:opacity-60"
             style={{ background: 'linear-gradient(135deg,#ffe29a,#ff8a3d)' }}
           >
             <Symbol name="plus" groesse={18} /> {frueher ? t('Nochmal bewerten') : t('Diesen Stand bewerten')}
@@ -133,7 +141,7 @@ export function StandSeite({ id }: { id: string }) {
               onClick={async () => {
                 setWiederholt(true);
                 await wiederholeBecher(letzteMeine);
-                setWiederholText(t('Gespeichert: noch ein Becher bei {stand}', { stand: s.stand }));
+                setWiederholText(t('Gespeichert: noch eine Bewertung bei {stand}', { stand: s.stand }));
                 setTimeout(() => (setWiederholt(false), setWiederholText('')), 2500);
               }}
               class="glas flex min-h-[52px] items-center justify-center gap-2 rounded-full px-6 py-3 font-semibold text-eis disabled:opacity-60"

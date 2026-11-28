@@ -36,7 +36,7 @@ export function Einstellungen() {
                 {t('Jetzt synchronisieren ({n} offen)', { n: offen })}
               </button>
             )}
-            <a class="knopf" href="#/profil">
+            <a class="inline-flex min-h-[44px] items-center font-semibold text-gold-300 underline" href="#/profil">
               {t('Name und Prüfstelle')}
             </a>
           </div>

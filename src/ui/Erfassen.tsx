@@ -453,14 +453,6 @@ export function Erfassen() {
         </button>
       </div>
 
-      <button type="button" class="qr-zeile" onClick={oeffneQr}>
-        <span class="qr-zeile-text">
-          <b>{t('Seid ihr zu mehreren?')}</b>
-          <small>{t('QR-Code zeigen')}</small>
-        </span>
-        <span class="qr-zeile-code" aria-hidden="true">QR</span>
-      </button>
-
       <section class={`preis-block${e.preis === undefined ? ' leer' : ' gesetzt'}${preisFehlt && e.preis === undefined ? ' fehlt' : ''}`} aria-label={t('Preis')}>
         <div class="preis-kopf">
           <span class="preis-titel">
@@ -527,6 +519,37 @@ export function Erfassen() {
         </p>
       </section>
 
+      <section class="noten" aria-label={t('Sterne')}>
+        <p class="noten-kopf">
+          {t('Sterne')} <span>{alleSterne ? t('mindestens eine') : t('Tippe auf die Sterne, mehr brauchst du nicht')}</span>
+        </p>
+        {(alleSterne ? KRITERIEN : KRITERIEN.filter((k) => k === 'geschmack')).map((k) => (
+          <NotenZeile
+            key={k}
+            name={kriteriumLabel(ANKER[k].label)}
+            wert={k === 'preisLeistung' ? plAuto : e.noten[k]}
+            onWert={k === 'preisLeistung' ? undefined : (n) => setNote(k, n)}
+            auto={k === 'preisLeistung'}
+            offen={hilfeOffen === k}
+            onHilfe={() => setHilfeOffen(hilfeOffen === k ? null : k)}
+            anker={Object.entries(ANKER[k].anker)
+              .map(([stufe, text]) => ({ stufe: Number(stufe), text: t(text) }))
+              .filter((a) => Number.isFinite(a.stufe))
+              .sort((x, y) => y.stufe - x.stufe)}
+            hilfeText={
+              k === 'preisLeistung'
+                ? !vergleichbar(e.sorte)
+                  ? t('Alkoholfreies und Feuerzangenbowle lassen sich preislich nicht vergleichen: keine Preis-Leistung.')
+                  : t('¼ Stern je Euro über oder unter dem üblichen Preis ({ref}{stadt}).', { ref: euro(referenz), stadt: e.stadt ? ` ${t('in')} ${e.stadt}` : '' })
+                : undefined
+            }
+          />
+        ))}
+        <button type="button" class="mehr-sterne" aria-expanded={alleSterne} onClick={schalteSterne}>
+          {alleSterne ? t('Weniger Sterne zeigen') : t('Weitere Sterne vergeben (Geruch, Temperatur, Personal …)')}
+        </button>
+      </section>
+
       <label class={`foto-knopf${foto ? ' gesetzt' : ''}`}>
         {fotoUrl ? <img src={fotoUrl} alt={t('Dein Foto')} /> : <Symbol name="kamera" groesse={26} />}
         <span>{foto ? t('Foto ändern') : t('Foto hinzufügen')}</span>
@@ -575,36 +598,15 @@ export function Erfassen() {
         <input class="feld" type="text" placeholder={t('Notiz')} aria-label={t('Notiz')} enterkeyhint="done" value={e.notiz} onInput={(ev) => setE({ ...e, notiz: (ev.target as HTMLInputElement).value })} />
       </details>
 
-      <section class="noten" aria-label={t('Sterne')}>
-        <p class="noten-kopf">
-          {t('Sterne')} <span>{alleSterne ? t('mindestens eine') : t('Tippe auf die Sterne, mehr brauchst du nicht')}</span>
-        </p>
-        {(alleSterne ? KRITERIEN : KRITERIEN.filter((k) => k === 'geschmack')).map((k) => (
-          <NotenZeile
-            key={k}
-            name={kriteriumLabel(ANKER[k].label)}
-            wert={k === 'preisLeistung' ? plAuto : e.noten[k]}
-            onWert={k === 'preisLeistung' ? undefined : (n) => setNote(k, n)}
-            auto={k === 'preisLeistung'}
-            offen={hilfeOffen === k}
-            onHilfe={() => setHilfeOffen(hilfeOffen === k ? null : k)}
-            anker={Object.entries(ANKER[k].anker)
-              .map(([stufe, text]) => ({ stufe: Number(stufe), text: t(text) }))
-              .filter((a) => Number.isFinite(a.stufe))
-              .sort((x, y) => y.stufe - x.stufe)}
-            hilfeText={
-              k === 'preisLeistung'
-                ? !vergleichbar(e.sorte)
-                  ? t('Alkoholfreies und Feuerzangenbowle lassen sich preislich nicht vergleichen: keine Preis-Leistung.')
-                  : t('¼ Stern je Euro über oder unter dem üblichen Preis ({ref}{stadt}).', { ref: euro(referenz), stadt: e.stadt ? ` ${t('in')} ${e.stadt}` : '' })
-                : undefined
-            }
-          />
-        ))}
-        <button type="button" class="mehr-sterne" aria-expanded={alleSterne} onClick={schalteSterne}>
-          {alleSterne ? t('Weniger Sterne zeigen') : t('Weitere Sterne vergeben (Geruch, Temperatur, Personal …)')}
-        </button>
-      </section>
+
+
+      <button type="button" class="qr-zeile" onClick={oeffneQr}>
+        <span class="qr-zeile-text">
+          <b>{t('Seid ihr zu mehreren?')}</b>
+          <small>{t('QR-Code zeigen')}</small>
+        </span>
+        <span class="qr-zeile-code" aria-hidden="true">QR</span>
+      </button>
 
       <footer class="fuss">
         {speicherFehler && (
@@ -617,7 +619,7 @@ export function Erfassen() {
             <span class={wertung.gesamt === null ? 'gesamt leer' : 'gesamt'}>{sterneText(wertung.gesamt)}</span>
             <Sterne wert={wertung.gesamt} groesse={16} />
           </span>
-          <span class="unter">{wertung.urteil ? t(wertung.urteil) : t('{n} von 6 bewertet', { n: bewertet })}</span>
+          <span class="unter">{wertung.urteil ? t(wertung.urteil) : (bewertet === 0 ? t('Tippe oben auf die Sterne') : t('{n} von 6 bewertet', { n: bewertet }))}</span>
         </div>
         <button
           type="button"

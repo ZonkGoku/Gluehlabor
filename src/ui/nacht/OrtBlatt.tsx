@@ -176,7 +176,7 @@ export function OrtBlatt({ start, bestand, onWahl, onZu, ohneMarkt = false }: Pr
       if (beliebt.length)
         eintraege.push({
           titel: t('Schon bewertet'),
-          liste: beliebt.map((b) => ({ id: `b-${b.stadt}`, symbol: 'pin', titel: b.stadt, rechts: tn(b.becher, '{n} Becher', '{n} Becher'), wahl: () => waehleStadt(b.stadt) })),
+          liste: beliebt.map((b) => ({ id: `b-${b.stadt}`, symbol: 'pin', titel: b.stadt, rechts: tn(b.becher, '{n} Bewertung', '{n} Bewertungen'), wahl: () => waehleStadt(b.stadt) })),
         });
     } else {
       const treffer = sucheOrte(orte ?? [], qk, 8);
@@ -185,7 +185,7 @@ export function OrtBlatt({ start, bestand, onWahl, onZu, ohneMarkt = false }: Pr
         symbol: 'pin',
         titel: o.name,
         unter: t(o.land),
-        rechts: becherJeStadt.get(o.key) ? tn(becherJeStadt.get(o.key)!, '{n} Becher', '{n} Becher') : undefined,
+        rechts: becherJeStadt.get(o.key) ? tn(becherJeStadt.get(o.key)!, '{n} Bewertung', '{n} Bewertungen') : undefined,
         markieren: true,
         wahl: () => waehleStadt(o.name),
       }));
@@ -208,7 +208,7 @@ export function OrtBlatt({ start, bestand, onWahl, onZu, ohneMarkt = false }: Pr
       titel: m.markt,
       unter: m.gepflegt ? undefined : t('von anderen eingetragen'),
       markieren: true,
-      rechts: m.becher ? tn(m.becher, '{n} Becher', '{n} Becher') : undefined,
+      rechts: m.becher ? tn(m.becher, '{n} Bewertung', '{n} Bewertungen') : undefined,
       hervor: start.stadt === stadt && start.markt === m.markt,
       wahl: () => onWahl(stadt, m.markt),
     }));

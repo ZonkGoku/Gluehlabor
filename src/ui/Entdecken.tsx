@@ -51,7 +51,7 @@ export function Entdecken() {
         <Kennzahl wert={k.staedte} label={k.staedte === 1 ? t('Stadt') : t('Städte')} />
         <Kennzahl wert={k.bewertungen} label={t('Bewertungen')} />
 
-        <Kachel titel={t('Wo ihr wart')} link={{ href: '#/vergleich', text: t('Märkte') }} klasse="col-span-2">
+        <Kachel titel={t('Wo ihr wart')} link={{ href: '#/vergleich', text: t('Alle Märkte') }} klasse="col-span-2">
           <Deutschlandkarte staedte={orte} />
         </Kachel>
 
@@ -88,7 +88,7 @@ export function Entdecken() {
                     <span class="font-mono text-xs text-dunst">
                       {euro(p.min)} – {euro(p.max)} · {p.n}×
                     </span>
-                    <span class="font-display text-2xl leading-none text-gold-300">{euro(p.median)}</span>
+                    <span class="shrink-0 whitespace-nowrap font-display text-2xl leading-none text-gold-300">{euro(p.median)}</span>
                   </li>
                 ))}
               </ul>
@@ -98,7 +98,7 @@ export function Entdecken() {
         </Kachel>
 
         {verlauf && (
-          <Kachel titel={t('Saisonverlauf · Becher je Abend')} klasse="col-span-2 md:col-span-4">
+          <Kachel titel={t('Saisonverlauf · Bewertungen je Abend')} klasse="col-span-2 md:col-span-4">
             <Saisonverlauf verlauf={verlauf} saison={saison as number} />
           </Kachel>
         )}

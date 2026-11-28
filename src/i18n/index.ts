@@ -1,5 +1,5 @@
 // Mehrsprachigkeit (Deutsch, Englisch) ohne Bibliothek. Der deutsche Text ist selbst der Schlüssel:
-//   t('Rangliste')                                  → „Rangliste" bzw. „Leaderboard"
+//   t('Rangliste')                                  → „Rangliste" bzw. „Ranking"
 //   t('{n} Bewertungen', { n: 4 })                  → Platzhalter in geschweiften Klammern
 //   tn(n, '{n} Bewertung', '{n} Bewertungen')       → Einzahl/Mehrzahl
 // Fehlt eine englische Übersetzung, erscheint der deutsche Text. Neue Texte: deutsch schreiben, dann in en.ts ergänzen.

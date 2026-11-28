@@ -20,8 +20,8 @@ export function Saisonverlauf({ verlauf, saison }: { verlauf: Verlauf; saison: n
     return (
       <p class="leer-hinweis">
         {ohneDatum > 0
-          ? t('Die {n} Becher aus {saison} haben kein Datum.', { n: ohneDatum, saison })
-          : t('Noch kein Becher in dieser Saison.')}
+          ? t('Die {n} Bewertungen aus {saison} haben kein Datum.', { n: ohneDatum, saison })
+          : t('Noch keine Bewertung in dieser Saison.')}
       </p>
     );
   }
@@ -38,7 +38,7 @@ export function Saisonverlauf({ verlauf, saison }: { verlauf: Verlauf; saison: n
             type="button"
             class={`saeule${t.anzahl === 0 ? ' leer' : ''}${t.datum === an.datum ? ' an' : ''}`}
             style={{ height: `${t.anzahl === 0 ? 4 : 12 + (t.anzahl / max) * 88}%` }}
-            aria-label={`${beschriftung(t.datum)}: ${tn(t.anzahl, '{n} Becher', '{n} Becher')}`}
+            aria-label={`${beschriftung(t.datum)}: ${tn(t.anzahl, '{n} Bewertung', '{n} Bewertungen')}`}
             aria-pressed={t.datum === an.datum}
             onClick={() => setGewaehlt(t.datum)}
             onFocus={() => setGewaehlt(t.datum)}
@@ -50,7 +50,7 @@ export function Saisonverlauf({ verlauf, saison }: { verlauf: Verlauf; saison: n
         {tage.length > 1 && <span>{beschriftung(tage.at(-1)!.datum)}</span>}
       </div>
       <p class="verlauf-text" aria-live="polite">
-        <b>{beschriftung(an.datum)}</b> · {tn(an.anzahl, '{n} Becher', '{n} Becher')}
+        <b>{beschriftung(an.datum)}</b> · {tn(an.anzahl, '{n} Bewertung', '{n} Bewertungen')}
         {an.mittel !== null && <> · Ø {sterneText(an.mittel)}</>}
       </p>
     </div>

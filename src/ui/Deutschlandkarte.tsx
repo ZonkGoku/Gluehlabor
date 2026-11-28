@@ -27,7 +27,7 @@ export function Deutschlandkarte({ staedte }: { staedte: StadtZahl[] }) {
         ))}
         {punkte.map((p) => (
           <g>
-            <title>{`${p.stadt}: ${tn(p.becher, '{n} Becher', '{n} Becher')}`}</title>
+            <title>{`${p.stadt}: ${tn(p.becher, '{n} Bewertung', '{n} Bewertungen')}`}</title>
             <circle cx={p.x} cy={p.y} r={p.r} class="punkt" />
           </g>
         ))}

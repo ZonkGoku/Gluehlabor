@@ -79,7 +79,7 @@ export function TicketBlatt({ id, onNaechster, onNochmal }: { id: string; onNaec
             </span>
             <span class="min-w-0 flex-1">
               <b class="block text-[17px] leading-tight">{t('Nochmal wie eben')}</b>
-              <span class="block truncate text-sm text-dunst">{t('Noch ein Becher bei {stand}', { stand: e.stand })}</span>
+              <span class="block truncate text-sm text-dunst">{t('Noch eine Bewertung bei {stand}', { stand: e.stand })}</span>
             </span>
           </button>
         )}
