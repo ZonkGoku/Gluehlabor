@@ -51,7 +51,7 @@ export function Rennbahn({ bahnen, ich }: { bahnen: Bahn[]; ich: string | null }
               <g class="kamel-lauf" style={{ transform: `translate(${bereit ? x : X0}px, ${y + (bahnH > 50 ? 15 : 10)}px)` }}>
                 <g class={b.platz === 1 && b.schritte > 0 ? 'kamel-wippen' : ''}>
                   <g transform={bahnH > 50 ? 'scale(1.15)' : 'scale(0.95)'}>
-                    <FahrzeugBild farbe={farbeVon(b.farbe)} fahrzeug={b.fahrzeug} gesicht={ichBin ? gesicht : null} />
+                    <FahrzeugBild farbe={farbeVon(b.farbe)} fahrzeug={b.fahrzeug} gesicht={ichBin ? gesicht : null} avatar={b.avatar} />
                   </g>
                 </g>
               </g>
@@ -77,7 +77,7 @@ export function Rennbahn({ bahnen, ich }: { bahnen: Bahn[]; ich: string | null }
 }
 
 /** Ein einzelner Streifen: dein Schlitten fährt von `von` nach `nach` (je 0 bis 1). Für das Ticket nach dem Bewerten. */
-export function MiniBahn({ farbe, von, nach, fahrzeug = 0 }: { farbe: string; von: number; nach: number; fahrzeug?: number }) {
+export function MiniBahn({ farbe, von, nach, fahrzeug = 0, avatar = -1 }: { farbe: string; von: number; nach: number; fahrzeug?: number; avatar?: number }) {
   const bereit = useBereit();
   const gesicht = useGesicht();
   const x = (a: number) => X0 + a * (X1 - X0 - SCHLITTEN_B);
@@ -86,7 +86,7 @@ export function MiniBahn({ farbe, von, nach, fahrzeug = 0 }: { farbe: string; vo
       <rect x={X0 - 10} y="4" width={X1 - X0 + 34} height="44" rx="14" fill="currentColor" opacity="0.08" />
       <path d={`M${X0} 40H${X1 + 10}`} stroke="currentColor" opacity="0.25" stroke-dasharray="3 6" stroke-linecap="round" fill="none" />
       <g class="kamel-lauf" style={{ transform: `translate(${x(bereit ? nach : von)}px, 8px)` }}>
-        <FahrzeugBild farbe={farbe} fahrzeug={fahrzeug} gesicht={gesicht} />
+        <FahrzeugBild farbe={farbe} fahrzeug={fahrzeug} gesicht={gesicht} avatar={avatar} />
       </g>
       <g aria-hidden="true">
         {[0, 1, 2, 3, 4].map((r) => [0, 1].map((c) => <rect x={X1 + 14 + c * 8} y={6 + r * 8} width="8" height="8" fill={(r + c) % 2 ? '#ffc857' : '#1a1020'} />))}
@@ -112,7 +112,7 @@ export function Siegerpodest({ bahnen, ich, ziel }: { bahnen: Bahn[]; ich: strin
             {b ? (
               <>
                 <svg viewBox="0 0 46 34" class="mx-auto block w-14" aria-hidden="true">
-                  <FahrzeugBild farbe={farbeVon(b.farbe)} fahrzeug={b.fahrzeug} />
+                  <FahrzeugBild farbe={farbeVon(b.farbe)} fahrzeug={b.fahrzeug} avatar={b.avatar} />
                 </svg>
                 <b class="block truncate text-[15px] text-eis">
                   {b.kamel}

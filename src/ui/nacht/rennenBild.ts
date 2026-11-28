@@ -1,5 +1,6 @@
 // Das Ergebnis eines Schlittenrennens als Bild für Stories (1080 × 1920, immer im Nachtlook), gezeichnet auf einer Canvas wie die Sammelkarte.
-import { FAHRZEUGE, FAHRZEUG_ANZAHL } from '../../lib/fahrzeuge';
+import { AVATARE } from '../../lib/avatare';
+import { FAHRZEUGE, FAHRZEUG_ANZAHL, type Teil } from '../../lib/fahrzeuge';
 import { SCHLITTEN_FARBEN, type Bahn } from '../../lib/rennen';
 import { t as uebersetze } from '../../i18n';
 
@@ -16,15 +17,14 @@ export interface RennenBildDaten {
   link: string;
 }
 
-/** Zeichnet ein Fahrzeug (Beschreibung in lib/fahrzeuge.ts) mit der linken oberen Ecke bei (x, y). */
-function fahrzeug(c: CanvasRenderingContext2D, x: number, y: number, s: number, farbe: string, nr: number): void {
-  const f = FAHRZEUGE[((nr % FAHRZEUG_ANZAHL) + FAHRZEUG_ANZAHL) % FAHRZEUG_ANZAHL];
+/** Zeichnet eine Teile-Liste (Fahrzeug oder Figur) mit der linken oberen Ecke bei (x, y), Maßstab s. */
+function zeichneTeile(c: CanvasRenderingContext2D, teile: readonly Teil[], x: number, y: number, s: number, farbe: string): void {
   c.save();
   c.translate(x, y);
   c.scale(s, s);
   c.lineCap = 'round';
   c.lineJoin = 'round';
-  for (const t of f.teile) {
+  for (const t of teile) {
     const farbeTeil = t.farbe ?? farbe;
     const pfad = new Path2D();
     if (t.kreis) pfad.arc(t.kreis[0], t.kreis[1], t.kreis[2], 0, Math.PI * 2);
@@ -41,6 +41,26 @@ function fahrzeug(c: CanvasRenderingContext2D, x: number, y: number, s: number, 
     }
   }
   c.restore();
+}
+
+/** Zeichnet ein Fahrzeug (Beschreibung in lib/fahrzeuge.ts) mit der linken oberen Ecke bei (x, y), samt Figur, wenn eine gewählt ist. */
+function fahrzeug(c: CanvasRenderingContext2D, x: number, y: number, s: number, farbe: string, nr: number, avatar = -1): void {
+  const f = FAHRZEUGE[((nr % FAHRZEUG_ANZAHL) + FAHRZEUG_ANZAHL) % FAHRZEUG_ANZAHL];
+  zeichneTeile(c, f.teile, x, y, s, farbe);
+  const figur = AVATARE[avatar];
+  if (!figur) return;
+  const [fx, fy, fr] = f.fahrer;
+  c.save();
+  c.beginPath();
+  c.arc(x + fx * s, y + fy * s, fr * s, 0, Math.PI * 2);
+  c.clip();
+  zeichneTeile(c, figur.teile, x + (fx - fr) * s, y + (fy - fr) * s, (2 * fr * s) / 20, '#888888');
+  c.restore();
+  c.beginPath();
+  c.arc(x + fx * s, y + fy * s, fr * s, 0, Math.PI * 2);
+  c.strokeStyle = '#ffffff';
+  c.lineWidth = 1.2 * s;
+  c.stroke();
 }
 
 function ladeLogo(): Promise<HTMLImageElement | null> {
@@ -114,7 +134,7 @@ export async function erzeugeRennenBild(d: RennenBildDaten): Promise<Blob> {
     c.font = '120px Anton';
     c.fillText(String(s.platz), s.x, boden - s.h + 130);
     if (s.b) {
-      fahrzeug(c, s.x - 100, boden - s.h - 160, 4.8, SCHLITTEN_FARBEN[s.b.farbe % SCHLITTEN_FARBEN.length], s.b.fahrzeug);
+      fahrzeug(c, s.x - 100, boden - s.h - 160, 4.8, SCHLITTEN_FARBEN[s.b.farbe % SCHLITTEN_FARBEN.length], s.b.fahrzeug, s.b.avatar ?? -1);
       c.fillStyle = '#ffffff';
       c.font = '44px "IBM Plex Sans"';
       c.fillText(s.b.kamel, s.x, boden - s.h - 190, 290);

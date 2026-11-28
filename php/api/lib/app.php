@@ -29,6 +29,7 @@ const RENNEN_MIN = 2;
 const RENNEN_MAX = 50;
 const RENNEN_FARBEN = 8;
 const FAHRZEUGE = 4;
+const AVATARE = 10;
 const RENNEN_DAUER_MS = 14 * 24 * 60 * 60 * 1000;
 const MIN_MS = 60_000;
 const STUNDE_MS = 3_600_000;
@@ -133,6 +134,18 @@ function fahrzeugAus(mixed $roh): int
     }
     if (!is_int($roh) || $roh < 0 || $roh >= FAHRZEUGE) {
         throw new HttpFehler(400, 'Ungültiges Fahrzeug.');
+    }
+    return $roh;
+}
+
+/** Figur aus der Anfrage: fehlt sie, gilt -1 (keine); sonst eine ganze Zahl von -1 bis AVATARE - 1. */
+function avatarAus(mixed $roh): int
+{
+    if ($roh === null) {
+        return -1;
+    }
+    if (!is_int($roh) || $roh < -1 || $roh >= AVATARE) {
+        throw new HttpFehler(400, 'Ungültige Figur.');
     }
     return $roh;
 }
@@ -659,6 +672,7 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
             throw new HttpFehler(400, 'Ungültige Farbe.');
         }
         $fahrzeug = fahrzeugAus($b['fahrzeug'] ?? null);
+        $avatar = avatarAus($b['avatar'] ?? null);
         if (!begrenze($db, 'rennen:' . $g['id'], TAG_MS, LIMITS['rennenJeGeraetUndTag'], $jetzt)) {
             throw new HttpFehler(429, 'Heute schon viele Rennen angelegt.');
         }
@@ -668,7 +682,7 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
             $id .= $zeichen[ord($c) % 32];
         }
         $db->lauf('INSERT INTO rennen (id, name, ziel, ersteller, erstellt_am, ende) VALUES (?, ?, ?, ?, ?, ?)', [$id, $rname['name'], $b['ziel'], $g['id'], $jetzt, $jetzt + RENNEN_DAUER_MS]);
-        $db->lauf('INSERT INTO rennen_teilnehmer (rennen_id, geraet_id, kamel, farbe, seit, fahrzeug) VALUES (?, ?, ?, ?, ?, ?)', [$id, $g['id'], $kname['name'], $b['farbe'], $jetzt, $fahrzeug]);
+        $db->lauf('INSERT INTO rennen_teilnehmer (rennen_id, geraet_id, kamel, farbe, seit, fahrzeug, avatar) VALUES (?, ?, ?, ?, ?, ?, ?)', [$id, $g['id'], $kname['name'], $b['farbe'], $jetzt, $fahrzeug, $avatar]);
         return new Antwort(201, ['ok' => true, 'id' => $id]);
     }
     if ($pfad === '/api/rennen/beitreten' && $methode === 'POST') {
@@ -685,6 +699,7 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
             throw new HttpFehler(400, 'Ungültige Farbe.');
         }
         $fahrzeug = fahrzeugAus($b['fahrzeug'] ?? null);
+        $avatar = avatarAus($b['avatar'] ?? null);
         $r = $db->eins('SELECT id, ende FROM rennen WHERE id = ?', [$b['id']]);
         if (!$r) {
             throw new HttpFehler(404, 'Rennen nicht gefunden.');
@@ -699,7 +714,7 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
         if ((int) ($n['n'] ?? 0) >= LIMITS['maxTeilnehmerJeRennen']) {
             throw new HttpFehler(409, 'Das Rennen ist voll.');
         }
-        $db->lauf('INSERT INTO rennen_teilnehmer (rennen_id, geraet_id, kamel, farbe, seit, fahrzeug) VALUES (?, ?, ?, ?, ?, ?)', [$b['id'], $g['id'], $kname['name'], $b['farbe'], $jetzt, $fahrzeug]);
+        $db->lauf('INSERT INTO rennen_teilnehmer (rennen_id, geraet_id, kamel, farbe, seit, fahrzeug, avatar) VALUES (?, ?, ?, ?, ?, ?, ?)', [$b['id'], $g['id'], $kname['name'], $b['farbe'], $jetzt, $fahrzeug, $avatar]);
         return new Antwort(200, ['ok' => true]);
     }
     if (($pfad === '/api/rennen/verlassen' || $pfad === '/api/rennen/loeschen') && $methode === 'POST') {
@@ -732,10 +747,10 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
         if (!$r) {
             throw new HttpFehler(404, 'Rennen nicht gefunden.');
         }
-        $t = $db->alle('SELECT geraet_id, kamel, farbe, seit, fahrzeug FROM rennen_teilnehmer WHERE rennen_id = ? ORDER BY seit ASC, geraet_id ASC', [$id]);
+        $t = $db->alle('SELECT geraet_id, kamel, farbe, seit, fahrzeug, avatar FROM rennen_teilnehmer WHERE rennen_id = ? ORDER BY seit ASC, geraet_id ASC', [$id]);
         return new Antwort(200, [
             'rennen' => ['id' => $r['id'], 'name' => $r['name'], 'ziel' => (int) $r['ziel'], 'ersteller' => $r['ersteller'], 'erstellt_am' => (int) $r['erstellt_am'], 'ende' => (int) $r['ende']],
-            'teilnehmer' => array_map(fn($z) => ['geraet' => $z['geraet_id'], 'kamel' => $z['kamel'], 'farbe' => (int) $z['farbe'], 'fahrzeug' => (int) $z['fahrzeug'], 'seit' => (int) $z['seit']], $t),
+            'teilnehmer' => array_map(fn($z) => ['geraet' => $z['geraet_id'], 'kamel' => $z['kamel'], 'farbe' => (int) $z['farbe'], 'fahrzeug' => (int) $z['fahrzeug'], 'avatar' => (int) $z['avatar'], 'seit' => (int) $z['seit']], $t),
         ], ['Cache-Control' => 'no-store']);
     }
 

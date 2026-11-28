@@ -24,7 +24,7 @@ function RennenZeile({ id }: { id: string }) {
         <b class="min-w-0 truncate text-[17px]">{d.rennen.name}</b>
         <span class="shrink-0 font-mono text-sm text-gold-300">{t('{n} von {m}', { n: meine.schritte, m: ziel })}</span>
       </span>
-      <MiniBahn farbe={farbeVon(meine.farbe)} fahrzeug={meine.fahrzeug} von={Math.max(0, meine.schritte - 1) / ziel} nach={meine.schritte / ziel} />
+      <MiniBahn farbe={farbeVon(meine.farbe)} fahrzeug={meine.fahrzeug} avatar={meine.avatar} von={Math.max(0, meine.schritte - 1) / ziel} nach={meine.schritte / ziel} />
       {satz && <span class="mt-1 block text-[15px] leading-snug text-dunst">{satz}</span>}
     </a>
   );

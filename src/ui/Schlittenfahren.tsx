@@ -23,7 +23,8 @@ import { useLive } from './hooks';
 import { Qr } from './Qr';
 import { teileRennenBild } from './nacht/rennenBild';
 import { Konfetti, lageText, Rennbahn, Siegerpodest, farbeVon } from './schlitten/Bahn';
-import { FahrzeugBild } from './schlitten/FahrzeugBild';
+import { AvatarBild, FahrzeugBild } from './schlitten/FahrzeugBild';
+import { AVATARE } from '../lib/avatare';
 import { FAHRZEUGE } from '../lib/fahrzeuge';
 import { fehlerText, useRennenDaten } from './schlitten/laden';
 import { useGesicht } from './schlitten/gesicht';
@@ -66,7 +67,7 @@ function FahrerFoto() {
 }
 
 // ───────── Schlitten wählen (Name und Farbe) ─────────
-function KamelWahl({ name, farbe, fahrzeug, onName, onFarbe, onFahrzeug }: { name: string; farbe: number; fahrzeug: number; onName: (n: string) => void; onFarbe: (f: number) => void; onFahrzeug: (f: number) => void }) {
+function KamelWahl({ name, farbe, fahrzeug, avatar, onName, onFarbe, onFahrzeug, onAvatar }: { name: string; farbe: number; fahrzeug: number; avatar: number; onName: (n: string) => void; onFarbe: (f: number) => void; onFahrzeug: (f: number) => void; onAvatar: (a: number) => void }) {
   return (
     <div class="grid gap-3">
       <label class="grid gap-1.5 text-[15px] text-dunst">
@@ -89,6 +90,35 @@ function KamelWahl({ name, farbe, fahrzeug, onName, onFarbe, onFahrzeug }: { nam
             <span class="text-[11px] text-dunst">{t(f.name)}</span>
           </button>
         ))}
+      </div>
+      <div>
+        <p class="mb-1.5 text-[15px] text-dunst">{t('Figur auf deinem Schlitten (alle sehen sie)')}</p>
+        <div role="radiogroup" aria-label={t('Figur')} class="grid grid-cols-6 gap-1.5">
+          <button
+            type="button"
+            role="radio"
+            aria-checked={avatar < 0}
+            aria-label={t('Keine Figur')}
+            onClick={() => onAvatar(-1)}
+            class={`grid min-h-[48px] place-items-center rounded-2xl border-2 text-xs text-dunst ${avatar < 0 ? 'border-[var(--nm-stern)] bg-flaeche' : 'border-[var(--nm-bedienung)]'}`}
+          >
+            {t('keine')}
+          </button>
+          {AVATARE.map((a, i) => (
+            <button
+              type="button"
+              role="radio"
+              aria-checked={avatar === i}
+              aria-label={t(a.name)}
+              onClick={() => onAvatar(i)}
+              class={`grid min-h-[48px] place-items-center rounded-2xl border-2 p-1 ${avatar === i ? 'border-[var(--nm-stern)] bg-flaeche' : 'border-[var(--nm-bedienung)]'}`}
+            >
+              <svg viewBox="0 0 20 20" class="w-8" aria-hidden="true">
+                <AvatarBild avatar={i} cx={10} cy={10} r={10} />
+              </svg>
+            </button>
+          ))}
+        </div>
       </div>
       <FahrerFoto />
       <div role="radiogroup" aria-label={t('Farbe')} class="flex flex-wrap gap-2">
@@ -113,17 +143,19 @@ function useKamelWahl() {
   const [name, setName] = useState('');
   const [farbe, setFarbe] = useState(0);
   const [fahrzeug, setFahrzeug] = useState(0);
+  const [avatar, setAvatar] = useState(-1);
   useEffect(() => {
     void letztesKamel().then((k) => {
       if (k) {
         setName(k.name);
         setFarbe(k.farbe);
         setFahrzeug(k.fahrzeug ?? 0);
+        setAvatar(k.avatar ?? -1);
       }
     });
   }, []);
   useEffect(() => setName((n) => n || standard), [standard]);
-  return { name, setName, farbe, setFarbe, fahrzeug, setFahrzeug };
+  return { name, setName, farbe, setFarbe, fahrzeug, setFahrzeug, avatar, setAvatar };
 }
 
 const knopf = 'flex min-h-[56px] w-full items-center justify-center rounded-full px-6 text-[17px] font-bold text-[#1a1020] no-underline disabled:opacity-50';
@@ -173,8 +205,8 @@ export function SchlittenfahrenUebersicht() {
     setFehler('');
     try {
       const n = k.name.trim();
-      const id = await legeRennenAn(`Rennen von ${n.slice(0, 13)}`, 5, n, k.farbe, k.fahrzeug);
-      await merkeKamel(n, k.farbe, k.fahrzeug);
+      const id = await legeRennenAn(`Rennen von ${n.slice(0, 13)}`, 5, n, k.farbe, k.fahrzeug, k.avatar);
+      await merkeKamel(n, k.farbe, k.fahrzeug, k.avatar);
       location.hash = `#/schlittenfahren/${id}`;
     } catch (e) {
       setFehler(fehlerText(e));
@@ -217,7 +249,7 @@ export function SchlittenfahrenUebersicht() {
       ) : (
         <section class="glas grid gap-4 rounded-3xl p-4" aria-label={t('Dein Schlitten')}>
           <p class="m-0 text-[17px] font-semibold text-eis">{t('Such dir deinen Schlitten aus')}</p>
-          <KamelWahl name={k.name} farbe={k.farbe} fahrzeug={k.fahrzeug} onName={k.setName} onFarbe={k.setFarbe} onFahrzeug={k.setFahrzeug} />
+          <KamelWahl name={k.name} farbe={k.farbe} fahrzeug={k.fahrzeug} avatar={k.avatar} onName={k.setName} onFarbe={k.setFarbe} onFahrzeug={k.setFahrzeug} onAvatar={k.setAvatar} />
           <button type="button" class={knopf} style={KNOPF_STIL} disabled={!HAT_SERVER || startet || k.name.trim().length < 2} onClick={() => void losgehts()}>
             {t('Rennen mit Freunden starten')}
           </button>
@@ -277,8 +309,8 @@ function NeuesRennen({ onZu }: { onZu: () => void }) {
     setLaeuft(true);
     setFehler('');
     try {
-      const id = await legeRennenAn(rname.trim(), ziel, k.name.trim(), k.farbe, k.fahrzeug);
-      await merkeKamel(k.name.trim(), k.farbe, k.fahrzeug);
+      const id = await legeRennenAn(rname.trim(), ziel, k.name.trim(), k.farbe, k.fahrzeug, k.avatar);
+      await merkeKamel(k.name.trim(), k.farbe, k.fahrzeug, k.avatar);
       location.hash = `#/schlittenfahren/${id}`;
     } catch (e) {
       setFehler(fehlerText(e));
@@ -318,7 +350,7 @@ function NeuesRennen({ onZu }: { onZu: () => void }) {
           </button>
         </div>
       </div>
-      <KamelWahl name={k.name} farbe={k.farbe} fahrzeug={k.fahrzeug} onName={k.setName} onFarbe={k.setFarbe} onFahrzeug={k.setFahrzeug} />
+      <KamelWahl name={k.name} farbe={k.farbe} fahrzeug={k.fahrzeug} avatar={k.avatar} onName={k.setName} onFarbe={k.setFarbe} onFahrzeug={k.setFahrzeug} onAvatar={k.setAvatar} />
       {fehler && (
         <p role="alert" class="m-0 text-[15px] text-[var(--warnung)]">
           {fehler}
@@ -545,8 +577,8 @@ function BeitrittsBlock({ id, voll, vorbei, danach }: { id: string; voll: boolea
     setLaeuft(true);
     setFehler('');
     try {
-      await trittBei(id, k.name.trim(), k.farbe, k.fahrzeug);
-      await merkeKamel(k.name.trim(), k.farbe, k.fahrzeug);
+      await trittBei(id, k.name.trim(), k.farbe, k.fahrzeug, k.avatar);
+      await merkeKamel(k.name.trim(), k.farbe, k.fahrzeug, k.avatar);
       danach();
     } catch (e) {
       setFehler(fehlerText(e));
@@ -556,7 +588,7 @@ function BeitrittsBlock({ id, voll, vorbei, danach }: { id: string; voll: boolea
   return (
     <section class="glas mt-5 grid gap-4 rounded-3xl p-4" aria-label={t('Mitfahren')}>
       <p class="m-0 text-[17px] font-semibold text-eis">{t('Fahr mit! Such dir einen Schlitten aus.')}</p>
-      <KamelWahl name={k.name} farbe={k.farbe} fahrzeug={k.fahrzeug} onName={k.setName} onFarbe={k.setFarbe} onFahrzeug={k.setFahrzeug} />
+      <KamelWahl name={k.name} farbe={k.farbe} fahrzeug={k.fahrzeug} avatar={k.avatar} onName={k.setName} onFarbe={k.setFarbe} onFahrzeug={k.setFahrzeug} onAvatar={k.setAvatar} />
       <button type="button" class={knopf} style={KNOPF_STIL} disabled={!ok || laeuft} onClick={() => void los()}>
         {t('Mitfahren')}
       </button>

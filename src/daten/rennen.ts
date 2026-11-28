@@ -11,16 +11,16 @@ export interface RennenDaten {
 
 export const ladeRennen = (id: string) => api<RennenDaten>(`/api/rennen/${id}`);
 
-export async function legeRennenAn(name: string, ziel: number, kamel: string, farbe: number, fahrzeug = 0): Promise<string> {
+export async function legeRennenAn(name: string, ziel: number, kamel: string, farbe: number, fahrzeug = 0, avatar = -1): Promise<string> {
   const geraet = await sorgeFuerAnmeldung();
-  const r = await api<{ id: string }>('/api/rennen', { methode: 'POST', geraet, body: { name, ziel, kamel, farbe, fahrzeug } });
+  const r = await api<{ id: string }>('/api/rennen', { methode: 'POST', geraet, body: { name, ziel, kamel, farbe, fahrzeug, avatar } });
   await merkeRennen(r.id);
   return r.id;
 }
 
-export async function trittBei(id: string, kamel: string, farbe: number, fahrzeug = 0): Promise<void> {
+export async function trittBei(id: string, kamel: string, farbe: number, fahrzeug = 0, avatar = -1): Promise<void> {
   const geraet = await sorgeFuerAnmeldung();
-  await api('/api/rennen/beitreten', { methode: 'POST', geraet, body: { id, kamel, farbe, fahrzeug } });
+  await api('/api/rennen/beitreten', { methode: 'POST', geraet, body: { id, kamel, farbe, fahrzeug, avatar } });
   await merkeRennen(id);
 }
 
@@ -48,8 +48,8 @@ export async function vergissRennen(id: string): Promise<void> {
 }
 
 /** Letzte Wahl für Schlittenname und Farbe, damit man sie nicht jedes Mal neu eingeben muss. */
-export const letztesKamel = () => leseEinstellung<{ name: string; farbe: number; fahrzeug?: number } | null>('kamel', null);
-export const merkeKamel = (name: string, farbe: number, fahrzeug = 0) => schreibeEinstellung('kamel', { name, farbe, fahrzeug });
+export const letztesKamel = () => leseEinstellung<{ name: string; farbe: number; fahrzeug?: number; avatar?: number } | null>('kamel', null);
+export const merkeKamel = (name: string, farbe: number, fahrzeug = 0, avatar = -1) => schreibeEinstellung('kamel', { name, farbe, fahrzeug, avatar });
 
 // ───────── Vorbelegung: ein Tipp zum Losfahren ─────────
 

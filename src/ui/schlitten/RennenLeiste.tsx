@@ -5,12 +5,12 @@ import { FahrzeugBild } from './FahrzeugBild';
 import { useGesicht } from './gesicht';
 import { useMeineRennen, type MeinRennen } from './meine';
 
-function Mini({ farbe, fahrzeug = 0 }: { farbe: string; fahrzeug?: number }) {
+function Mini({ farbe, fahrzeug = 0, avatar = -1 }: { farbe: string; fahrzeug?: number; avatar?: number }) {
   const gesicht = useGesicht();
   return (
     <svg viewBox="0 0 46 34" class="w-9 shrink-0" aria-hidden="true">
       <g transform="translate(2 1)">
-        <FahrzeugBild farbe={farbe} fahrzeug={fahrzeug} gesicht={gesicht} />
+        <FahrzeugBild farbe={farbe} fahrzeug={fahrzeug} gesicht={gesicht} avatar={avatar} />
       </g>
     </svg>
   );
@@ -35,7 +35,7 @@ export function RennenLeiste({ route }: { route: string }) {
       class="nm mx-4 mt-3 flex min-h-[52px] items-center gap-3 rounded-2xl border border-[var(--nm-stern)] bg-flaeche px-3 py-2 text-eis no-underline"
       aria-label={t('Du fährst im Rennen {name}. Platz {n}.', { name: r.name, n: r.meine.platz })}
     >
-      <Mini farbe={farbeVon(r.meine.farbe)} fahrzeug={r.meine.fahrzeug} />
+      <Mini farbe={farbeVon(r.meine.farbe)} fahrzeug={r.meine.fahrzeug} avatar={r.meine.avatar} />
       <span class="min-w-0 flex-1">
         <span class="flex items-baseline justify-between gap-2">
           <b class="min-w-0 truncate text-[15px]">{t('Rennen: {name}', { name: r.name })}</b>
@@ -71,7 +71,7 @@ export function RennenKarte() {
     <div class="grid gap-2">
       {rennen.map((r) => (
         <a key={r.id} href={`#/schlittenfahren/${r.id}`} class="glas rahmen-licht flex min-h-[72px] items-center gap-3 rounded-3xl p-4 text-eis no-underline">
-          <Mini farbe={farbeVon(r.meine.farbe)} fahrzeug={r.meine.fahrzeug} />
+          <Mini farbe={farbeVon(r.meine.farbe)} fahrzeug={r.meine.fahrzeug} avatar={r.meine.avatar} />
           <span class="min-w-0 flex-1">
             <span class="flex items-baseline justify-between gap-2">
               <b class="min-w-0 truncate text-[17px]">{r.name}</b>
