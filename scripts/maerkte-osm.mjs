@@ -12,18 +12,22 @@ const NAME = '(weihnacht|christkind|christkindl|advent|wintermarkt|winterzauber|
 // Jede Abfrage hat ein eigenes Zeitlimit; scheitert eine, laufen die anderen weiter.
 const FILTER = ['"amenity"="marketplace"', '"market"', '"event"', '"seasonal"="winter"', '"tourism"', '"leisure"', '"amenity"="events_venue"', '"amenity"="festival_grounds"'];
 const abfragen = ['DE', 'AT'].flatMap((land) =>
-  FILTER.map((f) => `[out:json][timeout:90];area["ISO3166-1"="${land}"]->.a;nwr[${f}]["name"~"${NAME}",i](area.a);out center tags;`),
+  FILTER.map((f) => `[out:json][timeout:50];area["ISO3166-1"="${land}"]->.a;nwr[${f}]["name"~"${NAME}",i](area.a);out center tags;`),
 );
+
+// Gesamtbudget: nach 15 Minuten wird mit den bisherigen Treffern weitergemacht (der Workflow bricht nach 25 ab, das war vorher der Fehler).
+const ENDE = Date.now() + 15 * 60 * 1000;
 
 async function einzeln(abfrage) {
   let fehler;
   for (const url of ENDPUNKTE) {
+    if (Date.now() > ENDE) break;
     try {
       const r = await fetch(url, {
         method: 'POST',
         body: 'data=' + encodeURIComponent(abfrage),
         headers: { 'content-type': 'application/x-www-form-urlencoded', 'user-agent': 'gluehlabor-maerkte/1.0' },
-        signal: AbortSignal.timeout(120000),
+        signal: AbortSignal.timeout(65000),
       });
       const text = await r.text();
       if (!r.ok) throw new Error(`${url}: HTTP ${r.status} ${text.slice(0, 120).replace(/\s+/g, ' ')}`);
@@ -33,13 +37,17 @@ async function einzeln(abfrage) {
       console.error('Fehlgeschlagen:', String(e.message ?? e).slice(0, 200));
     }
   }
-  throw fehler;
+  throw fehler ?? new Error('Zeitbudget aufgebraucht');
 }
 
 async function hole() {
   const elements = [];
   let ok = 0;
   for (const [i, q] of abfragen.entries()) {
+    if (Date.now() > ENDE) {
+      console.error(`Zeitbudget aufgebraucht, Abfragen ab ${i + 1} entfallen`);
+      break;
+    }
     try {
       const el = await einzeln(q);
       elements.push(...el);
