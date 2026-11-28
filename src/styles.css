@@ -728,3 +728,8 @@ select.feld {
 .mehr-angaben > summary::-webkit-details-marker { display: none; }
 .mehr-angaben > summary::before { content: '▸'; transition: transform .15s; }
 .mehr-angaben[open] > summary::before { transform: rotate(90deg); }
+
+/* Sorten als Bilder (Audit 28.11.2026: weniger Text, mehr Look and feel) */
+.sorten { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; margin: 4px 0 8px; }
+.sorten button { min-height: 52px; display: grid; place-items: center; border-radius: 16px; border: 2px solid var(--nm-bedienung); background: transparent; color: var(--text-2, currentColor); cursor: pointer; padding: 2px; }
+.sorten button.an { border-color: var(--nm-stern); background: var(--nm-flaeche, rgb(255 255 255 / 0.08)); box-shadow: 0 0 0 2px var(--nm-stern) inset; }

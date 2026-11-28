@@ -14,7 +14,6 @@ import { useRoute } from './ui/hooks';
 import { Rangliste } from './ui/Rangliste';
 import { StandSeite } from './ui/Stand';
 import { Moderation } from './ui/Moderation';
-import { Mehr } from './ui/Mehr';
 import { Spickzettel } from './ui/Spickzettel';
 import { Mitbewerten } from './ui/Mitbewerten';
 import { Statistik } from './ui/Statistik';
@@ -38,7 +37,10 @@ export function App() {
   else if (route.startsWith('becher/')) seite = <Detail id={decodeURIComponent(route.slice(7))} />;
   else if (route.startsWith('stand/')) seite = <StandSeite id={decodeURIComponent(route.slice(6))} />;
   else if (route === 'moderation') seite = <Moderation />;
-  else if (route === 'mehr') seite = <Mehr />;
+  else if (route === 'mehr') {
+    location.replace('#/profil'); // alter Link: „Mehr“ gibt es nicht mehr, Hilfe und Einstellungen stehen unter „Ich“
+    return null;
+  }
   else if (route === 'feedback') seite = <Feedback />;
   else if (route === 'entdecken') seite = <Entdecken />;
   else if (route === 'meine') seite = <MeineBewertungen />;

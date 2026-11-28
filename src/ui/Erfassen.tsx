@@ -19,13 +19,14 @@ import { ortTeile, stadtVon, zerlegeFreienMarkt } from '../lib/orte';
 import { baueStaende } from '../lib/staende';
 import { maerkteIn } from '../lib/ortssuche';
 import { kanonischerStand, schlageStaendeVor, type Vorschlag } from '../lib/standvorschlag';
+import { useGeraetId } from './daten';
+import { SorteIcon } from './nacht/SorteIcon';
 import { ANKER, MARKTLISTE, MARKT_ZUSATZ } from './stammdaten';
 import { euro, probeNr, sterneText } from '../lib/format';
 import { DEFAULT_GEWICHTE, KRITERIEN, leereNoten, SORTEN, type Eintrag, type Kriterium, type Sorte } from '../lib/modell';
 import { bewerte } from '../lib/scoring';
 import { berechnePreisLeistung, MENGEN, PREIS_MAX, PREIS_MIN, referenzPreis, vergleichbar } from '../lib/preisleistung';
 import { useLive } from './hooks';
-import { MenueBlatt } from './nacht/MenueBlatt';
 import { NameBlatt } from './nacht/NameBlatt';
 import { QrBlatt } from './nacht/QrBlatt';
 import { NotenZeile } from './NotenZeile';
@@ -93,13 +94,13 @@ function startEntwurf(): Entwurf {
 export function Erfassen() {
   const gewichte = useLive(leseGewichte, [], { ...DEFAULT_GEWICHTE });
   const anzahl = useLive(() => db.eintraege.count(), [], 0);
+  const geraetId = useGeraetId();
   const heute = abendDatum(new Date());
   const heutige = useLive(() => db.eintraege.where('datum').equals(heute).toArray(), [heute], []);
 
   const [e, setE] = useState<Entwurf>(startEntwurf);
   const [ortOffen, setOrtOffen] = useState(false);
   const [nameOffen, setNameOffen] = useState(false);
-  const [menueOffen, setMenueOffen] = useState(false);
   const [qrOffen, setQrOffen] = useState(false);
   // Zwei Schritte: erst „Wo?" (Stadt, Stand, Markt freiwillig), dann „Bewerten" (Preis und Noten).
   const [schritt, setSchritt] = useState<'wo' | 'bewerten'>(() => {
@@ -111,7 +112,6 @@ export function Erfassen() {
     return p === undefined ? '' : String(p).replace('.', ',');
   });
   const [preisFehlt, setPreisFehlt] = useState(false);
-  const [becherNrAngefasst, setBecherNrAngefasst] = useState(() => leseEntwurf()?.becherNr !== undefined);
   const [foto, setFoto] = useState<Blob | null>(null);
   // Foto für alle sichtbar? Nur wer es ausdrücklich ankreuzt. Die letzte Wahl merkt sich das Gerät, sie steht aber bei jedem Foto sichtbar da.
   const [fotoOeffentlich, setFotoOeffentlich] = useState(() => {
@@ -164,9 +164,8 @@ export function Erfassen() {
   // Entwurf bei jeder Änderung sichern.
   useEffect(() => schreibeEntwurf(e), [e]);
 
-  // Becher-Nr. vorschlagen, solange niemand sie selbst gewählt hat.
-  const vorschlagNr = naechsteBecherNr(heutige, heute);
-  const becherNr = becherNrAngefasst ? e.becherNr : vorschlagNr;
+  // Die Becher-Nr. zählt das System: die eigenen Bewertungen dieses Geräts heute + 1 (nicht auswählbar).
+  const becherNr = naechsteBecherNr(heutige.filter((x) => x.geraet === geraetId && x.sync !== 'abgelehnt'), heute);
 
   // Preis-Leistung rechnet die App selbst: aus dem Preis, der Größe und deinen Glühwein-Noten, gegen den üblichen Preis der Stadt.
   const referenz = useMemo(() => referenzPreis(bestand, e.stadt, MARKTLISTE), [bestand, e.stadt]);
@@ -275,7 +274,6 @@ export function Erfassen() {
     setE(neu);
     setPreisText('');
     setPreisFehlt(false);
-    setBecherNrAngefasst(false);
     setFoto(null);
     setFehlt(false);
     setHilfeOffen(null);
@@ -353,9 +351,6 @@ export function Erfassen() {
           <i data-an="true" />
           <i data-an={schritt === 'bewerten'} />
         </span>
-        <button type="button" class="kopf-menue" onClick={() => setMenueOffen(true)} aria-haspopup="dialog">
-          {t('Menü')}
-        </button>
       </div>
 
       {schritt === 'wo' ? (
@@ -519,6 +514,22 @@ export function Erfassen() {
         </p>
       </section>
 
+      <div class="sorten" role="radiogroup" aria-label={t('Sorte')}>
+        {SORTEN.map((x) => (
+          <button
+            type="button"
+            role="radio"
+            aria-checked={e.sorte === x}
+            aria-label={t(SORTE_LABEL[x])}
+            title={t(SORTE_LABEL[x])}
+            class={e.sorte === x ? 'an' : ''}
+            onClick={() => setE({ ...e, sorte: e.sorte === x ? undefined : x })}
+          >
+            <SorteIcon sorte={x} />
+          </button>
+        ))}
+      </div>
+
       <section class="noten" aria-label={t('Sterne')}>
         <p class="noten-kopf">
           {t('Sterne')} <span>{alleSterne ? t('mindestens eine') : t('Tippe auf die Sterne, mehr brauchst du nicht')}</span>
@@ -567,34 +578,6 @@ export function Erfassen() {
 
       <details class="mehr-angaben" open={Boolean(e.sorte || e.notiz.trim())}>
         <summary>{t('Mehr Angaben')}</summary>
-        <div class="meta">
-          <select
-            class={e.sorte ? 'chip gesetzt' : 'chip'}
-            aria-label={t('Sorte')}
-            value={e.sorte ?? ''}
-            onChange={(ev) => setE({ ...e, sorte: ((ev.target as HTMLSelectElement).value || undefined) as Sorte })}
-          >
-            <option value="">{t('Sorte')}</option>
-            {SORTEN.map((x) => (
-              <option value={x}>{t(SORTE_LABEL[x])}</option>
-            ))}
-          </select>
-          <select
-            class={becherNr !== undefined ? 'chip gesetzt' : 'chip'}
-            aria-label={t('Der wievielte Glühwein heute Abend?')}
-            value={becherNr ?? ''}
-            onChange={(ev) => {
-              const v = (ev.target as HTMLSelectElement).value;
-              setBecherNrAngefasst(true);
-              setE({ ...e, becherNr: v ? Number(v) : undefined });
-            }}
-          >
-            <option value="">{t('– heute')}</option>
-            {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-              <option value={n}>{t('{n}. heute', { n })}</option>
-            ))}
-          </select>
-        </div>
         <input class="feld" type="text" placeholder={t('Notiz')} aria-label={t('Notiz')} enterkeyhint="done" value={e.notiz} onInput={(ev) => setE({ ...e, notiz: (ev.target as HTMLInputElement).value })} />
       </details>
 
@@ -654,7 +637,6 @@ export function Erfassen() {
     {qrOffen && e.besuchId && (
       <QrBlatt besuch={{ id: e.besuchId, stand: e.stand.trim(), markt: e.markt.trim() || MARKTLISTE.sonstiger, stadt: e.stadt?.trim() || undefined, sorte: e.sorte }} onZu={() => setQrOffen(false)} />
     )}
-    {menueOffen && <MenueBlatt onZu={() => setMenueOffen(false)} />}
     {fertigId && <TicketBlatt id={fertigId} onNaechster={() => setFertigId(null)} onNochmal={(neu) => setFertigId(neu)} />}
     </>
   );

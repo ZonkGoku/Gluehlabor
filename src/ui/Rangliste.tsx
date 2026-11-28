@@ -75,6 +75,14 @@ export function Rangliste() {
             <DealMarke /> {t('gut und günstig')}
           </span>
         </p>
+        <p class="mt-2 flex flex-wrap gap-x-5">
+          <a href="#/entdecken" class="inline-flex min-h-[44px] items-center gap-1.5 text-sm font-semibold text-gold-300 no-underline">
+            <Symbol name="uebersicht" groesse={16} /> {t('Karte und Zahlen')}
+          </a>
+          <a href="#/fotos" class="inline-flex min-h-[44px] items-center gap-1.5 text-sm font-semibold text-gold-300 no-underline">
+            <Symbol name="kamera" groesse={16} /> {t('Fotos')}
+          </a>
+        </p>
         {alleZeilen.length >= 6 && (
           <input
             type="search"

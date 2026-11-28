@@ -6,6 +6,7 @@ import { db, holeGeraet, leseEinstellung, schreibeEinstellung, setzeName } from 
 import { abonniereSync, synchronisiere, type SyncInfo } from '../daten/sync';
 import { GRENZEN, pruefeName } from '../lib/community';
 import { Betreiber } from './bausteine';
+import { Gruppe } from './MenueListe';
 import { PassAbzeichen, PassKopf } from './Pass';
 import { useGeraetId, useName } from './daten';
 import { useLive } from './hooks';
@@ -108,6 +109,26 @@ export function Profil() {
 
         <div class="nm" style={{ gridColumn: '1 / -1' }}>
           <PassAbzeichen />
+        </div>
+
+        <div class="nm" style={{ gridColumn: '1 / -1' }}>
+          <Gruppe
+            titel="Hilfe und Einstellungen"
+            punkte={[
+              { href: '#/spickzettel', symbol: 'spickzettel', titel: 'Hilfe & Regeln', text: 'So bewertest du, was die Sterne bedeuten.' },
+              { href: '#/einstellungen', symbol: 'einstellungen', titel: 'Einstellungen', text: 'Sprache, Hell oder Dunkel, Sparmodus.' },
+              { href: '#/feedback', symbol: 'kamera', titel: 'Was fehlt dir?', text: 'Sag uns, was unklar ist oder fehlt.' },
+            ]}
+          />
+          {pruefstelle && (
+            <Gruppe
+              titel="Prüfstelle"
+              punkte={[
+                { href: '#/moderation', symbol: 'pokal', titel: 'Moderation', text: 'Meldungen, Stände pflegen, Bewertungen löschen.' },
+                { href: '#/statistik', symbol: 'statistik', titel: 'Statistik' },
+              ]}
+            />
+          )}
         </div>
 
         <details class="karte seite" style={{ padding: '18px', gridColumn: '1 / -1' }}>

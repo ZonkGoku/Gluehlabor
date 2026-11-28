@@ -1106,4 +1106,8 @@ export const EN: Record<string, string> = {
   "Außerirdischer": "Alien",
   "Mütze": "Beanie",
   "Ungültige Figur.": "Invalid character.",
+  "Rennen": "Race",
+  "Hilfe": "Help",
+  "So bewertest du, was die Sterne bedeuten.": "How to rate and what the stars mean.",
+  "Sprache, Hell oder Dunkel, Sparmodus.": "Language, light or dark, low-power mode.",
 };

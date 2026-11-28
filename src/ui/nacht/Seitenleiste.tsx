@@ -9,15 +9,18 @@ import { t } from '../../i18n';
 const PUNKTE = [
   { route: '', label: 'Start', symbol: 'uebersicht' },
   { route: 'rangliste', label: 'Rangliste', symbol: 'pokal' },
+  { route: 'schlittenfahren', label: 'Rennen', symbol: 'ziel' },
   { route: 'profil', label: 'Ich', symbol: 'profil' },
 ] as const;
-/** Seltener gebraucht: eigene, kleinere Gruppe. */
-const MEHR = [
-  { route: 'entdecken', label: 'Entdecken', symbol: 'uebersicht' },
-  { route: 'schlittenfahren', label: 'Schlittenfahren (Beta)', symbol: 'ziel' },
+/** Gleiche Ziele wie am Telefon, hier zusätzlich offen sichtbar (Platz ist da). */
+const ENTDECKEN = [
+  { route: 'entdecken', label: 'Karte und Zahlen', symbol: 'uebersicht' },
+  { route: 'fotos', label: 'Fotos', symbol: 'kamera' },
+] as const;
+const HILFE = [
   { route: 'spickzettel', label: 'Hilfe & Regeln', symbol: 'spickzettel' },
-  { route: 'vergleich', label: 'Vergleich', symbol: 'vergleich' },
   { route: 'einstellungen', label: 'Einstellungen', symbol: 'einstellungen' },
+  { route: 'feedback', label: 'Was fehlt dir?', symbol: 'kamera' },
 ] as const;
 
 const KLEIN =
@@ -49,8 +52,10 @@ export function Seitenleiste({ route, zeigeSync }: { route: string; zeigeSync: b
 
       <nav aria-label={t('Ansichten')} class="flex flex-1 flex-col gap-1 overflow-y-auto">
         {PUNKTE.map((p) => link(p))}
-        <p class="etikett mt-3 px-3.5 pb-1">{t('Mehr')}</p>
-        {MEHR.map((p) => link(p, true))}
+        <p class="etikett mt-3 px-3.5 pb-1">{t('Entdecken')}</p>
+        {ENTDECKEN.map((p) => link(p, true))}
+        <p class="etikett mt-3 px-3.5 pb-1">{t('Hilfe')}</p>
+        {HILFE.map((p) => link(p, true))}
       </nav>
 
       <a

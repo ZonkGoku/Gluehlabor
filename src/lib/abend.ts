@@ -11,13 +11,15 @@ export function abendDatum(jetzt: Date): string {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
-/** Vorschlag für die Becher-Nr.: höchste Nr. dieses Abends + 1, maximal 7. */
+/**
+ * Die Becher-Nr. zählt das System: so viele Bewertungen wie dieses Gerät heute schon hat, plus eine (mindestens die höchste vergebene Nr. + 1),
+ * höchstens 7 (mehr nimmt der Server nicht an). `eintraege` sind nur die eigenen Bewertungen, nie die der Community.
+ */
 export function naechsteBecherNr(
   eintraege: readonly { datum?: string; becherNr?: number }[],
   datum: string,
 ): number {
-  const max = eintraege
-    .filter((e) => e.datum === datum && typeof e.becherNr === 'number')
-    .reduce((m, e) => Math.max(m, e.becherNr!), 0);
-  return Math.min(max + 1, 7);
+  const heute = eintraege.filter((e) => e.datum === datum);
+  const max = heute.reduce((m, e) => (typeof e.becherNr === 'number' ? Math.max(m, e.becherNr) : m), 0);
+  return Math.min(Math.max(max, heute.length) + 1, 7);
 }

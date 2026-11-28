@@ -60,6 +60,9 @@ describe('naechsteBecherNr', () => {
     ];
     expect(naechsteBecherNr(e, '2026-12-03')).toBe(3);
   });
+  it('zählt die Bewertungen auch ohne Nr.', () => {
+    expect(naechsteBecherNr([{ datum: 'x' }, { datum: 'x' }, { datum: 'x' }], 'x')).toBe(4);
+  });
   it('höchstens 7', () => {
     expect(naechsteBecherNr([{ datum: 'x', becherNr: 7 }], 'x')).toBe(7);
   });

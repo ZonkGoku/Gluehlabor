@@ -197,6 +197,13 @@ Messung per Playwright (Tippflächen < 44 px, Schrift < 11 px, Seitenüberlauf),
 
 Zehn gezeichnete Figuren (Bär, Fuchs, Pinguin, Schneemann, Eule, Hase, Katze, Roboter, Außerirdischer, Mütze; `src/lib/avatare.ts`, wie die Fahrzeuge als Teile-Liste für SVG `FahrzeugBild`/`AvatarBild` und Canvas `rennenBild.ts`). **Alle im Rennen sehen sie** (anders als das Fahrer-Foto, das nur lokal bleibt und auf dem eigenen Gerät vor der Figur steht). Server: Feld `avatar` an `rennen_teilnehmer` (-1 = keine, 0–9; Migration `0008_avatar.sql`, PHP rüstet nach, Test „Figur“), Auswahl in `KamelWahl` beim Starten und Beitreten. Rein Zeichnungen: nichts Persönliches, keine Moderation nötig.
 
+### Menüführung vereinfacht (28.11.2026, nach Best Practices: höchstens 5 Ziele, kein „Mehr“ als Sammelbecken, Apple HIG warnt vor Überlauf-Reitern)
+
+- **Untere Leiste: Start · Rangliste · + Bewerten · Rennen · Ich.** Den Reiter „Mehr“ und die Seite `Mehr.tsx` gibt es nicht mehr (`#/mehr` leitet auf `#/profil`). Verteilt nach Absicht: Schlittenfahren = eigener Reiter „Rennen“; **Hilfe & Regeln, Einstellungen, „Was fehlt dir?“ und (nur Prüfstelle) Moderation/Statistik stehen auf „Ich“** (Gruppe „Hilfe und Einstellungen“, `ui/MenueListe.tsx`); **Karte und Zahlen (`#/entdecken`) und Fotos** sind von Start (Zahlenleiste, Fotostreifen, „Mehr entdecken“) und von der Rangliste (Links unter der Überschrift) erreichbar und markieren „Start“ in der Leiste (`platz()` in `Navigation.tsx`: `UNTER_ICH`, `UNTER_START`). Seitenleiste am Rechner: dieselben Ziele plus offene Gruppen „Entdecken“ und „Hilfe“.
+- **Erfassen hat nur noch „Zurück“** (der „Menü“-Knopf mit zweitem Hauptmenü ist weg; `MenueBlatt.tsx` gelöscht). Der Entwurf bleibt gespeichert.
+- **Becher-Nr. zählt das System:** Anzahl der **eigenen** Bewertungen dieses Geräts am Abend + 1, höchstens 7 (Server), nicht auswählbar (`naechsteBecherNr` in `lib/abend.ts`; vorher zählte „Nochmal wie eben“ und die Erfassung versehentlich alle Bewertungen der Community mit).
+- **Sorte als Bilder statt Text:** sieben Glühweintassen in Weinfarbe mit Merkmal (`ui/nacht/SorteIcon.tsx`, Reihe `.sorten` direkt unter dem Preis, Name nur als `aria-label`/Tooltip); erneut antippen löscht. Leitlinie: **weniger Text, mehr Bild** (Wunsch von Philip), bei neuen Bausteinen zuerst ein Symbol erwägen.
+
 ## Scoring-Regeln (verbindlich, siehe Tests in src/lib/scoring.test.ts)
 
 - Noten: Ganzzahl 1..10 oder `null`. **`null` fällt aus Zähler UND Nenner, zählt nie als 0.**

@@ -10,18 +10,19 @@ const PUNKTE = [
   { route: '', label: 'Start', symbol: 'uebersicht' },
   { route: 'rangliste', label: 'Rangliste', symbol: 'pokal' },
   null, // Platz des Erfassen-Knopfs
-  { route: 'mehr', label: 'Mehr', symbol: 'menue' },
+  { route: 'schlittenfahren', label: 'Rennen', symbol: 'ziel' },
   { route: 'profil', label: 'Ich', symbol: 'profil' },
 ] as const;
 
-/** Ansichten, die unter „Mehr" hängen, und die Seiten, die zur Rangliste gehören. */
-const UNTER_MEHR = ['entdecken', 'fotos', 'feedback', 'schlittenfahren', 'schlittenrennen', 'kamelrennen', 'vergleich', 'statistik', 'spickzettel', 'einstellungen', 'impressum', 'datenschutz', 'moderation'];
+/** Seiten, die zu „Ich" gehören (Meine Bewertungen, Einstellungen, Hilfe, Rückmeldung, Rechtliches, Prüfstelle), und die, die zum Start gehören (Entdecken, Fotos). */
+const UNTER_ICH = ['mehr', 'meine', 'einstellungen', 'feedback', 'spickzettel', 'impressum', 'datenschutz', 'moderation', 'statistik'];
+const UNTER_START = ['entdecken', 'fotos', 'vergleich'];
 
 export function platz(route: string): number {
   if (route.startsWith('becher/') || route.startsWith('stand/')) return 1;
-  if (route.startsWith('schlittenfahren/') || route.startsWith('schlittenrennen/') || route.startsWith('kamelrennen/')) return 3;
-  if (UNTER_MEHR.includes(route)) return 3;
-  if (route === 'meine' || route.startsWith('aendern/')) return PUNKTE.findIndex((p) => p !== null && p.route === 'profil');
+  if (route.startsWith('schlittenfahren') || route.startsWith('schlittenrennen') || route.startsWith('kamelrennen')) return 3;
+  if (route.startsWith('aendern/') || UNTER_ICH.includes(route)) return 4;
+  if (UNTER_START.includes(route)) return 0;
   return PUNKTE.findIndex((p) => p !== null && p.route === route);
 }
 
