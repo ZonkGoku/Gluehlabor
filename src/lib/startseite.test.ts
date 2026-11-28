@@ -6,7 +6,7 @@ import { KARTE_BREITE, KARTE_HOEHE, kartenPunkte, koordinatenVon, projiziere, um
 import staedteKarte from '../../data/staedte.json';
 import { DEFAULT_GEWICHTE, leereNoten, type Eintrag } from './modell';
 import type { MarktListe } from './orte';
-import { abend, kennzahlen, neuesteBecher, saisonStatus, saisonVerlauf, standardSaison } from './startseite';
+import { abend, gesamtZahlen, kennzahlen, neuesteBecher, saisonStatus, saisonVerlauf, standardSaison } from './startseite';
 
 const bestand = importiereCsv(readFileSync(resolve(process.cwd(), 'data/gluehwein-2025.csv'), 'utf8'));
 const orte: Koordinaten = JSON.parse(readFileSync(resolve(process.cwd(), 'data/staedte.json'), 'utf8'));
@@ -202,5 +202,19 @@ describe('Karte: Deutschland und Österreich', () => {
       expect(y, name).toBeGreaterThan(0);
       expect(y, name).toBeLessThan(KARTE_HOEHE);
     }
+  });
+});
+
+describe('gesamtZahlen', () => {
+  const liste: MarktListe = JSON.parse(readFileSync(resolve(process.cwd(), 'data/maerkte.json'), 'utf8'));
+  it('leer', () => expect(gesamtZahlen([], liste)).toEqual({ staende: 0, maerkte: 0, staedte: 0, bewertungen: 0 }));
+  it('zählt Stände je Stadt, echte Märkte und Städte; Sonstiger ist kein Markt', () => {
+    const e = [
+      mk('g1', 2026, '2026-11-20', 7, { stand: 'Glüh & Co', markt: 'Christkindlesmarkt', stadt: 'Nürnberg' }),
+      mk('g2', 2026, '2026-11-21', 6, { stand: 'GLÜH Co.', markt: 'Christkindlesmarkt', stadt: 'Nürnberg' }), // gleicher Stand
+      mk('g3', 2026, '2026-11-21', 6, { stand: 'Glüh & Co', markt: 'Sonstiger', stadt: 'Fürth' }), // anderer Stand (andere Stadt), kein Markt
+      mk('g4', 2026, '2026-11-22', 5, { stand: 'Punsch', markt: 'Sonstiger', stadt: 'Fürth' }),
+    ];
+    expect(gesamtZahlen(e, liste)).toEqual({ staende: 3, maerkte: 1, staedte: 2, bewertungen: 4 });
   });
 });

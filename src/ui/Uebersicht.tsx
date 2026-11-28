@@ -11,6 +11,7 @@ import { setzeName } from '../daten/db';
 import { synchronisiere } from '../daten/sync';
 import { anzeigeName, istPruefstelle, pruefeName } from '../lib/community';
 import { FotoLeiste } from './Fotos';
+import { Gesamt } from './Gesamt';
 import { InstallKarte } from './InstallKarte';
 import { RennenKarte } from './schlitten/RennenLeiste';
 import { useEintraege, useGeraetId, useGewichte, useMeineAnzahl, useName, useSaison } from './daten';
@@ -188,6 +189,9 @@ export function Uebersicht() {
       )}
 
       <div ref={raster}>
+        <div data-ein>
+          <Gesamt />
+        </div>
         <section data-ein aria-label={t('Die Besten')}>
           <div class="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
             <h2 class="font-display text-[28px] uppercase leading-none tracking-wide text-eis">{t('Die Besten in')}</h2>

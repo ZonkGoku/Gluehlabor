@@ -177,6 +177,12 @@ Eigenes Spiel unter „Mehr“ (`#/schlittenfahren`, `#/schlittenfahren/<id>`, a
 - **Galerie** `#/fotos` (`ui/Fotos.tsx`, Streifen `FotoLeiste` auf der Startseite, Eintrag unter „Mehr“), Vorschaubilder in Rangliste/Stand-Zeilen (`RangZeile bild`), Stand-Seite `FotoStreifen`. Datenschutz-Text (`Rechtliches.tsx`) nennt Fotos; **Entwurf, nicht geprüft**.
 - **Fahrer-Foto nur lokal** (`daten/gesicht.ts`, Einstellung `gesicht`, 160-px-Quadrat): erscheint nur auf dem **eigenen** Fahrzeug im Rennen (Bahn, MiniBahn, Leiste), wird **nie hochgeladen**; andere sehen nur das Fahrzeug. Ein Upload von Gesichtern auf den Server ist bewusst nicht gebaut (erst Datenschutzprüfung, Einwilligung, Moderation).
 
+## Übersicht und Menüs entrümpelt (28.11.2026, UI/UX-Audit nach Tester-Feedback „schwer zurechtzufinden“)
+
+- **Gesamtübersicht** `ui/Gesamt.tsx` oben auf der Startseite (und als Kennzahlen auf `#/entdecken`): Stände · Märkte · Städte · Bewertungen, alle Saisons, ohne Ausgeblendete. Rechnung `gesamtZahlen` in `lib/startseite.ts` (Stand = `standIdent` mit Stadt; Märkte zählen je Stadt, „Sonstiger“ ist kein Markt).
+- **Kopfzeile am Telefon:** nur Logo, Sprache, Hilfe (bzw. „Meine Bewertungen“, sobald man bewertet hat) und Sync-Punkt; der Hell/Dunkel-Schalter ist nur noch am Rechner im Kopf, am Telefon unter Einstellungen.
+- **Mehr** ist eine kompakte, gruppierte Liste (Entdecken · Hilfe und Einstellungen · Prüfstelle nur für Prüfstellen-Geräte) statt acht großer Karten; „Vergleich“ hängt nur noch an der Karte auf `#/entdecken`; der alte Text vom „Wochenrennen für alle“ ist weg.
+
 ## Scoring-Regeln (verbindlich, siehe Tests in src/lib/scoring.test.ts)
 
 - Noten: Ganzzahl 1..10 oder `null`. **`null` fällt aus Zähler UND Nenner, zählt nie als 0.**

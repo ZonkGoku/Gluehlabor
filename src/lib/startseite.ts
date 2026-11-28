@@ -1,6 +1,7 @@
 // Rechenlogik der Startseite: Abend, Saison, Verlauf, neueste Becher. Reine Funktionen.
 
 import { naechsteBecherNr } from './abend';
+import { standIdent } from './community';
 import type { Eintrag, Gewichte } from './modell';
 import { stadtVon, type MarktListe } from './orte';
 import { bewerte, rangliste } from './scoring';
@@ -134,4 +135,26 @@ export function kennzahlen(eintraege: readonly Eintrag[], liste: MarktListe, gew
     staedte: new Set(eintraege.map((e) => stadtVon(liste, e)).filter(Boolean)).size,
     mittel: mittelwert(gesamt),
   };
+}
+
+export interface GesamtZahlen {
+  staende: number;
+  /** Echte Märkte je Stadt; „kein bestimmter Markt" (Sonstiger) zählt nicht. */
+  maerkte: number;
+  staedte: number;
+  bewertungen: number;
+}
+
+/** Die einfache Gesamtübersicht: wie viele Stände, Märkte, Städte und Bewertungen es insgesamt gibt. */
+export function gesamtZahlen(eintraege: readonly Eintrag[], liste: MarktListe): GesamtZahlen {
+  const staende = new Set<string>();
+  const maerkte = new Set<string>();
+  const staedte = new Set<string>();
+  for (const e of eintraege) {
+    const stadt = stadtVon(liste, e) ?? null;
+    staende.add(standIdent({ stand: e.stand, stadt }));
+    if (stadt) staedte.add(stadt);
+    if (e.markt && e.markt !== 'Sonstiger') maerkte.add(`${stadt ?? ''}|${e.markt}`);
+  }
+  return { staende: staende.size, maerkte: maerkte.size, staedte: staedte.size, bewertungen: eintraege.length };
 }

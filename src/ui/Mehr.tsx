@@ -10,53 +10,67 @@ interface Punkt {
   href: string;
   symbol: string;
   titel: string;
-  text: string;
+  text?: string;
 }
 
-export function Mehr() {
-  const pruefstelle = useLive(() => leseEinstellung<boolean>('pruefstelle', false), [], false);
-  const punkte: Punkt[] = [
-    { href: '#/entdecken', symbol: 'uebersicht', titel: 'Entdecken', text: 'Karte, Top Deals, Preise und der Verlauf der Saison.' },
-    { href: '#/fotos', symbol: 'kamera', titel: 'Fotos', text: 'Die Fotos der Community, von allen für alle.' },
-    { href: '#/schlittenfahren', symbol: 'ziel', titel: 'Schlittenfahren (Beta)', text: 'Wochenrennen für alle und Rennen mit Freunden: Jede Bewertung bringt deinen Schlitten weiter.' },
-    { href: '#/spickzettel', symbol: 'spickzettel', titel: 'Hilfe & Regeln', text: 'So bewertest du: Regeln und was die Noten bedeuten.' },
-    { href: '#/vergleich', symbol: 'vergleich', titel: 'Vergleich', text: 'Über die Jahre: welche Stände wieder dabei waren und welche Märkte noch fehlen.' },
-    { href: '#/einstellungen', symbol: 'einstellungen', titel: 'Einstellungen', text: 'Sprache, Hell oder Dunkel.' },
-    ...(pruefstelle ? [{ href: '#/statistik', symbol: 'statistik', titel: 'Statistik', text: 'Nutzen die Bewertenden die ganze Skala?' }] : []),
-    ...(pruefstelle ? [{ href: '#/moderation', symbol: 'pokal', titel: 'Moderation', text: 'Meldungen, Bewertungen löschen, Stände pflegen.' }] : []),
-  ];
+function Gruppe({ titel, punkte }: { titel: string; punkte: Punkt[] }) {
   return (
-    <div class="nm">
-      <div class="mb-5 mt-2">
-        <p class="etikett !text-gold-300">{t('Weitere Ansichten')}</p>
-        <h1 class="mt-2 font-display text-[44px] uppercase leading-[1] tracking-wide text-eis sm:text-5xl">{t('Mehr')}</h1>
-      </div>
-      <div class="mb-4 empty:hidden">
-        <InstallKarte />
-      </div>
-      <ul class="grid gap-3 md:grid-cols-2">
+    <section class="mb-5" aria-label={t(titel)}>
+      <h2 class="etikett mb-2 !text-gold-300">{t(titel)}</h2>
+      <ul class="glas divide-y divide-[var(--nm-rand)] overflow-hidden rounded-3xl">
         {punkte.map((p) => (
           <li>
-            <a href={p.href} class="glas flex min-h-[72px] items-center gap-4 rounded-3xl p-4 text-eis no-underline transition hover:shadow-glut">
-              <span class="grid size-11 shrink-0 place-items-center rounded-2xl border border-rand bg-flaeche text-gold-300">
-                <Symbol name={p.symbol} groesse={22} />
+            <a href={p.href} class="flex min-h-[56px] items-center gap-3.5 px-4 py-2.5 text-eis no-underline transition hover:bg-flaeche-hover">
+              <span class="grid size-9 shrink-0 place-items-center rounded-xl border border-rand bg-flaeche text-gold-300">
+                <Symbol name={p.symbol} groesse={20} />
               </span>
               <span class="min-w-0 flex-1">
-                <span class="block text-[17px] font-semibold">{t(p.titel)}</span>
-                <span class="block text-sm text-dunst">{t(p.text)}</span>
+                <span class="block text-[16px] font-semibold">{t(p.titel)}</span>
+                {p.text && <span class="block text-[13px] leading-snug text-dunst">{t(p.text)}</span>}
               </span>
+              <span aria-hidden="true" class="text-dunst">›</span>
             </a>
           </li>
         ))}
       </ul>
-      <p class="mt-5 flex flex-wrap gap-x-5 gap-y-1 text-sm">
-        <a class="inline-block py-3 text-gold-300 no-underline hover:text-gold-400" href="#/impressum">
-          {t('Impressum')}
-        </a>
-        <a class="inline-block py-3 text-gold-300 no-underline hover:text-gold-400" href="#/datenschutz">
-          {t('Datenschutz')}
-        </a>
-      </p>
+    </section>
+  );
+}
+
+export function Mehr() {
+  const pruefstelle = useLive(() => leseEinstellung<boolean>('pruefstelle', false), [], false);
+  return (
+    <div class="nm">
+      <div class="mb-5 mt-2">
+        <h1 class="font-display text-[44px] uppercase leading-[1] tracking-wide text-eis sm:text-5xl">{t('Mehr')}</h1>
+      </div>
+      <div class="mb-4 empty:hidden">
+        <InstallKarte />
+      </div>
+      <Gruppe
+        titel="Entdecken"
+        punkte={[
+          { href: '#/entdecken', symbol: 'uebersicht', titel: 'Karte und Zahlen', text: 'Wo bewertet wurde, Top Deals, Preise.' },
+          { href: '#/fotos', symbol: 'kamera', titel: 'Fotos', text: 'Von der Community.' },
+          { href: '#/schlittenfahren', symbol: 'ziel', titel: 'Schlittenfahren (Beta)', text: 'Rennen mit Freunden: jede Bewertung ein Schritt.' },
+        ]}
+      />
+      <Gruppe
+        titel="Hilfe und Einstellungen"
+        punkte={[
+          { href: '#/spickzettel', symbol: 'spickzettel', titel: 'Hilfe & Regeln' },
+          { href: '#/einstellungen', symbol: 'einstellungen', titel: 'Einstellungen', text: 'Sprache, Hell oder Dunkel.' },
+        ]}
+      />
+      {pruefstelle && (
+        <Gruppe
+          titel="Prüfstelle"
+          punkte={[
+            { href: '#/moderation', symbol: 'pokal', titel: 'Moderation', text: 'Meldungen, Stände pflegen, Bewertungen löschen.' },
+            { href: '#/statistik', symbol: 'statistik', titel: 'Statistik' },
+          ]}
+        />
+      )}
       <Betreiber />
     </div>
   );

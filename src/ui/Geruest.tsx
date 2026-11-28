@@ -45,7 +45,7 @@ export function Geruest({ route, children, ohneNavigation = false }: { route: st
             {darf && <SyncAnzeige />}
             <SpracheKnopf />
             {breit && <MenueKnopf />}
-            <ThemeKnopf />
+            {breit && <ThemeKnopf />}
             {/* Wer schon bewertet hat, kommt von überall mit einem Tipp zu seinen Bewertungen. Am Telefon ersetzt das Symbol die Hilfe (die steht unter „Mehr“). */}
             {darf && (
               <a class={ICONKNOPF} href="#/meine" aria-label={t('Meine Bewertungen')} aria-current={route === 'meine' ? 'page' : undefined} title={t('Meine Bewertungen')}>
