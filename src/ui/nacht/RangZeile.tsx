@@ -3,9 +3,10 @@ import type { Zeile } from '../../lib/auswertung';
 import { DealMarke } from './DealMarke';
 import { PruefSiegel } from './PruefSiegel';
 import { SterneZeile } from './SterneWert';
+import { t } from '../../i18n';
 import { stufe } from './Ticket';
 
-export function RangZeile({ zeile, ort, href, anzahl, siegel = false, deal = false, bild }: { zeile: Zeile; ort?: string; href?: string; anzahl?: number; siegel?: boolean; deal?: boolean; bild?: string }) {
+export function RangZeile({ zeile, ort, href, anzahl, siegel = false, deal = false, bild, preis }: { zeile: Zeile; ort?: string; href?: string; anzahl?: number; siegel?: boolean; deal?: boolean; bild?: string; preis?: string | null }) {
   const { eintrag: e, wertung: w, rang } = zeile;
   const s = stufe(rang);
   return (
@@ -32,6 +33,12 @@ export function RangZeile({ zeile, ort, href, anzahl, siegel = false, deal = fal
           <span class="truncate">{ort ?? e.markt}</span>
         </span>
       </span>
+      {preis && (
+        <span class="shrink-0 text-right leading-tight">
+          <b class="block font-mono text-[16px] font-semibold tabular-nums text-eis">{preis}</b>
+          <span class="block text-[11px] text-dunst">{t('je 0,2 l')}</span>
+        </span>
+      )}
     </a>
   );
 }

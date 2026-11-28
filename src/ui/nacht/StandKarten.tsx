@@ -46,17 +46,18 @@ export function StandZeile({ stand }: { stand: Stand }) {
   const zeile = standAlsZeile(stand);
   // Das neueste Foto der Community (vom Server) als kleine Vorschau
   const mitFoto = stand.bewertungen.find((e) => e.foto);
-  return <RangZeile zeile={zeile} ort={stand.stadt ?? ortText(MARKTLISTE, zeile.eintrag)} href={standHref(stand)} anzahl={stand.wert.anzahl} siegel={stand.pruefstelle.anzahl > 0} deal={stand.deal.top} bild={mitFoto ? fotoAdresse(mitFoto, true) : undefined} />;
+  return <RangZeile zeile={zeile} ort={stand.stadt ?? ortText(MARKTLISTE, zeile.eintrag)} href={standHref(stand)} anzahl={stand.wert.anzahl} siegel={stand.pruefstelle.anzahl > 0} deal={stand.deal.top} bild={mitFoto ? fotoAdresse(mitFoto, true) : undefined} preis={stand.preis.median !== null ? euro(stand.preis.median) : null} />;
 }
 
 /** Zeile der Top-Deals-Liste: Preis-Leistung statt Gesamtnote, dazu der übliche Preis. */
 export function DealZeile({ stand }: { stand: Stand }) {
   const zeile = dealAlsZeile(stand);
-  const preis = stand.preis.median !== null ? `${euro(stand.preis.median)} ${tt('je 0,2 l')}` : null;
+  const preis = stand.preis.median !== null ? euro(stand.preis.median) : null;
   return (
     <RangZeile
       zeile={zeile}
-      ort={[stand.stadt ?? ortText(MARKTLISTE, zeile.eintrag), preis].filter(Boolean).join(' · ')}
+      ort={stand.stadt ?? ortText(MARKTLISTE, zeile.eintrag)}
+      preis={preis}
       href={standHref(stand)}
       anzahl={stand.wert.anzahl}
       siegel={stand.pruefstelle.anzahl > 0}
