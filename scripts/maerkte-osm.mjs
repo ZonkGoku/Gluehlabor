@@ -123,24 +123,46 @@ function bereinige(n) {
 
 const daten = await hole();
 const je = new Map(); // Stadt -> Map(norm -> Name)
+const zaehl = { gesamt: 0, mitName: 0, treffer: 0, ohneStadt: 0, weihnachtsTag: 0 };
+const probeTreffer = [], probeOhne = [], probeKeinTreffer = [];
+const WEIHNACHT_TAG = /christmas|weihnacht|winter/i;
 for (const el of daten.elements ?? []) {
   const t = el.tags ?? {};
   const lat = el.lat ?? el.center?.lat, lon = el.lon ?? el.center?.lon;
-  const name = t.name && bereinige(t.name);
-  if (!name || lat == null) continue;
-  if (!new RegExp(NAME, 'i').test(name)) continue;
+  zaehl.gesamt++;
+  // Name: auch Zweitnamen, viele Märkte stehen nur dort („name:de", „official_name", „alt_name")
+  const kandidaten = [t.name, t['name:de'], t.official_name, t.alt_name, t.short_name].filter(Boolean);
+  const namen = kandidaten.map(bereinige).filter(Boolean);
+  if (namen.length) zaehl.mitName++;
+  const tagTreffer = [t.market, t.event, t.seasonal, t.opening_hours].some((v) => typeof v === 'string' && /christmas|xmas|winter/i.test(v)) || t.market === 'christmas';
+  if (tagTreffer) zaehl.weihnachtsTag++;
+  const name = namen.find((n) => new RegExp(NAME, 'i').test(n)) ?? (tagTreffer ? namen[0] : undefined);
+  if (!name || lat == null) {
+    if (namen[0] && /markt|fest|zauber|dorf/i.test(namen[0]) && probeKeinTreffer.length < 25) probeKeinTreffer.push(namen[0]);
+    continue;
+  }
   const stadt = stadtVon(t, lat, lon);
-  if (!stadt) continue;
+  if (!stadt) {
+    zaehl.ohneStadt++;
+    if (probeOhne.length < 15) probeOhne.push(`${name} (${lat.toFixed(2)}, ${lon.toFixed(2)})`);
+    continue;
+  }
+  zaehl.treffer++;
+  if (probeTreffer.length < 25) probeTreffer.push(`${name} → ${stadt}`);
   const m = je.get(stadt) ?? new Map();
   // Name ohne Stadtnamen als Schlüssel, damit „Weihnachtsmarkt" und „Weihnachtsmarkt Hamburg" nicht doppelt stehen
   const k = norm(name).replace(norm(stadt), '').trim() || norm(name);
   if (!m.has(k) || name.length < m.get(k).length) m.set(k, name);
   je.set(stadt, m);
 }
+console.log('Zählung:', JSON.stringify(zaehl));
+console.log('Treffer (Beispiele):', probeTreffer.join(' | '));
+if (probeOhne.length) console.log('Ohne Stadt (Beispiele):', probeOhne.join(' | '));
+console.log('Nicht erkannt, mit „markt/fest/zauber/dorf“ im Namen (Beispiele):', probeKeinTreffer.join(' | '));
 const staedte = {};
 for (const [stadt, m] of [...je].sort((a, b) => a[0].localeCompare(b[0], 'de'))) staedte[stadt] = [...m.values()].sort((a, b) => a.localeCompare(b, 'de'));
 const anzahl = Object.values(staedte).reduce((n, l) => n + l.length, 0);
-// Schutz vor einer kaputten Antwort: nie weniger als die Hälfte des bisherigen Bestands schreiben (ohne Bestand genügen 20 Märkte).
+// Schutz vor einer kaputten Antwort: nie weniger als die Hälfte des bisherigen Bestands schreiben (ohne Bestand genügt ein Markt, der erste Lauf soll auch kleine Ergebnisse zeigen).
 let bisher = 0;
 try {
   const alt = JSON.parse(readFileSync(new URL('../data/maerkte-osm.json', import.meta.url), 'utf8')).staedte ?? {};
@@ -148,6 +170,6 @@ try {
 } catch {
   /* noch kein Bestand */
 }
-if (anzahl < 20 || anzahl < bisher / 2) throw new Error(`Nur ${anzahl} Märkte gefunden (bisher ${bisher}), das sieht nach einer unvollständigen Antwort aus. Nichts geschrieben.`);
+if (anzahl < 1 || (bisher > 0 && anzahl < bisher / 2)) throw new Error(`Nur ${anzahl} Märkte gefunden (bisher ${bisher}), das sieht nach einer unvollständigen Antwort aus. Nichts geschrieben.`);
 writeFileSync(new URL('../data/maerkte-osm.json', import.meta.url), JSON.stringify({ quelle: 'OpenStreetMap, ODbL (Mitwirkende)', stand: new Date().toISOString().slice(0, 10), staedte }, null, 1) + '\n');
 console.log(`${anzahl} Märkte in ${Object.keys(staedte).length} Städten`);
