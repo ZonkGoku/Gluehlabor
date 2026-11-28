@@ -53,26 +53,3 @@ export const merkeKamel = (name: string, farbe: number, fahrzeug = 0) => schreib
 
 // ───────── Vorbelegung: ein Tipp zum Losfahren ─────────
 
-/** Zuletzt gewählter Schlitten, sonst Name des Spielers mit zufälliger Farbe. */
-export async function standardSchlitten(): Promise<{ name: string; farbe: number; fahrzeug: number }> {
-  const k = await letztesKamel();
-  if (k) return { name: k.name, farbe: k.farbe, fahrzeug: k.fahrzeug ?? 0 };
-  const n = (await leseEinstellung<string>('name', '')).trim();
-  return { name: n.length >= 2 ? n.slice(0, 24) : 'Schlitten', farbe: Math.floor(Math.random() * 8), fahrzeug: 0 };
-}
-
-/** Legt ein Rennen mit allem Vorbelegten an (Name „Rennen von …“, 5 Schritte). Liefert die Kennung. */
-export async function schnellRennen(): Promise<string> {
-  const s = await standardSchlitten();
-  const n = (await leseEinstellung<string>('name', '')).trim();
-  const id = await legeRennenAn(n.length >= 2 ? `Rennen von ${n.slice(0, 13)}` : 'Mein Rennen', 5, s.name, s.farbe, s.fahrzeug);
-  await merkeKamel(s.name, s.farbe, s.fahrzeug);
-  return id;
-}
-
-/** Fährt mit dem vorbelegten Schlitten mit (ein Tipp). */
-export async function trittMitStandardBei(id: string): Promise<void> {
-  const s = await standardSchlitten();
-  await trittBei(id, s.name, s.farbe, s.fahrzeug);
-  await merkeKamel(s.name, s.farbe, s.fahrzeug);
-}

@@ -1086,4 +1086,9 @@ export const EN: Record<string, string> = {
   "Bitte schreib uns ein paar Worte.": "Please write us a few words.",
   "Heute schon viele Rückmeldungen. Bitte morgen wieder.": "Many feedback messages already today. Please try again tomorrow.",
   "Stand: Platz {r} von {n}": "Stall: place {r} of {n}",
+  "Dein Schlitten": "Your sled",
+  "Such dir deinen Schlitten aus": "Pick your sled",
+  "Gib deinem Schlitten einen Namen (mindestens 2 Zeichen).": "Give your sled a name (at least 2 characters).",
+  "Name und Länge des Rennens ändern": "Change race name and length",
+  "Fünf Schritte bis ins Ziel. Danach lädst du Freunde ein.": "Five steps to the finish. Then you invite friends.",
 };

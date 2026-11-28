@@ -10,9 +10,7 @@ import {
   loescheRennen,
   merkeKamel,
   meineRennen,
-  schnellRennen,
   trittBei,
-  trittMitStandardBei,
   verlasseRennen,
   vergissRennen,
   type RennenDaten,
@@ -152,6 +150,7 @@ export function SchlittenfahrenUebersicht() {
   const meine = ids;
   const [daten, setDaten] = useState<Record<string, RennenDaten | null>>({});
   const [optionen, setOptionen] = useState(false);
+  const k = useKamelWahl();
   const [code, setCode] = useState('');
   const [startet, setStartet] = useState(false);
   const [fehler, setFehler] = useState('');
@@ -173,7 +172,10 @@ export function SchlittenfahrenUebersicht() {
     setStartet(true);
     setFehler('');
     try {
-      location.hash = `#/schlittenfahren/${await schnellRennen()}`;
+      const n = k.name.trim();
+      const id = await legeRennenAn(`Rennen von ${n.slice(0, 13)}`, 5, n, k.farbe, k.fahrzeug);
+      await merkeKamel(n, k.farbe, k.fahrzeug);
+      location.hash = `#/schlittenfahren/${id}`;
     } catch (e) {
       setFehler(fehlerText(e));
       setStartet(false);
@@ -213,22 +215,25 @@ export function SchlittenfahrenUebersicht() {
       {optionen ? (
         <NeuesRennen onZu={() => setOptionen(false)} />
       ) : (
-        <>
-          <button type="button" class={knopf} style={KNOPF_STIL} disabled={!HAT_SERVER || startet} onClick={() => void losgehts()}>
+        <section class="glas grid gap-4 rounded-3xl p-4" aria-label={t('Dein Schlitten')}>
+          <p class="m-0 text-[17px] font-semibold text-eis">{t('Such dir deinen Schlitten aus')}</p>
+          <KamelWahl name={k.name} farbe={k.farbe} fahrzeug={k.fahrzeug} onName={k.setName} onFarbe={k.setFarbe} onFahrzeug={k.setFahrzeug} />
+          <button type="button" class={knopf} style={KNOPF_STIL} disabled={!HAT_SERVER || startet || k.name.trim().length < 2} onClick={() => void losgehts()}>
             {t('Rennen mit Freunden starten')}
           </button>
-          <p class="mb-0 mt-2 text-center text-sm text-dunst">{t('Ein Tipp, alles vorbelegt. Danach lädst du Freunde ein.')}</p>
+          {k.name.trim().length < 2 && <p class="m-0 text-center text-sm text-dunst">{t('Gib deinem Schlitten einen Namen (mindestens 2 Zeichen).')}</p>}
           {fehler && (
-            <p role="alert" class="mb-0 mt-2 text-center text-[15px] text-[var(--warnung)]">
+            <p role="alert" class="m-0 text-center text-[15px] text-[var(--warnung)]">
               {fehler}
             </p>
           )}
           <p class="m-0 text-center">
             <button type="button" class="min-h-[44px] text-dunst underline" disabled={!HAT_SERVER} onClick={() => setOptionen(true)}>
-              {t('Name, Länge und Farbe selbst wählen')}
+              {t('Name und Länge des Rennens ändern')}
             </button>
           </p>
-        </>
+          <p class="m-0 text-center text-sm text-dunst">{t('Fünf Schritte bis ins Ziel. Danach lädst du Freunde ein.')}</p>
+        </section>
       )}
 
       <section class="glas mt-4 grid gap-2 rounded-2xl p-4">
@@ -533,19 +538,15 @@ function BeitrittsBlock({ id, voll, vorbei, danach }: { id: string; voll: boolea
   const k = useKamelWahl();
   const [fehler, setFehler] = useState('');
   const [laeuft, setLaeuft] = useState(false);
-  const [aendern, setAendern] = useState(false);
   if (vorbei) return null;
   if (voll) return <p class="glas mt-5 rounded-2xl p-4 text-dunst">{t('Das Rennen ist voll.')}</p>;
   const ok = k.name.trim().length >= 2;
-  const los = async (schnell: boolean) => {
+  const los = async () => {
     setLaeuft(true);
     setFehler('');
     try {
-      if (schnell) await trittMitStandardBei(id);
-      else {
-        await trittBei(id, k.name.trim(), k.farbe, k.fahrzeug);
-        await merkeKamel(k.name.trim(), k.farbe, k.fahrzeug);
-      }
+      await trittBei(id, k.name.trim(), k.farbe, k.fahrzeug);
+      await merkeKamel(k.name.trim(), k.farbe, k.fahrzeug);
       danach();
     } catch (e) {
       setFehler(fehlerText(e));
@@ -555,25 +556,10 @@ function BeitrittsBlock({ id, voll, vorbei, danach }: { id: string; voll: boolea
   return (
     <section class="glas mt-5 grid gap-4 rounded-3xl p-4" aria-label={t('Mitfahren')}>
       <p class="m-0 text-[17px] font-semibold text-eis">{t('Fahr mit! Such dir einen Schlitten aus.')}</p>
-      {aendern ? (
-        <>
-          <KamelWahl name={k.name} farbe={k.farbe} fahrzeug={k.fahrzeug} onName={k.setName} onFarbe={k.setFarbe} onFahrzeug={k.setFahrzeug} />
-          <button type="button" class={knopf} style={KNOPF_STIL} disabled={!ok || laeuft} onClick={() => void los(false)}>
-            {t('Mitfahren')}
-          </button>
-        </>
-      ) : (
-        <>
-          <button type="button" class={knopf} style={KNOPF_STIL} disabled={laeuft} onClick={() => void los(true)}>
-            {t('Mitfahren')}
-          </button>
-          <p class="m-0 text-center">
-            <button type="button" class="min-h-[44px] text-dunst underline" onClick={() => setAendern(true)}>
-              {t('Schlitten und Farbe selbst wählen')}
-            </button>
-          </p>
-        </>
-      )}
+      <KamelWahl name={k.name} farbe={k.farbe} fahrzeug={k.fahrzeug} onName={k.setName} onFarbe={k.setFarbe} onFahrzeug={k.setFahrzeug} />
+      <button type="button" class={knopf} style={KNOPF_STIL} disabled={!ok || laeuft} onClick={() => void los()}>
+        {t('Mitfahren')}
+      </button>
       {fehler && (
         <p role="alert" class="m-0 text-[15px] text-[var(--warnung)]">
           {fehler}
