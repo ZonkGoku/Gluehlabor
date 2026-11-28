@@ -20,6 +20,9 @@ import { baueStaende } from '../lib/staende';
 import { maerkteIn } from '../lib/ortssuche';
 import { kanonischerStand, schlageStaendeVor, type Vorschlag } from '../lib/standvorschlag';
 import { useGeraetId } from './daten';
+import { automatischeStadt } from '../daten/standort';
+import { GroesseIcon } from './nacht/GroesseIcon';
+import { haeufigsteSorte, ordneStaende, standPreisVorschlag } from '../lib/eingabehilfen';
 import { SorteIcon } from './nacht/SorteIcon';
 import { ANKER, MARKTLISTE, MARKT_ZUSATZ } from './stammdaten';
 import { euro, probeNr, sterneText } from '../lib/format';
@@ -174,17 +177,28 @@ export function Erfassen() {
   const wertung = useMemo(() => bewerte(notenGesamt, gewichte), [notenGesamt, gewichte]);
   // Schnellwahl beim Preis: zuerst der zuletzt eingetragene Preis in dieser Stadt
   const letzterPreis = useMemo(() => leseLetzterPreis(e.stadt), [e.stadt, fertigId]);
-  const schnell = letzterPreis && !SCHNELLPREISE.includes(letzterPreis) ? [letzterPreis, ...SCHNELLPREISE.slice(0, 4)] : SCHNELLPREISE;
+  // Üblicher Preis an diesem Stand (aus den Meldungen anderer) steht als erste Schnellwahl, dann der letzte der Stadt.
+  const standPreis = useMemo(
+    () => (e.stand.trim() ? standPreisVorschlag(bestand.map((b) => ({ stand: b.stand, stadt: stadtVon(MARKTLISTE, b) ?? undefined, preis: b.preis, menge: b.menge })), e.stand, e.stadt, e.menge) : null),
+    [bestand, e.stand, e.stadt, e.menge],
+  );
+  const schnell = useMemo(() => {
+    const vorn = [standPreis, letzterPreis].filter((x): x is number => typeof x === 'number');
+    const rest = SCHNELLPREISE.filter((x) => !vorn.includes(x));
+    return [...new Set([...vorn, ...rest])].slice(0, 5);
+  }, [standPreis, letzterPreis]);
   // Schon bewertete Stände dieser Stadt als große Tippflächen, solange noch kein Stand eingetragen ist
   const staendeHier = useMemo(
     () =>
       e.stadt
-        ? baueStaende(bestand.filter((b) => stadtVon(MARKTLISTE, b) === e.stadt), MARKTLISTE, gewichte)
-            .sort((a, b) => b.wert.anzahl - a.wert.anzahl || a.stand.localeCompare(b.stand, 'de'))
-            .slice(0, 8)
-            .map((x) => ({ stand: x.stand, markt: x.markt, stadt: x.stadt, anzahl: x.wert.anzahl }))
+        ? ordneStaende(
+            baueStaende(bestand.filter((b) => stadtVon(MARKTLISTE, b) === e.stadt), MARKTLISTE, gewichte).map((x) => ({ stand: x.stand, markt: x.markt, stadt: x.stadt, anzahl: x.wert.anzahl })),
+            bestand.map((b) => ({ stand: b.stand, stadt: stadtVon(MARKTLISTE, b) ?? undefined, geraet: b.geraet, datum: b.datum, erstelltAm: b.erstelltAm })),
+            geraetId,
+            heute,
+          ).slice(0, 8)
         : [],
-    [bestand, e.stadt, gewichte],
+    [bestand, e.stadt, gewichte, geraetId, heute],
   );
   // Vorschläge nur aus echten Ständen, nie der eigenen halb getippten Eingabe: der Entwurf zählt erst nach dem Speichern.
   const vorschlaege = useMemo(() => {
@@ -199,6 +213,15 @@ export function Erfassen() {
     // Genau die Eingabe am selben Markt braucht keinen Vorschlag
     return alle.filter((v) => !(v.stand === e.stand.trim() && (!markt || v.markt === markt)));
   }, [bestand, e.stand, e.markt, e.stadt]);
+  // Sorte vorwählen: die häufigste des Stands, solange du selbst keine gewählt hast (sichtbar markiert, ein Tipp ändert sie)
+  const sorteGewaehlt = useRef(e.sorte !== undefined);
+  const standSorte = useMemo(
+    () => (e.stand.trim() ? haeufigsteSorte(bestand.map((b) => ({ stand: b.stand, stadt: stadtVon(MARKTLISTE, b) ?? undefined, sorte: b.sorte })), e.stand, e.stadt) : undefined),
+    [bestand, e.stand, e.stadt],
+  );
+  useEffect(() => {
+    if (schritt === 'bewerten' && !sorteGewaehlt.current && e.sorte === undefined && standSorte) setE((x) => (x.sorte === undefined ? { ...x, sorte: standSorte } : x));
+  }, [schritt, standSorte]);
   const bewertet = KRITERIEN.filter((k) => k !== 'preisLeistung' && e.noten[k] !== null).length;
 
   const setNote = (k: Kriterium, n: number | null) => setE((x) => ({ ...x, noten: { ...x.noten, [k]: n } }));
@@ -216,7 +239,9 @@ export function Erfassen() {
     setE((x) => ({ ...x, stand: v.stand, markt: v.markt, stadt: v.stadt ?? stadtVon(MARKTLISTE, { markt: v.markt }) ?? undefined, marktFrei: false }));
   };
 
+  const stadtManuell = useRef(false);
   const waehleOrt = (stadt: string, markt: string) => {
+    stadtManuell.current = true;
     setE((x) => ({ ...x, stadt, markt, marktFrei: false }));
     merkeOrt(stadt, markt === MARKTLISTE.sonstiger ? undefined : markt);
     setOrtOffen(false);
@@ -332,9 +357,20 @@ export function Erfassen() {
     if (e.gesperrt) setE({ ...e, gesperrt: false, besuchId: undefined });
     setSchritt('wo');
   };
-  // Ohne Stadt geht es nicht weiter: gleich fragen
+  // Ohne Stadt geht es nicht weiter: gleich fragen. Vorher versucht die App die Stadt aus dem Standort zu setzen (bleibt auf dem Gerät).
   useEffect(() => {
     if (schritt === 'wo' && !e.stadt) setOrtOffen(true);
+    if (e.gesperrt || schritt !== 'wo' || e.stand.trim()) return;
+    let aktiv = true;
+    void automatischeStadt(Boolean(e.stadt)).then((stadt) => {
+      if (!aktiv || !stadt || stadtManuell.current) return;
+      setE((x) => (x.stadt === stadt ? x : { ...x, stadt, markt: MARKTLISTE.sonstiger, marktFrei: false }));
+      merkeOrt(stadt, undefined);
+      setOrtOffen(false);
+    });
+    return () => {
+      aktiv = false;
+    };
   }, []);
 
   const knopfText = gespeichert ?? (bewertet === 0 ? t('Noch keine Sterne') : t('Speichern'));
@@ -406,7 +442,7 @@ export function Erfassen() {
                         <button type="button" onClick={() => waehleStand(v)}>
                           <span class="wo-name">{v.stand}</span>
                           <span class="wo-ort">{ortTeile(MARKTLISTE, v).join(' · ') || v.markt}</span>
-                          <span class="wo-zahl">{v.anzahl}×</span>
+                          {'heute' in v && v.heute ? <span class="wo-zahl" title={t('Heute Abend schon bewertet')}>✓</span> : <span class="wo-zahl">{v.anzahl}×</span>}
                         </button>
                       </li>
                     ))}
@@ -451,22 +487,24 @@ export function Erfassen() {
       <section class={`preis-block${e.preis === undefined ? ' leer' : ' gesetzt'}${preisFehlt && e.preis === undefined ? ' fehlt' : ''}`} aria-label={t('Preis')}>
         <div class="preis-kopf">
           <span class="preis-titel">
-            {t('Preis der Tasse')} <b>{t('Pflicht')}</b>
+            {t('Preis der Tasse')} <b>{t('Pflicht')}</b> <small class="ohne-pfand">{t('ohne Pfand')}</small>
           </span>
-          <select
-            class="preis-groesse"
-            aria-label={t('Größe der Tasse')}
-            value={e.menge ?? ''}
-            onChange={(ev) => {
-              const v = (ev.target as HTMLSelectElement).value;
-              setE({ ...e, menge: v ? Number(v) : undefined });
-            }}
-          >
-            <option value="">{t('Größe')} 0,2 l</option>
+          <div class="groessen" role="radiogroup" aria-label={t('Größe der Tasse')}>
             {MENGEN.map((m) => (
-              <option value={m}>{String(m).replace('.', aktuelleSprache() === 'en' ? '.' : ',')} l</option>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={(e.menge ?? 0.2) === m}
+                aria-label={`${String(m).replace('.', aktuelleSprache() === 'en' ? '.' : ',')} l`}
+                title={`${String(m).replace('.', aktuelleSprache() === 'en' ? '.' : ',')} l`}
+                class={(e.menge ?? 0.2) === m ? 'an' : ''}
+                onClick={() => setE({ ...e, menge: m === 0.2 ? undefined : m })}
+              >
+                <GroesseIcon menge={m} />
+                <small>{String(m).replace('.', aktuelleSprache() === 'en' ? '.' : ',')}</small>
+              </button>
             ))}
-          </select>
+          </div>
         </div>
         <div class="preis-zeile">
           <label class="preis-eingabe">
@@ -494,7 +532,7 @@ export function Erfassen() {
               <button
                 type="button"
                 aria-pressed={e.preis === p}
-                class={e.preis === p ? 'an' : p === letzterPreis ? 'letzter' : ''}
+                class={e.preis === p ? 'an' : p === standPreis ? 'vorschlag' : p === letzterPreis ? 'letzter' : ''}
                 onClick={() => {
                   setPreisText(String(p).replace('.', ','));
                   setE((x) => ({ ...x, preis: p }));
@@ -505,13 +543,15 @@ export function Erfassen() {
             ))}
           </div>
         </div>
-        <p class="preis-hinweis">
-          {preisFehlt && e.preis === undefined
-            ? t('Bitte den Preis eintragen.')
-            : letzterPreis && e.preis === undefined
-              ? t('Zuletzt in {stadt}: {preis}', { stadt: e.stadt ?? '', preis: euro(letzterPreis) })
-              : t('Ohne Pfand.')}
-        </p>
+        {(preisFehlt || e.preis === undefined) && (standPreis || letzterPreis || preisFehlt) && (
+          <p class="preis-hinweis">
+            {preisFehlt && e.preis === undefined
+              ? t('Bitte den Preis eintragen.')
+              : standPreis
+                ? t('Hier üblich: {preis}', { preis: euro(standPreis) })
+                : t('Zuletzt in {stadt}: {preis}', { stadt: e.stadt ?? '', preis: euro(letzterPreis ?? 0) })}
+          </p>
+        )}
       </section>
 
       <div class="sorten" role="radiogroup" aria-label={t('Sorte')}>
@@ -523,7 +563,10 @@ export function Erfassen() {
             aria-label={t(SORTE_LABEL[x])}
             title={t(SORTE_LABEL[x])}
             class={e.sorte === x ? 'an' : ''}
-            onClick={() => setE({ ...e, sorte: e.sorte === x ? undefined : x })}
+            onClick={() => {
+              sorteGewaehlt.current = true;
+              setE({ ...e, sorte: e.sorte === x ? undefined : x });
+            }}
           >
             <SorteIcon sorte={x} />
           </button>
@@ -532,7 +575,7 @@ export function Erfassen() {
 
       <section class="noten" aria-label={t('Sterne')}>
         <p class="noten-kopf">
-          {t('Sterne')} <span>{alleSterne ? t('mindestens eine') : t('Tippe auf die Sterne, mehr brauchst du nicht')}</span>
+          {t('Sterne')} {alleSterne && <span>{t('mindestens eine')}</span>}
         </p>
         {(alleSterne ? KRITERIEN : KRITERIEN.filter((k) => k === 'geschmack')).map((k) => (
           <NotenZeile
@@ -557,7 +600,7 @@ export function Erfassen() {
           />
         ))}
         <button type="button" class="mehr-sterne" aria-expanded={alleSterne} onClick={schalteSterne}>
-          {alleSterne ? t('Weniger Sterne zeigen') : t('Weitere Sterne vergeben (Geruch, Temperatur, Personal …)')}
+          {alleSterne ? t('Weniger Sterne') : t('Mehr Sterne')}
         </button>
       </section>
 

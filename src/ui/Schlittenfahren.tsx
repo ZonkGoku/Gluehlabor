@@ -25,6 +25,7 @@ import { teileRennenBild } from './nacht/rennenBild';
 import { Konfetti, lageText, Rennbahn, Siegerpodest, farbeVon } from './schlitten/Bahn';
 import { AvatarBild, FahrzeugBild } from './schlitten/FahrzeugBild';
 import { AVATARE } from '../lib/avatare';
+import { zufallsname } from '../lib/zufallsname';
 import { FAHRZEUGE } from '../lib/fahrzeuge';
 import { fehlerText, useRennenDaten } from './schlitten/laden';
 import { useGesicht } from './schlitten/gesicht';
@@ -154,7 +155,8 @@ function useKamelWahl() {
       }
     });
   }, []);
-  useEffect(() => setName((n) => n || standard), [standard]);
+  // Ohne gemerkten Schlitten und ohne Namen steht ein Vorschlag da (Würfel im Namensfeld)
+  useEffect(() => setName((n) => n || standard || zufallsname()), [standard]);
   return { name, setName, farbe, setFarbe, fahrzeug, setFahrzeug, avatar, setAvatar };
 }
 

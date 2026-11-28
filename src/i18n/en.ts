@@ -1110,4 +1110,11 @@ export const EN: Record<string, string> = {
   "Hilfe": "Help",
   "So bewertest du, was die Sterne bedeuten.": "How to rate and what the stars mean.",
   "Sprache, Hell oder Dunkel, Sparmodus.": "Language, light or dark, low-power mode.",
+  "Hier üblich: {preis}": "Usual here: {preis}",
+  "ohne Pfand": "no deposit",
+  "Weniger Sterne": "Fewer stars",
+  "Mehr Sterne": "More stars",
+  "Heute Abend schon bewertet": "Already rated tonight",
+  "Anderen Namen vorschlagen": "Suggest another name",
+  "Öffentlich sichtbar.": "Publicly visible.",
 };

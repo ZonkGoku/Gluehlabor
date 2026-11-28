@@ -205,6 +205,10 @@ Zehn gezeichnete Figuren (Bär, Fuchs, Pinguin, Schneemann, Eule, Hase, Katze, R
 - **Preis rechts in jeder Listenzeile** (Rangliste, Startseite, Top Deals; `RangZeile preis`): üblicher Preis des Stands je 0,2 l (Median, `Stand.preis.median`), darunter klein „je 0,2 l“; ohne Preismeldung steht dort nichts.
 - **Sorte als Bilder statt Text:** sieben Glühweintassen in Weinfarbe mit Merkmal (`ui/nacht/SorteIcon.tsx`, Reihe `.sorten` direkt unter dem Preis, Name nur als `aria-label`/Tooltip); erneut antippen löscht. Leitlinie: **weniger Text, mehr Bild** (Wunsch von Philip), bei neuen Bausteinen zuerst ein Symbol erwägen.
 
+### Weniger Eingabe (28.11.2026, „alles umsetzen“, Teil 1: Erfassen)
+
+Vorschläge sind **sichtbar markiert, nie stillschweigend gespeichert** (`lib/eingabehilfen.ts`, getestet): **Preis** – erste Schnellwahl ist der übliche Preis des Stands für dieselbe Tassengröße (Median der Meldungen, Hinweis „Hier üblich: …“), dann der letzte der Stadt; **Größe** als drei Tassen-Bilder (`nacht/GroesseIcon.tsx`) statt Dropdown; **Sorte** wird mit der häufigsten Sorte des Stands vorgewählt, solange man selbst nichts gewählt hat; **Standauswahl** zeigt zuerst die Stände, die dieses Gerät heute Abend schon bewertet hat (Haken), dann die zuletzt bewerteten (`ordneStaende`); **Stadt per Standort** (`daten/standort.ts`: still, wenn der Standort schon erlaubt ist; höchstens einmal von selbst fragen, nur ohne gemerkte Stadt; nächste Stadt ≤ 15 km, bleibt auf dem Gerät); **Name**: das Namensblatt (und der Schlittenname) steht mit einem Zufallsnamen („Zimtiger Igel 42“, `lib/zufallsname.ts`, alle Kombinationen als gültig getestet) bereit, Würfel mischt neu; Hinweiszeilen in der Erfassung entfallen („Ohne Pfand“ steht klein im Titel, „Mehr Sterne“ statt Satz).
+
 ## Scoring-Regeln (verbindlich, siehe Tests in src/lib/scoring.test.ts)
 
 - Noten: Ganzzahl 1..10 oder `null`. **`null` fällt aus Zähler UND Nenner, zählt nie als 0.**

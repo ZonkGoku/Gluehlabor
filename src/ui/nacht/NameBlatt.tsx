@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { setzeName } from '../../daten/db';
 import { synchronisiere } from '../../daten/sync';
 import { GRENZEN, pruefeName } from '../../lib/community';
+import { zufallsname } from '../../lib/zufallsname';
 import { t } from '../../i18n';
 
 interface Props {
@@ -11,10 +12,14 @@ interface Props {
 }
 
 export function NameBlatt({ onFertig, onZu }: Props) {
-  const [name, setName] = useState('');
+  // Ein Vorschlag steht schon da: ein Tipp auf „Speichern“ genügt, der Würfel mischt neu, Tippen ersetzt ihn.
+  const [name, setName] = useState(() => zufallsname());
   const [fehler, setFehler] = useState('');
   const feld = useRef<HTMLInputElement>(null);
-  useEffect(() => feld.current?.focus(), []);
+  useEffect(() => {
+    feld.current?.focus();
+    feld.current?.select();
+  }, []);
 
   const weiter = async () => {
     const p = pruefeName(name);
@@ -35,12 +40,11 @@ export function NameBlatt({ onFertig, onZu }: Props) {
         style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
       >
         <h2 class="font-display text-[28px] uppercase leading-none tracking-wide">{t('Wie heißt du?')}</h2>
-        <p class="mt-2 text-sm text-dunst">
-          {t('Öffentlich sichtbar. Ein Spitzname reicht.')}
-        </p>
+        <p class="mt-2 text-sm text-dunst">{t('Öffentlich sichtbar.')}</p>
+        <div class="mt-4 flex gap-2">
         <input
           ref={feld}
-          class="glas mt-4 w-full rounded-2xl px-4 py-3 text-base text-eis outline-none focus-visible:ring-2 focus-visible:ring-gold-400/70"
+          class="glas min-w-0 flex-1 rounded-2xl px-4 py-3 text-base text-eis outline-none focus-visible:ring-2 focus-visible:ring-gold-400/70"
           type="text"
           maxLength={GRENZEN.name}
           autocomplete="nickname"
@@ -54,6 +58,26 @@ export function NameBlatt({ onFertig, onZu }: Props) {
           }}
           onKeyDown={(e) => e.key === 'Enter' && void weiter()}
         />
+        <button
+          type="button"
+          class="glas grid size-[52px] shrink-0 place-items-center rounded-2xl text-gold-300"
+          aria-label={t('Anderen Namen vorschlagen')}
+          title={t('Anderen Namen vorschlagen')}
+          onClick={() => {
+            setName(zufallsname());
+            setFehler('');
+          }}
+        >
+          <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+            <rect x="3.5" y="3.5" width="17" height="17" rx="4" />
+            <circle cx="8.5" cy="8.5" r="1.2" fill="currentColor" stroke="none" />
+            <circle cx="15.5" cy="8.5" r="1.2" fill="currentColor" stroke="none" />
+            <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none" />
+            <circle cx="8.5" cy="15.5" r="1.2" fill="currentColor" stroke="none" />
+            <circle cx="15.5" cy="15.5" r="1.2" fill="currentColor" stroke="none" />
+          </svg>
+        </button>
+        </div>
         {fehler && <p class="mt-2 text-sm text-wein-400">{fehler}</p>}
         <div class="mt-4 flex gap-2">
           <button

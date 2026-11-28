@@ -1455,3 +1455,11 @@ html {
   line-height: 1.35;
   color: var(--text-2);
 }
+
+/* Eingabehilfen (28.11.2026): Tassengröße als Bild, Vorschlag vom Stand, Hinweis zu Pfand */
+.erf .groessen { display: flex; gap: 6px; }
+.erf .groessen button { min-height: 44px; min-width: 48px; display: grid; place-items: center; gap: 0; border-radius: 14px; border: 2px solid var(--nm-bedienung); background: transparent; color: var(--text-2); padding: 2px 6px; cursor: pointer; }
+.erf .groessen button small { font: 10px var(--mono); line-height: 1; margin-top: -2px; }
+.erf .groessen button.an { border-color: var(--nm-stern); color: var(--text); box-shadow: 0 0 0 1px var(--nm-stern) inset; }
+.erf .preis-titel .ohne-pfand { font: 11px var(--mono); letter-spacing: 0.04em; text-transform: none; color: var(--text-2); margin-left: 4px; }
+.erf .preis-schnell button.vorschlag { border-color: var(--nm-stern); box-shadow: 0 0 0 1px var(--nm-stern) inset; }
