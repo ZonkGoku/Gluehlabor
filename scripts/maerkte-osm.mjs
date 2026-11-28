@@ -45,7 +45,32 @@ async function einzeln(abfrage) {
   throw fehler ?? new Error('Zeitbudget aufgebraucht');
 }
 
+/** Aus einem Geofabrik-Auszug: Datei im GeoJSON-Sequenz-Format (osmium export), schon auf Markt-Tags gefiltert. Siehe Workflow „Märkte aktualisieren“. */
+function leseGeojsonSeq(datei) {
+  const elements = [];
+  for (const zeile of readFileSync(datei, 'utf8').split('\n')) {
+    const text = zeile.replace(/^\u001e/, '').trim();
+    if (!text) continue;
+    let f;
+    try {
+      f = JSON.parse(text);
+    } catch {
+      continue;
+    }
+    const punkte = [];
+    const sammle = (c) => (typeof c[0] === 'number' ? punkte.push(c) : c.forEach(sammle));
+    if (f.geometry?.coordinates) sammle(f.geometry.coordinates);
+    if (punkte.length === 0) continue;
+    const lon = punkte.reduce((n, q) => n + q[0], 0) / punkte.length;
+    const lat = punkte.reduce((n, q) => n + q[1], 0) / punkte.length;
+    elements.push({ tags: f.properties ?? {}, lat, lon });
+  }
+  console.log(`${elements.length} Objekte aus ${datei}`);
+  return { elements };
+}
+
 async function hole() {
+  if (process.env.GEOJSONSEQ) return leseGeojsonSeq(process.env.GEOJSONSEQ);
   const elements = [];
   let ok = 0;
   for (const [i, q] of abfragen.entries()) {
