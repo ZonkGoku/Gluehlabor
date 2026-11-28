@@ -136,6 +136,12 @@ final class Db
                 $this->pdo->exec($q);
             }
         }
+        $hatStimmung = $this->typ === 'mysql'
+            ? $this->eins("SELECT 1 AS x FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'rueckmeldungen' AND column_name = 'stimmung'")
+            : $this->eins("SELECT 1 AS x FROM pragma_table_info('rueckmeldungen') WHERE name = 'stimmung'");
+        if (!$hatStimmung && $hatRueck) {
+            $this->pdo->exec('ALTER TABLE rueckmeldungen ADD COLUMN stimmung INTEGER');
+        }
         $hatFahrzeug = $this->typ === 'mysql'
             ? $this->eins("SELECT 1 AS x FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'rennen_teilnehmer' AND column_name = 'fahrzeug'")
             : $this->eins("SELECT 1 AS x FROM pragma_table_info('rennen_teilnehmer') WHERE name = 'fahrzeug'");
@@ -228,7 +234,7 @@ final class Db
         return [
             "CREATE TABLE rueckmeldungen (
                id $auto, geraet_id $id NOT NULL, text " . ($my ? 'TEXT' : 'TEXT') . " NOT NULL, seite " . ($my ? 'VARCHAR(64)' : 'TEXT') . ",
-               erstellt_am $zahl NOT NULL, bearbeitet INTEGER NOT NULL DEFAULT 0)$ende",
+               erstellt_am $zahl NOT NULL, bearbeitet INTEGER NOT NULL DEFAULT 0, stimmung INTEGER)$ende",
             'CREATE INDEX rueckmeldungen_offen ON rueckmeldungen(bearbeitet, erstellt_am)',
         ];
     }

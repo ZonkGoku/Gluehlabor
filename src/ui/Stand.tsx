@@ -219,7 +219,7 @@ export function StandSeite({ id }: { id: string }) {
                 </span>
                 <span class="text-right">
                   <span class="block text-sm"><SterneZeile wert={w.gesamt} /></span>
-                  <UrteilPill urteil={w.urteil} />
+                  <UrteilPill urteil={w.urteil} nurBild />
                 </span>
               </a>
               {pruefstelle && HAT_SERVER && (e.sync === 'fertig' || e.sync === 'bestand') && (

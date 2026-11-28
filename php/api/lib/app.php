@@ -638,18 +638,23 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
     if ($pfad === '/api/feedback' && $methode === 'POST') {
         $g = anmelden($a, $db);
         $b = lesen($a);
-        if (!is_string($b['text'] ?? null)) {
+        $stimmung = $b['stimmung'] ?? null;
+        if ($stimmung !== null && (!is_int($stimmung) || $stimmung < 1 || $stimmung > 3)) {
+            throw new HttpFehler(400, 'Ungültige Stimmung.');
+        }
+        if (isset($b['text']) && !is_string($b['text'])) {
             throw new HttpFehler(400, 'Bitte schreib uns ein paar Worte.');
         }
-        $text = trim(mb_substr(saeubere($b['text']), 0, 1000, 'UTF-8'));
-        if (mb_strlen($text, 'UTF-8') < 3) {
+        $text = is_string($b['text'] ?? null) ? trim(mb_substr(saeubere($b['text']), 0, 1000, 'UTF-8')) : '';
+        // Ein Gesicht genügt; ohne Gesicht braucht es ein paar Worte
+        if ($stimmung === null && mb_strlen($text, 'UTF-8') < 3) {
             throw new HttpFehler(400, 'Bitte schreib uns ein paar Worte.');
         }
         $seite = is_string($b['seite'] ?? null) ? (mb_substr(saeubere($b['seite']), 0, 60, 'UTF-8') ?: null) : null;
         if (!begrenze($db, 'feedback:' . $g['id'], TAG_MS, LIMITS['rueckmeldungenJeGeraetUndTag'], $jetzt)) {
             throw new HttpFehler(429, 'Heute schon viele Rückmeldungen. Bitte morgen wieder.');
         }
-        $db->lauf('INSERT INTO rueckmeldungen (geraet_id, text, seite, erstellt_am) VALUES (?, ?, ?, ?)', [$g['id'], $text, $seite, $jetzt]);
+        $db->lauf('INSERT INTO rueckmeldungen (geraet_id, text, seite, erstellt_am, stimmung) VALUES (?, ?, ?, ?, ?)', [$g['id'], $text, $seite, $jetzt, $stimmung]);
         return new Antwort(200, ['ok' => true]);
     }
 
@@ -776,10 +781,11 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
             return new Antwort(200, ['meldungen' => $zeilen]);
         }
         if ($pfad === '/api/admin/feedback' && $methode === 'GET') {
-            $zeilen = $db->alle('SELECT id, text, seite, erstellt_am FROM rueckmeldungen WHERE bearbeitet = 0 ORDER BY erstellt_am DESC LIMIT 100');
+            $zeilen = $db->alle('SELECT id, text, seite, erstellt_am, stimmung FROM rueckmeldungen WHERE bearbeitet = 0 ORDER BY erstellt_am DESC LIMIT 100');
             foreach ($zeilen as &$z) {
                 $z['id'] = (int) $z['id'];
                 $z['erstellt_am'] = (int) $z['erstellt_am'];
+                $z['stimmung'] = $z['stimmung'] === null ? null : (int) $z['stimmung'];
             }
             return new Antwort(200, ['rueckmeldungen' => $zeilen]);
         }

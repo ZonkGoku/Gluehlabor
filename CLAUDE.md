@@ -168,7 +168,7 @@ Eigenes Spiel unter „Mehr“ (`#/schlittenfahren`, `#/schlittenfahren/<id>`, a
 - **Probleme sichtbar** (`ui/SyncProblem.tsx`, in `Geruest`): roter Hinweis oben, wenn der Server den Namen ablehnt (mit Eingabefeld für einen anderen) oder Bewertungen nicht annimmt (Grund, Tippen führt zu `#/meine`). Beim Speichern in `Erfassen` fängt `speichern` Fehler ab und zeigt sie am Knopf.
 - **Sparmodus** (`gluehlabor.sparmodus` = auto | an | aus, Einstellungen → Darstellung; `data-lite` am `<html>`, gesetzt in `public/theme-init.js` vor dem ersten Zeichnen und in `daten/darstellung.ts`): ohne `backdrop-filter`, Schnee, Leuchten, Dauerbewegung. **Automatisch an auf Android und bei ≤ 4 GB Speicher oder ≤ 4 Kernen** (Tester: App friert auf Android ein; gemessen mit 6-fach gebremster CPU: Erfassung 28 → 58 Bilder/s). Ursache nicht auf echtem Gerät bestätigt.
 - **Schwebende Leiste unten** (`data-schwebende-leiste`): verschwindet, solange ein Eingabefeld Fokus hat (`data-tastatur`, sonst sprang sie mit der Android-Tastatur mitten auf den Bildschirm); `touch-action: manipulation` gegen Doppeltipp-Zoom.
-- **Erfassen für Neulinge:** zuerst nur das Kriterium „Geschmack“, die übrigen sechs hinter „Weitere Sterne vergeben“ (Wahl pro Gerät in `gluehlabor.alleSterne`, offen, sobald schon weitere Sterne gesetzt sind).
+- **Alle Sterne sind Pflicht (28.11.2026, Wunsch von Philip „für einen Test“):** alle sechs Kriterien (ohne die automatische Preis-Leistung) müssen vergeben sein, sonst ist „Speichern“ gesperrt und zeigt „Noch n Sterne“; Fortschritt `n/6` in der Titelzeile und im Fuß. Nur die App erzwingt es (Server und `Aendern` bleiben tolerant, ältere Bewertungen haben oft nur Geschmack). Der frühere Neulings-Modus („nur Geschmack, Rest hinter einem Knopf“) ist entfernt.
 
 ## Fahrzeuge, Fotos, Galerie, Fahrer-Foto (seit 27.11.2026, Tester-Wunsch)
 
@@ -208,6 +208,13 @@ Zehn gezeichnete Figuren (Bär, Fuchs, Pinguin, Schneemann, Eule, Hase, Katze, R
 ### Weniger Eingabe (28.11.2026, „alles umsetzen“, Teil 1: Erfassen)
 
 Vorschläge sind **sichtbar markiert, nie stillschweigend gespeichert** (`lib/eingabehilfen.ts`, getestet): **Preis** – erste Schnellwahl ist der übliche Preis des Stands für dieselbe Tassengröße (Median der Meldungen, Hinweis „Hier üblich: …“), dann der letzte der Stadt; **Größe** als drei Tassen-Bilder (`nacht/GroesseIcon.tsx`) statt Dropdown; **Sorte** wird mit der häufigsten Sorte des Stands vorgewählt, solange man selbst nichts gewählt hat; **Standauswahl** zeigt zuerst die Stände, die dieses Gerät heute Abend schon bewertet hat (Haken), dann die zuletzt bewerteten (`ordneStaende`); **Stadt per Standort** (`daten/standort.ts`: still, wenn der Standort schon erlaubt ist; höchstens einmal von selbst fragen, nur ohne gemerkte Stadt; nächste Stadt ≤ 15 km, bleibt auf dem Gerät); **Name**: das Namensblatt (und der Schlittenname) steht mit einem Zufallsnamen („Zimtiger Igel 42“, `lib/zufallsname.ts`, alle Kombinationen als gültig getestet) bereit, Würfel mischt neu; Hinweiszeilen in der Erfassung entfallen („Ohne Pfand“ steht klein im Titel, „Mehr Sterne“ statt Satz).
+
+### Weniger Eingabe, Teil 2 (28.11.2026): Bilder statt Text
+
+- **Urteil als Bild** (`UrteilIcon` in `ui/bausteine.tsx`): Tasse mit Füllstand von voll („Nachschenken“, mit Plus) bis umgekippt („Weggießen“); in Listen nur das Bild (`UrteilPill nurBild`), auf großen Karten Bild und Wort. **Sorte im Detail als Bild**, **Sorten-Auswahl neu gezeichnet** (Tasse mit großem Merkmal: Kirschen, Trauben, Zuckerhut mit Flamme, „0%“, „?“, dazu ein Kurzwort darunter, weil reine Bilder laut Tester nicht gut erkennbar waren; `SorteIcon.tsx`, `SORTE_KURZ`).
+- **Hilfe & Regeln** beginnt mit fünf Bildkarten (Stand, Preis und Sterne, Foto/Teilen, Rangliste, Rennen); Regeln und Sterne-Erklärungen stehen eingeklappt darunter.
+- **Feedback mit Gesicht** (`StimmungIcon`, 1 schlecht, 2 okay, 3 gut; Server-Feld `stimmung`, Migration `0009_stimmung.sql`, PHP rüstet nach; ein Gesicht genügt ohne Text).
+- **Rangliste:** dritte Ansicht „Günstigste“ (`guenstigste` in `lib/preisklasse.ts`); der Preis in jeder Zeile ist grün mit ▼, wenn er ≥ 50 Cent unter dem Mittel der gezeigten Stände liegt, rot mit ▲ ab 50 Cent darüber (`preisKlasse`, `referenzVon`; ab drei Ständen mit Preis).
 
 ## Scoring-Regeln (verbindlich, siehe Tests in src/lib/scoring.test.ts)
 

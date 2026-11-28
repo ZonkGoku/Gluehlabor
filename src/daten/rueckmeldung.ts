@@ -8,11 +8,12 @@ export interface Rueckmeldung {
   text: string;
   seite: string | null;
   erstellt_am: number;
+  stimmung: number | null;
 }
 
-export async function sendeRueckmeldung(text: string, seite: string | null): Promise<void> {
+export async function sendeRueckmeldung(text: string, seite: string | null, stimmung: number | null = null): Promise<void> {
   const geraet = await holeGeraet();
-  await api('/api/feedback', { methode: 'POST', geraet, body: { text, seite } });
+  await api('/api/feedback', { methode: 'POST', geraet, body: { text, seite, stimmung } });
 }
 
 export async function ladeRueckmeldungen(): Promise<Rueckmeldung[]> {

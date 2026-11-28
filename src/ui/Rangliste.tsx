@@ -11,7 +11,8 @@ import { useEinblenden } from './nacht/bewegung';
 import { Chips } from './nacht/Chips';
 import { DealMarke } from './nacht/DealMarke';
 import { PruefSiegel } from './nacht/PruefSiegel';
-import { DealZeile, StandZeile } from './nacht/StandKarten';
+import { guenstigste, preisKlasse, referenzVon } from '../lib/preisklasse';
+import { DealZeile, PreisZeile, StandZeile } from './nacht/StandKarten';
 import { MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
 import { t, tn } from '../i18n';
@@ -30,7 +31,7 @@ export function Rangliste() {
   const [mehrOffen, setMehrOffen] = useState(false);
   const [suche, setSuche] = useState('');
   const [quelle, setQuelle] = useState<Quelle>('alle');
-  const [ansicht, setAnsicht] = useState<'gesamt' | 'deals'>(() => (location.hash.includes('deals') ? 'deals' : 'gesamt'));
+  const [ansicht, setAnsicht] = useState<'gesamt' | 'deals' | 'preis'>(() => (location.hash.includes('deals') ? 'deals' : 'gesamt'));
   const wurzel = useEinblenden<HTMLDivElement>();
   if (!alle) return null;
 
@@ -57,6 +58,8 @@ export function Rangliste() {
   // Suche nur nach Namen, der Platz bleibt der der ganzen Liste
   const zeilen = gesucht ? alleZeilen.filter((s) => schluessel(s.stand).includes(gesucht)) : alleZeilen;
   const bewertungen = zeilen.reduce((n, s) => n + s.wert.anzahl, 0);
+  const referenz = referenzVon(alleZeilen);
+  const guenstig = guenstigste(zeilen);
   const deals = zeilen.filter((s) => s.deal.punkte !== null).sort((a, b) => (a.deal.rang ?? 1e9) - (b.deal.rang ?? 1e9));
 
   return (
@@ -107,11 +110,11 @@ export function Rangliste() {
             </span>
           </span>
           <Chips
-            optionen={['gesamt', 'deals'] as const}
+            optionen={['gesamt', 'deals', 'preis'] as const}
             wert={ansicht}
             onWahl={setAnsicht}
             beschriftung={t('Ansicht')}
-            label={(o) => (o === 'gesamt' ? t('Gesamt') : t('Top Deals'))}
+            label={(o) => (o === 'gesamt' ? t('Gesamt') : o === 'deals' ? t('Top Deals') : t('Günstigste'))}
           />
           <button
             type="button"
@@ -157,7 +160,21 @@ export function Rangliste() {
           <p class="mt-2 text-dunst">{suche ? t('Nichts gefunden. Anderen Namen versuchen.') : t('Andere Saison, anderen Markt oder eine andere Wertung wählen.')}</p>
         </div>
       ) : (
-        ansicht === 'deals' ? (
+        ansicht === 'preis' ? (
+          <div ref={wurzel}>
+            {guenstig.length === 0 ? (
+              <p class="glas rounded-3xl p-6 text-center text-dunst">{t('Noch keine Preise für diese Auswahl.')}</p>
+            ) : (
+              <ol class="grid grid-cols-1 gap-2 md:grid-cols-2">
+                {guenstig.map((s, i) => (
+                  <li data-ein class="min-w-0">
+                    <PreisZeile stand={s} rang={i + 1} preisKlasse={preisKlasse(s.preis.median, referenz)} />
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        ) : ansicht === 'deals' ? (
           <div ref={wurzel}>
             <p class="mb-3 text-sm text-dunst">
               {t('Top Deals: guter Glühwein für wenig Geld.')}
@@ -180,7 +197,7 @@ export function Rangliste() {
           <ol class="grid grid-cols-1 gap-2 md:grid-cols-2">
             {zeilen.map((z) => (
               <li data-ein class="min-w-0">
-                <StandZeile stand={z} />
+                <StandZeile stand={z} preisKlasse={preisKlasse(z.preis.median, referenz)} />
               </li>
             ))}
           </ol>

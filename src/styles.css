@@ -731,5 +731,8 @@ select.feld {
 
 /* Sorten als Bilder (Audit 28.11.2026: weniger Text, mehr Look and feel) */
 .sorten { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; margin: 4px 0 8px; }
-.sorten button { min-height: 52px; display: grid; place-items: center; border-radius: 16px; border: 2px solid var(--nm-bedienung); background: transparent; color: var(--text-2, currentColor); cursor: pointer; padding: 2px; }
+.sorten button { min-height: 68px; display: grid; place-items: center; align-content: center; gap: 0; border-radius: 16px; border: 2px solid var(--nm-bedienung); background: transparent; color: var(--text-2, currentColor); cursor: pointer; padding: 2px; }
 .sorten button.an { border-color: var(--nm-stern); background: var(--nm-flaeche, rgb(255 255 255 / 0.08)); box-shadow: 0 0 0 2px var(--nm-stern) inset; }
+
+.sorten button small { font: 600 10px var(--mono); line-height: 1; color: var(--text-2); }
+.sorten button.an small { color: var(--text); }

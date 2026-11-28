@@ -23,7 +23,7 @@ import { useGeraetId } from './daten';
 import { automatischeStadt } from '../daten/standort';
 import { GroesseIcon } from './nacht/GroesseIcon';
 import { haeufigsteSorte, ordneStaende, standPreisVorschlag } from '../lib/eingabehilfen';
-import { SorteIcon } from './nacht/SorteIcon';
+import { SORTE_KURZ, SorteIcon } from './nacht/SorteIcon';
 import { ANKER, MARKTLISTE, MARKT_ZUSATZ } from './stammdaten';
 import { euro, probeNr, sterneText } from '../lib/format';
 import { DEFAULT_GEWICHTE, KRITERIEN, leereNoten, SORTEN, type Eintrag, type Kriterium, type Sorte } from '../lib/modell';
@@ -38,7 +38,7 @@ import { TicketBlatt } from './nacht/TicketBlatt';
 import { OrtBlatt } from './nacht/OrtBlatt';
 import { Symbol } from './Symbol';
 import { leseLetzterPreis, leseZuletzt, merkeOrt, merkePreis } from '../daten/zuletzt';
-import { aktuelleSprache, t, kriteriumLabel } from '../i18n';
+import { aktuelleSprache, t, tn, kriteriumLabel } from '../i18n';
 
 
 const SORTE_LABEL: Record<Sorte, string> = {
@@ -137,25 +137,6 @@ export function Erfassen() {
   const [gespeichert, setGespeichert] = useState<string | null>(null);
   const [fertigId, setFertigId] = useState<string | null>(null);
   const [speicherFehler, setSpeicherFehler] = useState('');
-  // Neulinge sehen zuerst nur „Geschmack“. Die übrigen Sterne stehen hinter einem Knopf (die Wahl merkt sich das Gerät, auch wenn schon weitere Sterne gesetzt sind).
-  const [alleSterne, setAlleSterne] = useState(() => {
-    try {
-      if (localStorage.getItem('gluehlabor.alleSterne') === '1') return true;
-    } catch {
-      /* ohne Speicher: eingeklappt */
-    }
-    const n = leseEntwurf()?.noten;
-    return KRITERIEN.some((k) => k !== 'geschmack' && k !== 'preisLeistung' && n?.[k] != null);
-  });
-  const schalteSterne = () => {
-    const neu = !alleSterne;
-    setAlleSterne(neu);
-    try {
-      localStorage.setItem('gluehlabor.alleSterne', neu ? '1' : '0');
-    } catch {
-      /* nicht kritisch */
-    }
-  };
   const standRef = useRef<HTMLInputElement>(null);
   // Alle Becher dieses Geräts, auch die schon synchronisierten der Community: daraus kommen die Vorschläge.
   const bestand = useLive(() => db.eintraege.toArray(), [], []);
@@ -222,7 +203,10 @@ export function Erfassen() {
   useEffect(() => {
     if (schritt === 'bewerten' && !sorteGewaehlt.current && e.sorte === undefined && standSorte) setE((x) => (x.sorte === undefined ? { ...x, sorte: standSorte } : x));
   }, [schritt, standSorte]);
+  // Eine Bewertung braucht alle Sterne (Preis-Leistung rechnet die App selbst): jede Probe soll vollständig sein.
+  const ALLE_STERNE = KRITERIEN.filter((k) => k !== 'preisLeistung').length;
   const bewertet = KRITERIEN.filter((k) => k !== 'preisLeistung' && e.noten[k] !== null).length;
+  const vollstaendig = bewertet === ALLE_STERNE;
 
   const setNote = (k: Kriterium, n: number | null) => setE((x) => ({ ...x, noten: { ...x.noten, [k]: n } }));
 
@@ -248,6 +232,7 @@ export function Erfassen() {
   };
 
   const speichernInnen = async (nameBestaetigt = false) => {
+    if (!vollstaendig) return; // alle Sterne nötig (der Knopf ist dann auch gesperrt)
     const stand = kanonischerStand(bestand, e.stand, e.markt, e.stadt);
     if (!stand) {
       setFehlt(true);
@@ -373,7 +358,7 @@ export function Erfassen() {
     };
   }, []);
 
-  const knopfText = gespeichert ?? (bewertet === 0 ? t('Noch keine Sterne') : t('Speichern'));
+  const knopfText = gespeichert ?? (vollstaendig ? t('Speichern') : tn(ALLE_STERNE - bewertet, 'Noch {n} Stern', 'Noch {n} Sterne'));
 
   return (
     <>
@@ -569,15 +554,16 @@ export function Erfassen() {
             }}
           >
             <SorteIcon sorte={x} />
+            <small>{t(SORTE_KURZ[x])}</small>
           </button>
         ))}
       </div>
 
       <section class="noten" aria-label={t('Sterne')}>
         <p class="noten-kopf">
-          {t('Sterne')} {alleSterne && <span>{t('mindestens eine')}</span>}
+          {t('Sterne')} <span>{bewertet}/{ALLE_STERNE}</span>
         </p>
-        {(alleSterne ? KRITERIEN : KRITERIEN.filter((k) => k === 'geschmack')).map((k) => (
+        {KRITERIEN.map((k) => (
           <NotenZeile
             key={k}
             name={kriteriumLabel(ANKER[k].label)}
@@ -599,9 +585,6 @@ export function Erfassen() {
             }
           />
         ))}
-        <button type="button" class="mehr-sterne" aria-expanded={alleSterne} onClick={schalteSterne}>
-          {alleSterne ? t('Weniger Sterne') : t('Mehr Sterne')}
-        </button>
       </section>
 
       <label class={`foto-knopf${foto ? ' gesetzt' : ''}`}>
@@ -645,12 +628,12 @@ export function Erfassen() {
             <span class={wertung.gesamt === null ? 'gesamt leer' : 'gesamt'}>{sterneText(wertung.gesamt)}</span>
             <Sterne wert={wertung.gesamt} groesse={16} />
           </span>
-          <span class="unter">{wertung.urteil ? t(wertung.urteil) : (bewertet === 0 ? t('Tippe oben auf die Sterne') : t('{n} von 6 bewertet', { n: bewertet }))}</span>
+          <span class="unter">{vollstaendig && wertung.urteil ? t(wertung.urteil) : `${bewertet}/${ALLE_STERNE}`}</span>
         </div>
         <button
           type="button"
           class={gespeichert ? 'speichern ok' : 'speichern'}
-          disabled={bewertet === 0 && !gespeichert}
+          disabled={!vollstaendig && !gespeichert}
           onClick={() => void speichern()}
         >
           {fehlt && !e.stand.trim() ? t('Stand fehlt') : preisFehlt && e.preis === undefined ? t('Preis fehlt') : knopfText}

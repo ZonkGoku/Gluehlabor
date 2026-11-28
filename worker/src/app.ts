@@ -573,14 +573,17 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
   if (pfad === '/api/feedback' && methode === 'POST') {
     const g = await anmelden(request, db);
     const b = await lesen(request);
-    if (typeof b.text !== 'string') throw new HttpFehler(400, 'Bitte schreib uns ein paar Worte.');
-    const text = [...saeubere(b.text)].slice(0, 1000).join('').trim();
-    if ([...text].length < 3) throw new HttpFehler(400, 'Bitte schreib uns ein paar Worte.');
+    const stimmung = b.stimmung === undefined || b.stimmung === null ? null : b.stimmung;
+    if (stimmung !== null && (typeof stimmung !== 'number' || !Number.isInteger(stimmung) || stimmung < 1 || stimmung > 3)) throw new HttpFehler(400, 'Ungültige Stimmung.');
+    if (b.text !== undefined && typeof b.text !== 'string') throw new HttpFehler(400, 'Bitte schreib uns ein paar Worte.');
+    const text = typeof b.text === 'string' ? [...saeubere(b.text)].slice(0, 1000).join('').trim() : '';
+    // Ein Gesicht genügt; ohne Gesicht braucht es ein paar Worte
+    if (stimmung === null && [...text].length < 3) throw new HttpFehler(400, 'Bitte schreib uns ein paar Worte.');
     const seite = typeof b.seite === 'string' ? [...saeubere(b.seite)].slice(0, 60).join('') || null : null;
     if (!(await begrenze(db, `feedback:${g.id}`, TAG, LIMITS.rueckmeldungenJeGeraetUndTag, jetzt))) {
       throw new HttpFehler(429, 'Heute schon viele Rückmeldungen. Bitte morgen wieder.');
     }
-    await db.prepare('INSERT INTO rueckmeldungen (geraet_id, text, seite, erstellt_am) VALUES (?, ?, ?, ?)').bind(g.id, text, seite, jetzt).run();
+    await db.prepare('INSERT INTO rueckmeldungen (geraet_id, text, seite, erstellt_am, stimmung) VALUES (?, ?, ?, ?, ?)').bind(g.id, text, seite, jetzt, stimmung).run();
     return json({ ok: true }, 200);
   }
 
@@ -668,7 +671,7 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
     }
 
     if (pfad === '/api/admin/feedback' && methode === 'GET') {
-      const { results } = await db.prepare('SELECT id, text, seite, erstellt_am FROM rueckmeldungen WHERE bearbeitet = 0 ORDER BY erstellt_am DESC LIMIT 100').all();
+      const { results } = await db.prepare('SELECT id, text, seite, erstellt_am, stimmung FROM rueckmeldungen WHERE bearbeitet = 0 ORDER BY erstellt_am DESC LIMIT 100').all();
       return json({ rueckmeldungen: results }, 200);
     }
 

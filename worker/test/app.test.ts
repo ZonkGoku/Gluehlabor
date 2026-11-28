@@ -656,6 +656,16 @@ describe('Rückmeldungen', () => {
     expect((await sendeFeedback(g, body)).status).toBe(400);
   });
 
+  it('ein Gesicht genügt ohne Text; ungültige Stimmung 400', async () => {
+    const g = await geraet();
+    expect((await sendeFeedback(g, { stimmung: 3 })).status).toBe(200);
+    expect((await sendeFeedback(g, { stimmung: 1, text: 'Zu viele Taps' })).status).toBe(200);
+    const l = await offen();
+    expect(l[0]).toMatchObject({ stimmung: 1, text: 'Zu viele Taps' });
+    expect(l[1]).toMatchObject({ stimmung: 3, text: '' });
+    for (const s of [0, 4, 1.5, '2']) expect((await sendeFeedback(g, { stimmung: s, text: 'Hallo da' })).status).toBe(400);
+  });
+
   it('kürzt auf 1000 Zeichen und begrenzt je Gerät und Tag auf 10', async () => {
     const g = await geraet();
     await sendeFeedback(g, { text: 'x'.repeat(5000) });

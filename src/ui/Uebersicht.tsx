@@ -18,6 +18,7 @@ import { useEintraege, useGeraetId, useGewichte, useMeineAnzahl, useName, useSai
 import { leseZuletzt } from '../daten/zuletzt';
 import { useEinblenden } from './nacht/bewegung';
 import { SterneZeile } from './nacht/SterneWert';
+import { preisKlasse, referenzVon } from '../lib/preisklasse';
 import { StandZeile } from './nacht/StandKarten';
 import { baueStaende } from '../lib/staende';
 import { MARKTLISTE } from './stammdaten';
@@ -218,7 +219,7 @@ export function Uebersicht() {
               <ol class="space-y-2">
                 {staendeStadt.slice(0, 3).map((s) => (
                   <li>
-                    <StandZeile stand={s} />
+                    <StandZeile stand={s} preisKlasse={preisKlasse(s.preis.median, referenzVon(staendeStadt))} />
                   </li>
                 ))}
               </ol>

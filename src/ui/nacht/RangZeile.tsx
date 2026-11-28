@@ -3,10 +3,11 @@ import type { Zeile } from '../../lib/auswertung';
 import { DealMarke } from './DealMarke';
 import { PruefSiegel } from './PruefSiegel';
 import { SterneZeile } from './SterneWert';
+import type { PreisKlasse } from '../../lib/preisklasse';
 import { t } from '../../i18n';
 import { stufe } from './Ticket';
 
-export function RangZeile({ zeile, ort, href, anzahl, siegel = false, deal = false, bild, preis }: { zeile: Zeile; ort?: string; href?: string; anzahl?: number; siegel?: boolean; deal?: boolean; bild?: string; preis?: string | null }) {
+export function RangZeile({ zeile, ort, href, anzahl, siegel = false, deal = false, bild, preis, preisKlasse }: { zeile: Zeile; ort?: string; href?: string; anzahl?: number; siegel?: boolean; deal?: boolean; bild?: string; preis?: string | null; preisKlasse?: PreisKlasse | null }) {
   const { eintrag: e, wertung: w, rang } = zeile;
   const s = stufe(rang);
   return (
@@ -35,7 +36,14 @@ export function RangZeile({ zeile, ort, href, anzahl, siegel = false, deal = fal
       </span>
       {preis && (
         <span class="shrink-0 text-right leading-tight">
-          <b class="block font-mono text-[16px] font-semibold tabular-nums text-eis">{preis}</b>
+          <b
+            class="block font-mono text-[16px] font-semibold tabular-nums text-eis"
+            style={preisKlasse === 'guenstig' ? { color: 'light-dark(#177a45, #6fe0a0)' } : preisKlasse === 'teuer' ? { color: 'light-dark(#b8283b, #ff8a98)' } : undefined}
+            title={preisKlasse === 'guenstig' ? t('günstiger als üblich') : preisKlasse === 'teuer' ? t('teurer als üblich') : undefined}
+          >
+            {preisKlasse === 'guenstig' ? '▼ ' : preisKlasse === 'teuer' ? '▲ ' : ''}
+            {preis}
+          </b>
           <span class="block text-[11px] text-dunst">{t('je 0,2 l')}</span>
         </span>
       )}

@@ -6,10 +6,12 @@ import { HAT_SERVER } from '../daten/config';
 import { t } from '../i18n';
 import { Betreiber } from './bausteine';
 import { useLive } from './hooks';
+import { STIMMUNG_NAME, STIMMUNGEN, StimmungIcon, type Stimmung } from './nacht/StimmungIcon';
 
 export function Feedback() {
   const pruefstelle = useLive(() => leseEinstellung<boolean>('pruefstelle', false), [], false);
   const [text, setText] = useState('');
+  const [stimmung, setStimmung] = useState<Stimmung | null>(null);
   const [zustand, setZustand] = useState<'schreiben' | 'sendet' | 'danke'>('schreiben');
   const [fehler, setFehler] = useState('');
   const [liste, setListe] = useState<Rueckmeldung[] | null>(null);
@@ -21,8 +23,9 @@ export function Feedback() {
     setZustand('sendet');
     setFehler('');
     try {
-      await sendeRueckmeldung(text.trim(), (document.referrer && '') || null);
+      await sendeRueckmeldung(text.trim(), null, stimmung);
       setText('');
+      setStimmung(null);
       setZustand('danke');
     } catch (err) {
       setFehler(rueckmeldungFehler(err));
@@ -49,7 +52,23 @@ export function Feedback() {
         </div>
       ) : (
         <div class="glas rounded-3xl p-5">
-          <label for="rueck-text" class="mb-2 block font-semibold text-eis">{t('Deine Rückmeldung')}</label>
+          <p class="mb-2 mt-0 font-semibold text-eis">{t('Wie gefällt dir Glühlabor?')}</p>
+          <div role="radiogroup" aria-label={t('Wie gefällt dir Glühlabor?')} class="mb-4 grid grid-cols-3 gap-2">
+            {STIMMUNGEN.map((s) => (
+              <button
+                type="button"
+                role="radio"
+                aria-checked={stimmung === s}
+                aria-label={t(STIMMUNG_NAME[s])}
+                title={t(STIMMUNG_NAME[s])}
+                onClick={() => setStimmung(stimmung === s ? null : s)}
+                class={`grid min-h-[64px] place-items-center rounded-2xl border-2 text-eis ${stimmung === s ? 'border-[var(--nm-stern)] bg-flaeche' : 'border-[var(--nm-bedienung)]'}`}
+              >
+                <StimmungIcon stimmung={s} groesse={42} />
+              </button>
+            ))}
+          </div>
+          <label for="rueck-text" class="mb-2 block text-sm text-dunst">{t('Noch etwas dazu? (freiwillig)')}</label>
           <textarea
             id="rueck-text"
             class="min-h-[140px] w-full rounded-2xl border border-[var(--nm-bedienung)] bg-flaeche p-3 text-base text-eis"
@@ -61,7 +80,7 @@ export function Feedback() {
           {fehler && <p role="alert" class="mt-2 text-sm font-semibold text-[var(--warnung)]">{fehler}</p>}
           <button
             type="button"
-            disabled={text.trim().length < 3 || zustand === 'sendet'}
+            disabled={(text.trim().length < 3 && stimmung === null) || zustand === 'sendet'}
             onClick={() => void senden()}
             class="mt-3 min-h-[52px] w-full rounded-full px-6 font-semibold text-[#1a1020] disabled:opacity-50"
             style={{ background: 'linear-gradient(135deg,#ffe29a,#ff8a3d)' }}
@@ -76,7 +95,10 @@ export function Feedback() {
           <ul class="grid gap-2">
             {liste.map((r) => (
               <li class="glas rounded-2xl p-4">
-                <p class="m-0 whitespace-pre-wrap break-words text-eis">{r.text}</p>
+                <p class="m-0 flex items-start gap-2 whitespace-pre-wrap break-words text-eis">
+                  {r.stimmung && <StimmungIcon stimmung={r.stimmung as Stimmung} groesse={26} />}
+                  <span>{r.text}</span>
+                </p>
                 <p class="mt-1 text-xs text-dunst">{new Date(r.erstellt_am).toLocaleString()}</p>
               </li>
             ))}

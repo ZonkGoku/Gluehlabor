@@ -11,7 +11,7 @@ import { anzeigeName, istPruefstelle } from '../lib/community';
 import { filtere } from '../lib/auswertung';
 import { baueStaende } from '../lib/staende';
 import { euro } from '../lib/format';
-import { KRITERIEN } from '../lib/modell';
+import { KRITERIEN, type Sorte } from '../lib/modell';
 import { ortText, ortTeile } from '../lib/orte';
 import { bewerte } from '../lib/scoring';
 import { kriteriumStatistik } from '../lib/statistik';
@@ -21,6 +21,7 @@ import { TopKarte } from './nacht/Ticket';
 import { useEintraege, useGeraetId, useGewichte } from './daten';
 import { ANKER, MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
+import { SorteIcon } from './nacht/SorteIcon';
 import { SterneZeile } from './nacht/SterneWert';
 import { t, kriteriumLabel, aktuelleSprache } from '../i18n';
 
@@ -75,7 +76,6 @@ export function Detail({ id }: { id: string }) {
     t('von {name}', { name: istPruefstelle(e) ? 'David & Philip' : anzeigeName(e) }),
     t('Saison {s}', { s: e.saison }),
     datumKurz(e.datum),
-    e.sorte && t(SORTE[e.sorte]),
     e.becherNr !== undefined && t('{n}. Becher des Abends', { n: e.becherNr }),
     e.preis !== undefined && `${euro(e.preis)}${e.menge ? ` / ${String(e.menge).replace('.', aktuelleSprache() === 'en' ? '.' : ',')} l` : ''}`,
   ].filter(Boolean) as string[];
@@ -97,6 +97,11 @@ export function Detail({ id }: { id: string }) {
           <h2>{t('Protokoll')}</h2>
           <div class="metaliste">
             {istPruefstelle(e) && <span class="chip-klein gold">{t('Prüfstelle')}</span>}
+            {e.sorte && (
+              <span class="chip-klein" title={t(SORTE[e.sorte])} aria-label={t(SORTE[e.sorte])} style={{ display: 'inline-flex', alignItems: 'center' }}>
+                <SorteIcon sorte={e.sorte as Sorte} groesse={20} />
+              </span>
+            )}
             {meta.map((m) => (
               <span class="chip-klein">{m}</span>
             ))}
