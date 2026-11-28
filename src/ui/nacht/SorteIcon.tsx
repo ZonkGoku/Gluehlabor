@@ -1,77 +1,52 @@
-// Die Sorten als Bilder: eine Glühweintasse in der Farbe des Weins mit einem großen Merkmal (Kirschen, Trauben, Zuckerhut mit Flamme, 0 %).
-// Rot und Weiß unterscheiden sich durch Farbe und Glanz; darunter steht immer ein Kurzwort, damit nichts erraten werden muss.
+// Die Sorten als Bilder statt Text: eine Glühweintasse in der Farbe des Weins, dazu ein Merkmal (Flamme, Kirsche, Trauben …).
+// Der Name steht nur als Beschriftung für Screenreader und als Tooltip daneben.
 import type { Sorte } from '../../lib/modell';
 
 const WEIN: Record<Sorte, string> = {
   rot: '#b3162f',
-  weiss: '#f6e7a2',
+  weiss: '#f7e9a6',
   kirsch: '#7a0f35',
-  winzer: '#a9561a',
-  feuerzangen: '#c4551a',
-  alkoholfrei: '#3fae6a',
+  winzer: '#b8631c',
+  feuerzangen: '#e0701a',
+  alkoholfrei: '#46b872',
   sonstiges: '#8f9ab3',
 };
 
-/** Kurzwort unter dem Bild (Schlüssel für die Übersetzung). */
-export const SORTE_KURZ: Record<Sorte, string> = { rot: 'Rot', weiss: 'Weiß', kirsch: 'Kirsch', winzer: 'Winzer', feuerzangen: 'Feuer', alkoholfrei: '0 %', sonstiges: 'Andere' };
-
-export function SorteIcon({ sorte, groesse = 40 }: { sorte: Sorte; groesse?: number }) {
+export function SorteIcon({ sorte, groesse = 36 }: { sorte: Sorte; groesse?: number }) {
   const farbe = WEIN[sorte];
   return (
-    <svg viewBox="0 0 40 40" width={groesse} height={groesse} aria-hidden="true" stroke-linecap="round" stroke-linejoin="round">
+    <svg viewBox="0 0 32 32" width={groesse} height={groesse} aria-hidden="true" stroke-linecap="round" stroke-linejoin="round">
+      {/* Dampf */}
+      <path d="M11 6c-1.4-1.6 1.4-2.6 0-4.4M16 6c-1.4-1.6 1.4-2.6 0-4.4M21 6c-1.4-1.6 1.4-2.6 0-4.4" fill="none" stroke="currentColor" stroke-width="1.3" opacity="0.45" />
       {/* Henkel */}
-      <path d="M30 17h2.6a4.4 4.4 0 0 1 0 8.8H29" fill="none" stroke="currentColor" stroke-width="2.4" opacity="0.85" />
+      <path d="M24.5 13h1.8a3.6 3.6 0 0 1 0 7.2h-2" fill="none" stroke="currentColor" stroke-width="2" opacity="0.8" />
       {/* Tasse mit Wein */}
-      <path d="M7 14h24v14a9 9 0 0 1-9 9h-6a9 9 0 0 1-9-9z" fill={farbe} stroke="currentColor" stroke-width="2.2" />
-      <path d="M9 18h20" stroke="#fff" stroke-width="2" opacity="0.45" />
-      {/* Weiß: Bläschen, damit es nicht wie leer wirkt */}
-      {sorte === 'weiss' && (
-        <>
-          <circle cx="15" cy="27" r="1.6" fill="#fff" opacity="0.9" />
-          <circle cx="21" cy="24" r="1.2" fill="#fff" opacity="0.9" />
-          <circle cx="24" cy="30" r="1.5" fill="#fff" opacity="0.9" />
-        </>
-      )}
-      {/* Kirsch: zwei große Kirschen */}
+      <path d="M6 9h19v11a7 7 0 0 1-7 7h-5a7 7 0 0 1-7-7z" fill={farbe} stroke="currentColor" stroke-width="1.8" />
+      <path d="M6.9 12h17.2" stroke="#fff" stroke-width="1.6" opacity="0.5" />
+      {/* Merkmal je Sorte */}
+      {sorte === 'feuerzangen' && <path d="M15.5 12.5c3.2 2.4 4.6 4.4 4.6 6.6a4.6 4.6 0 0 1-9.2 0c0-1.7 1-3 2-4 .2 1.5 1 2 1.6 2 .3-2 .3-3.2 1-4.6z" fill="#ffd24a" stroke="#a8480c" stroke-width="1.2" />}
       {sorte === 'kirsch' && (
         <>
-          <path d="M15 28q3-9 9-12M24 26q0-6-1-10" fill="none" stroke="#3d9a3d" stroke-width="2" />
-          <circle cx="14" cy="30" r="4.4" fill="#ff3b5c" stroke="#3d0716" stroke-width="1.6" />
-          <circle cx="24.5" cy="28.5" r="4.4" fill="#ff3b5c" stroke="#3d0716" stroke-width="1.6" />
+          <circle cx="12.6" cy="21.4" r="3.3" fill="#ff3b5c" stroke="#3d0716" stroke-width="1.1" />
+          <circle cx="19.2" cy="20.4" r="3.3" fill="#ff3b5c" stroke="#3d0716" stroke-width="1.1" />
+          <path d="M12.8 18.2q2.6-4.2 5.6-4.6M19 17.2q-.2-1.8-.3-3.2" fill="none" stroke="#3d9a3d" stroke-width="1.4" />
         </>
       )}
-      {/* Winzer: Traubenbündel mit Blatt */}
       {sorte === 'winzer' && (
         <>
-          <circle cx="14.5" cy="24.5" r="3" fill="#7a3aa8" stroke="#2a0e3d" stroke-width="1.2" />
-          <circle cx="20.5" cy="24.5" r="3" fill="#7a3aa8" stroke="#2a0e3d" stroke-width="1.2" />
-          <circle cx="26.5" cy="24.5" r="3" fill="#7a3aa8" stroke="#2a0e3d" stroke-width="1.2" />
-          <circle cx="17.5" cy="30" r="3" fill="#7a3aa8" stroke="#2a0e3d" stroke-width="1.2" />
-          <circle cx="23.5" cy="30" r="3" fill="#7a3aa8" stroke="#2a0e3d" stroke-width="1.2" />
-          <path d="M20.5 21.5v-3.5q4-.4 6 2.6-3.6 1.6-6-.2z" fill="#4cae4c" stroke="#1f5a1f" stroke-width="1.2" />
+          <circle cx="12.8" cy="19.8" r="2.3" fill="#7a3aa8" stroke="#2a0e3d" stroke-width="0.8" />
+          <circle cx="18" cy="19.8" r="2.3" fill="#7a3aa8" stroke="#2a0e3d" stroke-width="0.8" />
+          <circle cx="15.4" cy="23.6" r="2.3" fill="#7a3aa8" stroke="#2a0e3d" stroke-width="0.8" />
+          <path d="M15.4 17.4v-2.4q3.6-.4 5.2 2.2-3.2 1.4-5.2.2z" fill="#4cae4c" stroke="#1f5a1f" stroke-width="0.9" />
         </>
       )}
-      {/* Feuerzangenbowle: Zuckerhut über der Tasse, darüber eine große Flamme */}
-      {sorte === 'feuerzangen' && (
-        <>
-          <path d="M12 14l3-6h10l3 6z" fill="#fff8e8" stroke="currentColor" stroke-width="1.8" />
-          <path d="M20 1.5c3.4 3 5 5.2 5 7.6a5 5 0 0 1-10 0c0-1.9 1.1-3.3 2.2-4.4.2 1.7 1.2 2.2 1.8 2.2.4-2.2.2-3.6 1-5.4z" fill="#ffc83a" stroke="#b5400c" stroke-width="1.5" />
-          <path d="M20 18v0" />
-        </>
-      )}
-      {/* Alkoholfrei: groß „0 %" in der Tasse */}
       {sorte === 'alkoholfrei' && (
-        <text x="19" y="31" text-anchor="middle" font-size="13" font-weight="800" font-family="var(--mono), monospace" fill="#fff" stroke="none">
-          0%
-        </text>
+        <>
+          <circle cx="15.5" cy="19.5" r="5" fill="none" stroke="#fff" stroke-width="2" />
+          <path d="M12 23l7-7" stroke="#fff" stroke-width="2" fill="none" />
+        </>
       )}
-      {sorte === 'sonstiges' && (
-        <text x="19" y="32" text-anchor="middle" font-size="17" font-weight="800" font-family="var(--mono), monospace" fill="#fff" stroke="none">
-          ?
-        </text>
-      )}
-      {/* Dampf (nicht bei Feuerzange, dort sitzt die Flamme) */}
-      {sorte !== 'feuerzangen' && <path d="M13 9c-2-2 2-3.4 0-6M19 9c-2-2 2-3.4 0-6M25 9c-2-2 2-3.4 0-6" fill="none" stroke="currentColor" stroke-width="1.7" opacity="0.4" />}
+      {sorte === 'sonstiges' && <path d="M12.8 17.8a2.9 2.9 0 1 1 4 2.7c-.8.4-1.3 1-1.3 1.8M15.5 25h.01" fill="none" stroke="#fff" stroke-width="2.2" />}
     </svg>
   );
 }

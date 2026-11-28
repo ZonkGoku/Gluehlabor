@@ -23,7 +23,7 @@ import { useGeraetId } from './daten';
 import { automatischeStadt } from '../daten/standort';
 import { GroesseIcon } from './nacht/GroesseIcon';
 import { haeufigsteSorte, ordneStaende, standPreisVorschlag } from '../lib/eingabehilfen';
-import { SORTE_KURZ, SorteIcon } from './nacht/SorteIcon';
+import { SorteIcon } from './nacht/SorteIcon';
 import { TAGS } from '../lib/tags';
 import { ANKER, MARKTLISTE, MARKT_ZUSATZ } from './stammdaten';
 import { euro, probeNr, sterneText } from '../lib/format';
@@ -556,7 +556,6 @@ export function Erfassen() {
             }}
           >
             <SorteIcon sorte={x} />
-            <small>{t(SORTE_KURZ[x])}</small>
           </button>
         ))}
       </div>
