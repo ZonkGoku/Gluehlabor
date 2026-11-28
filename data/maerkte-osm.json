@@ -1,1 +1,394 @@
-{"quelle":"OpenStreetMap, ODbL (Mitwirkende)","stand":null,"staedte":{}}
+{
+ "quelle": "OpenStreetMap, ODbL (Mitwirkende)",
+ "stand": "2026-11-28",
+ "staedte": {
+  "Aschau im Chiemgau": [
+   "Wald-Wild-Schongebiet",
+   "Wald-Wild-Schongebiet Mühlhörndl West",
+   "Wald-Wild-Schongebiet Spielberg",
+   "Wildschutzgebiet",
+   "Wildschutzgebiet Wimbach"
+  ],
+  "Bad Reichenhall": [
+   "Wald-Wild-Schongebiet",
+   "Wald-Wild-Schongebiet Predigtstuhl",
+   "Wald-Wild-Schongebiet Schreck West"
+  ],
+  "Bad Wiessee": [
+   "Wald-Wild-Schongebiet"
+  ],
+  "Berchtesgaden": [
+   "Wald-Wild-Schongebiet"
+  ],
+  "Bischofswiesen": [
+   "Wald-Wild-Schongebiet Toter Mann"
+  ],
+  "Brannenburg": [
+   "Wald-Wild-Schongebiet",
+   "Wedellift"
+  ],
+  "Burgberg": [
+   "Heisenloch",
+   "Hörnlesee",
+   "Wald-Wild-Schongebiet",
+   "Wildschutzgebiet Großer Wald"
+  ],
+  "Erlangen": [
+   "Düll Lebkuchenverkauf",
+   "Lebkuchen-Schmidt aus Nürnberg"
+  ],
+  "Eslarn": [
+   "Advent im Wald"
+  ],
+  "Farchant": [
+   "Reschbergwiesen",
+   "Wald-Wild-Schongebiet",
+   "Wald-Wild-Schongebiet Ameisenberg",
+   "Wald-Wild-Schongebiet Bischof",
+   "Wald-Wild-Schongebiet Rotenkopf"
+  ],
+  "Fischbachau": [
+   "Aiplspitz Nord",
+   "Klammstein",
+   "Kleiner Traithen",
+   "Kleinmiesing",
+   "Lämpersberg",
+   "Rotwandgebiet - Bereich Jägerkamp",
+   "Rotwandgebiet - Bereich Maroldschneid",
+   "Soinwand",
+   "Spitzing, Kurvenlift",
+   "Vogelsang",
+   "Wald-Wild-Schongebiet",
+   "Wald-Wild-Schongebiet Aiplspitz",
+   "Wald-Wild-Schongebiet Gipfelplateau Breitenstein",
+   "Wald-Wild-Schongebiet Rauhkopf",
+   "Wald-Wild-Schongebiet Schnittlauchmoosalm",
+   "Wald-Wild-Schongebiet Schweinsberg",
+   "Wald-Wild-Schongebiet Tagweidkopf-Lacherspitz",
+   "Wildruhebereich Hausberg",
+   "Wildschutzgebiet Wirtsalm"
+  ],
+  "Garmisch-Partenkirchen": [
+   "Wald-Wild-Schongebiet",
+   "Wald-Wild-Schongebiet Hoher Gaifkopf",
+   "Wald-Wild-Schongebiet Roßwank",
+   "Wald-Wild-Schongebiet Roßwank Nordost",
+   "Wald-Wild-Schongebiet Wank Süd",
+   "Wildschutzgebiet Kramer",
+   "Wildschutzgebiet Reintal",
+   "Wildschutzgebiet Rotenkopf Süd"
+  ],
+  "Gößweinstein": [
+   "Weihnachtsmarkt"
+  ],
+  "Grainau": [
+   "Häusellaine",
+   "Wald-Wild-Schongebiet Riffelriss",
+   "Wildschutzgebiet Eibsee",
+   "Wildschutzgebiet Friedergriess"
+  ],
+  "Halblech": [
+   "Wald-Wild-Schongebiet",
+   "Wald-Wild-Schongebiet Hasentalkopf",
+   "Wald-Wild-Schongebiet Hundsfallköpfe",
+   "Wald-Wild-Schongebiet Lösertalkopf",
+   "Wald-Wild-Schongebiet Scheinberggraben",
+   "Wald-Wild-Schongebiet Scheinbergspitz Stock",
+   "Wald-Wild-Schongebiet Sulzeck",
+   "Wildschutzgebiet Buchenberg",
+   "Wildschutzgebiet Heiterried",
+   "Wildschutzgebiet Müllerviehweide",
+   "Wildschutzgebiet Schoberviehweide"
+  ],
+  "Haßfurt": [
+   "Eissportstadion Haßfurt"
+  ],
+  "Hengersberg": [
+   "Landgasthof Frohnstetten"
+  ],
+  "Immenstadt im Allgäu": [
+   "Wald-Wild-Schongebiet",
+   "Wald-Wild-Schongebiet Am Roten Kopf",
+   "Wald-Wild-Schongebiet Gschwender Horn",
+   "Wald-Wild-Schongebiet Himmelseck",
+   "Wald-Wild-Schongebiet Hochbergalpe Alte Brande",
+   "Wald-Wild-Schongebiet In den Kesseln",
+   "Wald-Wild-Schongebiet Kemptener Naturfreundehaus West",
+   "Wald-Wild-Schongebiet Kitzenstein",
+   "Wald-Wild-Schongebiet Mittelbergalpe",
+   "Wald-Wild-Schongebiet Obere Wilhelminealpe",
+   "Wald-Wild-Schongebiet Schattenberg",
+   "Wald-Wild-Schongebiet Scheidwangalpe",
+   "Wildschutzgebiet Wiesach",
+   "Wildschutzgebiet Wildengund-Alpe"
+  ],
+  "Inzell": [
+   "Peitingköpfl",
+   "Wald-Wild-Schongebiet",
+   "Wald-Wild-Schongebiet Hinterstaufen",
+   "Wald-Wild-Schongebiet Zenokopf"
+  ],
+  "Kössen": [
+   "Benz-Eck-Lifte",
+   "Birkenhof",
+   "Gasthof Sonneck",
+   "Oberbichl",
+   "Wald-Wild-Schongebiet",
+   "Wald-Wild-Schongebiet Neualm"
+  ],
+  "Kufstein": [
+   "Reinhardsberg"
+  ],
+  "Lenggries": [
+   "Spitzkamp",
+   "Start Langlaufloipe",
+   "Wald-Wild-Schongebiet",
+   "Wald-Wild-Schongebiet Achselköpfe",
+   "Wald-Wild-Schongebiet In der Feile",
+   "Wald-Wild-Schongebiet Plattenlahner Hochplatte",
+   "Wald-Wild-Schongebiet Schönberg",
+   "Wald-Wild-Schongebiet Zinnerleite"
+  ],
+  "Marquartstein": [
+   "Wald-Wild-Schongebiet"
+  ],
+  "Mittenwald": [
+   "Galgenstangenkopf",
+   "Karwendel-Nord",
+   "Krün-Ost",
+   "Krün-West",
+   "Riedboden",
+   "Wald-Wild-Schongebiet",
+   "Wald-Wild-Schongebiet Dammkar",
+   "Wald-Wild-Schongebiet Krinner-Kofler-Hütte",
+   "Wildschutzgebiet Bärenleiten",
+   "Wildschutzgebiet Hachel",
+   "Wildschutzgebiet Halmrauth",
+   "Wildschutzgebiet Laingraben"
+  ],
+  "Nesselwang": [
+   "Wald-Wild-Schongebiet Alpsitz Lachnerhütte",
+   "Wald-Wild-Schongebiet Edelsberg",
+   "Wald-Wild-Schongebiet Haslachalpe",
+   "Wald-Wild-Schongebiet Reuterwanne",
+   "Wildschutzgebiet Bayerstetter Berg"
+  ],
+  "Neubeuern": [
+   "Wald-Wild-Schongebiet",
+   "Wildschutzgebiet Feichteck"
+  ],
+  "Neumarkt in der Oberpfalz": [
+   "Mobile Kunsteislaufanlage"
+  ],
+  "Oberammergau": [
+   "Bad Kohlgrub Berg-Ost",
+   "Bad Kohlgrub Berg-West Teil 1",
+   "Bad Kohlgrub Berg-West Teil 2",
+   "Latschenköpfel",
+   "Schartenköpfel",
+   "Schattenwald",
+   "Teufelstättkopf",
+   "Unterammergau II",
+   "Wald-Wild-Schongebiet Am Zahn",
+   "Wald-Wild-Schongebiet Elmauberg",
+   "Wald-Wild-Schongebiet Ettaler Manndl",
+   "Wald-Wild-Schongebiet Graswang",
+   "Wald-Wild-Schongebiet Himmelreichrücken",
+   "Wald-Wild-Schongebiet Laber Nordhang",
+   "Wald-Wild-Schongebiet Oberammergau Gschwandkopf",
+   "Wald-Wild-Schongebiet Plattenberg",
+   "Wald-Wild-Schongebiet Rammösel",
+   "Wald-Wild-Schongebiet Rehbreinkopf",
+   "Wald-Wild-Schongebiet Steckenberg",
+   "Wald-Wild-Schongebiet Stier-Alm",
+   "Wanklift III",
+   "Wildruhezone Aurahotel Saulgrub",
+   "Wildschutzgebiet Aufacker, Oberammergau",
+   "Wildschutzgebiet Gschwandgraben"
+  ],
+  "Oberaudorf": [
+   "Baumoosgraben",
+   "Großer Brünnberg",
+   "Jägerwand",
+   "Kratzelschneid",
+   "P. 1569 bei Seeon-Alm",
+   "Schneelahner",
+   "Steilner Grat",
+   "Trainsjoch-Ost",
+   "Wald-Wild-Schongebiet Kleiner Brünnberg",
+   "Wald-Wild-Schongebiet Unterberger Joch",
+   "Wirtshöhe"
+  ],
+  "Oberstaufen": [
+   "Balderschwang Süd",
+   "Wald-Wild-Schongebiet Heidenkopf Süd",
+   "Wald-Wild-Schongebiet Hohenegg",
+   "Wald-Wild-Schongebiet Holzschlag-Alpe",
+   "Wald-Wild-Schongebiet Rohenhöhe",
+   "Wald-Wild-Schongebiet Schönhaldenalpen"
+  ],
+  "Oberstdorf": [
+   "Bolgengrat Südseite",
+   "Hinterbolgen Bolgengrat",
+   "Schatthalde",
+   "Wald-Wild-Schongebiet",
+   "Wald-Wild-Schongebiet Alpe Doismen",
+   "Wald-Wild-Schongebiet Bolsterlanger Horn",
+   "Wald-Wild-Schongebiet Burgstallbach",
+   "Wald-Wild-Schongebiet Entschenkopf",
+   "Wald-Wild-Schongebiet Entschenrücken",
+   "Wald-Wild-Schongebiet Falkenalpe Nord",
+   "Wald-Wild-Schongebiet Geisflue",
+   "Wald-Wild-Schongebiet Geißberg",
+   "Wald-Wild-Schongebiet Grafenkürenalpe",
+   "Wald-Wild-Schongebiet Grauenstein",
+   "Wald-Wild-Schongebiet im hinteren Gatter",
+   "Wald-Wild-Schongebiet Kackenköpfe West",
+   "Wald-Wild-Schongebiet Kanzelwand",
+   "Wald-Wild-Schongebiet Katzenköpfe",
+   "Wald-Wild-Schongebiet Koblat",
+   "Wald-Wild-Schongebiet Kreuzlealpe",
+   "Wald-Wild-Schongebiet Mitteleck",
+   "Wald-Wild-Schongebiet Obere Hörnlealpe",
+   "Wald-Wild-Schongebiet Obere Mittelalpe Süd",
+   "Wald-Wild-Schongebiet Piesenkopf",
+   "Wald-Wild-Schongebiet Riedbergerhorn",
+   "Wald-Wild-Schongebiet Riedberghorn Nord Weg",
+   "Wald-Wild-Schongebiet Riezler Alpe",
+   "Wald-Wild-Schongebiet Roßkopf",
+   "Wald-Wild-Schongebiet Roßschelpenalpe",
+   "Wald-Wild-Schongebiet Scheuenwände",
+   "Wald-Wild-Schongebiet Schlappoldsee",
+   "Wald-Wild-Schongebiet Schönbichel",
+   "Wald-Wild-Schongebiet Schwarzenbergalpe",
+   "Wald-Wild-Schongebiet Sölleralpe",
+   "Wald-Wild-Schongebiet Söllerkopf Ost",
+   "Wald-Wild-Schongebiet Steinhaufen",
+   "Wald-Wild-Schongebiet Unterschelpenalpe",
+   "Wald-Wild-Schongebiet Wannenkopf",
+   "Wildschutzgebiet",
+   "Wildschutzgebiet \"Gschlief\"",
+   "Wildschutzgebiet Älpelesgrub",
+   "Wildschutzgebiet Finkenschrine",
+   "Wildschutzgebiet Mitterhaus",
+   "Wildschutzgebiet Mösle",
+   "Wildschutzgebiet Raut-Alpe",
+   "Wildschutzgebiet Reichenbach"
+  ],
+  "Ohlstadt": [
+   "Eschenlohe-Wengwies",
+   "Illing Nord",
+   "Ohlstadt",
+   "Wald-Wild-Schongebiet",
+   "Wildschutzgebiet Schneckenwurf"
+  ],
+  "Oy-Mittelberg": [
+   "Starzlachberg",
+   "Untere Bichler Alpe",
+   "Wildschutzgebiet Buchenschachen",
+   "Wildschutzgebiet Riederberg"
+  ],
+  "Pfronten": [
+   "Beerenmoos",
+   "Breitenberg Nordost",
+   "Pfarrheim St. Nikolaus",
+   "Wald-Wild-Schongebiet Breitenberg",
+   "Wald-Wild-Schongebiet Kalbelehofalpe",
+   "Wald-Wild-Schongebiet Schönkahler",
+   "Wald-Wild-Schongebiet Seealpe",
+   "Wald-Wild-Schongebiet Willersalpe",
+   "Wildruhezone [16.11. bis 15.05.]",
+   "Wildschutzgebiet [16.11. - 15.05.]",
+   "Wildschutzgebiet Scheidbach",
+   "Wildschutzgebiet Seekopf"
+  ],
+  "Pommelsbrunn": [
+   "Brennberglift"
+  ],
+  "Rettenberg": [
+   "Wald-Wild-Schongebiet"
+  ],
+  "Rottach-Egern": [
+   "Bodenschneid",
+   "Rotkopf",
+   "Schlagkopf",
+   "Silberkopf Ost",
+   "Stoltzenberg",
+   "Wald-Wild-Schongebiet",
+   "Wald-Wild-Schongebiet Baumgartenschneid",
+   "Wald-Wild-Schongebiet Buchstein",
+   "Wald-Wild-Schongebiet Grubereck",
+   "Wald-Wild-Schongebiet Hirschberg",
+   "Wald-Wild-Schongebiet Hirschberg Nord",
+   "Wald-Wild-Schongebiet Platteneck",
+   "Wald-Wild-Schongebiet Rinnerspitz",
+   "Wald-Wild-Schongebiet Rotzigmoosberg",
+   "Wald-Wild-Schongebiet Setzberg West unten",
+   "Wald-Wild-Schongebiet Wallberg - Pförner Moos",
+   "Wildschutzgebiet Hohlenstein"
+  ],
+  "Ruhpolding": [
+   "Kratzelschneid",
+   "Mittersee-Hütte",
+   "Wald-Wild-Schongebiet",
+   "Wald-Wild-Schongebiet Finsterbachalm",
+   "Wald-Wild-Schongebiet Seehauser Hoch-Kienberg",
+   "Wald-Wild-Schongebiet Wildalphorn",
+   "Wald-Wild-Schongebiet Zinnkopf"
+  ],
+  "Schliersee": [
+   "Wald-Wild-Schongebiet"
+  ],
+  "Schönau am Königssee": [
+   "Wald-Wild-Schongebiet",
+   "Wald-Wild-Schongebiet Todtenlöcher"
+  ],
+  "Schwangau": [
+   "Niederstraußberg",
+   "Wald-Wild-Schongebiet",
+   "Wald-Wild-Schongebiet Ochsenäpeleskopf",
+   "Wald-Wild-Schongebiet Vorgesenalpe",
+   "Wildschutzgebiet Langhalde",
+   "Wildschutzgebiet Pöllat"
+  ],
+  "Sonthofen": [
+   "Dreifahnenkopf Nord",
+   "Hochreuthe",
+   "Iseler",
+   "Wald-Wild-Schongebiet",
+   "Wald-Wild-Schongebiet Alpe Strausberg",
+   "Wald-Wild-Schongebiet Gerenkopf",
+   "Wald-Wild-Schongebiet Michael-Schuster-Hütte",
+   "Wald-Wild-Schongebiet Obere Kierwanger Alpe",
+   "Wald-Wild-Schongebiet Ochsenkopf",
+   "Wald-Wild-Schongebiet Schnippe",
+   "Wald-Wild-Schongebiet Spieser",
+   "Wald-Wild-Schongebiet Stuibenköpfle",
+   "Wildschutzgebiet Ostertal"
+  ],
+  "Stockstadt am Main": [
+   "Waldweihnacht"
+  ],
+  "Türkenfeld": [
+   "Bergweihnacht / Handwerksmarkt"
+  ],
+  "Unterwössen": [
+   "Gondelbahn Seegatterl",
+   "Roßalmbahn",
+   "Skitouren Parkplatz",
+   "Wald-Wild-Schongebiet",
+   "Wald-Wild-Schongebiet Hasenpoint",
+   "Wald-Wild-Schongebiet Lembergschneid",
+   "Wildschutzgebiet Gründberg"
+  ],
+  "Vilsbiburg": [
+   "Hallenbad Vilsbiburg"
+  ],
+  "Waakirchen": [
+   "Waakirchen"
+  ],
+  "Wackersberg": [
+   "Wald-Wild-Schongebiet"
+  ]
+ }
+}
