@@ -134,9 +134,11 @@ for (const el of daten.elements ?? []) {
   const kandidaten = [t.name, t['name:de'], t.official_name, t.alt_name, t.short_name].filter(Boolean);
   const namen = kandidaten.map(bereinige).filter(Boolean);
   if (namen.length) zaehl.mitName++;
-  const tagTreffer = [t.market, t.event, t.seasonal, t.opening_hours].some((v) => typeof v === 'string' && /christmas|xmas|winter/i.test(v)) || t.market === 'christmas';
+  // Nur ausdrückliche Weihnachts-Tags. „seasonal=winter" gehört vor allem Wildschutzgebieten und Skiliften (so kam der erste Lauf auf lauter Unsinn).
+  const tagTreffer = [t.market, t.event].some((v) => typeof v === 'string' && /christmas|xmas/i.test(v));
   if (tagTreffer) zaehl.weihnachtsTag++;
   const name = namen.find((n) => new RegExp(NAME, 'i').test(n)) ?? (tagTreffer ? namen[0] : undefined);
+  if (name && /schongebiet|schutzgebiet|wildruhe|lift|loipe|skitour|parkplatz|stadion|hallenbad/i.test(name)) continue;
   if (!name || lat == null) {
     if (namen[0] && /markt|fest|zauber|dorf/i.test(namen[0]) && probeKeinTreffer.length < 25) probeKeinTreffer.push(namen[0]);
     continue;
