@@ -1,8 +1,8 @@
 // Fotos der Community: freigeben, wieder privat machen, Adresse. Hochgeladen wird im Abgleich (sync.ts, sendeFotos).
 import { api } from './api';
 import { API_BASIS } from './config';
-import { db, holeGeraet, type LokalerEintrag } from './db';
-import { synchronisiere } from './sync';
+import { db, type LokalerEintrag } from './db';
+import { mitGeraet, synchronisiere } from './sync';
 
 /** Adresse des Fotos beim Server (groß oder als kleine Vorschau); undefined, wenn dort keins liegt. */
 export function fotoAdresse(e: Pick<LokalerEintrag, 'foto'>, klein = false): string | undefined {
@@ -20,7 +20,7 @@ export async function macheFotoOeffentlich(id: string): Promise<void> {
 export async function macheFotoPrivat(id: string): Promise<void> {
   const e = await db.eintraege.get(id);
   if (e && (e.fotoHochgeladen || e.foto)) {
-    await api('/api/foto/loeschen', { methode: 'POST', geraet: await holeGeraet(), body: { id } });
+    await mitGeraet((geraet) => api('/api/foto/loeschen', { methode: 'POST', geraet, body: { id } }));
   }
   await db.eintraege.update(id, { fotoOeffentlich: false, fotoHochgeladen: undefined, foto: undefined });
 }

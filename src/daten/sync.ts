@@ -244,6 +244,21 @@ export function starteSync(): void {
 
 export type { LokalerEintrag };
 
+/**
+ * Führt eine Anfrage mit der Geräte-Anmeldung aus: Das Gerät wird zuerst beim Server angemeldet (es kennt dort sonst niemand, solange nie
+ * ein Abgleich lief) und bei „Unbekanntes Gerät“ (z. B. Server-Datenbank neu angelegt) einmal neu angemeldet und wiederholt.
+ * Das war der Fehler „Unbekanntes Gerät“ beim Eingeben des Prüfstellen-Codes auf einem Gerät, das noch nie abgeglichen hatte.
+ */
+export async function mitGeraet<T>(anfrage: (geraet: Awaited<ReturnType<typeof holeGeraet>>) => Promise<T>): Promise<T> {
+  try {
+    return await anfrage(await sorgeFuerAnmeldung());
+  } catch (err) {
+    if (!(err instanceof ApiFehler) || err.status !== 401) throw err;
+    await schreibeEinstellung('registriert', false);
+    return anfrage(await sorgeFuerAnmeldung());
+  }
+}
+
 /** Stellt sicher, dass dieses Gerät beim Server angemeldet ist (für Funktionen außerhalb des Abgleichs, z. B. Rennen). */
 export async function sorgeFuerAnmeldung(): Promise<Awaited<ReturnType<typeof holeGeraet>>> {
   const geraet = await holeGeraet();

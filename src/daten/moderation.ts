@@ -2,7 +2,7 @@
 // angemeldet mit dem Gerät statt mit dem Admin-Token.
 import { api, ApiFehler } from './api';
 import { db, holeGeraet, type LokalerEintrag } from './db';
-import { holeBecher } from './sync';
+import { holeBecher, mitGeraet } from './sync';
 import { t } from '../i18n';
 
 export interface Meldung {
@@ -19,8 +19,7 @@ export interface Meldung {
 }
 
 async function admin<T>(pfad: string, body?: unknown): Promise<T> {
-  const geraet = await holeGeraet();
-  return api<T>(`/api/admin/${pfad}`, { methode: body === undefined ? 'GET' : 'POST', geraet, body });
+  return mitGeraet((geraet) => api<T>(`/api/admin/${pfad}`, { methode: body === undefined ? 'GET' : 'POST', geraet, body }));
 }
 
 /** Wandelt Fehler in lesbaren Text. */

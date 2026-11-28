@@ -2,8 +2,8 @@
 import { useEffect, useState } from 'preact/hooks';
 import { api, ApiFehler } from '../daten/api';
 import { HAT_SERVER } from '../daten/config';
-import { db, holeGeraet, leseEinstellung, schreibeEinstellung, setzeName } from '../daten/db';
-import { abonniereSync, synchronisiere, type SyncInfo } from '../daten/sync';
+import { db, leseEinstellung, schreibeEinstellung, setzeName } from '../daten/db';
+import { abonniereSync, mitGeraet, synchronisiere, type SyncInfo } from '../daten/sync';
 import { GRENZEN, pruefeName } from '../lib/community';
 import { Betreiber } from './bausteine';
 import { Gruppe } from './MenueListe';
@@ -53,7 +53,7 @@ export function Profil() {
   const schalteFrei = async () => {
     setCodeMeldung(t('Prüfe …'));
     try {
-      await api('/api/pruefstelle', { methode: 'POST', geraet: await holeGeraet(), body: { code: code.trim() } });
+      await mitGeraet((geraet) => api('/api/pruefstelle', { methode: 'POST', geraet, body: { code: code.trim() } }));
       await schreibeEinstellung('pruefstelle', true);
       setCode('');
       setCodeMeldung(t('Dieses Gerät ist jetzt Prüfstelle.'));
