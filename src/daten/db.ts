@@ -118,13 +118,37 @@ let geraetLaeuft: Promise<Geraet> | null = null;
  */
 export function holeGeraet(): Promise<Geraet> {
   geraetLaeuft ??= (async () => {
-    const vorhanden = await leseEinstellung<Geraet | null>('geraet', null);
-    if (vorhanden) return vorhanden;
     const neu = { id: neueUuid(), schluessel: hex(crypto.getRandomValues(new Uint8Array(32))) };
-    await schreibeEinstellung('geraet', neu);
-    return neu;
+    // Prüfen und Schreiben in einem Schritt: Zwei Fenster, die beim ersten Start gleichzeitig eine Kennung erzeugen, behalten dieselbe
+    // (sonst kennt der Server nur das Paar des einen Fensters und lehnt das andere dauerhaft mit „Unbekanntes Gerät“ ab).
+    return db.transaction('rw', db.einstellungen, async () => {
+      const vorhanden = await db.einstellungen.get('geraet');
+      if (vorhanden) return vorhanden.wert as Geraet;
+      await db.einstellungen.put({ key: 'geraet', wert: neu });
+      return neu;
+    });
   })();
   return geraetLaeuft;
+}
+
+/**
+ * Neue Kennung und neuer Schlüssel, wenn der Server die bisherige Kennung mit einem anderen Schlüssel kennt (die Anmeldung ist dann nie
+ * möglich: „Unbekanntes Gerät“ bei jeder Anfrage). Noch nicht gesendete Bewertungen wandern mit; schon gesendete bleiben beim alten Gerät.
+ */
+export async function erneuereGeraet(): Promise<Geraet> {
+  const alt = await leseEinstellung<Geraet | null>('geraet', null);
+  const neu = { id: neueUuid(), schluessel: hex(crypto.getRandomValues(new Uint8Array(32))) };
+  await schreibeEinstellung('geraet', neu);
+  await schreibeEinstellung('registriert', false);
+  await schreibeEinstellung('nameGesendet', false);
+  await schreibeEinstellung('pruefstelle', false);
+  if (alt) {
+    for (const e of await db.eintraege.where('geraet').equals(alt.id).toArray()) {
+      if (e.sync !== 'fertig') await db.eintraege.update(e.id, { geraet: neu.id });
+    }
+  }
+  geraetLaeuft = Promise.resolve(neu);
+  return neu;
 }
 
 /** Name ändern. Er geht beim nächsten Sync zum Server; ohne Netz gilt er zunächst nur lokal. */

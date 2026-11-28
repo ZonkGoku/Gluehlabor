@@ -8,7 +8,7 @@
 import { eintragFuerServer, istEintrag } from '../lib/veroeffentlichung';
 import { api, ApiFehler } from './api';
 import { HAT_SERVER } from './config';
-import { db, holeGeraet, leseEinstellung, schreibeEinstellung, type LokalerEintrag } from './db';
+import { db, erneuereGeraet, holeGeraet, leseEinstellung, schreibeEinstellung, type LokalerEintrag } from './db';
 import { bereiteFotoFuerUpload } from './foto';
 
 export type SyncZustand = 'bereit' | 'laeuft' | 'offline' | 'kein-server' | 'fehler' | 'gesperrt';
@@ -39,16 +39,24 @@ interface Antwortzeile {
   grund?: string;
 }
 
-async function anmelden(geraet: Awaited<ReturnType<typeof holeGeraet>>): Promise<void> {
-  if (await leseEinstellung('registriert', false)) return;
+/** Meldet das Gerät beim Server an und liefert die Kennung, mit der es dort gilt (bei Schlüssel-Konflikt eine neue). */
+async function anmelden(geraet: Awaited<ReturnType<typeof holeGeraet>>): Promise<Awaited<ReturnType<typeof holeGeraet>>> {
+  if (await leseEinstellung('registriert', false)) return geraet;
   try {
     await api('/api/geraete', { methode: 'POST', body: { id: geraet.id, schluessel: geraet.schluessel } });
   } catch (err) {
     // 409: Die Kennung ist schon beim Server, z. B. weil die Antwort damals verloren ging. Dann prüfen, ob der Schlüssel passt.
     if (!(err instanceof ApiFehler) || err.status !== 409) throw err;
-    await api('/api/ich', { geraet });
+    try {
+      await api('/api/ich', { geraet });
+    } catch (err2) {
+      // Die Kennung gehört dort zu einem anderen Schlüssel (z. B. zwei Fenster haben beim ersten Start gleichzeitig eine erzeugt): neu anfangen.
+      if (!(err2 instanceof ApiFehler) || err2.status !== 401) throw err2;
+      return anmelden(await erneuereGeraet());
+    }
   }
   await schreibeEinstellung('registriert', true);
+  return geraet;
 }
 
 async function sendeName(geraet: Awaited<ReturnType<typeof holeGeraet>>): Promise<void> {
@@ -187,8 +195,7 @@ export const MELDEGRUENDE: { wert: string; label: string }[] = [
 
 /** Meldet einen Becher beim Server (Meldeverfahren). Wirft ApiFehler mit lesbarer Meldung. */
 export async function meldeBecher(id: string, grund: string, text: string): Promise<void> {
-  const geraet = await holeGeraet();
-  await anmelden(geraet);
+  const geraet = await anmelden(await holeGeraet());
   await api('/api/melden', { methode: 'POST', geraet, body: { id, grund, ...(text.trim() ? { text: text.trim() } : {}) } });
 }
 
@@ -204,8 +211,7 @@ async function lauf(): Promise<void> {
   if (!navigator.onLine) return setze({ ...info, zustand: 'offline' });
   setze({ ...info, zustand: 'laeuft' });
   try {
-    const geraet = await holeGeraet();
-    await anmelden(geraet);
+    const geraet = await anmelden(await holeGeraet());
     await sendeName(geraet);
     await sendeBecher(geraet);
     await sendeAenderungen(geraet);
@@ -261,7 +267,5 @@ export async function mitGeraet<T>(anfrage: (geraet: Awaited<ReturnType<typeof h
 
 /** Stellt sicher, dass dieses Gerät beim Server angemeldet ist (für Funktionen außerhalb des Abgleichs, z. B. Rennen). */
 export async function sorgeFuerAnmeldung(): Promise<Awaited<ReturnType<typeof holeGeraet>>> {
-  const geraet = await holeGeraet();
-  await anmelden(geraet);
-  return geraet;
+  return anmelden(await holeGeraet());
 }

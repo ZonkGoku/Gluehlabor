@@ -8,6 +8,8 @@ export default defineConfig({
   // ohne dass der Repo-Name (inkl. Groß-/Kleinschreibung) hier stehen muss.
   // Zusammen mit dem Hash-Router gibt es keine weiße Seite durch falsche Pfade.
   base: './',
+  // Bauzeit: steht in „Technik“ im Profil, damit man bei Fehlern sieht, welche Version auf dem Gerät läuft (alte Zwischenspeicher-Stände).
+  define: { __BAUZEIT__: JSON.stringify(new Date().toISOString().slice(0, 16).replace('T', ' ')) },
   plugins: [
     preact(),
     tailwindcss(),

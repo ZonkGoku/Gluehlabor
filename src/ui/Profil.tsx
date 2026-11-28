@@ -153,6 +153,9 @@ export function Profil() {
           <summary style={{ cursor: 'pointer', minHeight: '44px', display: 'flex', alignItems: 'center', fontWeight: 600 }}>{t('Technik und Prüfstelle')}</summary>
         <section>
           <h2 style={{ margin: 0 }}>{t('Verbindung')}</h2>
+          <p style={{ margin: '6px 0 0', fontSize: '12px', color: 'var(--text-2)', fontFamily: 'var(--mono)' }}>
+            {t('Version')} {__BAUZEIT__} · {t('Gerät')} {(geraetId ?? '–').slice(0, 8)}
+          </p>
           <p style={{ margin: '8px 0 0' }}>{t(VERBINDUNG[info.zustand])}</p>
           {info.meldung && <div class="meldung">{t(info.meldung)}</div>}
           <div class="knopfreihe">

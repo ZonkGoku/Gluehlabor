@@ -1153,4 +1153,6 @@ export const EN: Record<string, string> = {
   "Nettes Personal": "Friendly staff",
   "Viel los": "Busy",
   "Ungültiges Schlagwort.": "Invalid tag.",
+  "Version": "Version",
+  "Gerät": "Device",
 };
