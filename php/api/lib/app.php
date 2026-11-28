@@ -240,6 +240,9 @@ function alsEintrag(array $z): array
     if ($z['notiz']) {
         $e['notiz'] = $z['notiz'];
     }
+    if (!empty($z['tags'])) {
+        $e['tags'] = explode(',', $z['tags']);
+    }
     if ($z['name']) {
         $e['name'] = $z['name'];
     }
@@ -257,12 +260,12 @@ function fuegeEin(Db $db, array $e, string $geraetId, ?string $name, bool $pruef
         $n = $e['noten'];
         $db->lauf(
             'INSERT INTO becher (seq, id, geraet_id, name, pruefstelle, besuch_id, stand, markt, stadt, saison, datum, sorte,
-               becher_nr, preis, menge, notiz, geschmack, geruch, temperatur, personal, atmosphaere, preis_leistung, becher,
+               becher_nr, preis, menge, notiz, tags, geschmack, geruch, temperatur, personal, atmosphaere, preis_leistung, becher,
                erstellt_am, eingegangen_am, versteckt)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)',
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)',
             [
                 $seq, $e['id'], $geraetId, $name, $pruefstelle ? 1 : 0, $e['besuchId'], $e['stand'], $e['markt'], $e['stadt'],
-                $e['saison'], $e['datum'], $e['sorte'], $e['becherNr'], $e['preis'], $e['menge'], $e['notiz'],
+                $e['saison'], $e['datum'], $e['sorte'], $e['becherNr'], $e['preis'], $e['menge'], $e['notiz'], $e['tags'] ? implode(',', $e['tags']) : null,
                 $n['geschmack'], $n['geruch'], $n['temperatur'], $n['personal'], $n['atmosphaere'],
                 $n['preisLeistung'], $n['becher'], $e['erstelltAm'], $jetzt,
             ],

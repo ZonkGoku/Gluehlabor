@@ -61,6 +61,8 @@ export interface Eintrag {
   /** Größe der Tasse in Litern (z. B. 0.25). Ohne Angabe gilt 0,2 l. */
   menge?: number;
   notiz?: string;
+  /** Schnell-Tags (lib/tags.ts), Ids */
+  tags?: string[];
   foto?: string; // relativer Pfad im veröffentlichten Datenbestand
   noten: Noten;
   erstelltAm: number; // ms seit Epoche

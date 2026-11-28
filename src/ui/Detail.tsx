@@ -22,6 +22,7 @@ import { useEintraege, useGeraetId, useGewichte } from './daten';
 import { ANKER, MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
 import { SorteIcon } from './nacht/SorteIcon';
+import { tagLabel } from '../lib/tags';
 import { SterneZeile } from './nacht/SterneWert';
 import { t, kriteriumLabel, aktuelleSprache } from '../i18n';
 
@@ -106,6 +107,13 @@ export function Detail({ id }: { id: string }) {
               <span class="chip-klein">{m}</span>
             ))}
           </div>
+          {e.tags && e.tags.length > 0 && (
+            <div class="metaliste" style={{ marginTop: '12px' }}>
+              {e.tags.map((x) => (
+                <span class="chip-klein">{t(tagLabel(x))}</span>
+              ))}
+            </div>
+          )}
           {e.notiz && <p style={{ margin: '14px 0 0', lineHeight: 1.5 }}>„{e.notiz}"</p>}
           {e.geraet === geraetId && e.fotoBlob && (
             <div class="grid gap-2" style={{ margin: '14px 0 0' }}>

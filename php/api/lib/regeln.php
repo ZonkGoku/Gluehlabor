@@ -3,6 +3,7 @@
 // Ändert sich dort etwas, muss es hier mitziehen; php/test prüft beides gegen dieselben Fälle.
 declare(strict_types=1);
 
+const TAG_IDS = ['wuerzig', 'suess', 'stark', 'wassrig', 'heiss', 'lau', 'nett', 'voll'];
 const GRENZEN = ['stand' => 80, 'markt' => 80, 'stadt' => 60, 'notiz' => 500, 'name' => 24, 'nameMin' => 2];
 const RESERVIERTE_NAMEN = ['david', 'philip', 'prüfstelle', 'pruefstelle', 'admin', 'becherwerk', 'gluehlabor', 'glühlabor', 'moderator'];
 const KRITERIEN = ['geschmack', 'geruch', 'temperatur', 'personal', 'atmosphaere', 'preisLeistung', 'becher'];
@@ -143,6 +144,20 @@ function pruefeEinreichung(mixed $e, int $jetzt): array
         return $notiz;
     }
 
+    // Schnell-Tags: nur bekannte Ids, ohne Doppelte
+    $tags = [];
+    if (array_key_exists('tags', $e) && $e['tags'] !== null) {
+        if (!is_array($e['tags']) || !array_is_list($e['tags']) || count($e['tags']) > count(TAG_IDS)) {
+            return ['ok' => false, 'grund' => 'Ungültiges Schlagwort.'];
+        }
+        foreach ($e['tags'] as $x) {
+            if (!is_string($x) || !in_array($x, TAG_IDS, true)) {
+                return ['ok' => false, 'grund' => 'Ungültiges Schlagwort.'];
+            }
+        }
+        $tags = array_values(array_unique($e['tags']));
+    }
+
     $jahr = (int) gmdate('Y', intdiv($jetzt, 1000));
     $saison = $e['saison'] ?? null;
     if (!istGanz($saison) || $saison < 2025 || $saison > $jahr + 1) {
@@ -216,6 +231,7 @@ function pruefeEinreichung(mixed $e, int $jetzt): array
         'preis' => $preis === null ? null : round($preis * 100) / 100,
         'menge' => $menge === null ? null : round($menge * 100) / 100,
         'notiz' => $notiz['wert'],
+        'tags' => $tags === [] ? null : $tags,
         'besuchId' => is_string($besuch) ? $besuch : null,
     ];
     return ['ok' => true, 'eintrag' => $eintrag];

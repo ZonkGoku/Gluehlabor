@@ -221,30 +221,57 @@ export function SchlittenfahrenUebersicht() {
       <Kopf titel={t('Schlittenfahren')} text={t('Jede Bewertung bringt deinen Schlitten einen Schritt weiter. Wer zuerst im Ziel ist, gewinnt.')} />
       {!HAT_SERVER && <p class="glas mb-4 rounded-2xl p-4 text-dunst">{t('Rennen brauchen eine Verbindung zum Server. Hier läuft die App nur lokal.')}</p>}
 
-      {meine.length > 0 && (
-        <ul class="m-0 mb-4 grid list-none gap-2 p-0" aria-label={t('Deine Rennen')}>
-          {meine.map((id) => {
-            const d = daten[id];
-            if (d === null) return null;
-            const stand = d && alle ? berechneRennen(d.rennen, d.teilnehmer, alle) : null;
-            const m = stand?.bahnen.find((b) => b.geraet === ich);
-            return (
-              <li>
-                <a href={`#/schlittenfahren/${id}`} class="glas flex min-h-[64px] items-center gap-3 rounded-2xl px-4 py-3 text-eis no-underline">
-                  <span class="min-w-0 flex-1">
-                    <b class="block truncate text-[17px]">{d ? d.rennen.name : '…'}</b>
-                    <span class="block text-sm text-dunst">
-                      {d && stand ? (stand.vorbei ? t('Vorbei') : tn(stand.tageUebrig, 'Noch {n} Tag', 'Noch {n} Tage')) : ''}
-                      {d && ` · ${t('{n} fahren mit', { n: d.teilnehmer.length })}`}
+      {meine.length > 0 && (() => {
+        const zeilen = meine
+          .map((id) => ({ id, d: daten[id], stand: daten[id] && alle ? berechneRennen(daten[id]!.rennen, daten[id]!.teilnehmer, alle) : null }))
+          .filter((z) => z.d !== null);
+        const liste = (rs: typeof zeilen, chronik: boolean) => (
+          <ul class="m-0 mb-4 grid list-none gap-2 p-0" aria-label={chronik ? t('Sieger-Chronik') : t('Deine Rennen')}>
+            {rs.map(({ id, d, stand }) => {
+              const m = stand?.bahnen.find((b) => b.geraet === ich);
+              const sieger = chronik ? stand?.sieger : null;
+              return (
+                <li>
+                  <a href={`#/schlittenfahren/${id}`} class="glas flex min-h-[64px] items-center gap-3 rounded-2xl px-4 py-3 text-eis no-underline">
+                    {sieger && (
+                      <svg viewBox="0 0 46 34" class="w-12 shrink-0" aria-hidden="true">
+                        <FahrzeugBild farbe={SCHLITTEN_FARBEN[sieger.farbe % SCHLITTEN_FARBEN.length]} fahrzeug={sieger.fahrzeug} avatar={sieger.avatar} />
+                      </svg>
+                    )}
+                    <span class="min-w-0 flex-1">
+                      <b class="block truncate text-[17px]">{d ? d.rennen.name : '…'}</b>
+                      <span class="block truncate text-sm text-dunst">
+                        {sieger
+                          ? `${t('Sieger')}: ${sieger.kamel}${sieger.geraet === ich ? ` (${t('du')})` : ''}`
+                          : d && stand
+                            ? stand.vorbei
+                              ? t('Vorbei')
+                              : tn(stand.tageUebrig, 'Noch {n} Tag', 'Noch {n} Tage')
+                            : ''}
+                        {d && ` · ${t('{n} fahren mit', { n: d.teilnehmer.length })}`}
+                      </span>
                     </span>
-                  </span>
-                  {m && <span class="font-display text-3xl text-gold-300">{m.platz}.</span>}
-                </a>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+                    {m && <span class="font-display text-3xl text-gold-300">{m.platz}.</span>}
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        );
+        const laufend = zeilen.filter((z) => !z.stand?.vorbei);
+        const vorbei = zeilen.filter((z) => z.stand?.vorbei);
+        return (
+          <>
+            {laufend.length > 0 && liste(laufend, false)}
+            {vorbei.length > 0 && (
+              <section aria-label={t('Sieger-Chronik')}>
+                <h2 class="etikett mb-2 !text-gold-300">{t('Sieger-Chronik')}</h2>
+                {liste(vorbei, true)}
+              </section>
+            )}
+          </>
+        );
+      })()}
 
       {optionen ? (
         <NeuesRennen onZu={() => setOptionen(false)} />

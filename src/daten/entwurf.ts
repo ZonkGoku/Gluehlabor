@@ -14,6 +14,8 @@ export interface Entwurf {
   /** Größe der Tasse in Litern; ohne Angabe 0,2 l. */
   menge?: number;
   notiz: string;
+  /** Schnell-Tags (lib/tags.ts) */
+  tags?: string[];
   noten: Noten;
   /** Stadt, wenn sie feststeht (z. B. aus einem QR-Code). */
   stadt?: string;

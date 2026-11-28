@@ -675,6 +675,32 @@ describe('Rückmeldungen', () => {
   });
 });
 
+describe('Schnell-Tags', () => {
+  it('werden gespeichert und in der Liste mitgeliefert, ohne Doppelte', async () => {
+    const g = await geraet();
+    const b = becher({ tags: ['heiss', 'wuerzig', 'heiss'] });
+    expect((await sende(g, [b])).json.ergebnisse[0].status).toBe('ok');
+    const e = (await liste()).json.eintraege.find((x: any) => x.id === b.id);
+    expect(e.tags).toEqual(['heiss', 'wuerzig']);
+  });
+  it('ohne Tags kein Feld; unbekannte oder falsche Tags werden abgelehnt', async () => {
+    const g = await geraet();
+    const ohne = becher();
+    const falsch = becher({ tags: ['heiss', 'quatsch'] });
+    const kaputt = becher({ tags: 'heiss' });
+    const r = (await sende(g, [ohne, falsch, kaputt])).json.ergebnisse;
+    expect(r.map((x: any) => x.status)).toEqual(['ok', 'abgelehnt', 'abgelehnt']);
+    expect((await liste()).json.eintraege.find((x: any) => x.id === ohne.id).tags).toBeUndefined();
+  });
+  it('bleiben bei einer Änderung der Bewertung erhalten', async () => {
+    const g = await geraet();
+    const b = becher({ tags: ['nett'] });
+    await sende(g, [b]);
+    expect((await ruf('POST', '/api/becher/aendern', { auth: g.auth, body: { id: b.id, noten: b.noten, preis: 5 } })).status).toBe(200);
+    expect((await liste()).json.eintraege.find((x: any) => x.id === b.id).tags).toEqual(['nett']);
+  });
+});
+
 describe('Melden', () => {
   const melde = (g: { auth: string }, id: string, grund = 'spam', extra: Record<string, unknown> = {}) =>
     ruf('POST', '/api/melden', { auth: g.auth, body: { id, grund, ...extra } });

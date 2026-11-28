@@ -202,6 +202,7 @@ interface BecherZeile {
   preis: number | null;
   menge: number | null;
   notiz: string | null;
+  tags?: string | null;
   geschmack: number | null;
   geruch: number | null;
   temperatur: number | null;
@@ -243,6 +244,7 @@ function alsEintrag(z: BecherZeile): Record<string, unknown> {
   if (z.preis !== null) e.preis = z.preis;
   if (z.menge !== null) e.menge = z.menge;
   if (z.notiz) e.notiz = z.notiz;
+  if (z.tags) e.tags = z.tags.split(',');
   if (z.name) e.name = z.name;
   if (z.besuch_id) e.besuchId = z.besuch_id;
   if (z.foto_am) e.foto = `/api/foto/${z.id}?v=${z.foto_am}`;
@@ -267,13 +269,13 @@ function einfuegen(db: D1Like, e: Eintragsdaten, geraetId: string, name: string 
   return db
     .prepare(
       `INSERT INTO becher (seq, id, geraet_id, name, pruefstelle, besuch_id, stand, markt, stadt, saison, datum, sorte,
-         becher_nr, preis, menge, notiz, geschmack, geruch, temperatur, personal, atmosphaere, preis_leistung, becher,
+         becher_nr, preis, menge, notiz, tags, geschmack, geruch, temperatur, personal, atmosphaere, preis_leistung, becher,
          erstellt_am, eingegangen_am, versteckt)
-       VALUES (${NAECHSTE_SEQ}, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
+       VALUES (${NAECHSTE_SEQ}, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
     )
     .bind(
       e.id, geraetId, name, pruefstelle ? 1 : 0, e.besuchId ?? null, e.stand, e.markt, e.stadt ?? null, e.saison,
-      e.datum ?? null, e.sorte ?? null, e.becherNr ?? null, e.preis ?? null, e.menge ?? null, e.notiz ?? null,
+      e.datum ?? null, e.sorte ?? null, e.becherNr ?? null, e.preis ?? null, e.menge ?? null, e.notiz ?? null, e.tags && e.tags.length > 0 ? e.tags.join(',') : null,
       e.noten.geschmack, e.noten.geruch, e.noten.temperatur, e.noten.personal, e.noten.atmosphaere,
       e.noten.preisLeistung, e.noten.becher, e.erstelltAm, jetzt,
     );

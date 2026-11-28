@@ -18,6 +18,7 @@ export function eintragFuerServer(e: Eintrag): Record<string, unknown> {
   if (e.preis !== undefined) s.preis = e.preis;
   if (e.menge !== undefined) s.menge = e.menge;
   if (e.notiz) s.notiz = e.notiz;
+  if (e.tags && e.tags.length > 0) s.tags = e.tags;
   if (e.besuchId) s.besuchId = e.besuchId;
   s.noten = Object.fromEntries(KRITERIEN.map((k) => [k, e.noten[k]]));
   s.erstelltAm = e.erstelltAm;
@@ -35,6 +36,7 @@ export function istEintrag(x: unknown): x is Eintrag {
     if (e[feld] !== undefined && typeof e[feld] !== 'string') return false;
   }
   if (e.pruefstelle !== undefined && typeof e.pruefstelle !== 'boolean') return false;
+  if (e.tags !== undefined && !(Array.isArray(e.tags) && e.tags.every((x) => typeof x === 'string'))) return false;
   if (e.sorte !== undefined && !(SORTEN as readonly string[]).includes(e.sorte as string)) return false;
   const noten = e.noten as Record<string, unknown> | undefined;
   if (!noten || typeof noten !== 'object') return false;

@@ -26,6 +26,7 @@ export function Profil() {
   const geraetId = useGeraetId();
   const [name, setName] = useState('');
   const [nameMeldung, setNameMeldung] = useState('');
+  const [nameAendern, setNameAendern] = useState(false);
   const [info, setInfo] = useState<SyncInfo>({ zustand: 'bereit' });
   const [code, setCode] = useState('');
   const [codeMeldung, setCodeMeldung] = useState('');
@@ -44,6 +45,7 @@ export function Profil() {
     await setzeName(p.name);
     await schreibeEinstellung('nameFehler', '');
     setNameMeldung(t('Gespeichert: {name}', { name: p.name }));
+    setNameAendern(false);
     void synchronisiere();
   };
 
@@ -80,6 +82,17 @@ export function Profil() {
         <span aria-hidden="true" class="text-xl text-gold-300">→</span>
       </a>
       <div class="raster">
+        {gespeicherterName && !nameAendern ? (
+          <section class="karte seite" style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <small style={{ display: 'block', color: 'var(--text-2)' }}>{t('Dein Name')}</small>
+              <b style={{ fontSize: '17px' }}>{gespeicherterName}</b>
+            </span>
+            <button class="knopf" style={{ minHeight: '44px' }} onClick={() => setNameAendern(true)}>
+              {t('Ändern')}
+            </button>
+          </section>
+        ) : (
         <section class="karte seite" style={{ padding: '18px' }}>
           <h2 style={{ margin: 0 }}>{t('Dein Name · nötig zum Bewerten')}</h2>
           <p style={{ margin: '8px 0 0' }}>
@@ -106,6 +119,7 @@ export function Profil() {
           </div>
           {(nameMeldung || nameFehler) && <div class="meldung">{nameMeldung || t('Der Server hat den Namen abgelehnt: {grund}', { grund: t(nameFehler) })}</div>}
         </section>
+        )}
 
         <div class="nm" style={{ gridColumn: '1 / -1' }}>
           <PassAbzeichen />

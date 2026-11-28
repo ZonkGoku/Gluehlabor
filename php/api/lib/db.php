@@ -142,6 +142,12 @@ final class Db
         if (!$hatStimmung && $hatRueck) {
             $this->pdo->exec('ALTER TABLE rueckmeldungen ADD COLUMN stimmung INTEGER');
         }
+        $hatTags = $this->typ === 'mysql'
+            ? $this->eins("SELECT 1 AS x FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'becher' AND column_name = 'tags'")
+            : $this->eins("SELECT 1 AS x FROM pragma_table_info('becher') WHERE name = 'tags'");
+        if (!$hatTags) {
+            $this->pdo->exec('ALTER TABLE becher ADD COLUMN tags ' . ($this->typ === 'mysql' ? 'VARCHAR(255)' : 'TEXT'));
+        }
         $hatFahrzeug = $this->typ === 'mysql'
             ? $this->eins("SELECT 1 AS x FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'rennen_teilnehmer' AND column_name = 'fahrzeug'")
             : $this->eins("SELECT 1 AS x FROM pragma_table_info('rennen_teilnehmer') WHERE name = 'fahrzeug'");
@@ -181,7 +187,7 @@ final class Db
                seq $zahl NOT NULL, id $id PRIMARY KEY, geraet_id $id NOT NULL, name $text,
                pruefstelle INTEGER NOT NULL DEFAULT 0, besuch_id $text, stand $text NOT NULL, markt $text NOT NULL,
                stadt $text, saison INTEGER NOT NULL, datum $text, sorte $text, becher_nr INTEGER, preis $kommazahl, menge $kommazahl,
-               notiz $gross, geschmack INTEGER, geruch INTEGER, temperatur INTEGER, personal INTEGER,
+               notiz $gross, tags $text, geschmack INTEGER, geruch INTEGER, temperatur INTEGER, personal INTEGER,
                atmosphaere INTEGER, preis_leistung INTEGER, becher INTEGER,
                erstellt_am $zahl NOT NULL, eingegangen_am $zahl NOT NULL, versteckt INTEGER NOT NULL DEFAULT 0)$ende",
             'CREATE INDEX becher_seq ON becher(seq)',

@@ -3,6 +3,7 @@
 
 import { KRITERIEN, SORTEN, type Eintrag, type Noten } from './modell';
 import { istGueltigeNote } from './scoring';
+import { TAG_IDS } from './tags';
 
 export const GRENZEN = { stand: 80, markt: 80, stadt: 60, notiz: 500, name: 24, nameMin: 2 } as const;
 
@@ -93,6 +94,13 @@ export function pruefeEinreichung(x: unknown, jetzt: number): EinreichungPruefun
   const notiz = pruefeText(e.notiz, 'Notiz', GRENZEN.notiz, false);
   if (!notiz.ok) return notiz;
 
+  // Schnell-Tags: nur bekannte Ids, ohne Doppelte
+  let tags: string[] = [];
+  if (e.tags !== undefined && e.tags !== null) {
+    if (!Array.isArray(e.tags) || e.tags.length > TAG_IDS.length || e.tags.some((x) => typeof x !== 'string' || !TAG_IDS.includes(x))) return { ok: false, grund: 'Ungültiges Schlagwort.' };
+    tags = [...new Set(e.tags as string[])];
+  }
+
   const jahr = new Date(jetzt).getUTCFullYear();
   if (!Number.isInteger(e.saison) || (e.saison as number) < 2025 || (e.saison as number) > jahr + 1) {
     return { ok: false, grund: 'Ungültige Saison.' };
@@ -145,6 +153,7 @@ export function pruefeEinreichung(x: unknown, jetzt: number): EinreichungPruefun
   if (typeof e.preis === 'number') eintrag.preis = Math.round(e.preis * 100) / 100;
   if (typeof e.menge === 'number') eintrag.menge = Math.round(e.menge * 100) / 100;
   if (notiz.wert) eintrag.notiz = notiz.wert;
+  if (tags.length > 0) eintrag.tags = tags;
   if (typeof e.besuchId === 'string') eintrag.besuchId = e.besuchId;
   return { ok: true, eintrag };
 }

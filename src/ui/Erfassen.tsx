@@ -24,6 +24,7 @@ import { automatischeStadt } from '../daten/standort';
 import { GroesseIcon } from './nacht/GroesseIcon';
 import { haeufigsteSorte, ordneStaende, standPreisVorschlag } from '../lib/eingabehilfen';
 import { SORTE_KURZ, SorteIcon } from './nacht/SorteIcon';
+import { TAGS } from '../lib/tags';
 import { ANKER, MARKTLISTE, MARKT_ZUSATZ } from './stammdaten';
 import { euro, probeNr, sterneText } from '../lib/format';
 import { DEFAULT_GEWICHTE, KRITERIEN, leereNoten, SORTEN, type Eintrag, type Kriterium, type Sorte } from '../lib/modell';
@@ -275,6 +276,7 @@ export function Erfassen() {
     merkePreis(e.stadt, e.preis);
     if (e.menge !== undefined) eintrag.menge = e.menge;
     if (e.notiz.trim()) eintrag.notiz = e.notiz.trim();
+    if (e.tags && e.tags.length > 0) eintrag.tags = e.tags;
 
     await speichereNeuenEintrag(eintrag, foto ?? undefined, Boolean(foto) && fotoOeffentlich);
     // Ab hier ist der Becher sicher auf dem Gerät.
@@ -602,8 +604,20 @@ export function Erfassen() {
         </label>
       )}
 
-      <details class="mehr-angaben" open={Boolean(e.sorte || e.notiz.trim())}>
+      <details class="mehr-angaben" open={Boolean(e.notiz.trim() || e.tags?.length)}>
         <summary>{t('Mehr Angaben')}</summary>
+        <div class="tags" role="group" aria-label={t('Schlagwörter')}>
+          {TAGS.map((x) => (
+            <button
+              type="button"
+              aria-pressed={Boolean(e.tags?.includes(x.id))}
+              class={e.tags?.includes(x.id) ? 'an' : ''}
+              onClick={() => setE({ ...e, tags: e.tags?.includes(x.id) ? e.tags.filter((y) => y !== x.id) : [...(e.tags ?? []), x.id] })}
+            >
+              {t(x.label)}
+            </button>
+          ))}
+        </div>
         <input class="feld" type="text" placeholder={t('Notiz')} aria-label={t('Notiz')} enterkeyhint="done" value={e.notiz} onInput={(ev) => setE({ ...e, notiz: (ev.target as HTMLInputElement).value })} />
       </details>
 

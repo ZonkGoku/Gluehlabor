@@ -91,14 +91,16 @@ export function Vergleich() {
           </div>
         </section>
 
-        {listen.map((l) => (
-          <section class="karte">
-            <h2>
+        {listen.map((l, i) => (
+          <details class="karte" open={i === 0}>
+            <summary style={{ cursor: 'pointer', minHeight: '44px', display: 'flex', alignItems: 'center' }}>
+            <h2 style={{ margin: 0 }}>
               {t('Wo wart ihr noch nie?')} · {l.stadt}
               <span class="mono" style={{ fontWeight: 500, color: 'var(--text-2)', fontSize: '13px' }}>
-                {t('{a}/{b} erkundet', { a: l.besucht, b: l.checkliste.length })}
+                {' '}{t('{a}/{b} erkundet', { a: l.besucht, b: l.checkliste.length })}
               </span>
             </h2>
+            </summary>
             <div class="fortschritt">
               <span style={{ width: `${(l.besucht / l.checkliste.length) * 100}%` }} />
             </div>
@@ -110,12 +112,12 @@ export function Vergleich() {
                 </div>
               ))}
             </div>
-          </section>
+          </details>
         ))}
 
         {unentdeckt.length > 0 && (
-          <section class="karte">
-            <h2>{t('Noch unentdeckt')}</h2>
+          <details class="karte">
+            <summary style={{ cursor: 'pointer', minHeight: '44px', display: 'flex', alignItems: 'center' }}><h2 style={{ margin: 0 }}>{t('Noch unentdeckt')}</h2></summary>
             <p style={{ margin: '0 0 12px', color: 'var(--text-2)', fontSize: '14px' }}>
               {t('In diesen Städten kennt Glühlabor schon Märkte, aber noch ohne euren Becher.')}
             </p>
@@ -126,7 +128,7 @@ export function Vergleich() {
                 </span>
               ))}
             </div>
-          </section>
+          </details>
         )}
 
         <section class="karte">

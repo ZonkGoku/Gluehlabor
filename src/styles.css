@@ -736,3 +736,8 @@ select.feld {
 
 .sorten button small { font: 600 10px var(--mono); line-height: 1; color: var(--text-2); }
 .sorten button.an small { color: var(--text); }
+
+/* Schnell-Tags statt Notiz */
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.tags button { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 2px solid var(--nm-bedienung); background: transparent; color: var(--text-2); font: 600 13px var(--mono); cursor: pointer; }
+.tags button.an { border-color: var(--nm-stern); color: var(--text); box-shadow: 0 0 0 1px var(--nm-stern) inset; }

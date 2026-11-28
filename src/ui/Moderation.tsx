@@ -2,7 +2,8 @@
 import { useEffect, useState } from 'preact/hooks';
 import { HAT_SERVER } from '../daten/config';
 import { leseEinstellung } from '../daten/db';
-import { aendereStand, entferne, entzieheZugang, fehlerText, ladeMeldungen, loescheGeraet, sperreGeraet, verstecke, verwirfMeldung, type Meldung } from '../daten/moderation';
+import { fotoAdresse } from '../daten/fotos';
+import { aendereStand, entferne, entzieheZugang, fehlerText, ladeMeldungen, loescheGeraet, sperreGeraet, verstecke, versteckeFoto, verwirfMeldung, type Meldung } from '../daten/moderation';
 import { MELDEGRUENDE } from '../daten/sync';
 import { useEintraege, useGeraetId } from './daten';
 import { anzeigeName, istPruefstelle } from '../lib/community';
@@ -91,7 +92,7 @@ export function Moderation() {
   const gewichte = useGewichte();
   const [suche, setSuche] = useState('');
   const [gewaehlt, setGewaehlt] = useState<Set<string>>(new Set());
-  const [ansicht, setAnsicht] = useState<'staende' | 'doppelte' | 'meldungen' | 'bewertungen' | 'mehr'>('staende');
+  const [ansicht, setAnsicht] = useState<'staende' | 'doppelte' | 'meldungen' | 'fotos' | 'bewertungen' | 'mehr'>('staende');
   const dubletten = alle ? findeDubletten(baueStaende(alle, MARKTLISTE, gewichte)) : [];
 
   const lade = async () => {
@@ -151,6 +152,7 @@ export function Moderation() {
           ['staende', t('Stände'), null],
           ['doppelte', t('Doppelte'), dubletten.length],
           ['meldungen', t('Meldungen'), liste?.length ?? null],
+          ['fotos', t('Fotos'), alle ? alle.filter((x) => x.foto).length : null],
           ['bewertungen', t('Bewertungen'), alle?.length ?? null],
           ['mehr', t('Mehr'), null],
         ] as const).map(([id, label, n]) => (
@@ -169,6 +171,37 @@ export function Moderation() {
       </div>
 
       {ansicht === 'staende' && alle && <AdminStaende alle={alle} gewichte={gewichte} tu={tu} />}
+
+      {ansicht === 'fotos' && alle && (
+        <section aria-label={t('Fotos')}>
+          {alle.filter((x) => x.foto).length === 0 ? (
+            <p class="glas rounded-3xl p-5 text-dunst">{t('Noch keine Fotos der Community.')}</p>
+          ) : (
+            <ul class="m-0 grid list-none grid-cols-2 gap-3 p-0 sm:grid-cols-3">
+              {alle
+                .filter((x) => x.foto)
+                .sort((a, b) => b.erstelltAm - a.erstelltAm)
+                .map((x) => (
+                  <li class="glas overflow-hidden rounded-2xl">
+                    <a href={`#/becher/${encodeURIComponent(x.id)}`} class="block">
+                      <img src={fotoAdresse(x, true)} alt="" loading="lazy" decoding="async" class="aspect-square w-full object-cover" />
+                    </a>
+                    <div class="flex items-center justify-between gap-2 px-2.5 py-2">
+                      <span class="min-w-0 truncate text-[13px] text-dunst">{x.stand}</span>
+                      <button
+                        type="button"
+                        class="min-h-[44px] shrink-0 rounded-full px-3 text-[13px] font-semibold text-wein-400"
+                        onClick={() => void tu(async () => versteckeFoto(x.id, true), t('Foto ausgeblendet.'))}
+                      >
+                        {t('Ausblenden')}
+                      </button>
+                    </div>
+                  </li>
+                ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       {ansicht === 'meldungen' && (
         <>
