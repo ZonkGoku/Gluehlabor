@@ -1,6 +1,7 @@
 import { Detail } from './ui/Detail';
 import { Entdecken } from './ui/Entdecken';
 import { Aendern } from './ui/Aendern';
+import { Feedback } from './ui/Feedback';
 import { Fotos } from './ui/Fotos';
 import { MeineBewertungen } from './ui/MeineBewertungen';
 import { RennenSeite, SchlittenfahrenUebersicht } from './ui/Schlittenfahren';
@@ -38,6 +39,7 @@ export function App() {
   else if (route.startsWith('stand/')) seite = <StandSeite id={decodeURIComponent(route.slice(6))} />;
   else if (route === 'moderation') seite = <Moderation />;
   else if (route === 'mehr') seite = <Mehr />;
+  else if (route === 'feedback') seite = <Feedback />;
   else if (route === 'entdecken') seite = <Entdecken />;
   else if (route === 'meine') seite = <MeineBewertungen />;
   else if (route === 'fotos') seite = <Fotos />;

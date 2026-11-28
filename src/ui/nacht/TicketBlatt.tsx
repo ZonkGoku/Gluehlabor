@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { neueAbzeichen } from '../../lib/abzeichen';
 import { filtere, ranglisteMitWertung } from '../../lib/auswertung';
+import { baueStaende } from '../../lib/staende';
 import { ortText, stadtVon } from '../../lib/orte';
 import { useEintraege, useGewichte } from '../daten';
 import { MARKTLISTE } from '../stammdaten';
@@ -25,8 +26,12 @@ export function TicketBlatt({ id, onNaechster, onNochmal }: { id: string; onNaec
   if (!alle || !e) return null;
 
   const zeilen = ranglisteMitWertung(filtere(alle, { saison: e.saison, markt: 'alle' }), gewichte);
-  const zeile = zeilen.find((z) => z.eintrag.id === id);
-  if (!zeile) return null;
+  const zeile0 = zeilen.find((z) => z.eintrag.id === id);
+  if (!zeile0) return null;
+  // Der Platz gehört dem Stand (die Rangliste zählt Stände), nicht dieser einen Bewertung
+  const staendeSaison = baueStaende(filtere(alle, { saison: e.saison, markt: 'alle' }), MARKTLISTE, gewichte);
+  const standRang = staendeSaison.find((x) => x.bewertungen.some((b) => b.id === id))?.rang ?? null;
+  const zeile = { ...zeile0, rang: standRang };
   const ort = ortText(MARKTLISTE, e);
   const neu = neueAbzeichen(alle.filter((x) => x.geraet === e.geraet && x.sync !== 'bestand'), alle, MARKTLISTE, id, gewichte);
   const link = `${location.origin}${location.pathname}#/becher/${encodeURIComponent(id)}`;
@@ -93,7 +98,7 @@ export function TicketBlatt({ id, onNaechster, onNochmal }: { id: string; onNaec
         )}
 
         {fotoUrl && <img src={fotoUrl} alt={t('Dein Foto')} class="mb-4 max-h-64 w-full rounded-3xl border border-rand object-cover" />}
-        <TopKarte zeile={zeile} ort={ort} hinweis={zeile.rang ? t('Platz {r} von {n}', { r: zeile.rang, n: zeilen.length }) : undefined} ohneLink />
+        <TopKarte zeile={zeile} ort={ort} hinweis={zeile.rang ? t('Stand: Platz {r} von {n}', { r: zeile.rang, n: staendeSaison.length }) : undefined} ohneLink />
 
         <div class="mt-6 grid gap-3">
           <button

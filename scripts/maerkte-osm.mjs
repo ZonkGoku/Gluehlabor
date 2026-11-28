@@ -8,13 +8,17 @@ import { readFileSync, writeFileSync } from 'node:fs';
 const orte = JSON.parse(readFileSync(new URL('../data/orte.json', import.meta.url), 'utf8')).orte; // [name, lat, lon, land, einw/100]
 const ENDPUNKTE = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
 const NAME = '(weihnacht|christkind|christkindl|advent|wintermarkt|winterzauber|nikolaus|lichtermarkt|glühwein|gluehwein|striezel|weihnachtsdorf|christmas)';
-// Viele kleine Abfragen statt weniger großer: je Bundesland (und Österreich) und Tag-Art. Große Abfragen über ganz Deutschland laufen bei Overpass
-// gern in Zeitüberschreitungen (so scheiterte der erste Lauf). Jede Abfrage hat ein eigenes Zeitlimit; scheitert eine, laufen die anderen weiter.
+// Zuerst nur Bayern (Fokus von David & Philip): ein Rechteck um Bayern statt der Gebietssuche, das ist für Overpass viel billiger (die Gebietssuche
+// über ganze Länder lief im ersten Lauf in Zeitüberschreitungen). Treffer außerhalb Bayerns (z. B. Salzburg) bleiben drin, sie werden unten über
+// den nächsten Ort aus data/orte.json zugeordnet. Mit REGION=alle (Umgebungsvariable) läuft es für Deutschland und Österreich, je Bundesland.
+const REGION = process.env.REGION ?? 'bayern';
+const BAYERN = '47.2,8.9,50.6,13.9'; // Süd, West, Nord, Ost
 const GEBIETE = ['DE-BW', 'DE-BY', 'DE-BE', 'DE-BB', 'DE-HB', 'DE-HH', 'DE-HE', 'DE-MV', 'DE-NI', 'DE-NW', 'DE-RP', 'DE-SL', 'DE-SN', 'DE-ST', 'DE-SH', 'DE-TH', 'AT'];
 const FILTER = ['"amenity"="marketplace"', '"market"', '"event"', '"seasonal"="winter"', '"tourism"', '"leisure"'];
-const abfragen = GEBIETE.flatMap((g) =>
-  FILTER.map((f) => `[out:json][timeout:40];area["${g.includes('-') ? 'ISO3166-2' : 'ISO3166-1'}"="${g}"]->.a;nwr[${f}]["name"~"${NAME}",i](area.a);out center tags;`),
-);
+const abfragen =
+  REGION === 'alle'
+    ? GEBIETE.flatMap((g) => FILTER.map((f) => `[out:json][timeout:40];area["${g.includes('-') ? 'ISO3166-2' : 'ISO3166-1'}"="${g}"]->.a;nwr[${f}]["name"~"${NAME}",i](area.a);out center tags;`))
+    : FILTER.map((f) => `[out:json][timeout:60][bbox:${BAYERN}];nwr[${f}]["name"~"${NAME}",i];out center tags;`);
 
 // Gesamtbudget: nach 15 Minuten wird mit den bisherigen Treffern weitergemacht (der Workflow bricht nach 30 ab).
 const ENDE = Date.now() + 15 * 60 * 1000;
@@ -28,7 +32,7 @@ async function einzeln(abfrage) {
         method: 'POST',
         body: 'data=' + encodeURIComponent(abfrage),
         headers: { 'content-type': 'application/x-www-form-urlencoded', 'user-agent': 'gluehlabor-maerkte/1.0' },
-        signal: AbortSignal.timeout(55000),
+        signal: AbortSignal.timeout(75000),
       });
       const text = await r.text();
       if (!r.ok) throw new Error(`${url}: HTTP ${r.status} ${text.slice(0, 120).replace(/\s+/g, ' ')}`);

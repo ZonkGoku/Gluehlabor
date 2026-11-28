@@ -59,6 +59,7 @@ export function Mehr() {
         titel="Hilfe und Einstellungen"
         punkte={[
           { href: '#/spickzettel', symbol: 'spickzettel', titel: 'Hilfe & Regeln' },
+          { href: '#/feedback', symbol: 'kamera', titel: 'Was fehlt dir?', text: 'Sag uns, was unklar ist oder fehlt.' },
           { href: '#/einstellungen', symbol: 'einstellungen', titel: 'Einstellungen', text: 'Sprache, Hell oder Dunkel.' },
         ]}
       />

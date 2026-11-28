@@ -211,5 +211,37 @@
   "Bregenz": [
     47.5,
     9.75
+  ],
+  "Bad Reichenhall": [
+    47.73,
+    12.88
+  ],
+  "Berchtesgaden": [
+    47.63,
+    13
+  ],
+  "Freising": [
+    48.4,
+    11.75
+  ],
+  "Erding": [
+    48.31,
+    11.91
+  ],
+  "Wasserburg am Inn": [
+    48.05,
+    12.22
+  ],
+  "Bad Tölz": [
+    47.76,
+    11.56
+  ],
+  "Prien am Chiemsee": [
+    47.86,
+    12.35
+  ],
+  "Miesbach": [
+    47.79,
+    11.83
   ]
 }

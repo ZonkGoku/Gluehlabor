@@ -257,9 +257,11 @@ export function Uebersicht() {
 
         <FotoLeiste />
 
-        <div data-ein class="mt-6">
-          <RennenKarte />
-        </div>
+        {meineAnzahl > 0 && (
+          <div data-ein class="mt-6">
+            <RennenKarte />
+          </div>
+        )}
 
         <a
           data-ein

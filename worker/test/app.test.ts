@@ -616,6 +616,39 @@ describe('Browser-Ursprünge', () => {
   });
 });
 
+describe('Rückmeldungen', () => {
+  const sendeFeedback = (g: { auth: string }, body: Record<string, unknown>) => ruf('POST', '/api/feedback', { auth: g.auth, body });
+  const offen = async () => (await ruf('GET', '/api/admin/feedback', { auth: ADMIN })).json.rueckmeldungen as any[];
+
+  it('ohne Anmeldung: 401; die Liste ist nur für die Prüfstelle', async () => {
+    expect((await ruf('POST', '/api/feedback', { body: { text: 'Hallo' } })).status).toBe(401);
+    expect((await ruf('GET', '/api/admin/feedback')).status).toBe(401);
+  });
+
+  it('speichert Text und Seite, bereinigt, neueste zuerst', async () => {
+    const g = await geraet();
+    expect((await sendeFeedback(g, { text: '  Mir fehlt die Suche  ', seite: 'rangliste' })).status).toBe(200);
+    expect((await sendeFeedback(g, { text: 'Zweite Idee' })).status).toBe(200);
+    const l = await offen();
+    expect(l.map((x) => x.text)).toEqual(['Zweite Idee', 'Mir fehlt die Suche']);
+    expect(l[1]).toMatchObject({ seite: 'rangliste' });
+    expect(l[0].seite ?? null).toBeNull();
+  });
+
+  it.each([['kein Text', {}], ['Text kein Text', { text: 5 }], ['zu kurz', { text: ' a ' }]])('lehnt ab: %s', async (_n, body) => {
+    const g = await geraet();
+    expect((await sendeFeedback(g, body)).status).toBe(400);
+  });
+
+  it('kürzt auf 1000 Zeichen und begrenzt je Gerät und Tag auf 10', async () => {
+    const g = await geraet();
+    await sendeFeedback(g, { text: 'x'.repeat(5000) });
+    expect((await offen())[0].text).toHaveLength(1000);
+    for (let i = 0; i < 9; i++) expect((await sendeFeedback(g, { text: `Idee ${i} hier` })).status).toBe(200);
+    expect((await sendeFeedback(g, { text: 'Eine zu viel' })).status).toBe(429);
+  });
+});
+
 describe('Melden', () => {
   const melde = (g: { auth: string }, id: string, grund = 'spam', extra: Record<string, unknown> = {}) =>
     ruf('POST', '/api/melden', { auth: g.auth, body: { id, grund, ...extra } });

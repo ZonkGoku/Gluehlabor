@@ -4,6 +4,10 @@ name: Märkte aktualisieren
 # Manuell starten (Actions → Märkte aktualisieren → Run workflow), dann den Pull Request ansehen und mergen.
 on:
   workflow_dispatch:
+    inputs:
+      region:
+        description: 'bayern (Standard, schnell) oder alle (ganz Deutschland und Österreich, langsam)'
+        default: 'bayern'
 
 permissions:
   contents: write
@@ -21,6 +25,8 @@ jobs:
         with:
           node-version: 22
       - run: node scripts/maerkte-osm.mjs
+        env:
+          REGION: ${{ inputs.region || 'bayern' }}
       - name: Pull Request öffnen
         env:
           GH_TOKEN: ${{ github.token }}

@@ -128,6 +128,14 @@ final class Db
                 $this->pdo->exec($q);
             }
         }
+        $hatRueck = $this->typ === 'mysql'
+            ? $this->eins("SELECT 1 AS x FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'rueckmeldungen'")
+            : $this->eins("SELECT 1 AS x FROM sqlite_master WHERE type = 'table' AND name = 'rueckmeldungen'");
+        if (!$hatRueck) {
+            foreach ($this->rueckSchema() as $q) {
+                $this->pdo->exec($q);
+            }
+        }
         $hatFahrzeug = $this->typ === 'mysql'
             ? $this->eins("SELECT 1 AS x FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'rennen_teilnehmer' AND column_name = 'fahrzeug'")
             : $this->eins("SELECT 1 AS x FROM pragma_table_info('rennen_teilnehmer') WHERE name = 'fahrzeug'");
@@ -178,6 +186,7 @@ final class Db
             "INSERT INTO zaehler (name, wert) VALUES ('seq', 0)",
             ...$this->rennenSchema(),
             ...$this->fotosSchema(),
+            ...$this->rueckSchema(),
         ];
         foreach ($sql as $s) {
             $this->pdo->exec($s);
@@ -199,6 +208,22 @@ final class Db
             "CREATE TABLE rennen_teilnehmer (
                rennen_id $id NOT NULL, geraet_id $id NOT NULL, kamel $text NOT NULL, farbe INTEGER NOT NULL, seit $zahl NOT NULL, fahrzeug INTEGER NOT NULL DEFAULT 0,
                PRIMARY KEY (rennen_id, geraet_id))$ende",
+        ];
+    }
+
+    /** Tabelle der Rückmeldungen aus der App. @return list<string> */
+    private function rueckSchema(): array
+    {
+        $my = $this->typ === 'mysql';
+        $id = $my ? 'VARCHAR(64)' : 'TEXT';
+        $zahl = $my ? 'BIGINT' : 'INTEGER';
+        $auto = $my ? 'BIGINT AUTO_INCREMENT PRIMARY KEY' : 'INTEGER PRIMARY KEY AUTOINCREMENT';
+        $ende = $my ? ' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin' : '';
+        return [
+            "CREATE TABLE rueckmeldungen (
+               id $auto, geraet_id $id NOT NULL, text " . ($my ? 'TEXT' : 'TEXT') . " NOT NULL, seite " . ($my ? 'VARCHAR(64)' : 'TEXT') . ",
+               erstellt_am $zahl NOT NULL, bearbeitet INTEGER NOT NULL DEFAULT 0)$ende",
+            'CREATE INDEX rueckmeldungen_offen ON rueckmeldungen(bearbeitet, erstellt_am)',
         ];
     }
 

@@ -11,6 +11,7 @@ const LIMITS = [
     'becherJeGeraetUndTagPruefstelle' => 1000,
     'schreibzugriffeJeIpUndMinute' => 240,
     'meldungenJeGeraetUndTag' => 20,
+    'rueckmeldungenJeGeraetUndTag' => 10,
     'rennenJeGeraetUndTag' => 5,
     'maxTeilnehmerJeRennen' => 12,
     'maxBodyBytes' => 64000,
@@ -620,6 +621,25 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
         return new Antwort(200, ['ok' => true]);
     }
 
+    // ── Rückmeldung aus der App („Was fehlt dir?“) ──
+    if ($pfad === '/api/feedback' && $methode === 'POST') {
+        $g = anmelden($a, $db);
+        $b = lesen($a);
+        if (!is_string($b['text'] ?? null)) {
+            throw new HttpFehler(400, 'Bitte schreib uns ein paar Worte.');
+        }
+        $text = trim(mb_substr(saeubere($b['text']), 0, 1000, 'UTF-8'));
+        if (mb_strlen($text, 'UTF-8') < 3) {
+            throw new HttpFehler(400, 'Bitte schreib uns ein paar Worte.');
+        }
+        $seite = is_string($b['seite'] ?? null) ? (mb_substr(saeubere($b['seite']), 0, 60, 'UTF-8') ?: null) : null;
+        if (!begrenze($db, 'feedback:' . $g['id'], TAG_MS, LIMITS['rueckmeldungenJeGeraetUndTag'], $jetzt)) {
+            throw new HttpFehler(429, 'Heute schon viele Rückmeldungen. Bitte morgen wieder.');
+        }
+        $db->lauf('INSERT INTO rueckmeldungen (geraet_id, text, seite, erstellt_am) VALUES (?, ?, ?, ?)', [$g['id'], $text, $seite, $jetzt]);
+        return new Antwort(200, ['ok' => true]);
+    }
+
     // ── Schlittenfahren (Beta) ──
     if ($pfad === '/api/rennen' && $methode === 'POST') {
         $g = anmelden($a, $db);
@@ -739,6 +759,14 @@ function route(Anfrage $a, Db $db, array $env, string $pfad, string $methode, in
                 $z['versteckt'] = $z['versteckt'] === null ? null : (int) $z['versteckt'];
             }
             return new Antwort(200, ['meldungen' => $zeilen]);
+        }
+        if ($pfad === '/api/admin/feedback' && $methode === 'GET') {
+            $zeilen = $db->alle('SELECT id, text, seite, erstellt_am FROM rueckmeldungen WHERE bearbeitet = 0 ORDER BY erstellt_am DESC LIMIT 100');
+            foreach ($zeilen as &$z) {
+                $z['id'] = (int) $z['id'];
+                $z['erstellt_am'] = (int) $z['erstellt_am'];
+            }
+            return new Antwort(200, ['rueckmeldungen' => $zeilen]);
         }
         if ($methode !== 'POST') {
             throw new HttpFehler(404, 'Nicht gefunden.');

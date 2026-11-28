@@ -256,6 +256,90 @@
       "maerkte": [
         "Würzburger Weihnachtsmarkt"
       ]
+    },
+    {
+      "stadt": "Rosenheim",
+      "maerkte": [
+        "Christkindlmarkt Rosenheim"
+      ]
+    },
+    {
+      "stadt": "Traunstein",
+      "maerkte": [
+        "Christkindlmarkt Traunstein"
+      ]
+    },
+    {
+      "stadt": "Bad Reichenhall",
+      "maerkte": [
+        "Christkindlmarkt Bad Reichenhall"
+      ]
+    },
+    {
+      "stadt": "Berchtesgaden",
+      "maerkte": [
+        "Christkindlmarkt Berchtesgaden"
+      ]
+    },
+    {
+      "stadt": "Garmisch-Partenkirchen",
+      "maerkte": [
+        "Christkindlmarkt Garmisch-Partenkirchen"
+      ]
+    },
+    {
+      "stadt": "Passau",
+      "maerkte": [
+        "Christkindlmarkt Passau"
+      ]
+    },
+    {
+      "stadt": "Ingolstadt",
+      "maerkte": [
+        "Christkindlmarkt Ingolstadt"
+      ]
+    },
+    {
+      "stadt": "Landshut",
+      "maerkte": [
+        "Christkindlmarkt Landshut"
+      ]
+    },
+    {
+      "stadt": "Freising",
+      "maerkte": [
+        "Weihnachtsmarkt Freising"
+      ]
+    },
+    {
+      "stadt": "Erding",
+      "maerkte": [
+        "Christkindlmarkt Erding"
+      ]
+    },
+    {
+      "stadt": "Wasserburg am Inn",
+      "maerkte": [
+        "Christkindlmarkt Wasserburg"
+      ]
+    },
+    {
+      "stadt": "Bad Tölz",
+      "maerkte": [
+        "Christkindlmarkt Bad Tölz"
+      ]
+    },
+    {
+      "stadt": "Prien am Chiemsee",
+      "maerkte": [
+        "Christkindlmarkt Prien"
+      ]
+    },
+    {
+      "stadt": "Miesbach",
+      "maerkte": [
+        "Christkindlmarkt Miesbach"
+      ]
     }
   ]
 }

@@ -8,7 +8,8 @@ import { useLive } from './hooks';
 import { MELDEGRUENDE, meldeBecher } from '../daten/sync';
 import { ankerFuer } from '../lib/anker';
 import { anzeigeName, istPruefstelle } from '../lib/community';
-import { filtere, ranglisteMitWertung } from '../lib/auswertung';
+import { filtere } from '../lib/auswertung';
+import { baueStaende } from '../lib/staende';
 import { euro } from '../lib/format';
 import { KRITERIEN } from '../lib/modell';
 import { ortText, ortTeile } from '../lib/orte';
@@ -66,8 +67,9 @@ export function Detail({ id }: { id: string }) {
     );
 
   const w = bewerte(e.noten, gewichte);
-  const saisonZeilen = ranglisteMitWertung(filtere(alle, { saison: e.saison, markt: 'alle' }), gewichte);
-  const rang = saisonZeilen.find((z) => z.eintrag.id === e.id)?.rang;
+  // Platz = Platz des Stands in der Rangliste (die Liste zählt Stände), nicht der Rang dieser einen Bewertung
+  const staendeSaison = baueStaende(filtere(alle, { saison: e.saison, markt: 'alle' }), MARKTLISTE, gewichte);
+  const rang = staendeSaison.find((s) => s.bewertungen.some((b) => b.id === e.id))?.rang ?? undefined;
   const meta = [
     ...ortTeile(MARKTLISTE, e),
     t('von {name}', { name: istPruefstelle(e) ? 'David & Philip' : anzeigeName(e) }),
@@ -88,7 +90,7 @@ export function Detail({ id }: { id: string }) {
         <TopKarte
           zeile={{ rang: rang ?? null, eintrag: e, wertung: w }}
           ort={ortText(MARKTLISTE, e)}
-          hinweis={rang ? t('Platz {r} von {n}', { r: rang, n: saisonZeilen.length }) : undefined}
+          hinweis={rang ? t('Stand: Platz {r} von {n}', { r: rang, n: staendeSaison.length }) : undefined}
           ohneLink
         />
         <section class="karte">

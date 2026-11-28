@@ -30,6 +30,7 @@ const LIMITS = {
   becherJeGeraetUndTagPruefstelle: 1000,
   schreibzugriffeJeIpUndMinute: 240,
   meldungenJeGeraetUndTag: 20,
+  rueckmeldungenJeGeraetUndTag: 10,
   rennenJeGeraetUndTag: 5,
   maxTeilnehmerJeRennen: 12,
   maxBodyBytes: 64_000,
@@ -560,6 +561,21 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
     return json({ ok: true }, 200);
   }
 
+  // ── Rückmeldung aus der App („Was fehlt dir?“) ──
+  if (pfad === '/api/feedback' && methode === 'POST') {
+    const g = await anmelden(request, db);
+    const b = await lesen(request);
+    if (typeof b.text !== 'string') throw new HttpFehler(400, 'Bitte schreib uns ein paar Worte.');
+    const text = [...saeubere(b.text)].slice(0, 1000).join('').trim();
+    if ([...text].length < 3) throw new HttpFehler(400, 'Bitte schreib uns ein paar Worte.');
+    const seite = typeof b.seite === 'string' ? [...saeubere(b.seite)].slice(0, 60).join('') || null : null;
+    if (!(await begrenze(db, `feedback:${g.id}`, TAG, LIMITS.rueckmeldungenJeGeraetUndTag, jetzt))) {
+      throw new HttpFehler(429, 'Heute schon viele Rückmeldungen. Bitte morgen wieder.');
+    }
+    await db.prepare('INSERT INTO rueckmeldungen (geraet_id, text, seite, erstellt_am) VALUES (?, ?, ?, ?)').bind(g.id, text, seite, jetzt).run();
+    return json({ ok: true }, 200);
+  }
+
   // ── Schlittenfahren (Beta) ──
   if (pfad === '/api/rennen' && methode === 'POST') {
     const g = await anmelden(request, db);
@@ -639,6 +655,11 @@ async function route(request: Request, env: Env, pfad: string, methode: string, 
         )
         .all();
       return json({ meldungen: results }, 200);
+    }
+
+    if (pfad === '/api/admin/feedback' && methode === 'GET') {
+      const { results } = await db.prepare('SELECT id, text, seite, erstellt_am FROM rueckmeldungen WHERE bearbeitet = 0 ORDER BY erstellt_am DESC LIMIT 100').all();
+      return json({ rueckmeldungen: results }, 200);
     }
 
     const b = await lesen(request);
