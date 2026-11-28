@@ -22,6 +22,7 @@ import { useEintraege, useGeraetId, useGewichte } from './daten';
 import { ANKER, MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
 import { SorteIcon } from './nacht/SorteIcon';
+import { KopfIcon } from './nacht/KopfIcon';
 import { tagLabel } from '../lib/tags';
 import { SterneZeile } from './nacht/SterneWert';
 import { t, kriteriumLabel, aktuelleSprache } from '../i18n';
@@ -95,7 +96,10 @@ export function Detail({ id }: { id: string }) {
           ohneLink
         />
         <section class="karte">
-          <h2>{t('Protokoll')}</h2>
+          <h2>
+            <KopfIcon name="spickzettel" />
+            {t('Protokoll')}
+          </h2>
           <div class="metaliste">
             {istPruefstelle(e) && <span class="chip-klein gold">{t('Prüfstelle')}</span>}
             {e.sorte && (
@@ -251,7 +255,10 @@ export function Detail({ id }: { id: string }) {
       </div>
 
       <section class="karte" style={{ marginTop: '14px' }}>
-        <h2>{t('Die sieben Kriterien')}</h2>
+        <h2>
+            <KopfIcon name="stern" />
+            {t('Die sieben Kriterien')}
+          </h2>
         <ul class="m-0 grid list-none gap-3 p-0">
           {KRITERIEN.map((k) => {
             const n = e.noten[k];

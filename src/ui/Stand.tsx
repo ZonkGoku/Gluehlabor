@@ -24,6 +24,7 @@ import { Netzdiagramm, NotenBalken, type Reihe } from './Netzdiagramm';
 import { SiegelEtikett } from './nacht/PruefSiegel';
 import { ANKER, MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
+import { KopfIcon } from './nacht/KopfIcon';
 import { URTEILE } from '../lib/auswertung';
 import { kriteriumLabel, t } from '../i18n';
 
@@ -101,11 +102,11 @@ export function StandSeite({ id }: { id: string }) {
         <div class="grid content-start gap-3">
           <div class="grid grid-cols-2 gap-3">
             <Kachel innen="p-4">
-              <p class="etikett">{t('Prüfstelle · David & Philip')}</p>
+              <p class="etikett"><KopfIcon name="siegel" />{t('Prüfstelle · David & Philip')}</p>
               <p class="mt-2">{s.pruefstelle.anzahl === 0 ? <span class="text-sm text-dunst">{t('noch nicht bewertet')}</span> : <SterneGross wert={s.pruefstelle.gesamt} anzahl={s.pruefstelle.anzahl} />}</p>
             </Kachel>
             <Kachel innen="p-4">
-              <p class="etikett">{t('Community')}</p>
+              <p class="etikett"><KopfIcon name="leute" />{t('Community')}</p>
               <p class="mt-2">{s.community.anzahl === 0 ? <span class="text-sm text-dunst">{t('noch nicht bewertet')}</span> : <SterneGross wert={s.community.gesamt} anzahl={s.community.anzahl} />}</p>
             </Kachel>
           </div>
@@ -113,6 +114,7 @@ export function StandSeite({ id }: { id: string }) {
             <div class="flex items-start justify-between gap-3">
               <div>
                 <p class="etikett">
+                  <KopfIcon name="euro" />
                   {t('Preis-Leistung')}{' '}
                   <HilfePunkt text={t('Glühwein-Sterne, minus ¼ Stern je Euro über dem üblichen Preis.')} />
                 </p>
@@ -199,7 +201,9 @@ export function StandSeite({ id }: { id: string }) {
         })()}
       </Kachel>
 
-      <h2 class="etikett mt-6 !text-[11px]">{t('Alle Bewertungen')} · {s.bewertungen.length}</h2>
+      <h2 class="etikett mt-6 !text-[11px]">
+        <KopfIcon name="rangliste" />
+        {t('Alle Bewertungen')} · {s.bewertungen.length}</h2>
       <ul class="mt-2 grid gap-2 md:grid-cols-2">
         {s.bewertungen.map((e) => {
           const w = bewerte(e.noten, gewichte);

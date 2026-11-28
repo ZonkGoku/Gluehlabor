@@ -221,6 +221,8 @@ Vorschläge sind **sichtbar markiert, nie stillschweigend gespeichert** (`lib/ei
 - **Schnell-Tags statt Notiz** (`lib/tags.ts`: Würzig, Zu süß, Stark, Wässrig, Schön heiß, Nur lauwarm, Nettes Personal, Viel los; unter „Mehr Angaben“ über der Notiz): Feld `tags` an der Bewertung (Komma-Liste in Spalte `tags`, Migration `0010_tags.sql`, PHP rüstet nach; Prüfung in `community.ts` UND `regeln.php`, `TAG_IDS` müssen gleich sein; unbekannte Ids lehnt der Server ab; bleiben bei „Ändern“ erhalten, die Änderungsseite bietet sie nicht an). Im Detail als Chips. Tests „Schnell-Tags“.
 - **Sieger-Chronik** auf der Rennen-Seite: beendete Rennen stehen getrennt mit Sieger (Fahrzeug, Figur, Name). **Foto-Übersicht in der Moderation** (Reiter „Fotos“: Raster mit „Ausblenden“). **Ich-Seite:** der Name ist eine Zeile mit „Ändern“, sobald er gesetzt ist. **Vergleich:** Städte-Karten eingeklappt (nur die erste offen), „Noch unentdeckt“ eingeklappt.
 
+- **Kleine Symbole in Panels und Überschriften** (`ui/nacht/KopfIcon.tsx`, Wunsch von Philip „damit man besser sieht, wo man ist“): Erfassen (Stand: Pin, Preis: Euro, Sterne: Stern, Mehr Angaben: Tag), Kacheln auf „Entdecken“ (`Kachel icon=…`: Karte, Top Deals, Preise, Saisonverlauf), Stand-Seite (Prüfstelle: Siegel, Community: Leute, Preis-Leistung: Euro), Startseite (Bisher bewertet, Die Besten, Gerade bewertet, Fotos), Meine Bewertungen, Abzeichen/Stempel, Detail (Protokoll, Kriterien), Rennen, Ich. Neue Symbole in `Symbol.tsx`: `euro`, `stern`, `tag`, `leute`, `siegel`. Bei neuen Panels gleich ein Symbol vor den Titel setzen.
+
 ## Scoring-Regeln (verbindlich, siehe Tests in src/lib/scoring.test.ts)
 
 - Noten: Ganzzahl 1..10 oder `null`. **`null` fällt aus Zähler UND Nenner, zählt nie als 0.**

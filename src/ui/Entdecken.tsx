@@ -51,11 +51,11 @@ export function Entdecken() {
         <Kennzahl wert={k.staedte} label={k.staedte === 1 ? t('Stadt') : t('Städte')} />
         <Kennzahl wert={k.bewertungen} label={t('Bewertungen')} />
 
-        <Kachel titel={t('Wo ihr wart')} link={{ href: '#/vergleich', text: t('Alle Märkte') }} klasse="col-span-2">
+        <Kachel icon="pin" titel={t('Wo ihr wart')} link={{ href: '#/vergleich', text: t('Alle Märkte') }} klasse="col-span-2">
           <Deutschlandkarte staedte={orte} />
         </Kachel>
 
-        <Kachel titel={t('Top Deals')} link={{ href: '#/rangliste?deals=1', text: t('Alle Deals') }} klasse="col-span-2" innen="p-3">
+        <Kachel icon="flamme" titel={t('Top Deals')} link={{ href: '#/rangliste?deals=1', text: t('Alle Deals') }} klasse="col-span-2" innen="p-3">
           {topDeals.length === 0 ? (
             <p class="px-1 py-2 text-sm text-dunst">{t('Sobald Preise gemeldet sind, erscheinen hier die besten Deals.')}</p>
           ) : (
@@ -69,7 +69,7 @@ export function Entdecken() {
           )}
         </Kachel>
 
-        <Kachel titel={t('Glühwein-Preise')} klasse="col-span-2 md:col-span-4">
+        <Kachel icon="euro" titel={t('Glühwein-Preise')} klasse="col-span-2 md:col-span-4">
           {preise.zeilen.length === 0 ? (
             <p class="text-sm text-dunst">
               {preise.meldungen === 0
@@ -98,7 +98,7 @@ export function Entdecken() {
         </Kachel>
 
         {verlauf && (
-          <Kachel titel={t('Saisonverlauf · Bewertungen je Abend')} klasse="col-span-2 md:col-span-4">
+          <Kachel icon="statistik" titel={t('Saisonverlauf · Bewertungen je Abend')} klasse="col-span-2 md:col-span-4">
             <Saisonverlauf verlauf={verlauf} saison={saison as number} />
           </Kachel>
         )}

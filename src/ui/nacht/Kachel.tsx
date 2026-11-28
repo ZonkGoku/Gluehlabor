@@ -1,8 +1,11 @@
 // Bento-Kachel aus Milchglas.
 import type { ComponentChildren } from 'preact';
+import { KopfIcon } from './KopfIcon';
 
 interface KachelProps {
   titel?: string;
+  /** Symbol vor dem Titel (ui/Symbol.tsx) */
+  icon?: string;
   /** Kleiner Link rechts neben dem Titel. */
   link?: { href: string; text: string };
   /** Grid-Klassen (col-span, row-span …). */
@@ -11,12 +14,15 @@ interface KachelProps {
   innen?: string;
 }
 
-export function Kachel({ titel, link, klasse = '', innen = 'p-4', children }: KachelProps) {
+export function Kachel({ titel, icon, link, klasse = '', innen = 'p-4', children }: KachelProps) {
   return (
     <section data-ein class={`glas rounded-3xl ${innen} ${klasse}`}>
       {titel && (
         <header class="mb-3 flex items-baseline justify-between gap-3">
-          <h2 class="etikett !text-[11px] !font-medium">{titel}</h2>
+          <h2 class="etikett !text-[11px] !font-medium">
+            {icon && <KopfIcon name={icon} />}
+            {titel}
+          </h2>
           {link && (
             <a href={link.href} class="-my-3 inline-block py-3 text-sm font-medium text-gold-300 no-underline hover:text-gold-400">
               {link.text}

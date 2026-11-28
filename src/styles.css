@@ -739,3 +739,6 @@ select.feld {
 .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
 .tags button { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 2px solid var(--nm-bedienung); background: transparent; color: var(--text-2); font: 600 13px var(--mono); cursor: pointer; }
 .tags button.an { border-color: var(--nm-stern); color: var(--text); box-shadow: 0 0 0 1px var(--nm-stern) inset; }
+
+/* Kleine Symbole vor Panel-Titeln */
+.kopf-icon { display: inline-flex; color: var(--nm-stern, #f5b50a); margin-right: 7px; vertical-align: -3px; }

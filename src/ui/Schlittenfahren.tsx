@@ -24,6 +24,7 @@ import { Qr } from './Qr';
 import { teileRennenBild } from './nacht/rennenBild';
 import { Konfetti, lageText, Rennbahn, Siegerpodest, farbeVon } from './schlitten/Bahn';
 import { AvatarBild, FahrzeugBild } from './schlitten/FahrzeugBild';
+import { KopfIcon } from './nacht/KopfIcon';
 import { AVATARE } from '../lib/avatare';
 import { zufallsname } from '../lib/zufallsname';
 import { FAHRZEUGE } from '../lib/fahrzeuge';
@@ -277,7 +278,10 @@ export function SchlittenfahrenUebersicht() {
         <NeuesRennen onZu={() => setOptionen(false)} />
       ) : (
         <section class="glas grid gap-4 rounded-3xl p-4" aria-label={t('Dein Schlitten')}>
-          <p class="m-0 text-[17px] font-semibold text-eis">{t('Such dir deinen Schlitten aus')}</p>
+          <p class="m-0 text-[17px] font-semibold text-eis">
+            <KopfIcon name="ziel" groesse={18} />
+            {t('Such dir deinen Schlitten aus')}
+          </p>
           <KamelWahl name={k.name} farbe={k.farbe} fahrzeug={k.fahrzeug} avatar={k.avatar} onName={k.setName} onFarbe={k.setFarbe} onFahrzeug={k.setFahrzeug} onAvatar={k.setAvatar} />
           <button type="button" class={knopf} style={KNOPF_STIL} disabled={!HAT_SERVER || startet || k.name.trim().length < 2} onClick={() => void losgehts()}>
             {t('Rennen mit Freunden starten')}

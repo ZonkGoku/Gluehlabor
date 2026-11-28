@@ -2,6 +2,7 @@
 import { fotoAdresse } from '../daten/fotos';
 import { t, tn } from '../i18n';
 import { Betreiber } from './bausteine';
+import { KopfIcon } from './nacht/KopfIcon';
 import { useEintraege } from './daten';
 import type { LokalerEintrag } from '../daten/db';
 
@@ -16,7 +17,10 @@ export function FotoLeiste() {
   return (
     <section data-ein class="mt-6" aria-label={t('Fotos aus der Community')}>
       <div class="mb-3 flex items-baseline justify-between gap-3">
-        <h2 class="m-0 font-display text-[28px] uppercase leading-none tracking-wide text-eis">{t('Fotos')}</h2>
+        <h2 class="m-0 font-display text-[28px] uppercase leading-none tracking-wide text-eis">
+          <KopfIcon name="kamera" groesse={22} />
+          {t('Fotos')}
+        </h2>
         <a href="#/fotos" class="min-h-[44px] py-3 text-sm font-semibold text-gold-300 no-underline">
           {t('Alle {n} Fotos', { n: fotos.length })} →
         </a>

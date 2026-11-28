@@ -23,6 +23,7 @@ import { StandZeile } from './nacht/StandKarten';
 import { baueStaende } from '../lib/staende';
 import { MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
+import { KopfIcon } from './nacht/KopfIcon';
 import { t } from '../i18n';
 
 /** Ohne Namen bleiben Bewertungen auf dem Gerät: Die Frage kommt, wenn noch kein Name da ist. */
@@ -195,7 +196,10 @@ export function Uebersicht() {
         </div>
         <section data-ein aria-label={t('Die Besten')}>
           <div class="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-            <h2 class="font-display text-[28px] uppercase leading-none tracking-wide text-eis">{t('Die Besten in')}</h2>
+            <h2 class="font-display text-[28px] uppercase leading-none tracking-wide text-eis">
+              <KopfIcon name="pokal" groesse={22} />
+              {t('Die Besten in')}
+            </h2>
             <label class="relative">
               <span class="sr-only">{t('Stadt')}</span>
               <select class={AUSWAHL} value={stadt} onChange={(ev) => waehleStadt((ev.target as HTMLSelectElement).value)}>
@@ -232,7 +236,10 @@ export function Uebersicht() {
 
         {neueste.length > 0 && (
           <section data-ein class="mt-6" aria-label={t('Gerade bewertet')}>
-            <h2 class="mb-3 font-display text-[28px] uppercase leading-none tracking-wide text-eis">{t('Gerade bewertet')}</h2>
+            <h2 class="mb-3 font-display text-[28px] uppercase leading-none tracking-wide text-eis">
+              <KopfIcon name="uhr" groesse={22} />
+              {t('Gerade bewertet')}
+            </h2>
             <ul class="space-y-2">
               {neueste.map((e) => (
                 <li>

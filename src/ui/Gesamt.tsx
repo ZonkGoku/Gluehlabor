@@ -2,6 +2,7 @@
 import { gesamtZahlen } from '../lib/startseite';
 import { useEintraege } from './daten';
 import { MARKTLISTE } from './stammdaten';
+import { KopfIcon } from './nacht/KopfIcon';
 import { t } from '../i18n';
 
 export function Gesamt() {
@@ -16,7 +17,10 @@ export function Gesamt() {
   ];
   return (
     <section aria-label={t('Bisher bewertet')} class="mb-5">
-      <p class="etikett mb-2 !text-gold-300">{t('Bisher bewertet')}</p>
+      <p class="etikett mb-2 !text-gold-300">
+        <KopfIcon name="statistik" />
+        {t('Bisher bewertet')}
+      </p>
       <ul class="grid grid-cols-4 gap-2">
         {felder.map(([n, name, href]) => (
           <li>

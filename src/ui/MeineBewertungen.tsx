@@ -9,6 +9,7 @@ import { Betreiber, datumKurz } from './bausteine';
 import { useEintraege, useGeraetId, useGewichte } from './daten';
 import { SterneZeile } from './nacht/SterneWert';
 import { MARKTLISTE } from './stammdaten';
+import { KopfIcon } from './nacht/KopfIcon';
 
 export function MeineBewertungen() {
   const alle = useEintraege();
@@ -44,7 +45,9 @@ export function MeineBewertungen() {
       ) : (
         <>
           <section aria-label={t('Meine Rangliste')}>
-            <h2 class="mb-3 font-display text-[26px] uppercase leading-none tracking-wide text-eis">{t('Meine Rangliste')}</h2>
+            <h2 class="mb-3 font-display text-[26px] uppercase leading-none tracking-wide text-eis"><KopfIcon name="pokal" groesse={22} />
+              {t('Meine Rangliste')}
+            </h2>
             <ol class="m-0 grid list-none gap-2 p-0">
               {favoriten.map((f, i) => (
                 <li>
@@ -62,7 +65,9 @@ export function MeineBewertungen() {
           </section>
 
           <section class="mt-6" aria-label={t('Alle meine Bewertungen')}>
-            <h2 class="mb-3 font-display text-[26px] uppercase leading-none tracking-wide text-eis">{t('Alle meine Bewertungen')}</h2>
+            <h2 class="mb-3 font-display text-[26px] uppercase leading-none tracking-wide text-eis"><KopfIcon name="rangliste" groesse={22} />
+              {t('Alle meine Bewertungen')}
+            </h2>
             <ul class="m-0 grid list-none gap-2 p-0">
               {meine.map((e) => (
                 <li class="glas grid gap-2 rounded-2xl p-3">

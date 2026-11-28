@@ -3,6 +3,7 @@ import { berechneAbzeichen, passStempel, stufeFuer, type Abzeichen } from '../li
 import { useEintraege, useGeraetId, useGewichte } from './daten';
 import { MARKTLISTE } from './stammdaten';
 import { Symbol } from './Symbol';
+import { KopfIcon } from './nacht/KopfIcon';
 import { t, tn } from '../i18n';
 
 export function AbzeichenKachel({ a }: { a: Abzeichen }) {
@@ -77,6 +78,7 @@ export function PassAbzeichen() {
       {/* Wer noch nichts erreicht hat, sieht erst nur die Überschrift: die zehn leeren Kacheln machen die Seite lang und sagen einem Neuling nichts. */}
       <details class="abzeichen" open={erreicht > 0}>
         <summary class="mb-3 flex min-h-[44px] cursor-pointer list-none items-center gap-2 font-display text-[26px] uppercase leading-none tracking-wide text-eis">
+          <KopfIcon name="siegel" groesse={22} />
           {t('Abzeichen')} <span class="font-mono text-base text-dunst">{erreicht}/{abzeichen.length}</span>
           <span class="text-base text-dunst" aria-hidden="true">▾</span>
         </summary>
@@ -89,7 +91,9 @@ export function PassAbzeichen() {
 
       {stempel.length > 0 && (
         <div>
-          <h2 class="mb-3 font-display text-[26px] uppercase leading-none tracking-wide text-eis">{t('Stempel')}</h2>
+          <h2 class="mb-3 font-display text-[26px] uppercase leading-none tracking-wide text-eis"><KopfIcon name="pin" groesse={22} />
+            {t('Stempel')}
+          </h2>
           <ul class="m-0 flex list-none flex-wrap gap-2 p-0">
             {stempel.map((s) => (
               <li class="inline-flex min-h-[44px] items-center gap-2 rounded-full border-2 border-[var(--nm-stern)] px-4 text-eis">

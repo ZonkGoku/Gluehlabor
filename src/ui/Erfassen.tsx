@@ -38,6 +38,7 @@ import { Sterne } from './nacht/SterneWert';
 import { TicketBlatt } from './nacht/TicketBlatt';
 import { OrtBlatt } from './nacht/OrtBlatt';
 import { Symbol } from './Symbol';
+import { KopfIcon } from './nacht/KopfIcon';
 import { leseLetzterPreis, leseZuletzt, merkeOrt, merkePreis } from '../daten/zuletzt';
 import { aktuelleSprache, t, tn, kriteriumLabel } from '../i18n';
 
@@ -462,6 +463,9 @@ export function Erfassen() {
       ) : (
       <>
       <div class="besuch-zeile">
+        <span class="kopf-icon" aria-hidden="true" style={{ marginRight: '12px' }}>
+          <Symbol name="pin" groesse={22} />
+        </span>
         <div class="besuch-text">
           <b>{e.stand}</b>
           <span>{[e.markt !== MARKTLISTE.sonstiger ? e.markt : null, e.stadt].filter(Boolean).join(' · ')}</span>
@@ -474,6 +478,7 @@ export function Erfassen() {
       <section class={`preis-block${e.preis === undefined ? ' leer' : ' gesetzt'}${preisFehlt && e.preis === undefined ? ' fehlt' : ''}`} aria-label={t('Preis')}>
         <div class="preis-kopf">
           <span class="preis-titel">
+            <KopfIcon name="euro" />
             {t('Preis der Tasse')} <b>{t('Pflicht')}</b> <small class="ohne-pfand">{t('ohne Pfand')}</small>
           </span>
           <div class="groessen" role="radiogroup" aria-label={t('Größe der Tasse')}>
@@ -562,6 +567,7 @@ export function Erfassen() {
 
       <section class="noten" aria-label={t('Sterne')}>
         <p class="noten-kopf">
+          <KopfIcon name="stern" />
           {t('Sterne')} <span>{bewertet}/{ALLE_STERNE}</span>
         </p>
         {KRITERIEN.map((k) => (
@@ -604,7 +610,10 @@ export function Erfassen() {
       )}
 
       <details class="mehr-angaben" open={Boolean(e.notiz.trim() || e.tags?.length)}>
-        <summary>{t('Mehr Angaben')}</summary>
+        <summary>
+          <KopfIcon name="tag" />
+          {t('Mehr Angaben')}
+        </summary>
         <div class="tags" role="group" aria-label={t('Schlagwörter')}>
           {TAGS.map((x) => (
             <button

@@ -7,6 +7,7 @@ import { abonniereSync, synchronisiere, type SyncInfo } from '../daten/sync';
 import { GRENZEN, pruefeName } from '../lib/community';
 import { Betreiber } from './bausteine';
 import { Gruppe } from './MenueListe';
+import { KopfIcon } from './nacht/KopfIcon';
 import { PassAbzeichen, PassKopf } from './Pass';
 import { useGeraetId, useName } from './daten';
 import { useLive } from './hooks';
@@ -94,7 +95,10 @@ export function Profil() {
           </section>
         ) : (
         <section class="karte seite" style={{ padding: '18px' }}>
-          <h2 style={{ margin: 0 }}>{t('Dein Name · nötig zum Bewerten')}</h2>
+          <h2 style={{ margin: 0 }}>
+            <KopfIcon name="profil" />
+            {t('Dein Name · nötig zum Bewerten')}
+          </h2>
           <p style={{ margin: '8px 0 0' }}>
             {t('Öffentlich sichtbar neben deinen Bewertungen.')}
           </p>
