@@ -6,16 +6,17 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const orte = JSON.parse(readFileSync(new URL('../data/orte.json', import.meta.url), 'utf8')).orte; // [name, lat, lon, land, einw/100]
-const ENDPUNKTE = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+const ENDPUNKTE = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
 const NAME = '(weihnacht|christkind|christkindl|advent|wintermarkt|winterzauber|nikolaus|lichtermarkt|glühwein|gluehwein|striezel|weihnachtsdorf|christmas)';
-// Mehrere kleine Abfragen statt einer großen (Overpass bricht große Namenssuchen über ganz Deutschland gern ab).
-// Jede Abfrage hat ein eigenes Zeitlimit; scheitert eine, laufen die anderen weiter.
-const FILTER = ['"amenity"="marketplace"', '"market"', '"event"', '"seasonal"="winter"', '"tourism"', '"leisure"', '"amenity"="events_venue"', '"amenity"="festival_grounds"'];
-const abfragen = ['DE', 'AT'].flatMap((land) =>
-  FILTER.map((f) => `[out:json][timeout:50];area["ISO3166-1"="${land}"]->.a;nwr[${f}]["name"~"${NAME}",i](area.a);out center tags;`),
+// Viele kleine Abfragen statt weniger großer: je Bundesland (und Österreich) und Tag-Art. Große Abfragen über ganz Deutschland laufen bei Overpass
+// gern in Zeitüberschreitungen (so scheiterte der erste Lauf). Jede Abfrage hat ein eigenes Zeitlimit; scheitert eine, laufen die anderen weiter.
+const GEBIETE = ['DE-BW', 'DE-BY', 'DE-BE', 'DE-BB', 'DE-HB', 'DE-HH', 'DE-HE', 'DE-MV', 'DE-NI', 'DE-NW', 'DE-RP', 'DE-SL', 'DE-SN', 'DE-ST', 'DE-SH', 'DE-TH', 'AT'];
+const FILTER = ['"amenity"="marketplace"', '"market"', '"event"', '"seasonal"="winter"', '"tourism"', '"leisure"'];
+const abfragen = GEBIETE.flatMap((g) =>
+  FILTER.map((f) => `[out:json][timeout:40];area["${g.includes('-') ? 'ISO3166-2' : 'ISO3166-1'}"="${g}"]->.a;nwr[${f}]["name"~"${NAME}",i](area.a);out center tags;`),
 );
 
-// Gesamtbudget: nach 15 Minuten wird mit den bisherigen Treffern weitergemacht (der Workflow bricht nach 25 ab, das war vorher der Fehler).
+// Gesamtbudget: nach 15 Minuten wird mit den bisherigen Treffern weitergemacht (der Workflow bricht nach 30 ab).
 const ENDE = Date.now() + 15 * 60 * 1000;
 
 async function einzeln(abfrage) {
@@ -27,7 +28,7 @@ async function einzeln(abfrage) {
         method: 'POST',
         body: 'data=' + encodeURIComponent(abfrage),
         headers: { 'content-type': 'application/x-www-form-urlencoded', 'user-agent': 'gluehlabor-maerkte/1.0' },
-        signal: AbortSignal.timeout(65000),
+        signal: AbortSignal.timeout(55000),
       });
       const text = await r.text();
       if (!r.ok) throw new Error(`${url}: HTTP ${r.status} ${text.slice(0, 120).replace(/\s+/g, ' ')}`);
@@ -56,8 +57,9 @@ async function hole() {
     } catch {
       console.error(`Abfrage ${i + 1}/${abfragen.length} übersprungen`);
     }
-    await new Promise((res) => setTimeout(res, 2000));
+    await new Promise((res) => setTimeout(res, 1000));
   }
+  console.log(`${ok} von ${abfragen.length} Abfragen beantwortet, ${elements.length} Treffer.`);
   if (ok === 0) throw new Error('Keine einzige Overpass-Abfrage hat geantwortet.');
   return { elements };
 }
@@ -109,6 +111,14 @@ for (const el of daten.elements ?? []) {
 const staedte = {};
 for (const [stadt, m] of [...je].sort((a, b) => a[0].localeCompare(b[0], 'de'))) staedte[stadt] = [...m.values()].sort((a, b) => a.localeCompare(b, 'de'));
 const anzahl = Object.values(staedte).reduce((n, l) => n + l.length, 0);
-if (anzahl < 200) throw new Error(`Nur ${anzahl} Märkte gefunden, das sieht nach einer fehlerhaften Antwort aus. Nichts geschrieben.`);
+// Schutz vor einer kaputten Antwort: nie weniger als die Hälfte des bisherigen Bestands schreiben (ohne Bestand genügen 20 Märkte).
+let bisher = 0;
+try {
+  const alt = JSON.parse(readFileSync(new URL('../data/maerkte-osm.json', import.meta.url), 'utf8')).staedte ?? {};
+  bisher = Object.values(alt).reduce((n, l) => n + l.length, 0);
+} catch {
+  /* noch kein Bestand */
+}
+if (anzahl < 20 || anzahl < bisher / 2) throw new Error(`Nur ${anzahl} Märkte gefunden (bisher ${bisher}), das sieht nach einer unvollständigen Antwort aus. Nichts geschrieben.`);
 writeFileSync(new URL('../data/maerkte-osm.json', import.meta.url), JSON.stringify({ quelle: 'OpenStreetMap, ODbL (Mitwirkende)', stand: new Date().toISOString().slice(0, 10), staedte }, null, 1) + '\n');
 console.log(`${anzahl} Märkte in ${Object.keys(staedte).length} Städten`);
